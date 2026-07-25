@@ -7,6 +7,8 @@ import {
   sanitizeSqlName,
   unsupportedImportFormatMessage,
 } from "@/features/import/importers";
+import { resolveMessage } from "@/core";
+import { createTranslator } from "@/i18n";
 
 describe("import helpers", () => {
   it("detects supported import file kinds", () => {
@@ -18,6 +20,9 @@ describe("import helpers", () => {
     expect(detectImportFileKind("notes.txt")).toBeNull();
   });
 
+  // The message is a translation key now (#135), but LocalizedError still sets
+  // Error.message to the English rendering so untranslated catch sites and
+  // these assertions keep working.
   it("reports unsupported import formats with clear errors", () => {
     expect(() => parseImportText("", "xlsx")).toThrow(
       "Native XLSX/XLS import is not supported.",
@@ -25,8 +30,21 @@ describe("import helpers", () => {
     expect(() => parseImportText("", "sql")).toThrow(
       "SQL files are loaded into the editor and are not parsed as table data.",
     );
-    expect(unsupportedImportFormatMessage("xml")).toBe(
+    expect(unsupportedImportFormatMessage("xml")).toEqual({
+      kind: "key",
+      key: "import.error.unsupportedFormat",
+      values: { format: "xml", supported: "CSV, TSV, JSON, JSONL/NDJSON" },
+    });
+  });
+
+  it("resolves the unsupported-format message in the active locale", () => {
+    const message = unsupportedImportFormatMessage("xml");
+
+    expect(resolveMessage(createTranslator("en").t, message)).toBe(
       'Unsupported import format "xml". Supported text import formats: CSV, TSV, JSON, JSONL/NDJSON.',
+    );
+    expect(resolveMessage(createTranslator("ja").t, message)).toContain(
+      "対応していません",
     );
   });
 

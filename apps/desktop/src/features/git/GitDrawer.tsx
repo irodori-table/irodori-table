@@ -11,6 +11,7 @@ import type { CSSProperties } from "react";
 import { useEffect } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { resolveMessage } from "@/core";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator } from "@/i18n";
 import { GitChangesView } from "./GitChangesView";
@@ -448,7 +449,7 @@ export function GitPanel({ variant = "drawer", onClose }: GitPanelProps) {
       {error ? (
         <div className="inline-error git-error">
           <AlertTriangle size={13} />
-          <span>{error}</span>
+          <span>{resolveMessage(t, error)}</span>
         </div>
       ) : null}
 

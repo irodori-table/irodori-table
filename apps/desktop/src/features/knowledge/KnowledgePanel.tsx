@@ -11,7 +11,7 @@ import {
   type KnowledgeFactMatch,
   type KnowledgePack,
 } from "./knowledge-pack";
-import { errorMessage } from "@/core";
+import { localizedErrorMessage } from "@/core";
 
 type KnowledgeScope = "connection" | "all";
 
@@ -78,7 +78,7 @@ export function KnowledgePanel({
     fetchKnowledgePack()
       .then((next) => setPack(next))
       .catch((error: unknown) => {
-        setRefreshError(errorMessage(error));
+        setRefreshError(localizedErrorMessage(t, error));
       })
       .finally(() => setRefreshing(false));
   };

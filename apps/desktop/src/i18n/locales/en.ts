@@ -1252,6 +1252,98 @@ export const en = {
   "sidebar.menu.moveToRightSidebar": "Move to Right Sidebar",
   "sidebar.menu.moveToLeftSidebar": "Move to Left Sidebar",
   "sidebar.menu.hideView": "Hide '{name}'",
+  "git.error.commitMessageRequired": "Commit message is required",
+  "git.error.selectFileToStage": "Select at least one file to stage",
+  "git.error.selectFileToUnstage": "Select at least one file to unstage",
+  "git.error.selectFileToDiscard": "Select at least one file to discard",
+  "git.error.branchNameRequired": "Branch name is required",
+  "history.outcome.failed": "failed",
+  "history.outcome.rows": "{count} rows",
+  "history.outcome.rowsCapped": "{count} rows capped",
+  "history.outcome.elapsed": "{ms} ms",
+  "history.unknownTime": "Unknown time",
+  "settings.jobs.kind.knowledgeRefresh": "Knowledge refresh",
+  "settings.jobs.kind.indexBuild": "Index build",
+  "settings.jobs.kind.mlEvaluation": "ML evaluation",
+  "settings.jobs.kind.bulkEdit": "Bulk edit",
+  "settings.jobs.kind.sourceScan": "Source scan",
+  "settings.jobs.status.queued": "Queued",
+  "settings.jobs.status.running": "Running",
+  "settings.jobs.status.cancelling": "Cancelling",
+  "settings.jobs.status.succeeded": "Succeeded",
+  "settings.jobs.status.failed": "Failed",
+  "settings.jobs.status.cancelled": "Cancelled",
+  "import.error.sqlNotTableData":
+    "SQL files are loaded into the editor and are not parsed as table data.",
+  "import.error.xlsxUnsupported":
+    "Native XLSX/XLS import is not supported. Import {supported}, or load a SQL file instead.",
+  "import.error.unsupportedFormat":
+    'Unsupported import format "{format}". Supported text import formats: {supported}.',
+  "erd.export.error.pngEncodeFailed": "Could not encode PNG",
+  "erd.export.error.invalidDimensions": "ERD has invalid dimensions",
+  "erd.export.error.tooLargeForPng":
+    "ERD is too large to export as PNG; export SVG instead",
+  "erd.export.error.canvasUnavailable": "Canvas is not available",
+  "erd.export.error.svgRenderFailed": "Could not render SVG",
+  "erd.export.error.textClipboardUnavailable":
+    "Text clipboard is not available in this environment",
+  "erd.export.error.pngClipboardUnavailable":
+    "PNG clipboard is not available in this environment",
+  "erd.export.error.pngClipboardUnsupported":
+    "PNG clipboard is not supported in this environment",
+  "schemaSpec.error.unsupportedFormat":
+    "Unsupported table specification format. Expected {format}.",
+  "schemaSpec.error.missingSchemas": "Table specification is missing schemas.",
+  "schemaSpec.error.invalidSchemaEntry":
+    "Invalid schema entry in table specification.",
+  "schemaSpec.error.schemaMissingName": "Schema entry is missing a name.",
+  "schemaSpec.error.schemaMissingTables": "Schema '{name}' is missing tables.",
+  "schemaSpec.error.invalidTableEntry":
+    "Invalid table entry in table specification.",
+  "schemaSpec.error.tableMissingName": "Table entry is missing a name.",
+  "schemaSpec.error.tableMissingColumns": "Table '{name}' is missing columns.",
+  "schemaSpec.error.invalidColumnEntry":
+    "Invalid column entry in table specification.",
+  "schemaSpec.error.columnMissingNameOrType":
+    "Column entry is missing name or dataType.",
+  "schemaSpec.error.invalidIndexEntry":
+    "Invalid index entry in table specification.",
+  "schemaSpec.error.invalidForeignKeyEntry":
+    "Invalid foreign key entry in table specification.",
+  "schemaSpec.error.foreignKeyMissingReferencesTable":
+    "Foreign key entry is missing referencesTable.",
+  "schemaDiagram.error.unsupportedFormat":
+    "Unsupported schema diagram format. Expected {format}.",
+  "schemaDiagram.error.missingTables": "Schema diagram is missing tables.",
+  "schemaDiagram.error.invalidTableEntry":
+    "Invalid table entry in schema diagram.",
+  "knowledge.pack.error.requestFailed":
+    "Knowledge pack request failed: HTTP {status}",
+  "knowledge.pack.error.notAnObject": "Knowledge pack must be an object",
+  "knowledge.pack.error.unsupportedSchema":
+    "Knowledge pack has an unsupported schema",
+  "knowledge.pack.error.productNotAnObject":
+    "Knowledge pack product entry must be an object",
+  "knowledge.pack.error.factNotAnObject":
+    "Knowledge fact entry must be an object",
+  "knowledge.pack.error.fieldRequired": "{label} is required",
+  "passkey.error.publicKeyExportUnavailable":
+    "Passkey public key export is unavailable",
+  "passkey.error.unexpectedAssertionType":
+    "Passkey assertion had an unexpected type",
+  "passkey.error.challengeMismatch": "Passkey challenge did not match",
+  "passkey.error.originMismatch": "Passkey origin did not match this app",
+  "passkey.error.signatureVerificationFailed":
+    "Passkey signature could not be verified",
+  "passkey.error.unavailableRuntime":
+    "Passkeys are not available in this runtime",
+  "passkey.error.noPublicKeyCredential":
+    "The passkey operation did not return a public key credential",
+  "passkey.error.unsupportedAlgorithm":
+    "Unsupported passkey algorithm: {value}",
+  "passkey.error.invalidClientData": "Passkey client data was not an object",
+  "passkey.error.malformedCredential":
+    "The stored passkey credential is malformed ({detail})",
 } as const;
 
 export type TranslationKey = keyof typeof en;

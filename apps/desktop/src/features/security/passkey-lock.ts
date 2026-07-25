@@ -1,4 +1,4 @@
-import { isRecord } from "@/core";
+import { isRecord, localizedError } from "@/core";
 export type PasskeyAlgorithm = "ES256" | "RS256";
 
 export type PasskeyCredentialRecord = {
@@ -107,7 +107,7 @@ export async function registerPasskeyCredential(
   const publicKey = response.getPublicKey?.();
   const publicKeyAlgorithm = response.getPublicKeyAlgorithm?.();
   if (!publicKey || typeof publicKeyAlgorithm !== "number") {
-    throw new Error("passkey public key export is unavailable");
+    throw localizedError("passkey.error.publicKeyExportUnavailable");
   }
   const algorithm = passkeyAlgorithmFromCose(publicKeyAlgorithm);
   return {
@@ -144,17 +144,17 @@ export async function authenticatePasskeyCredential(
     publicKeyCredential.response as AuthenticatorAssertionResponse;
   const clientData = parseClientData(response.clientDataJSON);
   if (clientData.type !== "webauthn.get") {
-    throw new Error("passkey assertion had an unexpected type");
+    throw localizedError("passkey.error.unexpectedAssertionType");
   }
   if (clientData.challenge !== base64UrlEncode(challenge)) {
-    throw new Error("passkey challenge did not match");
+    throw localizedError("passkey.error.challengeMismatch");
   }
   if (
     typeof window !== "undefined" &&
     typeof clientData.origin === "string" &&
     clientData.origin !== window.location.origin
   ) {
-    throw new Error("passkey origin did not match this app");
+    throw localizedError("passkey.error.originMismatch");
   }
   const verified = await verifyPasskeyAssertion(
     credentialRecord,
@@ -163,7 +163,7 @@ export async function authenticatePasskeyCredential(
     response.signature,
   );
   if (!verified) {
-    throw new Error("passkey signature could not be verified");
+    throw localizedError("passkey.error.signatureVerificationFailed");
   }
 }
 
@@ -234,19 +234,25 @@ export function derEcdsaSignatureToRaw(
 ): Uint8Array {
   let offset = 0;
   if (signature[offset] !== 0x30) {
-    throw new Error("invalid ECDSA signature sequence");
+    throw localizedError("passkey.error.malformedCredential", {
+      detail: "invalid ECDSA signature sequence",
+    });
   }
   offset += 1;
   const sequenceLength = readDerLength(signature, offset);
   offset = sequenceLength.nextOffset;
   if (offset + sequenceLength.length !== signature.length) {
-    throw new Error("invalid ECDSA signature length");
+    throw localizedError("passkey.error.malformedCredential", {
+      detail: "invalid ECDSA signature length",
+    });
   }
   const r = readDerInteger(signature, offset);
   offset = r.nextOffset;
   const s = readDerInteger(signature, offset);
   if (s.nextOffset !== signature.length) {
-    throw new Error("invalid ECDSA signature trailing data");
+    throw localizedError("passkey.error.malformedCredential", {
+      detail: "invalid ECDSA signature trailing data",
+    });
   }
   const raw = new Uint8Array(coordinateLength * 2);
   raw.set(leftPadCoordinate(r.value, coordinateLength), 0);
@@ -306,7 +312,7 @@ function assertWebAuthnAvailable() {
     typeof navigator.credentials?.get !== "function" ||
     typeof crypto?.subtle?.verify !== "function"
   ) {
-    throw new Error("passkey is not available in this runtime");
+    throw localizedError("passkey.error.unavailableRuntime");
   }
 }
 
@@ -314,7 +320,7 @@ function assertPublicKeyCredential(
   credential: Credential | null,
 ): PublicKeyCredential {
   if (!credential || credential.type !== "public-key") {
-    throw new Error("passkey operation did not return a public key credential");
+    throw localizedError("passkey.error.noPublicKeyCredential");
   }
   return credential as PublicKeyCredential;
 }
@@ -326,7 +332,7 @@ function passkeyAlgorithmFromCose(value: number): PasskeyAlgorithm {
   if (value === rs256Algorithm) {
     return "RS256";
   }
-  throw new Error(`unsupported passkey algorithm: ${value}`);
+  throw localizedError("passkey.error.unsupportedAlgorithm", { value });
 }
 
 function parseClientData(input: ArrayBuffer): {
@@ -337,7 +343,7 @@ function parseClientData(input: ArrayBuffer): {
   const decoded = new TextDecoder().decode(input);
   const parsed = JSON.parse(decoded) as unknown;
   if (!isRecord(parsed)) {
-    throw new Error("passkey client data was not an object");
+    throw localizedError("passkey.error.invalidClientData");
   }
   return parsed;
 }
@@ -365,20 +371,26 @@ function bytesToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 function readDerLength(bytes: Uint8Array, offset: number) {
   const first = bytes[offset];
   if (first === undefined) {
-    throw new Error("missing DER length");
+    throw localizedError("passkey.error.malformedCredential", {
+      detail: "missing DER length",
+    });
   }
   if ((first & 0x80) === 0) {
     return { length: first, nextOffset: offset + 1 };
   }
   const byteCount = first & 0x7f;
   if (byteCount === 0 || byteCount > 2) {
-    throw new Error("unsupported DER length");
+    throw localizedError("passkey.error.malformedCredential", {
+      detail: "unsupported DER length",
+    });
   }
   let length = 0;
   for (let index = 0; index < byteCount; index += 1) {
     const next = bytes[offset + 1 + index];
     if (next === undefined) {
-      throw new Error("truncated DER length");
+      throw localizedError("passkey.error.malformedCredential", {
+        detail: "truncated DER length",
+      });
     }
     length = (length << 8) | next;
   }
@@ -387,13 +399,17 @@ function readDerLength(bytes: Uint8Array, offset: number) {
 
 function readDerInteger(bytes: Uint8Array, offset: number) {
   if (bytes[offset] !== 0x02) {
-    throw new Error("missing DER integer");
+    throw localizedError("passkey.error.malformedCredential", {
+      detail: "missing DER integer",
+    });
   }
   const length = readDerLength(bytes, offset + 1);
   const start = length.nextOffset;
   const end = start + length.length;
   if (end > bytes.length) {
-    throw new Error("truncated DER integer");
+    throw localizedError("passkey.error.malformedCredential", {
+      detail: "truncated DER integer",
+    });
   }
   return {
     value: bytes.slice(start, end),
@@ -407,7 +423,9 @@ function leftPadCoordinate(value: Uint8Array, length: number): Uint8Array {
     trimmed = trimmed.slice(1);
   }
   if (trimmed.length > length) {
-    throw new Error("ECDSA coordinate is too long");
+    throw localizedError("passkey.error.malformedCredential", {
+      detail: "ECDSA coordinate is too long",
+    });
   }
   const output = new Uint8Array(length);
   output.set(trimmed, length - trimmed.length);

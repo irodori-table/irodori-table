@@ -1,3 +1,4 @@
+import { localizedError } from "@/core";
 import bundledKnowledgePackJson from "./bundled-knowledge-pack.json";
 
 export const defaultKnowledgePackUrl =
@@ -50,7 +51,9 @@ export async function fetchKnowledgePack(
     },
   });
   if (!response.ok) {
-    throw new Error(`knowledge pack request failed: HTTP ${response.status}`);
+    throw localizedError("knowledge.pack.error.requestFailed", {
+      status: response.status,
+    });
   }
   const parsed = (await response.json()) as unknown;
   return normalizeKnowledgePack(parsed, url);
@@ -102,11 +105,11 @@ export function searchKnowledgeFacts(
 
 function normalizeKnowledgePack(value: unknown, source: string): KnowledgePack {
   if (!value || typeof value !== "object") {
-    throw new Error("knowledge pack must be an object");
+    throw localizedError("knowledge.pack.error.notAnObject");
   }
   const raw = value as Partial<KnowledgePack>;
   if (raw.schemaVersion !== 1 || !Array.isArray(raw.products)) {
-    throw new Error("knowledge pack has an unsupported schema");
+    throw localizedError("knowledge.pack.error.unsupportedSchema");
   }
   return {
     schemaVersion: 1,
@@ -118,7 +121,7 @@ function normalizeKnowledgePack(value: unknown, source: string): KnowledgePack {
 
 function normalizeKnowledgePackProduct(value: unknown): KnowledgePackProduct {
   if (!value || typeof value !== "object") {
-    throw new Error("knowledge pack product entry must be an object");
+    throw localizedError("knowledge.pack.error.productNotAnObject");
   }
   const raw = value as Partial<KnowledgePackProduct>;
   return {
@@ -132,7 +135,7 @@ function normalizeKnowledgePackProduct(value: unknown): KnowledgePackProduct {
 
 function normalizeKnowledgeFact(value: unknown): KnowledgeFact {
   if (!value || typeof value !== "object") {
-    throw new Error("knowledge fact entry must be an object");
+    throw localizedError("knowledge.pack.error.factNotAnObject");
   }
   const raw = value as Partial<KnowledgeFact>;
   return {
@@ -155,7 +158,7 @@ function productKey(label: string): string {
 
 function requiredString(value: unknown, label: string): string {
   if (typeof value !== "string" || !value.trim()) {
-    throw new Error(`${label} is required`);
+    throw localizedError("knowledge.pack.error.fieldRequired", { label });
   }
   return value;
 }

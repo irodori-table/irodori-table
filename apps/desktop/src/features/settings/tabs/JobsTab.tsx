@@ -1,6 +1,7 @@
 import { AlertTriangle, XCircle } from "lucide-react";
 import { usePreferencesStore } from "@/features/preferences";
 import type { JobList, JobSummary } from "../../../generated/irodori-api";
+import type { TranslationKey } from "@/i18n";
 import type { TranslateFn } from "./shared";
 
 /** Format in the app locale (not the OS locale). */
@@ -8,21 +9,34 @@ function toCount(value: bigint | number, locale: string) {
   return Number(value).toLocaleString(locale);
 }
 
-function formatJobKind(kind: JobSummary["kind"]) {
-  switch (kind) {
-    case "knowledgeRefresh":
-      return "Knowledge refresh";
-    case "indexBuild":
-      return "Index build";
-    case "mlEvaluation":
-      return "ML evaluation";
-    case "bulkEdit":
-      return "Bulk edit";
-    case "sourceScan":
-      return "Source scan";
-    default:
-      return kind.charAt(0).toUpperCase() + kind.slice(1);
-  }
+const jobKindKeys = {
+  knowledgeRefresh: "settings.jobs.kind.knowledgeRefresh",
+  indexBuild: "settings.jobs.kind.indexBuild",
+  mlEvaluation: "settings.jobs.kind.mlEvaluation",
+  bulkEdit: "settings.jobs.kind.bulkEdit",
+  sourceScan: "settings.jobs.kind.sourceScan",
+} as const satisfies Partial<Record<JobSummary["kind"], TranslationKey>>;
+
+const jobStatusKeys = {
+  queued: "settings.jobs.status.queued",
+  running: "settings.jobs.status.running",
+  cancelling: "settings.jobs.status.cancelling",
+  succeeded: "settings.jobs.status.succeeded",
+  failed: "settings.jobs.status.failed",
+  cancelled: "settings.jobs.status.cancelled",
+} as const satisfies Record<JobSummary["status"], TranslationKey>;
+
+/**
+ * A job kind the backend added since this build shipped has no key yet, so it
+ * falls back to its own identifier rather than rendering blank.
+ */
+function formatJobKind(t: TranslateFn, kind: JobSummary["kind"]) {
+  const key = jobKindKeys[kind as keyof typeof jobKindKeys];
+  return key ? t(key) : kind.charAt(0).toUpperCase() + kind.slice(1);
+}
+
+function formatJobStatus(t: TranslateFn, status: JobSummary["status"]) {
+  return t(jobStatusKeys[status]);
 }
 
 function formatJobTime(value: bigint | undefined, locale: string) {
@@ -41,7 +55,7 @@ function formatJobTime(value: bigint | undefined, locale: string) {
   });
 }
 
-function formatJobProgress(job: JobSummary, locale: string) {
+function formatJobProgress(t: TranslateFn, job: JobSummary, locale: string) {
   const progress = job.progress;
   if (progress.total !== undefined) {
     return `${toCount(progress.completed, locale)} / ${toCount(progress.total, locale)} ${progress.unit}`;
@@ -49,7 +63,7 @@ function formatJobProgress(job: JobSummary, locale: string) {
   if (progress.completed > 0n) {
     return `${toCount(progress.completed, locale)} ${progress.unit}`;
   }
-  return progress.message ?? "Waiting";
+  return progress.message ?? t("common.waiting");
 }
 
 export interface JobsTabProps {
@@ -104,8 +118,9 @@ export function JobsTab({
                 <div className="job-main">
                   <strong>{job.title}</strong>
                   <small>
-                    {formatJobKind(job.kind)} · {job.status} ·{" "}
-                    {formatJobProgress(job, locale)}
+                    {formatJobKind(t, job.kind)} ·{" "}
+                    {formatJobStatus(t, job.status)} ·{" "}
+                    {formatJobProgress(t, job, locale)}
                   </small>
                   {job.progress.percent !== undefined ? (
                     <div className="job-progress">
@@ -151,7 +166,8 @@ export function JobsTab({
                 <div className="job-main">
                   <strong>{job.title}</strong>
                   <small>
-                    {formatJobKind(job.kind)} · {job.status} ·{" "}
+                    {formatJobKind(t, job.kind)} ·{" "}
+                    {formatJobStatus(t, job.status)} ·{" "}
                     {formatJobTime(job.finishedAtMs ?? job.updatedAtMs, locale)}
                   </small>
                   {job.error ? (

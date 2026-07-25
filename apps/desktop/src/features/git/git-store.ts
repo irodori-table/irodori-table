@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
+import { keyMessage, textMessage, type LocalizedMessage } from "@/core";
 import { errorMessage } from "@/core";
 import {
   gitCheckoutBranch,
@@ -48,7 +49,7 @@ type GitState = {
   logLoading: boolean;
   diffLoading: boolean;
   commitDiffLoading: boolean;
-  error: string | null;
+  error: LocalizedMessage | null;
   commandOutput: GitCommandOutput | null;
   commitMessage: string;
   openDrawer: () => void;
@@ -228,7 +229,10 @@ export const useGitStore = create<GitState>((set, get) => ({
         get().selectedCommitHash === selectedCommitHash &&
         get().selectedCommitPath === selectedCommitPath
       ) {
-        set({ error: errorMessage(error), commitDiffLoading: false });
+        set({
+          error: textMessage(errorMessage(error)),
+          commitDiffLoading: false,
+        });
       }
     }
   },
@@ -265,7 +269,11 @@ export const useGitStore = create<GitState>((set, get) => ({
         get().selectCommitFile(null),
       ]);
     } catch (error) {
-      set({ error: errorMessage(error), loading: false, logLoading: false });
+      set({
+        error: textMessage(errorMessage(error)),
+        loading: false,
+        logLoading: false,
+      });
     }
   },
   selectFile: async (selectedPath) => {
@@ -274,13 +282,13 @@ export const useGitStore = create<GitState>((set, get) => ({
       const diff = await gitDiff(repoArg(get()), selectedPath ?? undefined);
       set({ diff, diffLoading: false });
     } catch (error) {
-      set({ error: errorMessage(error), diffLoading: false });
+      set({ error: textMessage(errorMessage(error)), diffLoading: false });
     }
   },
   commitAll: async () => {
     const message = get().commitMessage.trim();
     if (!message) {
-      set({ error: "Commit message is required" });
+      set({ error: keyMessage("git.error.commitMessageRequired") });
       return false;
     }
     set({ loading: true, error: null, commandOutput: null });
@@ -290,14 +298,14 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
   commitStaged: async () => {
     const message = get().commitMessage.trim();
     if (!message) {
-      set({ error: "Commit message is required" });
+      set({ error: keyMessage("git.error.commitMessageRequired") });
       return false;
     }
     set({ loading: true, error: null, commandOutput: null });
@@ -307,7 +315,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
@@ -319,7 +327,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
@@ -331,7 +339,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
@@ -343,14 +351,14 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
   stagePaths: async (paths) => {
     const targetPaths = selectedPaths(paths);
     if (targetPaths.length === 0) {
-      set({ error: "Select at least one file to stage" });
+      set({ error: keyMessage("git.error.selectFileToStage") });
       return false;
     }
     set({ loading: true, error: null, commandOutput: null });
@@ -360,14 +368,14 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
   unstagePaths: async (paths) => {
     const targetPaths = selectedPaths(paths);
     if (targetPaths.length === 0) {
-      set({ error: "Select at least one file to unstage" });
+      set({ error: keyMessage("git.error.selectFileToUnstage") });
       return false;
     }
     set({ loading: true, error: null, commandOutput: null });
@@ -377,14 +385,14 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
   discardPaths: async (paths) => {
     const targetPaths = selectedPaths(paths);
     if (targetPaths.length === 0) {
-      set({ error: "Select at least one file to discard" });
+      set({ error: keyMessage("git.error.selectFileToDiscard") });
       return false;
     }
     set({ loading: true, error: null, commandOutput: null });
@@ -394,14 +402,14 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
   checkoutBranch: async (branch) => {
     const target = branch.trim();
     if (!target) {
-      set({ error: "Branch name is required" });
+      set({ error: keyMessage("git.error.branchNameRequired") });
       return false;
     }
     set({ loading: true, error: null, commandOutput: null });
@@ -415,14 +423,14 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
   createBranch: async (branch, startPoint) => {
     const target = branch.trim();
     if (!target) {
-      set({ error: "Branch name is required" });
+      set({ error: keyMessage("git.error.branchNameRequired") });
       return false;
     }
     set({ loading: true, error: null, commandOutput: null });
@@ -437,14 +445,14 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },
   deleteBranch: async (branch, force = false) => {
     const target = branch.trim();
     if (!target) {
-      set({ error: "Branch name is required" });
+      set({ error: keyMessage("git.error.branchNameRequired") });
       return false;
     }
     set({ loading: true, error: null, commandOutput: null });
@@ -458,7 +466,7 @@ export const useGitStore = create<GitState>((set, get) => ({
       await get().refresh();
       return true;
     } catch (error) {
-      set({ error: errorMessage(error), loading: false });
+      set({ error: textMessage(errorMessage(error)), loading: false });
       return false;
     }
   },

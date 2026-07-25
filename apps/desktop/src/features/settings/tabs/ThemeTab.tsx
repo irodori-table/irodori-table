@@ -98,7 +98,8 @@ export function ThemeTab({
         >
           {defaultThemeEntries.map((theme) => (
             <option key={theme.id} value={theme.id}>
-              {theme.name} ({theme.kind})
+              {theme.name} (
+              {theme.kind === "dark" ? t("common.dark") : t("common.light")})
             </option>
           ))}
         </select>

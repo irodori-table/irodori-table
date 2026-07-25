@@ -34,7 +34,7 @@ import {
 import { toCount } from "@/features/results";
 import type { SqlEditorHandle } from "@/features/query-editor";
 import type { Translator } from "@/i18n";
-import { type ValueUpdater, errorMessage } from "@/core";
+import { type ValueUpdater, localizedErrorMessage } from "@/core";
 import type { SqlMetadataTarget } from "@/sql/metadata-inspection";
 import type {
   DbEngine,
@@ -159,7 +159,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.importFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -198,7 +198,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.copyFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -259,7 +259,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.copyFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -281,7 +281,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.querySaveFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -321,7 +321,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.exitFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -344,7 +344,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.copyFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -356,7 +356,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.devToolsUnavailable"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
