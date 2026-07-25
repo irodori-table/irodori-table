@@ -2371,8 +2371,9 @@
 /* Log buffers get a filter bar row between the tab strip and the editor
    (issue #177). The bar is always present for `.log` tabs so toggling a
    filter never shifts the editor. */
+/* Tab strip, filter bar, marks bar, buffer (#177 tiers 2-3). */
 .editor-shell-with-log-filter {
-  grid-template-rows: var(--bar-md) auto minmax(0, 1fr);
+  grid-template-rows: var(--bar-md) auto auto minmax(0, 1fr);
 }
 
 .log-filter-bar {
@@ -2385,6 +2386,131 @@
   padding: 0 8px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-muted);
+}
+
+.log-marks-bar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--bar-sm);
+  padding: 0 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.log-mark-colors {
+  display: flex;
+  gap: 4px;
+}
+
+/* Fixed swatch size so selecting a colour cannot reflow the strip. */
+.log-mark-color {
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.log-mark-color.active {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.log-mark-color-amber {
+  background: var(--amber);
+}
+
+.log-mark-color-green {
+  background: var(--green);
+}
+
+.log-mark-color-blue {
+  background: var(--blue);
+}
+
+.log-mark-color-red {
+  background: var(--red);
+}
+
+/* The list scrolls rather than wrapping, so a heavily marked file keeps the
+   strip one row tall and the buffer below it does not move. */
+.log-mark-list {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+}
+
+.log-mark-chip {
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.log-mark-chip.log-mark-color-amber {
+  border-left: 3px solid var(--amber);
+}
+
+.log-mark-chip.log-mark-color-green {
+  border-left: 3px solid var(--green);
+}
+
+.log-mark-chip.log-mark-color-blue {
+  border-left: 3px solid var(--blue);
+}
+
+.log-mark-chip.log-mark-color-red {
+  border-left: 3px solid var(--red);
+}
+
+.log-mark-empty,
+.log-mark-status {
+  flex: 1 1 auto;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.log-mark-status {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+/* Marked lines in the buffer. A left border plus a wash keeps the mark legible
+   over the severity colours the tier-1 highlighter already applies. */
+.cm-log-mark {
+  box-shadow: inset 3px 0 0 0 currentColor;
+}
+
+.cm-log-mark-amber {
+  color: var(--amber);
+  background: color-mix(in srgb, var(--amber) 12%, transparent);
+}
+
+.cm-log-mark-green {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 12%, transparent);
+}
+
+.cm-log-mark-blue {
+  color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 12%, transparent);
+}
+
+.cm-log-mark-red {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 12%, transparent);
 }
 
 .log-filter-text {

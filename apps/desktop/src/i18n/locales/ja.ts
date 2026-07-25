@@ -1624,4 +1624,16 @@ export const ja = {
   "ai.cliArgsPlaceholder":
     "-p   ({token} をプレースホルダとして使用。無い場合は標準入力に渡されます)",
   "ai.cliArgsShortPlaceholder": "-p  ({token} も使用可)",
+  "editor.logMarks.label": "ログ行のマーク",
+  "editor.logMarks.color": "マークの色",
+  "editor.logMarks.markCurrentLine": "現在の行をマーク",
+  "editor.logMarks.count": "{count} 行マーク済み",
+  "editor.logMarks.none": "マークした行はありません",
+  "editor.logMarks.list": "マークした行",
+  "editor.logMarks.jumpToLine": "{line} 行目へ移動",
+  "editor.logMarks.clear": "マークを消去",
+  "editor.logMarks.color.amber": "アンバー",
+  "editor.logMarks.color.green": "グリーン",
+  "editor.logMarks.color.blue": "ブルー",
+  "editor.logMarks.color.red": "レッド",
 } satisfies TranslationDictionary;

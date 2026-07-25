@@ -1584,6 +1584,18 @@ export const en = {
   "ai.cliArgsPlaceholder":
     "-p   (use {token} as a placeholder, else prompt is piped to stdin)",
   "ai.cliArgsShortPlaceholder": "-p  (or use {token})",
+  "editor.logMarks.label": "Log line marks",
+  "editor.logMarks.color": "Mark colour",
+  "editor.logMarks.markCurrentLine": "Mark current line",
+  "editor.logMarks.count": "{count} marked",
+  "editor.logMarks.none": "No marked lines",
+  "editor.logMarks.list": "Marked lines",
+  "editor.logMarks.jumpToLine": "Go to line {line}",
+  "editor.logMarks.clear": "Clear marks",
+  "editor.logMarks.color.amber": "Amber",
+  "editor.logMarks.color.green": "Green",
+  "editor.logMarks.color.blue": "Blue",
+  "editor.logMarks.color.red": "Red",
 } as const;
 
 export type TranslationKey = keyof typeof en;
