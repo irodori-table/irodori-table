@@ -45,20 +45,20 @@ export function ImportDialog({
   return (
     <DialogShell
       className="data-dialog import-dialog"
-      label="Import preview"
+      label={t("import.dialog.label")}
       onClose={onClose}
     >
       <div className="dialog-header">
-        <strong>Import</strong>
+        <strong>{t("import.dialog.title")}</strong>
         <span>{`${preview.fileName} \u00b7 ${preview.format.toUpperCase()}`}</span>
         <button className="text-button" type="button" onClick={onClose}>
-          Close
+          {t("common.close")}
         </button>
       </div>
       <div className="dialog-body">
         <div className="dialog-form-row">
           <label>
-            <span>Table</span>
+            <span>{t("import.dialog.table")}</span>
             <input
               value={preview.tableName}
               onChange={(event) =>
@@ -74,9 +74,15 @@ export function ImportDialog({
             />
           </label>
           <span className="dialog-stat">
-            {formatCount(preview.rows.length)} /{" "}
-            {formatCount(preview.totalRows)} rows
-            {preview.truncated ? " capped" : ""}
+            {t(
+              preview.truncated
+                ? "import.dialog.rowCountCapped"
+                : "import.dialog.rowCount",
+              {
+                shown: formatCount(preview.rows.length),
+                total: formatCount(preview.totalRows),
+              },
+            )}
           </span>
         </div>
         <div
@@ -136,14 +142,14 @@ export function ImportDialog({
           type="button"
           onClick={() => void navigator.clipboard?.writeText(sqlPreview)}
         >
-          Copy SQL
+          {t("common.copySql")}
         </button>
         <button
           className="primary-action"
           type="button"
           onClick={onPutSqlInEditor}
         >
-          Put SQL in editor
+          {t("common.putSqlInEditor")}
         </button>
       </div>
     </DialogShell>

@@ -31,7 +31,9 @@ import {
   type DiagramTable,
 } from "./schema-diagram";
 import { useSchemaDiagramStore } from "./schema-diagram-store";
-import { errorMessage } from "@/core";
+import { localizedErrorMessage } from "@/core";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator, type Translator } from "@/i18n";
 
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 1.6;
@@ -90,6 +92,9 @@ export function SchemaDiagramDialog({
   const moveTable = useSchemaDiagramStore((state) => state.moveTable);
   const addTable = useSchemaDiagramStore((state) => state.addTable);
   const setDocument = useSchemaDiagramStore((state) => state.setDocument);
+
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
 
   const [zoom, setZoom] = useState(1);
   const [importError, setImportError] = useState<string | null>(null);
@@ -175,7 +180,7 @@ export function SchemaDiagramDialog({
       setDocument(parseDiagramDocument(await file.text()));
       setImportError(null);
     } catch (error) {
-      setImportError(errorMessage(error));
+      setImportError(localizedErrorMessage(t, error));
     }
   }
 
@@ -188,38 +193,41 @@ export function SchemaDiagramDialog({
   return (
     <DialogShell
       className="diagram diagram-designer"
-      label="Schema diagram designer"
+      label={t("schemaDiagram.dialogLabel")}
       onClose={onClose}
     >
       <div className="diagram-header">
-        <strong>Schema Designer</strong>
+        <strong>{t("schemaDiagram.title")}</strong>
         <span>
-          {tableCount} tables · {columnCount} columns
+          {t("schemaDiagram.summary", {
+            tables: tableCount,
+            columns: columnCount,
+          })}
         </span>
         <button
           className="text-button"
           type="button"
-          title="Add a new table"
+          title={t("schemaDiagram.addTable")}
           onClick={addTable}
         >
           <Plus size={13} />
-          <span>Table</span>
+          <span>{t("schemaDiagram.table")}</span>
         </button>
         <button
           className="text-button"
           type="button"
-          title="Replace the canvas with the connected database schema"
+          title={t("schemaDiagram.seedFromDb")}
           onClick={onSeedFromDb}
           disabled={!canSeedFromDb}
         >
           <Database size={13} />
-          <span>From DB</span>
+          <span>{t("schemaDiagram.fromDb")}</span>
         </button>
         <button
           className="mini-button"
           type="button"
-          title="Zoom out"
-          aria-label="Zoom out"
+          title={t("erd.zoomOut")}
+          aria-label={t("erd.zoomOut")}
           onClick={() => setZoom((current) => clampZoom(current - 0.1))}
         >
           <ZoomOut size={13} />
@@ -228,8 +236,8 @@ export function SchemaDiagramDialog({
         <button
           className="mini-button"
           type="button"
-          title="Zoom in"
-          aria-label="Zoom in"
+          title={t("erd.zoomIn")}
+          aria-label={t("erd.zoomIn")}
           onClick={() => setZoom((current) => clampZoom(current + 0.1))}
         >
           <ZoomIn size={13} />
@@ -237,47 +245,47 @@ export function SchemaDiagramDialog({
         <button
           className="text-button"
           type="button"
-          title="Fit to viewport"
+          title={t("schemaDiagram.fitToViewport")}
           onClick={fitToViewport}
         >
           <Maximize2 size={13} />
-          <span>Fit</span>
+          <span>{t("schemaDiagram.fit")}</span>
         </button>
         <button
           className="text-button"
           type="button"
-          title="Export diagram as JSON"
+          title={t("schemaDiagram.exportJson")}
           onClick={exportJson}
         >
           <Download size={13} />
-          <span>Export</span>
+          <span>{t("schemaDiagram.export")}</span>
         </button>
         <button
           className="text-button"
           type="button"
-          title="Import diagram JSON"
+          title={t("schemaDiagram.importJson")}
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload size={13} />
-          <span>Import</span>
+          <span>{t("schemaDiagram.import")}</span>
         </button>
         <button
           className="text-button"
           type="button"
           onClick={() => onCopySql(sql)}
         >
-          Copy SQL
+          {t("common.copySql")}
         </button>
         <button
           className="primary-action"
           type="button"
-          title="Generate the runnable CREATE script in the editor"
+          title={t("schemaDiagram.createDbSqlTitle")}
           onClick={() => onPutSqlInEditor(sql)}
         >
-          Create DB SQL
+          {t("schemaDiagram.createDbSql")}
         </button>
         <button className="text-button" type="button" onClick={onClose}>
-          Close
+          {t("common.close")}
         </button>
       </div>
 
@@ -337,6 +345,7 @@ export function SchemaDiagramDialog({
             {document.tables.map((table) => (
               <DiagramTableCard
                 key={table.id}
+                t={t}
                 table={table}
                 tables={document.tables}
                 selected={table.id === selectedTableId}
@@ -367,6 +376,7 @@ export function SchemaDiagramDialog({
 }
 
 function DiagramTableCard({
+  t,
   table,
   tables,
   selected,
@@ -374,6 +384,7 @@ function DiagramTableCard({
   onHeaderPointerMove,
   onHeaderPointerUp,
 }: {
+  t: Translator["t"];
   table: DiagramTable;
   tables: DiagramTable[];
   selected: boolean;
@@ -406,7 +417,7 @@ function DiagramTableCard({
         onPointerUp={onHeaderPointerUp}
       >
         <input
-          aria-label="Table name"
+          aria-label={t("schemaDiagram.tableName")}
           className="diagram-designer-table-name"
           value={table.name}
           onChange={(event) =>
@@ -416,8 +427,8 @@ function DiagramTableCard({
         <button
           className="mini-button"
           type="button"
-          aria-label={`Remove ${table.name}`}
-          title="Remove table"
+          aria-label={t("schemaDiagram.removeNamedTable", { name: table.name })}
+          title={t("schemaDiagram.removeTable")}
           onClick={() => removeTable(table.id)}
         >
           <Trash2 size={12} />
@@ -430,9 +441,9 @@ function DiagramTableCard({
             <button
               className={`diagram-designer-key${column.primaryKey ? " is-on" : ""}`}
               type="button"
-              aria-label="Toggle primary key"
+              aria-label={t("schemaDiagram.togglePrimaryKey")}
               aria-pressed={column.primaryKey}
-              title="Primary key"
+              title={t("schemaDiagram.primaryKey")}
               onClick={() =>
                 updateColumn(table.id, column.id, {
                   primaryKey: !column.primaryKey,
@@ -442,10 +453,10 @@ function DiagramTableCard({
               <KeyRound size={11} />
             </button>
             <input
-              aria-label="Column name"
+              aria-label={t("schemaDiagram.columnName")}
               className="diagram-designer-column-name"
               value={column.name}
-              placeholder="column"
+              placeholder={t("schemaDiagram.columnPlaceholder")}
               onChange={(event) =>
                 updateColumn(table.id, column.id, {
                   name: event.currentTarget.value,
@@ -453,10 +464,10 @@ function DiagramTableCard({
               }
             />
             <input
-              aria-label="Column type"
+              aria-label={t("schemaDiagram.columnType")}
               className="diagram-designer-column-type"
               value={column.dataType}
-              placeholder="TYPE"
+              placeholder={t("schemaDiagram.columnTypePlaceholder")}
               onChange={(event) =>
                 updateColumn(table.id, column.id, {
                   dataType: event.currentTarget.value,
@@ -467,7 +478,7 @@ function DiagramTableCard({
               <input
                 type="checkbox"
                 checked={!column.nullable}
-                aria-label="Not null"
+                aria-label={t("schemaDiagram.notNull")}
                 onChange={(event) =>
                   updateColumn(table.id, column.id, {
                     nullable: !event.currentTarget.checked,
@@ -479,8 +490,10 @@ function DiagramTableCard({
             <button
               className="mini-button"
               type="button"
-              aria-label={`Remove column ${column.name}`}
-              title="Remove column"
+              aria-label={t("schemaDiagram.removeNamedColumn", {
+                name: column.name,
+              })}
+              title={t("schemaDiagram.removeColumn")}
               onClick={() => removeColumn(table.id, column.id)}
             >
               <X size={11} />
@@ -494,6 +507,7 @@ function DiagramTableCard({
           {table.foreignKeys.map((foreignKey) => (
             <DiagramForeignKeyRow
               key={foreignKey.id}
+              t={t}
               table={table}
               tables={tables}
               foreignKey={foreignKey}
@@ -509,7 +523,7 @@ function DiagramTableCard({
           type="button"
           onClick={() => addColumn(table.id)}
         >
-          + Column
+          {t("schemaDiagram.addColumn")}
         </button>
         <button
           className="text-button"
@@ -517,8 +531,8 @@ function DiagramTableCard({
           disabled={tables.length < 2}
           title={
             tables.length < 2
-              ? "Add another table to create a relationship"
-              : "Add a foreign key relationship"
+              ? t("schemaDiagram.needSecondTable")
+              : t("schemaDiagram.addForeignKey")
           }
           onClick={() => addForeignKey(table.id)}
         >
@@ -531,11 +545,13 @@ function DiagramTableCard({
 }
 
 function DiagramForeignKeyRow({
+  t,
   table,
   tables,
   foreignKey,
   onRemove,
 }: {
+  t: Translator["t"];
   table: DiagramTable;
   tables: DiagramTable[];
   foreignKey: DiagramForeignKey;
@@ -552,7 +568,7 @@ function DiagramForeignKeyRow({
     <div className="diagram-designer-relation">
       <Link2 size={11} />
       <select
-        aria-label="Local column"
+        aria-label={t("schemaDiagram.localColumn")}
         value={foreignKey.columns[0] ?? ""}
         onChange={(event) =>
           updateForeignKey(table.id, foreignKey.id, {
@@ -560,16 +576,16 @@ function DiagramForeignKeyRow({
           })
         }
       >
-        <option value="">column</option>
+        <option value="">{t("schemaDiagram.columnPlaceholder")}</option>
         {table.columns.map((column) => (
           <option key={column.id} value={column.name}>
-            {column.name || "(unnamed)"}
+            {column.name || t("common.unnamed")}
           </option>
         ))}
       </select>
       <span className="diagram-designer-relation-arrow">→</span>
       <select
-        aria-label="Referenced table"
+        aria-label={t("schemaDiagram.referencedTable")}
         value={foreignKey.referencesTableId}
         onChange={(event) =>
           updateForeignKey(table.id, foreignKey.id, {
@@ -582,12 +598,12 @@ function DiagramForeignKeyRow({
           .filter((item) => item.id !== table.id)
           .map((item) => (
             <option key={item.id} value={item.id}>
-              {item.name || "(unnamed)"}
+              {item.name || t("common.unnamed")}
             </option>
           ))}
       </select>
       <select
-        aria-label="Referenced column"
+        aria-label={t("schemaDiagram.referencedColumn")}
         value={foreignKey.referencesColumns[0] ?? ""}
         onChange={(event) =>
           updateForeignKey(table.id, foreignKey.id, {
@@ -595,18 +611,18 @@ function DiagramForeignKeyRow({
           })
         }
       >
-        <option value="">column</option>
+        <option value="">{t("schemaDiagram.columnPlaceholder")}</option>
         {(target?.columns ?? []).map((column) => (
           <option key={column.id} value={column.name}>
-            {column.name || "(unnamed)"}
+            {column.name || t("common.unnamed")}
           </option>
         ))}
       </select>
       <button
         className="mini-button"
         type="button"
-        aria-label="Remove relationship"
-        title="Remove relationship"
+        aria-label={t("schemaDiagram.removeRelationship")}
+        title={t("schemaDiagram.removeRelationship")}
         onClick={onRemove}
       >
         <X size={11} />
