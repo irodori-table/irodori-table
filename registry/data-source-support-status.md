@@ -99,7 +99,7 @@ them. The app asks the user to install the matching connector from
 | DynamoDB | `dynamodb` | Key-value | `KeyValue` | Installable key-value connector extension. |
 | ArangoDB | `arangodb` | Graph / multi-model | `Graph` | Installable graph/multi-model connector extension. |
 | Apache IoTDB | `iotdb` | Time-series | `TimeSeries` | Installable time-series connector extension. |
-| Apache Hive | `hive` | Lakehouse / catalog | `Jdbc` | Installable Hive/Hive Metastore connector extension. |
+| Apache Hive | `hive` | Lakehouse / catalog | `Jdbc` | Installable Hive/Hive Metastore connector extension. **Known limitation (#117): reduces every table to a bare `read_parquet` glob under the table root, ignoring the metastore — partitions stored elsewhere, and ORC/Avro/text tables, read as empty or fail to resolve. The app warns on connect.** |
 | Amazon Athena | `athena` | Lakehouse / query-engine | `Lakehouse` | Installable Athena/Glue/workgroup connector extension. |
 | Apache Iceberg | `iceberg` | Lakehouse | `Lakehouse` | Installable catalog-backed Iceberg connector extension. |
 | AWS S3 Tables | `s3Tables` | Lakehouse | `Lakehouse` | Installable managed Iceberg connector extension. |

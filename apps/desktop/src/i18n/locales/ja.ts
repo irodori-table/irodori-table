@@ -1482,4 +1482,8 @@ export const ja = {
   "search.replaceAllInTab": "このタブ内をすべて置換",
   "search.replaceThisMatch": "この箇所を置換",
   "search.matchPosition": "{line} 行 {column} 列",
+  "notice.connection.correctness.hive.title":
+    "Hive の結果は正しくない可能性があります",
+  "notice.connection.correctness.hive.detail":
+    "Hive コネクタはテーブル直下の Parquet ファイルを読むだけでメタストアを参照しません。そのため、テーブル外にあるパーティションや、ORC・Avro・テキスト形式のテーブルは空になるか解決できません。行数は他のクライアントで確認してから利用してください。",
 } satisfies TranslationDictionary;

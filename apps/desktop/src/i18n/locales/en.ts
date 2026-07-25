@@ -1445,6 +1445,9 @@ export const en = {
   "search.replaceAllInTab": "Replace all in this tab",
   "search.replaceThisMatch": "Replace this match",
   "search.matchPosition": "Line {line}, Col {column}",
+  "notice.connection.correctness.hive.title": "Hive results may be incorrect",
+  "notice.connection.correctness.hive.detail":
+    "The Hive connector reads Parquet files under the table root and ignores the metastore, so partitions stored elsewhere, and tables in ORC, Avro or text format, read as empty or fail to resolve. Verify row counts against another client before relying on them.",
 } as const;
 
 export type TranslationKey = keyof typeof en;

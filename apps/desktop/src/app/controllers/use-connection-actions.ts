@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import type { ShowActionNotice } from "@/app/ActionToast";
 import {
   describeConnection,
+  engineCorrectnessWarning,
   engineLabel,
   exportConnectionProfiles,
   importConnectionProfiles,
@@ -398,6 +399,18 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
           ms: elapsedMs,
         }),
       );
+      // A connector that can return wrong rows has to say so on every connect,
+      // not once in the docs (#117). This rides after the success notice
+      // because the connection genuinely opened; it is the results that cannot
+      // be trusted. Warnings do not auto-dismiss.
+      const correctness = engineCorrectnessWarning(profile.engine);
+      if (correctness) {
+        showActionNotice(
+          "warning",
+          t(correctness.titleKey),
+          t(correctness.detailKey),
+        );
+      }
     } catch (error) {
       const display = errorDisplay(error);
       setConnectionError(error);
