@@ -1,8 +1,12 @@
 import { useMemo } from "react";
 import type { GraphResultModel } from "../graph-result";
 import { layoutGraphResultModel } from "../graph-result";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 
 export function GraphResultView({ model }: { model: GraphResultModel }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const layout = useMemo(() => layoutGraphResultModel(model), [model]);
   if (model.nodes.length === 0) {
     return (
@@ -24,7 +28,7 @@ export function GraphResultView({ model }: { model: GraphResultModel }) {
         <svg
           className="graph-result-svg"
           role="img"
-          aria-label="Query result graph"
+          aria-label={t("results.graphLabel")}
           viewBox={`0 0 ${layout.width} ${layout.height}`}
           width={layout.width}
           height={layout.height}

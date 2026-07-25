@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Maximize2 } from "lucide-react";
 import { ColorPickerButton } from "@/components/ColorPicker";
 import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import {
   buildChartResultSeries,
   chartSelectionIsValid,
@@ -52,6 +53,8 @@ function defaultSeriesColor(kind: ChartKind): string {
 }
 
 export function ChartResultView({ model }: { model: ChartResultModel }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const [selection, setSelection] = useState<ChartResultSelection | null>(
     model.defaultSelection,
   );
@@ -119,7 +122,7 @@ export function ChartResultView({ model }: { model: ChartResultModel }) {
           <div
             className="chart-window"
             role="dialog"
-            aria-label="Chart window"
+            aria-label={t("chart.windowLabel")}
             onClick={(event) => event.stopPropagation()}
           >
             <ChartToolbar
@@ -166,6 +169,7 @@ function ChartToolbar({
   onCloseWindow?: () => void;
 }) {
   const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
     <div
       className={
@@ -177,7 +181,7 @@ function ChartToolbar({
       <strong>{windowed ? "Chart Window" : "Chart"}</strong>
       <div
         className="segmented-control chart-kind-toggle"
-        aria-label="Chart type"
+        aria-label={t("chart.type")}
       >
         {(["bar", "line", "scatter"] as const).map((kind) => (
           <button
@@ -197,15 +201,15 @@ function ChartToolbar({
           value={selection.color ?? null}
           fallbackColor={defaultSeriesColor(selection.kind)}
           ariaLabel="Series color"
-          title="Series color"
+          title={t("chart.seriesColor")}
           onChange={(color) => onUpdateSelection({ color })}
         />
         {selection.color ? (
           <button
             type="button"
             className="chart-color-reset"
-            title="Reset to theme color"
-            aria-label="Reset series color"
+            title={t("chart.resetToThemeColor")}
+            aria-label={t("chart.resetSeriesColor")}
             onClick={() => onUpdateSelection({ color: null })}
           >
             Reset
@@ -329,7 +333,7 @@ function ChartToolbar({
           className="text-button"
           type="button"
           onClick={onOpenWindow}
-          title="Open chart window"
+          title={t("chart.openWindow")}
         >
           <Maximize2 size={13} />
           <span>Open</span>

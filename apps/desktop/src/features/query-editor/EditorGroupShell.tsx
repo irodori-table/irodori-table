@@ -12,6 +12,16 @@ import SqlEditor, {
   type SqlMetadataToolWindowRequest,
 } from "./SqlEditor";
 import { LogFilterBar } from "./LogFilterBar";
+import { LogMarksBar } from "./LogMarksBar";
+import {
+  emptyLogMarks,
+  loadLogMarks,
+  pruneLogMarks,
+  saveLogMarks,
+  toggleLogMark,
+  type LogMarkColor,
+  type LogMarks,
+} from "./editor-log-marks";
 import {
   computeLogFilterRanges,
   emptyLogFilter,
@@ -91,6 +101,46 @@ export function EditorGroupShell({
       setLogFilter(emptyLogFilter);
     }
   }
+  // Marks are per file and survive the session (#177 tier 3), so unlike the
+  // filter they are loaded on tab switch rather than reset. The tab's
+  // file-style label is the identity, matching what routes the language.
+  const [logMarks, setLogMarks] = useState<LogMarks>(() =>
+    language === "log" ? loadLogMarks(tabLabel) : emptyLogMarks,
+  );
+  const [markColor, setMarkColor] = useState<LogMarkColor>("amber");
+  const lastMarksTab = useRef(tabLabel);
+  if (lastMarksTab.current !== tabLabel) {
+    lastMarksTab.current = tabLabel;
+    setLogMarks(language === "log" ? loadLogMarks(tabLabel) : emptyLogMarks);
+  }
+
+  const persistMarks = (next: LogMarks) => {
+    setLogMarks(next);
+    saveLogMarks(tabLabel, next);
+  };
+
+  // A log re-read after truncation can be shorter than when it was marked; drop
+  // marks past the end so the list cannot point at lines that no longer exist.
+  const lineCount = useMemo(
+    () => (language === "log" ? splitLogFilterLines(query).length : 0),
+    [language, query],
+  );
+  const visibleMarks = useMemo(
+    () =>
+      language === "log" ? pruneLogMarks(logMarks, lineCount) : emptyLogMarks,
+    [language, logMarks, lineCount],
+  );
+
+  const markCurrentLine = () => {
+    // Ask the view rather than recomputing from the string: it already knows
+    // the line, including how the document's line breaks were counted.
+    const line = apiRef.current?.getCursorLine();
+    if (!line) {
+      return;
+    }
+    persistMarks(toggleLogMark(logMarks, line, markColor));
+  };
+
   const logFilterStats = useMemo(() => {
     if (language !== "log" || !isLogFilterActive(logFilter)) {
       return null;
@@ -115,11 +165,21 @@ export function EditorGroupShell({
       ) : null}
       {renderEditorTabStrip(group)}
       {language === "log" ? (
-        <LogFilterBar
-          filter={logFilter}
-          hiddenLineCount={logFilterStats?.hiddenLineCount ?? 0}
-          onFilterChange={setLogFilter}
-        />
+        <>
+          <LogFilterBar
+            filter={logFilter}
+            hiddenLineCount={logFilterStats?.hiddenLineCount ?? 0}
+            onFilterChange={setLogFilter}
+          />
+          <LogMarksBar
+            marks={visibleMarks}
+            activeColor={markColor}
+            onActiveColorChange={setMarkColor}
+            onMarkCurrentLine={markCurrentLine}
+            onJumpToLine={(line) => apiRef.current?.revealLine(line)}
+            onClearMarks={() => persistMarks(emptyLogMarks)}
+          />
+        </>
       ) : null}
       <div className="editor-buffer">
         <SqlEditor
@@ -127,6 +187,7 @@ export function EditorGroupShell({
           value={query}
           tabLabel={tabLabel}
           logFilter={language === "log" ? logFilter : undefined}
+          logMarks={language === "log" ? visibleMarks : undefined}
           onChange={onQueryChange}
           onSelectionChange={(selection) => {
             setActiveEditorGroup(group);

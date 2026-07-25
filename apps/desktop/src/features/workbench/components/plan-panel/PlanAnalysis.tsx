@@ -5,6 +5,8 @@ import type {
   QueryPlanNode,
 } from "@/generated/irodori-api";
 import { PlanAiExplanation } from "./PlanAiExplanation";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import { CopyView } from "./PlanCopyView";
 import { FlameView } from "./PlanFlameView";
 import { GraphView } from "./PlanGraphView";
@@ -96,12 +98,10 @@ function PlanViewTabs({
   activeView: PlanView;
   onChange: (view: PlanView) => void;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
-    <div
-      className="plan-view-tabs"
-      role="tablist"
-      aria-label="Plan analysis views"
-    >
+    <div className="plan-view-tabs" role="tablist" aria-label={t("plan.views")}>
       {planViews.map((view) => (
         <button
           type="button"
@@ -111,7 +111,7 @@ function PlanViewTabs({
           className={activeView === view.id ? "active" : ""}
           onClick={() => onChange(view.id)}
         >
-          {view.label}
+          {t(view.labelKey)}
         </button>
       ))}
     </div>

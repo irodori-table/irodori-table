@@ -1,6 +1,7 @@
 import { BarChart3, X } from "lucide-react";
 import { usePreferencesStore } from "@/features/preferences";
 import type { QueryResultSet } from "@/generated/irodori-api";
+import { createTranslator } from "@/i18n";
 import { buildBiResultSummary } from "../bi-result";
 import type { ChartResultModel } from "../chart-result";
 import { ChartResultView } from "./ChartResultView";
@@ -21,6 +22,7 @@ export function BiPanel({
   onClose,
 }: BiPanelProps) {
   const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const summary = buildBiResultSummary(result, chartModel, locale);
   const visibleProfiles = summary?.profiles.slice(0, 12) ?? [];
   const hiddenProfileCount = summary
@@ -28,16 +30,16 @@ export function BiPanel({
     : 0;
 
   return (
-    <section className="bi-panel" aria-label="BI">
+    <section className="bi-panel" aria-label={t("bi.title")}>
       <div className="bi-panel-header">
         <div>
-          <strong>BI</strong>
-          <span>{summary?.statusLabel ?? "No active result"}</span>
+          <strong>{t("bi.title")}</strong>
+          <span>{summary?.statusLabel ?? t("bi.noActiveResult")}</span>
         </div>
         <button
           type="button"
-          title="Close BI"
-          aria-label="Close BI"
+          title={t("bi.close")}
+          aria-label={t("bi.close")}
           onClick={onClose}
         >
           <X size={14} />
@@ -45,29 +47,29 @@ export function BiPanel({
       </div>
       <div className="bi-panel-body">
         {summary ? (
-          <div className="bi-summary" aria-label="BI result summary">
+          <div className="bi-summary" aria-label={t("bi.resultSummary")}>
             <div>
               <strong>{summary.rowCountLabel}</strong>
               <span>{summary.columnCountLabel}</span>
             </div>
             <div>
               <strong>{summary.elapsedLabel}</strong>
-              <span>{summary.sampleLabel ?? "not sampled"}</span>
+              <span>{summary.sampleLabel ?? t("bi.summary.notSampled")}</span>
             </div>
           </div>
         ) : null}
         {chartModel ? (
           <>
             <ChartResultView model={chartModel} />
-            <div className="bi-field-list" aria-label="BI fields">
-              <strong>Fields</strong>
+            <div className="bi-field-list" aria-label={t("bi.fields")}>
+              <strong>{t("bi.fieldsHeading")}</strong>
               {visibleProfiles.map((profile) => (
                 <div
                   className="bi-field-row"
                   key={`${profile.index}-${profile.name}`}
                 >
                   <span>{profile.name}</span>
-                  <small>{profile.role}</small>
+                  <small>{profile.roleLabel}</small>
                   <em>
                     {profile.kindLabel}
                     {" · "}
@@ -78,7 +80,9 @@ export function BiPanel({
               ))}
               {hiddenProfileCount > 0 ? (
                 <div className="bi-field-more">
-                  +{hiddenProfileCount.toLocaleString(locale)} more fields
+                  {t("bi.moreFields", {
+                    count: hiddenProfileCount.toLocaleString(locale),
+                  })}
                 </div>
               ) : null}
             </div>
@@ -87,12 +91,10 @@ export function BiPanel({
           <div className="bi-panel-empty">
             <BarChart3 size={18} />
             <strong>
-              {result ? "No chartable result" : "No active result"}
+              {result ? t("bi.noChartableResult") : t("bi.noActiveResult")}
             </strong>
             <span>
-              {result
-                ? "Use a result with numeric, date, or low-cardinality fields."
-                : "Run a tabular query to build a local BI view."}
+              {result ? t("bi.noChartableHint") : t("bi.runQueryHint")}
             </span>
             {chartAvailable ? (
               <button
@@ -100,7 +102,7 @@ export function BiPanel({
                 type="button"
                 onClick={onOpenChartMode}
               >
-                Open Chart
+                {t("bi.openChart")}
               </button>
             ) : null}
           </div>

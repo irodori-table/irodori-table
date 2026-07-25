@@ -7,12 +7,16 @@ import {
   type QueryPlanAnalysis,
 } from "@/generated/irodori-api";
 import { errorMessage } from "@/core";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 
 export const PlanAiExplanation = memo(function PlanAiExplanation({
   plan,
 }: {
   plan: QueryPlanAnalysis;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const [providerReady, setProviderReady] = useState<boolean | null>(null);
   const [narration, setNarration] = useState<string | null>(null);
   const [narrating, setNarrating] = useState(false);
@@ -62,13 +66,11 @@ export const PlanAiExplanation = memo(function PlanAiExplanation({
     <section className="plan-section compact plan-ai-explanation">
       <div className="plan-section-title">
         <Sparkles size={14} />
-        <span>AI explanation</span>
+        <span>{t("plan.ai.heading")}</span>
       </div>
 
       {providerReady === false ? (
-        <div className="plan-empty-card">
-          Configure an AI provider in Settings to enable AI explanations.
-        </div>
+        <div className="plan-empty-card">{t("plan.ai.configureProvider")}</div>
       ) : (
         <>
           <button
@@ -76,10 +78,12 @@ export const PlanAiExplanation = memo(function PlanAiExplanation({
             className="plan-ai-explain-button"
             onClick={explain}
             disabled={providerReady !== true || narrating}
-            aria-label="Explain this query plan with AI"
+            aria-label={t("plan.ai.buttonLabel")}
           >
             <Sparkles size={13} />
-            <span>{narrating ? "Explaining…" : "Explain with AI"}</span>
+            <span>
+              {narrating ? t("plan.ai.explaining") : t("plan.ai.explainWithAi")}
+            </span>
           </button>
 
           {narrationError ? (

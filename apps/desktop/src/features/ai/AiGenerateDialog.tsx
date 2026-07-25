@@ -302,7 +302,7 @@ export function AiGenerateDialog({
                 <input
                   type="password"
                   value={apiKey}
-                  placeholder="sk-… (kept in memory only)"
+                  placeholder={t("ai.apiKeyPlaceholder")}
                   onChange={(e) => setApiKey(e.target.value)}
                 />
               </label>
@@ -349,7 +349,9 @@ export function AiGenerateDialog({
                 <span>{t("ai.provider.args")}</span>
                 <input
                   value={provider.args.join(" ")}
-                  placeholder="-p   (use {prompt} as a placeholder, else prompt is piped to stdin)"
+                  placeholder={t("ai.cliArgsPlaceholder", {
+                    token: "{prompt}",
+                  })}
                   onChange={(e) =>
                     setProvider((p) => ({
                       ...p,

@@ -11,7 +11,7 @@ EXTENSION_SDK_DIR ?= $(firstword $(wildcard ../irodori-kit/packages/extension-sd
         dev test build typegen e2e doctor \
         desktop-dev desktop-vite desktop-typegen desktop-typegen-check desktop-format desktop-format-check desktop-lint desktop-test desktop-test-browser desktop-test-rust-ts desktop-test-watch desktop-build desktop-build-verified desktop-e2e \
         rust-clippy cargo-deny workflow-lint \
-        check security security-strict extension-manifests kit-link kit-unlink kit-patch-check foundation-release foundation-release-check db db-verify db-all db-up db-down \
+        check security security-strict extension-manifests extension-scaffold-check kit-link kit-unlink kit-patch-check foundation-release foundation-release-check db db-verify db-all db-up db-down \
         extension-scenarios extension-fleet-audit \
         release release-patch release-minor release-major run-dev run-linux run-linux-release \
         knowledge-refresh knowledge-analyze ml-extract perf-hot-surfaces docs docs-check
@@ -169,6 +169,9 @@ security:
 
 security-strict:
 	REQUIRE_CARGO_AUDIT=1 scripts/security-check.sh
+
+extension-scaffold-check:
+	node tools/extensions/scaffold-preserve-check.mjs
 
 extension-manifests:
 	@if [ -n "$(EXTENSION_SDK_DIR)" ]; then \

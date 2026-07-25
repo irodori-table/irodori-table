@@ -4,6 +4,8 @@ import type { WorkspaceConnection } from "@/lib/workspace-connection";
 import type { DbEngine } from "@/generated/irodori-api";
 import { isVectorEngine, vectorHelperTemplates } from "../vector-helpers";
 import type { CompletionHint } from "../types";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import type { WorkbenchSide } from "../types";
 
 type InspectorProps = {
@@ -38,6 +40,8 @@ export function InspectorContent({
   showCompletion = true,
   showHistory = true,
 }: InspectorProps) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const vectorTemplates = vectorHelperTemplates(editorEngine);
   return (
     <>
@@ -50,8 +54,8 @@ export function InspectorContent({
               {onCloseCompletion ? (
                 <button
                   type="button"
-                  aria-label="Close completion"
-                  title="Close completion"
+                  aria-label={t("inspector.closeCompletion")}
+                  title={t("inspector.closeCompletion")}
                   onClick={onCloseCompletion}
                 >
                   <X size={12} />
@@ -82,8 +86,8 @@ export function InspectorContent({
               {onCloseCompletion ? (
                 <button
                   type="button"
-                  aria-label="Close completion"
-                  title="Close completion"
+                  aria-label={t("inspector.closeCompletion")}
+                  title={t("inspector.closeCompletion")}
                   onClick={onCloseCompletion}
                 >
                   <X size={12} />
@@ -96,7 +100,7 @@ export function InspectorContent({
               <div
                 className="metadata-skeleton compact"
                 role="status"
-                aria-label="Loading metadata"
+                aria-label={t("inspector.loadingMetadata")}
               >
                 {Array.from({ length: 5 }, (_, index) => (
                   <span key={index} />

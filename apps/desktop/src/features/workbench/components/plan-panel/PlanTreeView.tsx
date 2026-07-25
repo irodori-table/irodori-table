@@ -3,6 +3,8 @@ import type { CSSProperties } from "react";
 import type { QueryPlanNode } from "@/generated/irodori-api";
 import { nodeMetricLine } from "./plan-format";
 import type { PlanNodeSelector } from "./plan-types";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 
 export function TreeView({
   nodes,
@@ -13,11 +15,13 @@ export function TreeView({
   selectedNodeId: string | null;
   onSelectNode: PlanNodeSelector;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
     <section className="plan-section flush">
       <div className="plan-section-title">
         <TreePine size={14} />
-        <span>Tree</span>
+        <span>{t("plan.view.tree")}</span>
       </div>
       <div className="plan-tree">
         {nodes.map((node) => (

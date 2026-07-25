@@ -63,6 +63,14 @@ import {
   type LogFilterSpec,
 } from "./editor-log-filter";
 import {
+  currentLogMarks,
+  emptyLogMarks,
+  logLineMarks,
+  logMarksEqual,
+  setLogMarksEffect,
+  type LogMarks,
+} from "./editor-log-marks";
+import {
   editorLanguageForTabLabel,
   type EditorLanguage,
 } from "@/lib/editor-language";
@@ -105,6 +113,10 @@ export interface SqlEditorHandle {
   quickDefinition: () => boolean;
   /** Select and scroll a document range into view. */
   revealRange: (selection: SqlEditorSelection) => void;
+  /** Scroll to and focus a 1-based line; used by the log marks list (#177). */
+  revealLine: (line: number) => void;
+  /** 1-based line holding the cursor, or null when the view is not ready. */
+  getCursorLine: () => number | null;
   /**
    * Pretty-print the whole buffer with the engine's dialect, in place.
    * Reports no-op cases separately so the host does not show a fake success.
@@ -139,6 +151,8 @@ interface SqlEditorProps {
   engine: DbEngine;
   /** View-level log filter for `.log` buffers (issue #177); never edits the doc. */
   logFilter?: LogFilterSpec;
+  /** Marked lines for `.log` buffers (#177 tier 3). */
+  logMarks?: LogMarks;
   /** Introspection metadata for the active connection (drives table/column completion). */
   metadata?: DatabaseMetadata;
   snippets: readonly SqlSnippetDefinition[];
@@ -456,7 +470,7 @@ function contentHighlightExtensions(
     case "tsv":
       return delimitedHighlighting("\t", theme.ui);
     case "log":
-      return [logHighlighting(theme.ui), logLineFilter];
+      return [logHighlighting(theme.ui), logLineFilter, logLineMarks];
     case "text":
       return [];
     case "sql":
@@ -736,6 +750,7 @@ const SqlEditor = forwardRef<SqlEditorHandle, SqlEditorProps>(
       tabLabel,
       engine,
       logFilter,
+      logMarks,
       metadata,
       snippets,
       theme,
@@ -880,6 +895,19 @@ const SqlEditor = forwardRef<SqlEditorHandle, SqlEditorProps>(
       }
     }, [language, logFilter]);
 
+    // Same shape as the filter sync above: the marks field only exists in the
+    // log branch of the highlight compartment, so a language flip drops it and
+    // this re-applies the shell's state.
+    useEffect(() => {
+      const view = viewRef.current;
+      if (!view) return;
+      const next =
+        language === "log" ? (logMarks ?? emptyLogMarks) : emptyLogMarks;
+      if (!logMarksEqual(currentLogMarks(view.state), next)) {
+        view.dispatch({ effects: setLogMarksEffect.of(next) });
+      }
+    }, [language, logMarks]);
+
     useImperativeHandle(
       ref,
       () => ({
@@ -900,6 +928,21 @@ const SqlEditor = forwardRef<SqlEditorHandle, SqlEditorProps>(
             onMetadataJump,
             onMetadataToolWindow,
           );
+        },
+        getCursorLine() {
+          const view = viewRef.current;
+          if (!view) return null;
+          return view.state.doc.lineAt(view.state.selection.main.head).number;
+        },
+        revealLine(line) {
+          const view = viewRef.current;
+          if (!view || line < 1 || line > view.state.doc.lines) return;
+          const target = view.state.doc.line(line);
+          view.dispatch({
+            selection: { anchor: target.from, head: target.from },
+            scrollIntoView: true,
+          });
+          view.focus();
         },
         revealRange(selection) {
           const view = viewRef.current;

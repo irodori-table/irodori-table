@@ -6,6 +6,8 @@ import {
   type SqlMetadataTarget,
 } from "../../sql/metadata-inspection";
 import { renderSqlMetadataTooltip } from "./sql-metadata-tooltip";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import type { EditorSelection } from "./query-editor-pane-types";
 
 type MetadataUsage = {
@@ -29,6 +31,8 @@ export function MetadataToolWindow({
   onEdit: () => void;
   onRevealUsage: (selection: EditorSelection) => void;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const title = sqlMetadataTargetTitle(request.target);
   const usages =
@@ -48,7 +52,10 @@ export function MetadataToolWindow({
   }, [request]);
 
   return (
-    <section className="metadata-tool-window" aria-label="Find tool window">
+    <section
+      className="metadata-tool-window"
+      aria-label={t("metadataTool.windowLabel")}
+    >
       <div className="metadata-tool-window-header">
         <div className="metadata-tool-window-title">
           {request.mode === "usages" ? (
@@ -63,8 +70,8 @@ export function MetadataToolWindow({
           <button
             className="icon-button"
             type="button"
-            title="Edit Source"
-            aria-label="Edit Source"
+            title={t("metadataTool.editSource")}
+            aria-label={t("metadataTool.editSource")}
             onClick={onEdit}
           >
             <Pencil size={14} />
@@ -72,8 +79,8 @@ export function MetadataToolWindow({
           <button
             className="icon-button"
             type="button"
-            title="Close"
-            aria-label="Close"
+            title={t("common.close")}
+            aria-label={t("common.close")}
             onClick={onClose}
           >
             <X size={14} />

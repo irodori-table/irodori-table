@@ -100,6 +100,9 @@ jobs:
       - name: Check data-source support inventory
         run: node tools/docs/support-status.mjs --check
 
+      - name: Check connector scaffold preserves implemented drivers
+        run: node tools/extensions/scaffold-preserve-check.mjs
+
       - name: Validate extension manifests
         env:
           EXTENSION_SDK_DIR: irodori-kit/packages/extension-sdk

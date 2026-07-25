@@ -16,6 +16,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.8.2] - 2026-07-25
+
+### Added
+
+- Log buffers support marking lines in four colours. Marks are listed above the
+  buffer, jump to the line when clicked, and persist per file so reopening a log
+  later keeps the trail. Marks past the end of a shortened file are dropped, so
+  a truncated or rotated log cannot list lines that no longer exist (#177).
+
+### Fixed
+
+- The BI, Explain Plan and Lakehouse panels now render in the selected
+  language. All three were English-only regardless of the language setting,
+  including the plan analysis views, the plan node detail table, the lakehouse
+  action list, and the BI field summaries (#170).
+- Remaining tooltips and screen-reader labels across the colour picker, chart
+  view, result graph, ERD, editor split, metadata tool window, completion
+  inspector and AI provider forms now follow the language setting (#170).
+- `tools/extensions/scaffold-connector-repos.mjs --force` no longer reverts
+  implemented connector drivers to the bootstrap template. It regenerates
+  manifests, docs, CI and packaging as before but preserves each repo's Rust
+  sources; `--force-drivers` is the explicit opt-in for overwriting them (#182).
+- The connector scaffold runs again at all. Since 0.8.0 added declarative
+  feature extensions, which ship no driver and therefore declare no engine, the
+  generator aborted with "irodori.knowledge has no engine" — even in
+  `--dry-run` (#182).
+
 ## [0.8.1] - 2026-07-25
 
 ### Fixed

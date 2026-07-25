@@ -1,6 +1,8 @@
 import { Flame } from "lucide-react";
 import type { PlanFlameRow } from "./plan-model";
 import type { PlanNodeSelector } from "./plan-types";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 
 export function FlameView({
   rows,
@@ -11,11 +13,13 @@ export function FlameView({
   selectedNodeId: string | null;
   onSelectNode: PlanNodeSelector;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
     <section className="plan-section flush">
       <div className="plan-section-title">
         <Flame size={14} />
-        <span>Flame</span>
+        <span>{t("plan.view.flame")}</span>
       </div>
       <div className="plan-flame-list">
         {rows.map((row) => (
