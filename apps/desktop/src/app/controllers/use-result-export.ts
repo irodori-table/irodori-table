@@ -8,10 +8,8 @@ import {
   type ResultExportFormat,
 } from "@/features/results";
 import type { Translator } from "@/i18n";
-import { errorMessage } from "@/core";
+import { type ValueUpdater, errorMessage } from "@/core";
 import type { QueryResult } from "@/generated/irodori-api";
-
-type ValueUpdater<T> = T | ((current: T) => T);
 
 export type ResultExportDeps = {
   activeResult: QueryResult | null | undefined;

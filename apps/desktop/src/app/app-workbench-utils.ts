@@ -91,10 +91,6 @@ export function selectedSqlFromSelections(
     .join("\n\n");
 }
 
-export function clampNumber(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
 export function keyScopeFromTarget(
   target: EventTarget | null,
   fallback: KeybindingScope,
@@ -144,10 +140,6 @@ export function parseClipboardTable(text: string): string[][] {
 }
 
 export const emptyJobList: JobList = { active: [], history: [] };
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 export function builtInTheme(
   kind: ThemeKind,

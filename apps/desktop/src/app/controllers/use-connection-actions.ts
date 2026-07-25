@@ -23,14 +23,18 @@ import {
 import { toCount } from "@/features/results";
 import { downloadBlob } from "@/features/erd";
 import { queryService } from "@/features/workbench";
-import { errorDisplay, errorMessage, isRetryableError } from "@/core";
+import {
+  type ValueUpdater,
+  errorDisplay,
+  errorMessage,
+  isRetryableError,
+} from "@/core";
 import type { Translator } from "@/i18n";
 import type { DatabaseMetadata } from "@/generated/irodori-api";
 import { tauriRuntimeError } from "../app-workbench-utils";
 
 // Mirrors the connection-store setter contract: accept either the next value or
 // an updater that derives it from the current value.
-type ValueUpdater<T> = T | ((current: T) => T);
 
 export type ConnectionActionsDeps = {
   draft: ConnectionDraft;

@@ -1,5 +1,6 @@
 import type { DbEngine } from "../generated/irodori-api";
 import defaultSnippetConfig from "./default-snippets.json";
+import { isRecord } from "@/core";
 
 export type SqlSnippetScope = "statement" | "expression" | "clause";
 
@@ -522,8 +523,4 @@ function snippetIdentityKey(snippetDefinition: SqlSnippetDefinition): string {
       ? [...snippetDefinition.engines].sort().join(",")
       : "*";
   return `${snippetDefinition.label}:${engines}`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

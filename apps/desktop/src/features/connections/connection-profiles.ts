@@ -5,6 +5,7 @@ import type {
 } from "../../generated/irodori-api";
 import { translate } from "@/i18n";
 import connectionDefaults from "./connection-defaults.json";
+import { isRecord } from "@/core";
 import {
   defaultPort,
   engineConnectionLayout,
@@ -478,10 +479,6 @@ function isDbEngine(value: unknown): value is DbEngine {
     typeof value === "string" &&
     engineOptions.some((option) => option.value === value)
   );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function jsonString(value: unknown, fallback: string) {

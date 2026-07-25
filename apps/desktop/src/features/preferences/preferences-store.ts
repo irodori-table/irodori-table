@@ -9,6 +9,7 @@ import { isSqlFormatterId, type SqlFormatterId } from "../../sql/formatter";
 import { detectBrowserLocale, normalizeLocale, type Locale } from "../../i18n";
 import { isSqlLinterId, type SqlLinterId } from "../../sql/linter";
 import { addCustomPaletteColor, normalizeCustomPalette } from "../../lib/color";
+import { resolveValue, type ValueUpdater } from "@/core";
 import {
   normalizePasskeyCredentialRecord,
   type PasskeyCredentialRecord,
@@ -24,7 +25,6 @@ export { CUSTOM_PALETTE_MAX } from "../../lib/color";
 
 export type { CustomThemeEntry } from "@/theme";
 export type ThemePreference = "system" | ThemeKind;
-type ValueUpdater<T> = T | ((current: T) => T);
 
 const themeStorageKey = "irodori.theme.v1";
 const activeDefaultThemeStorageKey = "irodori.theme.defaultId.v1";
@@ -102,12 +102,6 @@ type PreferencesState = {
     value: ValueUpdater<PasskeyCredentialRecord | null>,
   ) => void;
 };
-
-function resolveValue<T>(current: T, value: ValueUpdater<T>): T {
-  return typeof value === "function"
-    ? (value as (current: T) => T)(current)
-    : value;
-}
 
 function localStorageOrNull(): Storage | null {
   if (typeof window === "undefined") {

@@ -1,12 +1,11 @@
 import { create } from "zustand";
 import type { DbObjectMetadata } from "@/generated/irodori-api";
+import { resolveValue, type ValueUpdater } from "@/core";
 import {
   blankSchemaDraft,
   schemaDraftFromObject,
   type SchemaDesignerDraft,
 } from "./schema-designer";
-
-type ValueUpdater<T> = T | ((current: T) => T);
 
 type SchemaDesignerState = {
   open: boolean;
@@ -17,12 +16,6 @@ type SchemaDesignerState = {
   openForObject: (object: DbObjectMetadata) => void;
   close: () => void;
 };
-
-function resolveValue<T>(current: T, value: ValueUpdater<T>): T {
-  return typeof value === "function"
-    ? (value as (current: T) => T)(current)
-    : value;
-}
 
 export const useSchemaDesignerStore = create<SchemaDesignerState>((set) => ({
   open: false,

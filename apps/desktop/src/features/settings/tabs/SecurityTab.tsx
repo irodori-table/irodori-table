@@ -14,8 +14,8 @@ import {
   type PasskeyCredentialRecord,
 } from "@/features/security";
 import { usePreferencesStore } from "@/features/preferences";
-import type { BooleanUpdater, TranslateFn } from "./shared";
-import { errorMessage } from "@/core";
+import type { TranslateFn } from "./shared";
+import { errorMessage, type BooleanUpdater } from "@/core";
 
 export interface SecurityTabProps {
   t: TranslateFn;

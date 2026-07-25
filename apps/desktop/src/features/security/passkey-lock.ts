@@ -1,3 +1,4 @@
+import { isRecord } from "@/core";
 export type PasskeyAlgorithm = "ES256" | "RS256";
 
 export type PasskeyCredentialRecord = {
@@ -411,8 +412,4 @@ function leftPadCoordinate(value: Uint8Array, length: number): Uint8Array {
   const output = new Uint8Array(length);
   output.set(trimmed, length - trimmed.length);
   return output;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

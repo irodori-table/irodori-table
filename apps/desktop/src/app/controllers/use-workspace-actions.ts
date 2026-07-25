@@ -34,7 +34,7 @@ import {
 import { toCount } from "@/features/results";
 import type { SqlEditorHandle } from "@/features/query-editor";
 import type { Translator } from "@/i18n";
-import { errorMessage } from "@/core";
+import { type ValueUpdater, errorMessage } from "@/core";
 import type { SqlMetadataTarget } from "@/sql/metadata-inspection";
 import type {
   DbEngine,
@@ -42,8 +42,6 @@ import type {
   QueryParameterInput,
 } from "@/generated/irodori-api";
 import type { WorkspaceConnection } from "@/features/connections";
-
-type ValueUpdater<T> = T | ((current: T) => T);
 
 export type WorkspaceActionsDeps = {
   query: string;

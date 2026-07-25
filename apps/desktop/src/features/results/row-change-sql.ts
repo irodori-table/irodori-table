@@ -1,6 +1,7 @@
 import type { DbEngine } from "@/generated/irodori-api";
 import type { ResultEditTarget } from "./result-edit-target";
 import { quoteIdent } from "./row-detail";
+import { isRecord } from "@/core";
 
 export type BuildSelectedRowChangeSqlInput = {
   engine: DbEngine;
@@ -97,8 +98,4 @@ function jsonSafeSqlValue(value: unknown): unknown {
     );
   }
   return value;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

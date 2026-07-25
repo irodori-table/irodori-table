@@ -30,13 +30,12 @@ import {
 } from "@/features/erd";
 import type { SqlEditorHandle } from "@/features/query-editor";
 import type { Translator } from "@/i18n";
-import { errorMessage } from "@/core";
+import { clampNumber, errorMessage } from "@/core";
 import type {
   DatabaseMetadata,
   DbObjectMetadata,
 } from "@/generated/irodori-api";
 import type { IrodoriTheme } from "@/theme";
-import { clampNumber } from "../app-workbench-utils";
 
 export type ErdDiagramDeps = {
   activeConnectionId: string;

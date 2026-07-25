@@ -1,7 +1,10 @@
 import { create } from "zustand";
-import { parseStoredNumber } from "@/core";
-
-type ValueUpdater<T> = T | ((current: T) => T);
+import {
+  type ValueUpdater,
+  clampNumber,
+  parseStoredNumber,
+  resolveValue,
+} from "@/core";
 
 type ResultsState = {
   resultOffloadEnabled: boolean;
@@ -15,16 +18,6 @@ const resultMemoryBudgetStorageKey = "irodori.results.memoryBudget.v1";
 const resultMemoryBudgetDefault = 10_000;
 const resultMemoryBudgetMin = 1_000;
 const resultMemoryBudgetMax = 100_000;
-
-function resolveValue<T>(current: T, value: ValueUpdater<T>): T {
-  return typeof value === "function"
-    ? (value as (current: T) => T)(current)
-    : value;
-}
-
-function clampNumber(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
 
 function loadResultOffload() {
   return window.localStorage.getItem(resultOffloadStorageKey) === "true";

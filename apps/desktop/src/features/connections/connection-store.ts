@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { DatabaseMetadata } from "@/generated/irodori-api";
+import { resolveValue, type ValueUpdater } from "@/core";
 import {
   loadProfiles,
   newDraft,
@@ -8,8 +9,6 @@ import {
   type ConnectionDraft,
   type WorkspaceConnection,
 } from "./connection-profiles";
-
-type ValueUpdater<T> = T | ((current: T) => T);
 
 type ConnectionState = {
   activeConnectionId: string;
@@ -47,12 +46,6 @@ type ConnectionState = {
   setMetadataErrors: (value: ValueUpdater<Record<string, string>>) => void;
   setObjectActionMenu: (value: ValueUpdater<string | null>) => void;
 };
-
-function resolveValue<T>(current: T, value: ValueUpdater<T>): T {
-  return typeof value === "function"
-    ? (value as (current: T) => T)(current)
-    : value;
-}
 
 const initialProfiles = loadProfiles();
 const initialDraft = initialProfiles[0] ?? newDraft(1);

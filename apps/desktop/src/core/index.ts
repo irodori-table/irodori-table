@@ -29,3 +29,10 @@ export {
   isRetryableError,
 } from "./errors";
 export { parseStoredNumber } from "./storage";
+export { isRecord } from "./object";
+export { clampInt, clampNumber } from "./number";
+export {
+  resolveValue,
+  type BooleanUpdater,
+  type ValueUpdater,
+} from "./value-updater";

@@ -24,7 +24,7 @@ import type { SqlLinterId } from "../../sql/linter";
 import { DialogShell } from "@/components/DialogShell";
 import { createTranslator, type Locale } from "../../i18n";
 import type { ThemeKind } from "@/theme";
-import type { BooleanUpdater, ValueUpdater } from "./tabs/shared";
+import type { BooleanUpdater, ValueUpdater } from "@/core";
 import { GeneralTab } from "./tabs/GeneralTab";
 import { ThemeTab } from "./tabs/ThemeTab";
 import { KeymapTab } from "./tabs/KeymapTab";

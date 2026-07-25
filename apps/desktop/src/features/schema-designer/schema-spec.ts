@@ -1,3 +1,4 @@
+import { isRecord } from "@/core";
 import type {
   DatabaseMetadata,
   DbObjectMetadata,
@@ -661,10 +662,6 @@ function sanitizeFileNamePart(value: string) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
   return sanitized || "connection";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function stringValue(value: unknown) {

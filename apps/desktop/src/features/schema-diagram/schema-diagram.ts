@@ -10,6 +10,7 @@
 // designer never re-implements DDL generation.
 
 import type { DatabaseMetadata } from "@/generated/irodori-api";
+import { isRecord } from "@/core";
 import {
   buildCreateDatabaseSql,
   buildTableSpecDocument,
@@ -394,10 +395,6 @@ export function clampTablePosition(
     x: Math.max(0, Math.round(x)),
     y: Math.max(0, Math.round(y)),
   };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function stringValue(value: unknown): string {

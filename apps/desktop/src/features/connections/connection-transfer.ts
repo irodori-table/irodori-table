@@ -1,4 +1,5 @@
 import type { DbEngine } from "@/generated/irodori-api";
+import { isRecord } from "@/core";
 import {
   defaultConnectionColor,
   defaultPort,
@@ -1414,10 +1415,6 @@ function isCandidate(
   value: ConnectionCandidate | null,
 ): value is ConnectionCandidate {
   return value !== null;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function firstRecord(

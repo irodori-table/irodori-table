@@ -1,5 +1,6 @@
 import type { DbEngine } from "../generated/irodori-api";
 import completionKeywordsConfig from "./completion-keywords.json";
+import { isRecord } from "@/core";
 
 export const SQL_COMPLETION_KEYWORDS_SCHEMA_VERSION = 1;
 
@@ -51,8 +52,4 @@ function keywordList(value: unknown, fieldName: string): string[] {
     }
     return keyword.trim();
   });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }

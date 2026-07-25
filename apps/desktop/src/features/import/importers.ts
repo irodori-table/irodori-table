@@ -1,3 +1,4 @@
+import { isRecord } from "@/core";
 export type ImportTextFormat = "csv" | "tsv" | "json" | "jsonl";
 export type ImportFileKind = ImportTextFormat | "sql" | "excel";
 
@@ -471,8 +472,4 @@ function jsonSafeValue(value: unknown): unknown {
 
 function quoteIdentifier(name: string) {
   return `"${name.replace(/"/g, '""')}"`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

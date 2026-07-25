@@ -2,13 +2,6 @@ import type { Translator } from "../../../i18n";
 
 export type TranslateFn = Translator["t"];
 
-export type ValueUpdater<T> = T | ((current: T) => T);
-export type BooleanUpdater = ValueUpdater<boolean>;
-
-export function clampNumber(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
 /**
  * Open an external URL in the user's default browser through the Tauri opener
  * plugin (the window capability grants `opener:default`, which covers
