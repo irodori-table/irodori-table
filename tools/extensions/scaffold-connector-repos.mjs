@@ -2,7 +2,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -115,7 +115,21 @@ const sharedMigrationSources = [
 ];
 
 const excludedExtensionIds = new Set();
-const entries = index.extensions.filter((entry) => !excludedExtensionIds.has(entry.id));
+/**
+ * Only native connector extensions are scaffolded from this template.
+ *
+ * The declarative feature extensions added in v0.8.0 (irodori.knowledge,
+ * irodori.datalake) activate host features rather than shipping a driver, so
+ * they carry no `engines` and there is no Rust repo to generate. Before this
+ * filter the generator threw "irodori.knowledge has no engine" and could not
+ * run at all — not even `--dry-run`.
+ */
+const entries = index.extensions.filter(
+  (entry) =>
+    !excludedExtensionIds.has(entry.id) &&
+    entry.runtime !== "declarative" &&
+    (entry.engines?.length ?? 0) > 0,
+);
 const summary = {
   skipped: 0,
   written: 0,
@@ -144,6 +158,11 @@ function writeConnectorRepo(entry) {
   const repoName = repositoryName(entry);
   const repoDir = resolve(extensionsRoot, repoName);
   const implementedMarkers = implementedRepoMarkers(repoDir);
+  // A repo that already has a real driver keeps its Rust sources even under
+  // --force: the template is a bootstrap, and the shipped drivers have
+  // deliberately diverged from it (#182).
+  const preserveRustSources =
+    implementedMarkers.length > 0 && !options.forceDrivers;
   if (implementedMarkers.length > 0 && !options.force) {
     const skipVerb = options.dryRun ? "would skip" : "skipped";
     console.log(
@@ -155,10 +174,13 @@ function writeConnectorRepo(entry) {
   }
   if (implementedMarkers.length > 0 && options.force) {
     const forceVerb = options.dryRun ? "would rewrite" : "rewriting";
+    const rustNote = preserveRustSources
+      ? "; keeping its Rust sources, pass --force-drivers to overwrite them"
+      : "; OVERWRITING its Rust sources because --force-drivers is set";
     console.log(
       `connector-scaffold: ${forceVerb} implemented repo ${repoName} because --force is set (${implementedMarkers.join(
         ", ",
-      )})`,
+      )})${rustNote}`,
     );
   } else if (options.dryRun) {
     console.log(`connector-scaffold: would write ${repoName}`);
@@ -297,7 +319,7 @@ function writeConnectorRepo(entry) {
   }
   writeText(resolve(repoDir, "Cargo.toml"), cargoToml(repoName, crateName, realDriverLinked));
   writeText(resolve(repoDir, ".cargo/config.toml"), cargoConfig());
-  writeRustSources(repoDir, engine, label, realDriverLinked);
+  writeRustSources(repoDir, engine, label, realDriverLinked, preserveRustSources);
   writeText(
     resolve(repoDir, "README.md"),
     readme(entry, engineMeta, visibility, realDriverLinked, connection, experience, dialectDefinition),
@@ -2288,7 +2310,30 @@ color = "auto"
 `;
 }
 
-function writeRustSources(repoDir, engine, label, realDriverLinked) {
+/**
+ * Write the Rust sources, unless this repo already has a real driver.
+ *
+ * The scaffold's `duckDbDriverRust()` is a bootstrap template. Three connectors
+ * have since diverged from it on purpose — Iceberg gained REST catalog
+ * browsing, Hudi became timeline-aware, Delta gained transaction-log checks —
+ * and `src/lib.rs` in those repos declares the extra modules those fixes added.
+ * Rewriting either file would revert the fixes and orphan the modules, which is
+ * exactly the `--force` footgun #182 reported. It also un-fixes the
+ * `read_parquet` glob that #117 flagged as returning silently wrong rows.
+ */
+function writeRustSources(
+  repoDir,
+  engine,
+  label,
+  realDriverLinked,
+  preserveRustSources = false,
+) {
+  if (preserveRustSources) {
+    console.log(
+      `connector-scaffold: preserved Rust sources in ${basename(repoDir)}`,
+    );
+    return;
+  }
   writeText(resolve(repoDir, "src/lib.rs"), rustLib(engine, label, realDriverLinked));
   removeIfExists(resolve(repoDir, "src/abi.rs"));
   if (realDriverLinked) {
@@ -2326,6 +2371,7 @@ function parseArgs(args) {
   const parsed = {
     dryRun: false,
     force: false,
+    forceDrivers: false,
     help: false,
   };
 
@@ -2334,6 +2380,11 @@ function parseArgs(args) {
       parsed.dryRun = true;
     } else if (arg === "--force") {
       parsed.force = true;
+    } else if (arg === "--force-drivers") {
+      // Implies --force: overwriting Rust sources without regenerating the rest
+      // would leave a repo half-scaffolded.
+      parsed.force = true;
+      parsed.forceDrivers = true;
     } else if (arg === "--help" || arg === "-h") {
       parsed.help = true;
     } else {
@@ -2351,7 +2402,17 @@ Bootstraps connector extension repositories from registry/catalog/index.json.
 
 Options:
   --dry-run  Report which repositories would be written or skipped.
-  --force    Rewrite implemented repositories that have connector.source.json or src/driver.rs.
+  --force    Rewrite implemented repositories (those with connector.source.json
+             or src/driver.rs). Their Rust sources under src/ are PRESERVED:
+             the template is a bootstrap, and the implemented drivers have
+             deliberately diverged from it (Iceberg REST catalog browsing,
+             Hudi timeline-aware reads, Delta transaction-log checks). Manifest,
+             docs, CI and packaging files are regenerated as usual.
+  --force-drivers
+             Implies --force and additionally overwrites src/*.rs, reverting
+             those driver fixes to the naive template — including the
+             read_parquet glob that returns silently wrong rows (#117). Only
+             use this on a repo you intend to re-implement from scratch.
   -h, --help Show this help text.
 `);
 }
