@@ -59,20 +59,20 @@ export function SchemaDesignerDialog({
   return (
     <DialogShell
       className="data-dialog schema-dialog"
-      label="Schema designer"
+      label={t("schemaDesigner.dialogLabel")}
       onClose={onClose}
     >
       <div className="dialog-header">
-        <strong>Schema Designer</strong>
+        <strong>{t("schemaDesigner.title")}</strong>
         <span>{draft.mode === "create" ? "CREATE TABLE" : "ALTER TABLE"}</span>
         <button className="text-button" type="button" onClick={onClose}>
-          Close
+          {t("common.close")}
         </button>
       </div>
       <div className="dialog-body schema-body">
         <div className="dialog-form-row schema-target">
           <label>
-            <span>Mode</span>
+            <span>{t("schemaDesigner.mode")}</span>
             <select
               value={draft.mode}
               onChange={(event) =>
@@ -82,12 +82,12 @@ export function SchemaDesignerDialog({
                 }))
               }
             >
-              <option value="create">Create</option>
-              <option value="alter">Alter</option>
+              <option value="create">{t("schemaDesigner.modeCreate")}</option>
+              <option value="alter">{t("schemaDesigner.modeAlter")}</option>
             </select>
           </label>
           <label>
-            <span>Schema</span>
+            <span>{t("schemaDesigner.schema")}</span>
             <input
               value={draft.schema}
               onChange={(event) =>
@@ -99,7 +99,7 @@ export function SchemaDesignerDialog({
             />
           </label>
           <label>
-            <span>Table</span>
+            <span>{t("schemaDesigner.table")}</span>
             <input
               value={draft.table}
               onChange={(event) =>
@@ -114,7 +114,7 @@ export function SchemaDesignerDialog({
 
         <section className="designer-section">
           <header>
-            <strong>Columns</strong>
+            <strong>{t("schemaDesigner.columns")}</strong>
             <button
               className="text-button"
               type="button"
@@ -135,7 +135,7 @@ export function SchemaDesignerDialog({
                 }))
               }
             >
-              + Column
+              {t("schemaDesigner.addColumn")}
             </button>
           </header>
           <div className="designer-grid column-grid">
@@ -147,7 +147,7 @@ export function SchemaDesignerDialog({
                   key={column.id}
                 >
                   <input
-                    aria-label="Column name"
+                    aria-label={t("schemaDesigner.columnName")}
                     value={column.name}
                     disabled={locked}
                     onChange={(event) =>
@@ -157,7 +157,7 @@ export function SchemaDesignerDialog({
                     }
                   />
                   <input
-                    aria-label="Column type"
+                    aria-label={t("schemaDesigner.columnType")}
                     value={column.dataType}
                     disabled={locked}
                     onChange={(event) =>
@@ -204,10 +204,10 @@ export function SchemaDesignerDialog({
                     <span>PK</span>
                   </label>
                   <input
-                    aria-label="Default value"
+                    aria-label={t("schemaDesigner.defaultValue")}
                     value={column.defaultValue}
                     disabled={locked}
-                    placeholder="default"
+                    placeholder={t("schemaDesigner.defaultPlaceholder")}
                     onChange={(event) =>
                       updateColumn(column.id, {
                         defaultValue: event.currentTarget.value,
@@ -217,6 +217,8 @@ export function SchemaDesignerDialog({
                   <button
                     className="mini-button"
                     type="button"
+                    aria-label={t("schemaDesigner.removeColumn")}
+                    title={t("schemaDesigner.removeColumn")}
                     disabled={locked}
                     onClick={() =>
                       onDraftChange((current) => ({
@@ -237,7 +239,7 @@ export function SchemaDesignerDialog({
 
         <section className="designer-section">
           <header>
-            <strong>Indexes</strong>
+            <strong>{t("schemaDesigner.indexes")}</strong>
             <button
               className="text-button"
               type="button"
@@ -256,7 +258,7 @@ export function SchemaDesignerDialog({
                 }))
               }
             >
-              + Index
+              {t("schemaDesigner.addIndex")}
             </button>
           </header>
           <div className="designer-grid index-grid">
@@ -268,10 +270,10 @@ export function SchemaDesignerDialog({
                   key={index.id}
                 >
                   <input
-                    aria-label="Index name"
+                    aria-label={t("schemaDesigner.indexName")}
                     value={index.name}
                     disabled={locked}
-                    placeholder="auto name"
+                    placeholder={t("schemaDesigner.autoNamePlaceholder")}
                     onChange={(event) =>
                       updateIndex(index.id, {
                         name: event.currentTarget.value,
@@ -279,10 +281,10 @@ export function SchemaDesignerDialog({
                     }
                   />
                   <input
-                    aria-label="Index columns"
+                    aria-label={t("schemaDesigner.indexColumns")}
                     value={index.columns}
                     disabled={locked}
-                    placeholder="col_a, col_b"
+                    placeholder={t("schemaDesigner.indexColumnsPlaceholder")}
                     onChange={(event) =>
                       updateIndex(index.id, {
                         columns: event.currentTarget.value,
@@ -300,11 +302,13 @@ export function SchemaDesignerDialog({
                         })
                       }
                     />
-                    <span>Unique</span>
+                    <span>{t("schemaDesigner.unique")}</span>
                   </label>
                   <button
                     className="mini-button"
                     type="button"
+                    aria-label={t("schemaDesigner.removeIndex")}
+                    title={t("schemaDesigner.removeIndex")}
                     disabled={locked}
                     onClick={() =>
                       onDraftChange((current) => ({
@@ -325,7 +329,7 @@ export function SchemaDesignerDialog({
 
         <section className="designer-section">
           <header>
-            <strong>Foreign Keys</strong>
+            <strong>{t("schemaDesigner.foreignKeys")}</strong>
             <button
               className="text-button"
               type="button"
@@ -347,7 +351,7 @@ export function SchemaDesignerDialog({
                 }))
               }
             >
-              + FK
+              {t("schemaDesigner.addForeignKey")}
             </button>
           </header>
           <div className="designer-grid fk-grid">
@@ -359,10 +363,10 @@ export function SchemaDesignerDialog({
                   key={foreignKey.id}
                 >
                   <input
-                    aria-label="Foreign key name"
+                    aria-label={t("schemaDesigner.foreignKeyName")}
                     value={foreignKey.name}
                     disabled={locked}
-                    placeholder="auto name"
+                    placeholder={t("schemaDesigner.autoNamePlaceholder")}
                     onChange={(event) =>
                       updateForeignKey(foreignKey.id, {
                         name: event.currentTarget.value,
@@ -370,10 +374,10 @@ export function SchemaDesignerDialog({
                     }
                   />
                   <input
-                    aria-label="Foreign key columns"
+                    aria-label={t("schemaDesigner.foreignKeyColumns")}
                     value={foreignKey.columns}
                     disabled={locked}
-                    placeholder="local cols"
+                    placeholder={t("schemaDesigner.localColumnsPlaceholder")}
                     onChange={(event) =>
                       updateForeignKey(foreignKey.id, {
                         columns: event.currentTarget.value,
@@ -381,10 +385,12 @@ export function SchemaDesignerDialog({
                     }
                   />
                   <input
-                    aria-label="Referenced schema"
+                    aria-label={t("schemaDesigner.referencedSchema")}
                     value={foreignKey.referencesSchema}
                     disabled={locked}
-                    placeholder="schema"
+                    placeholder={t(
+                      "schemaDesigner.referencedSchemaPlaceholder",
+                    )}
                     onChange={(event) =>
                       updateForeignKey(foreignKey.id, {
                         referencesSchema: event.currentTarget.value,
@@ -392,10 +398,10 @@ export function SchemaDesignerDialog({
                     }
                   />
                   <input
-                    aria-label="Referenced table"
+                    aria-label={t("schemaDesigner.referencedTable")}
                     value={foreignKey.referencesTable}
                     disabled={locked}
-                    placeholder="table"
+                    placeholder={t("schemaDesigner.referencedTablePlaceholder")}
                     onChange={(event) =>
                       updateForeignKey(foreignKey.id, {
                         referencesTable: event.currentTarget.value,
@@ -403,10 +409,12 @@ export function SchemaDesignerDialog({
                     }
                   />
                   <input
-                    aria-label="Referenced columns"
+                    aria-label={t("schemaDesigner.referencedColumns")}
                     value={foreignKey.referencesColumns}
                     disabled={locked}
-                    placeholder="ref cols"
+                    placeholder={t(
+                      "schemaDesigner.referencedColumnsPlaceholder",
+                    )}
                     onChange={(event) =>
                       updateForeignKey(foreignKey.id, {
                         referencesColumns: event.currentTarget.value,
@@ -414,7 +422,7 @@ export function SchemaDesignerDialog({
                     }
                   />
                   <select
-                    aria-label="On delete"
+                    aria-label={t("schemaDesigner.onDelete")}
                     value={foreignKey.onDelete}
                     disabled={locked}
                     onChange={(event) =>
@@ -432,6 +440,8 @@ export function SchemaDesignerDialog({
                   <button
                     className="mini-button"
                     type="button"
+                    aria-label={t("schemaDesigner.removeForeignKey")}
+                    title={t("schemaDesigner.removeForeignKey")}
                     disabled={locked}
                     onClick={() =>
                       onDraftChange((current) => ({
@@ -454,14 +464,14 @@ export function SchemaDesignerDialog({
       </div>
       <div className="dialog-footer">
         <button className="text-button" type="button" onClick={onCopySql}>
-          Copy SQL
+          {t("common.copySql")}
         </button>
         <button
           className="primary-action"
           type="button"
           onClick={onPutSqlInEditor}
         >
-          Put SQL in editor
+          {t("common.putSqlInEditor")}
         </button>
       </div>
     </DialogShell>

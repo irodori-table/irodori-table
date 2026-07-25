@@ -25,8 +25,8 @@ import {
   type SqlSnippetDefinition,
   type SqlSnippetScope,
 } from "../../../sql/completion";
-import { clampNumber, type TranslateFn, type ValueUpdater } from "./shared";
-import { errorMessage } from "@/core";
+import type { TranslateFn } from "./shared";
+import { clampNumber, errorMessage, type ValueUpdater } from "@/core";
 
 const snippetScopeOptions: SqlSnippetScope[] = [
   "statement",

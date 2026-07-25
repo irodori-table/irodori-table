@@ -1,3 +1,4 @@
+import { isRecord } from "@/core";
 import type {
   QueryParameterInput,
   QueryParameterPromptSet,
@@ -6,10 +7,6 @@ import type {
 export const queryParameterMemoryStorageKey = "irodori.queryParameters.v1";
 
 export type QueryParameterMemory = Record<string, Record<string, string>>;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 export function loadQueryParameterMemory(): QueryParameterMemory {
   try {

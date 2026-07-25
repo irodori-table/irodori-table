@@ -27,12 +27,8 @@ import {
   type SqlLinterId,
 } from "../../../sql/linter";
 import { localeLabels, supportedLocales, type Locale } from "../../../i18n";
-import {
-  clampNumber,
-  type BooleanUpdater,
-  type TranslateFn,
-  type ValueUpdater,
-} from "./shared";
+import type { TranslateFn } from "./shared";
+import { clampNumber, type BooleanUpdater, type ValueUpdater } from "@/core";
 
 export interface GeneralTabProps {
   t: TranslateFn;

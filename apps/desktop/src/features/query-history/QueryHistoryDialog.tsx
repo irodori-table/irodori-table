@@ -192,8 +192,8 @@ export function QueryHistoryDialog({
                     </small>
                   </span>
                   <span className="history-row-meta">
-                    <span>{formatHistoryDateTime(item.ranAt, locale)}</span>
-                    <span>{formatHistoryOutcome(item, locale)}</span>
+                    <span>{formatHistoryDateTime(item.ranAt, t, locale)}</span>
+                    <span>{formatHistoryOutcome(item, t, locale)}</span>
                   </span>
                 </button>
               );
@@ -223,10 +223,14 @@ export function QueryHistoryDialog({
                 </div>
                 <div className="history-meta">
                   <span className="history-chip">
-                    {formatHistoryDateTime(selectedHistoryItem.ranAt, locale)}
+                    {formatHistoryDateTime(
+                      selectedHistoryItem.ranAt,
+                      t,
+                      locale,
+                    )}
                   </span>
                   <span className="history-chip">
-                    {formatHistoryOutcome(selectedHistoryItem, locale)}
+                    {formatHistoryOutcome(selectedHistoryItem, t, locale)}
                   </span>
                 </div>
                 <div className="history-detail-actions">

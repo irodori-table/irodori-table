@@ -1,4 +1,4 @@
-import { isRecord } from "@/app/app-workbench-utils";
+import { isRecord } from "@/core";
 
 export const CURRENT_SETTINGS_SCHEMA_VERSION = 1;
 

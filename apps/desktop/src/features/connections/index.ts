@@ -42,5 +42,10 @@ export {
   type ConnectionImportResult,
   type ConnectionTransferFormat,
 } from "./connection-transfer";
+export {
+  engineCorrectnessWarning,
+  enginesWithCorrectnessWarnings,
+  type EngineCorrectnessWarning,
+} from "./engine-correctness-warnings";
 export { ConnectionManagerDialog } from "./ConnectionManagerDialog";
 export { useConnectionStore } from "./connection-store";

@@ -10,7 +10,7 @@ export type ActionNoticeAction = {
 
 export type ActionNotice = {
   id: number;
-  kind: "success" | "error" | "info";
+  kind: "success" | "warning" | "error" | "info";
   title: string;
   detail?: string;
   action?: ActionNoticeAction;
@@ -24,11 +24,18 @@ export type ShowActionNotice = (
 ) => void;
 
 const MAX_VISIBLE_NOTICES = 4;
-// Errors stay until dismissed so a failure can't silently scroll away while
-// the user is looking elsewhere; success/info auto-dismiss.
+// Errors and warnings stay until dismissed so neither a failure nor a
+// correctness caveat can silently scroll away while the user is looking
+// elsewhere; success/info auto-dismiss.
+//
+// `warning` exists separately from `error` because the operation succeeded —
+// a Hive connection really did open (#117) — but its results cannot be trusted.
+// Styling it as a failure would be wrong, and letting it auto-dismiss would
+// reproduce the very problem it warns about.
 const DISMISS_DELAY_MS: Record<ActionNotice["kind"], number | null> = {
   success: 3200,
   info: 3200,
+  warning: null,
   error: null,
 };
 
@@ -108,11 +115,14 @@ export function ActionToast({
 }) {
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = createTranslator(locale);
+  // Warnings are announced assertively too: a silently-wrong-results caveat is
+  // worth interrupting for.
+  const urgent = notice.kind === "error" || notice.kind === "warning";
   return (
     <div
       className={`action-toast ${notice.kind}`}
-      role={notice.kind === "error" ? "alert" : "status"}
-      aria-live={notice.kind === "error" ? "assertive" : "polite"}
+      role={urgent ? "alert" : "status"}
+      aria-live={urgent ? "assertive" : "polite"}
     >
       <span className="action-toast-mark" aria-hidden="true" />
       <span>

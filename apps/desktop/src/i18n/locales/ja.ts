@@ -1280,4 +1280,210 @@ export const ja = {
   "sidebar.menu.moveToRightSidebar": "右サイドバーへ移動",
   "sidebar.menu.moveToLeftSidebar": "左サイドバーへ移動",
   "sidebar.menu.hideView": "「{name}」を非表示",
+  "git.error.commitMessageRequired": "コミットメッセージを入力してください",
+  "git.error.selectFileToStage":
+    "ステージするファイルを1つ以上選択してください",
+  "git.error.selectFileToUnstage":
+    "ステージを解除するファイルを1つ以上選択してください",
+  "git.error.selectFileToDiscard":
+    "変更を破棄するファイルを1つ以上選択してください",
+  "git.error.branchNameRequired": "ブランチ名を入力してください",
+  "history.outcome.failed": "失敗",
+  "history.outcome.rows": "{count} 行",
+  "history.outcome.rowsCapped": "{count} 行(上限到達)",
+  "history.outcome.elapsed": "{ms} ms",
+  "history.unknownTime": "日時不明",
+  "settings.jobs.kind.knowledgeRefresh": "ナレッジ更新",
+  "settings.jobs.kind.indexBuild": "インデックス構築",
+  "settings.jobs.kind.mlEvaluation": "ML 評価",
+  "settings.jobs.kind.bulkEdit": "一括編集",
+  "settings.jobs.kind.sourceScan": "ソーススキャン",
+  "settings.jobs.status.queued": "待機中",
+  "settings.jobs.status.running": "実行中",
+  "settings.jobs.status.cancelling": "キャンセル中",
+  "settings.jobs.status.succeeded": "成功",
+  "settings.jobs.status.failed": "失敗",
+  "settings.jobs.status.cancelled": "キャンセル済み",
+  "import.error.sqlNotTableData":
+    "SQL ファイルはエディタに読み込まれ、テーブルデータとしては解析されません。",
+  "import.error.xlsxUnsupported":
+    "XLSX/XLS の直接インポートには対応していません。{supported} をインポートするか、SQL ファイルを読み込んでください。",
+  "import.error.unsupportedFormat":
+    "インポート形式「{format}」には対応していません。対応するテキスト形式: {supported}。",
+  "erd.export.error.pngEncodeFailed": "PNG をエンコードできませんでした",
+  "erd.export.error.invalidDimensions": "ERD のサイズが不正です",
+  "erd.export.error.tooLargeForPng":
+    "ERD が大きすぎて PNG に書き出せません。SVG で書き出してください",
+  "erd.export.error.canvasUnavailable": "Canvas を利用できません",
+  "erd.export.error.svgRenderFailed": "SVG を描画できませんでした",
+  "erd.export.error.textClipboardUnavailable":
+    "この環境ではテキストのクリップボードを利用できません",
+  "erd.export.error.pngClipboardUnavailable":
+    "この環境では PNG のクリップボードを利用できません",
+  "erd.export.error.pngClipboardUnsupported":
+    "この環境では PNG のクリップボードに対応していません",
+  "schemaSpec.error.unsupportedFormat":
+    "テーブル仕様の形式に対応していません。想定される形式: {format}。",
+  "schemaSpec.error.missingSchemas": "テーブル仕様にスキーマがありません。",
+  "schemaSpec.error.invalidSchemaEntry":
+    "テーブル仕様のスキーマ定義が不正です。",
+  "schemaSpec.error.schemaMissingName": "スキーマ定義に名前がありません。",
+  "schemaSpec.error.schemaMissingTables":
+    "スキーマ「{name}」にテーブルがありません。",
+  "schemaSpec.error.invalidTableEntry":
+    "テーブル仕様のテーブル定義が不正です。",
+  "schemaSpec.error.tableMissingName": "テーブル定義に名前がありません。",
+  "schemaSpec.error.tableMissingColumns":
+    "テーブル「{name}」にカラムがありません。",
+  "schemaSpec.error.invalidColumnEntry": "テーブル仕様のカラム定義が不正です。",
+  "schemaSpec.error.columnMissingNameOrType":
+    "カラム定義に name または dataType がありません。",
+  "schemaSpec.error.invalidIndexEntry":
+    "テーブル仕様のインデックス定義が不正です。",
+  "schemaSpec.error.invalidForeignKeyEntry":
+    "テーブル仕様の外部キー定義が不正です。",
+  "schemaSpec.error.foreignKeyMissingReferencesTable":
+    "外部キー定義に referencesTable がありません。",
+  "schemaDiagram.error.unsupportedFormat":
+    "スキーマ図の形式に対応していません。想定される形式: {format}。",
+  "schemaDiagram.error.missingTables": "スキーマ図にテーブルがありません。",
+  "schemaDiagram.error.invalidTableEntry":
+    "スキーマ図のテーブル定義が不正です。",
+  "knowledge.pack.error.requestFailed":
+    "ナレッジパックの取得に失敗しました: HTTP {status}",
+  "knowledge.pack.error.notAnObject":
+    "ナレッジパックはオブジェクトである必要があります",
+  "knowledge.pack.error.unsupportedSchema":
+    "ナレッジパックのスキーマに対応していません",
+  "knowledge.pack.error.productNotAnObject":
+    "ナレッジパックの製品エントリはオブジェクトである必要があります",
+  "knowledge.pack.error.factNotAnObject":
+    "ナレッジのファクトエントリはオブジェクトである必要があります",
+  "knowledge.pack.error.fieldRequired": "{label} は必須です",
+  "passkey.error.publicKeyExportUnavailable":
+    "パスキーの公開鍵をエクスポートできません",
+  "passkey.error.unexpectedAssertionType":
+    "パスキーの認証種別が想定と異なります",
+  "passkey.error.challengeMismatch": "パスキーのチャレンジが一致しませんでした",
+  "passkey.error.originMismatch":
+    "パスキーのオリジンがこのアプリと一致しませんでした",
+  "passkey.error.signatureVerificationFailed":
+    "パスキーの署名を検証できませんでした",
+  "passkey.error.unavailableRuntime":
+    "この実行環境ではパスキーを利用できません",
+  "passkey.error.noPublicKeyCredential":
+    "パスキーの操作で公開鍵クレデンシャルが返りませんでした",
+  "passkey.error.unsupportedAlgorithm":
+    "対応していないパスキーのアルゴリズムです: {value}",
+  "passkey.error.invalidClientData":
+    "パスキーのクライアントデータがオブジェクトではありません",
+  "passkey.error.malformedCredential":
+    "保存されているパスキーのクレデンシャルが不正です ({detail})",
+  "common.copySql": "SQL をコピー",
+  "common.putSqlInEditor": "SQL をエディタに挿入",
+  "common.unnamed": "(名称未設定)",
+  "import.dialog.label": "インポートのプレビュー",
+  "import.dialog.title": "インポート",
+  "import.dialog.table": "テーブル",
+  "import.dialog.rowCount": "{shown} / {total} 行",
+  "import.dialog.rowCountCapped": "{shown} / {total} 行(上限到達)",
+  "schemaDesigner.dialogLabel": "スキーマデザイナー",
+  "schemaDesigner.title": "スキーマデザイナー",
+  "schemaDesigner.mode": "モード",
+  "schemaDesigner.modeCreate": "作成",
+  "schemaDesigner.modeAlter": "変更",
+  "schemaDesigner.schema": "スキーマ",
+  "schemaDesigner.table": "テーブル",
+  "schemaDesigner.columns": "カラム",
+  "schemaDesigner.addColumn": "+ カラム",
+  "schemaDesigner.columnName": "カラム名",
+  "schemaDesigner.columnType": "カラムの型",
+  "schemaDesigner.defaultValue": "デフォルト値",
+  "schemaDesigner.defaultPlaceholder": "デフォルト",
+  "schemaDesigner.removeColumn": "カラムを削除",
+  "schemaDesigner.indexes": "インデックス",
+  "schemaDesigner.addIndex": "+ インデックス",
+  "schemaDesigner.indexName": "インデックス名",
+  "schemaDesigner.autoNamePlaceholder": "自動命名",
+  "schemaDesigner.indexColumns": "インデックス対象カラム",
+  "schemaDesigner.indexColumnsPlaceholder": "col_a, col_b",
+  "schemaDesigner.unique": "ユニーク",
+  "schemaDesigner.removeIndex": "インデックスを削除",
+  "schemaDesigner.foreignKeys": "外部キー",
+  "schemaDesigner.addForeignKey": "+ 外部キー",
+  "schemaDesigner.foreignKeyName": "外部キー名",
+  "schemaDesigner.foreignKeyColumns": "外部キーのカラム",
+  "schemaDesigner.localColumnsPlaceholder": "対象カラム",
+  "schemaDesigner.referencedSchema": "参照先スキーマ",
+  "schemaDesigner.referencedSchemaPlaceholder": "スキーマ",
+  "schemaDesigner.referencedTable": "参照先テーブル",
+  "schemaDesigner.referencedTablePlaceholder": "テーブル",
+  "schemaDesigner.referencedColumns": "参照先カラム",
+  "schemaDesigner.referencedColumnsPlaceholder": "参照カラム",
+  "schemaDesigner.onDelete": "削除時の動作",
+  "schemaDesigner.removeForeignKey": "外部キーを削除",
+  "schemaDiagram.dialogLabel": "スキーマ図デザイナー",
+  "schemaDiagram.title": "スキーマデザイナー",
+  "schemaDiagram.summary": "{tables} テーブル · {columns} カラム",
+  "schemaDiagram.addTable": "テーブルを追加",
+  "schemaDiagram.table": "テーブル",
+  "schemaDiagram.seedFromDb":
+    "接続中のデータベースのスキーマでキャンバスを置き換える",
+  "schemaDiagram.fromDb": "DB から",
+  "schemaDiagram.fitToViewport": "画面に合わせる",
+  "schemaDiagram.fit": "フィット",
+  "schemaDiagram.exportJson": "図を JSON で書き出す",
+  "schemaDiagram.export": "書き出し",
+  "schemaDiagram.importJson": "図の JSON を読み込む",
+  "schemaDiagram.import": "読み込み",
+  "schemaDiagram.createDbSqlTitle":
+    "実行可能な CREATE スクリプトをエディタに生成する",
+  "schemaDiagram.createDbSql": "DB 作成 SQL",
+  "schemaDiagram.tableName": "テーブル名",
+  "schemaDiagram.removeTable": "テーブルを削除",
+  "schemaDiagram.removeNamedTable": "{name} を削除",
+  "schemaDiagram.togglePrimaryKey": "主キーを切り替え",
+  "schemaDiagram.primaryKey": "主キー",
+  "schemaDiagram.columnName": "カラム名",
+  "schemaDiagram.columnPlaceholder": "カラム",
+  "schemaDiagram.columnType": "カラムの型",
+  "schemaDiagram.columnTypePlaceholder": "型",
+  "schemaDiagram.notNull": "NOT NULL",
+  "schemaDiagram.removeColumn": "カラムを削除",
+  "schemaDiagram.removeNamedColumn": "カラム {name} を削除",
+  "schemaDiagram.addColumn": "+ カラム",
+  "schemaDiagram.addForeignKey": "外部キーのリレーションを追加",
+  "schemaDiagram.needSecondTable":
+    "リレーションを作るにはテーブルをもう1つ追加してください",
+  "schemaDiagram.localColumn": "参照元カラム",
+  "schemaDiagram.referencedTable": "参照先テーブル",
+  "schemaDiagram.referencedColumn": "参照先カラム",
+  "schemaDiagram.removeRelationship": "リレーションを削除",
+  "search.panelLabel": "検索と置換",
+  "search.title": "検索",
+  "search.showReplace": "置換を表示",
+  "search.hideReplace": "置換を隠す",
+  "search.queryPlaceholder": "すべてのタブから検索",
+  "search.matchCase": "大文字と小文字を区別",
+  "search.matchWholeWord": "単語単位で一致",
+  "search.useRegex": "正規表現を使う",
+  "search.replacePlaceholder": "置換後",
+  "search.replaceAllEverywhere": "すべてのタブで置換",
+  "search.all": "すべて",
+  "search.typeToSearch":
+    "入力すると開いているすべてのエディタタブを検索します。",
+  "search.invalidRegex": "正規表現が不正です",
+  "search.noResults": "一致なし。",
+  "search.resultCount": "{count} 件",
+  "search.resultCountOne": "1 件",
+  "search.tabCount": "{count} タブ",
+  "search.tabCountOne": "1 タブ",
+  "search.summary": "{tabs}中に {results}",
+  "search.replaceAllInTab": "このタブ内をすべて置換",
+  "search.replaceThisMatch": "この箇所を置換",
+  "search.matchPosition": "{line} 行 {column} 列",
+  "notice.connection.correctness.hive.title":
+    "Hive の結果は正しくない可能性があります",
+  "notice.connection.correctness.hive.detail":
+    "Hive コネクタはテーブル直下の Parquet ファイルを読むだけでメタストアを参照しません。そのため、テーブル外にあるパーティションや、ORC・Avro・テキスト形式のテーブルは空になるか解決できません。行数は他のクライアントで確認してから利用してください。",
 } satisfies TranslationDictionary;

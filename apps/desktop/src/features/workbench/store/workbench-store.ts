@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { parseStoredNumber } from "@/core";
+import {
+  type ValueUpdater,
+  clampNumber,
+  parseStoredNumber,
+  resolveValue,
+} from "@/core";
 import {
   defaultWorkbenchViewHidden,
   defaultWorkbenchViewVisibility,
@@ -16,8 +21,6 @@ import type { EditorSplitMode } from "@/lib/editor-split-mode";
 
 export type { EditorSplitMode } from "@/lib/editor-split-mode";
 export type SidebarSide = WorkbenchSide;
-
-type ValueUpdater<T> = T | ((current: T) => T);
 
 type WorkbenchState = {
   sidebarOpen: boolean;
@@ -80,16 +83,6 @@ const resultsHeightMax = 560;
 const editorSplitPercentDefault = 50;
 const editorSplitPercentMin = 28;
 const editorSplitPercentMax = 72;
-
-function resolveValue<T>(current: T, value: ValueUpdater<T>): T {
-  return typeof value === "function"
-    ? (value as (current: T) => T)(current)
-    : value;
-}
-
-function clampNumber(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
 
 function loadStoredNumber(
   key: string,

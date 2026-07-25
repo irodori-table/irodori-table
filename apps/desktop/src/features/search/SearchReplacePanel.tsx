@@ -7,6 +7,8 @@ import {
   replaceMatchAt,
   type TextMatch,
 } from "@/sql/text-search";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import { useSearchStore } from "./search-store";
 import "./search-replace.css";
 
@@ -38,6 +40,8 @@ export function SearchReplacePanel({
   onReplaceTab,
   onClose,
 }: SearchReplacePanelProps) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const query = useSearchStore((s) => s.query);
   const replacement = useSearchStore((s) => s.replacement);
   const opts = useSearchStore((s) => s.options);
@@ -103,15 +107,15 @@ export function SearchReplacePanel({
   };
 
   return (
-    <section className="search-panel" aria-label="Search and replace">
+    <section className="search-panel" aria-label={t("search.panelLabel")}>
       <header className="search-header">
         <span className="search-title">
-          <Search size={14} /> Search
+          <Search size={14} /> {t("search.title")}
         </span>
         <button
           type="button"
-          title="Close"
-          aria-label="Close"
+          title={t("common.close")}
+          aria-label={t("common.close")}
           onClick={onClose}
         >
           <X size={14} />
@@ -122,7 +126,9 @@ export function SearchReplacePanel({
         <button
           type="button"
           className="search-replace-expand"
-          aria-label={showReplace ? "Hide replace" : "Show replace"}
+          aria-label={
+            showReplace ? t("search.hideReplace") : t("search.showReplace")
+          }
           aria-expanded={showReplace}
           onClick={() => setShowReplace(!showReplace)}
         >
@@ -134,14 +140,14 @@ export function SearchReplacePanel({
             <input
               ref={searchInputRef}
               value={query}
-              placeholder="Search across all tabs"
+              placeholder={t("search.queryPlaceholder")}
               onChange={(e) => setQuery(e.target.value)}
             />
             <div className="search-toggles">
               <button
                 type="button"
                 className={opts.caseSensitive ? "active" : undefined}
-                title="Match case"
+                title={t("search.matchCase")}
                 aria-pressed={opts.caseSensitive}
                 onClick={() => toggleOption("caseSensitive")}
               >
@@ -150,7 +156,7 @@ export function SearchReplacePanel({
               <button
                 type="button"
                 className={opts.wholeWord ? "active" : undefined}
-                title="Match whole word"
+                title={t("search.matchWholeWord")}
                 aria-pressed={opts.wholeWord}
                 onClick={() => toggleOption("wholeWord")}
               >
@@ -159,7 +165,7 @@ export function SearchReplacePanel({
               <button
                 type="button"
                 className={opts.useRegex ? "active" : undefined}
-                title="Use regular expression"
+                title={t("search.useRegex")}
                 aria-pressed={opts.useRegex}
                 onClick={() => toggleOption("useRegex")}
               >
@@ -172,17 +178,17 @@ export function SearchReplacePanel({
             <div className="search-field">
               <input
                 value={replacement}
-                placeholder="Replace"
+                placeholder={t("search.replacePlaceholder")}
                 onChange={(e) => setReplacement(e.target.value)}
               />
               <button
                 type="button"
                 className="search-replace-all"
-                title="Replace all (every tab)"
+                title={t("search.replaceAllEverywhere")}
                 disabled={!query || !valid || totalMatches === 0}
                 onClick={replaceEverywhere}
               >
-                <Replace size={13} /> All
+                <Replace size={13} /> {t("search.all")}
               </button>
             </div>
           ) : null}
@@ -191,15 +197,24 @@ export function SearchReplacePanel({
 
       <div className="search-summary">
         {!query ? (
-          "Type to search every open editor tab."
+          t("search.typeToSearch")
         ) : !valid ? (
-          <span className="search-invalid">Invalid regular expression</span>
+          <span className="search-invalid">{t("search.invalidRegex")}</span>
         ) : totalMatches === 0 ? (
-          "No results."
+          t("search.noResults")
         ) : (
-          `${totalMatches} result${totalMatches === 1 ? "" : "s"} in ${results.length} tab${
-            results.length === 1 ? "" : "s"
-          }`
+          // Built from two counted fragments rather than one sentence, so a
+          // locale without English pluralisation can still order the parts.
+          t("search.summary", {
+            results:
+              totalMatches === 1
+                ? t("search.resultCountOne")
+                : t("search.resultCount", { count: totalMatches }),
+            tabs:
+              results.length === 1
+                ? t("search.tabCountOne")
+                : t("search.tabCount", { count: results.length }),
+          })
         )}
       </div>
 
@@ -226,7 +241,7 @@ export function SearchReplacePanel({
                   <button
                     type="button"
                     className="search-file-replace"
-                    title="Replace all in this tab"
+                    title={t("search.replaceAllInTab")}
                     onClick={() => replaceAllInTab(tab)}
                   >
                     <Replace size={12} />
@@ -239,7 +254,10 @@ export function SearchReplacePanel({
                       <button
                         type="button"
                         className="search-match-line"
-                        title={`Line ${match.line}, Col ${match.column}`}
+                        title={t("search.matchPosition", {
+                          line: match.line,
+                          column: match.column,
+                        })}
                         onClick={() => onReveal(tab, match)}
                       >
                         <span className="search-match-ln">{match.line}</span>
@@ -251,7 +269,7 @@ export function SearchReplacePanel({
                         <button
                           type="button"
                           className="search-match-replace"
-                          title="Replace this match"
+                          title={t("search.replaceThisMatch")}
                           onClick={() => replaceOne(tab, match)}
                         >
                           <Replace size={11} />

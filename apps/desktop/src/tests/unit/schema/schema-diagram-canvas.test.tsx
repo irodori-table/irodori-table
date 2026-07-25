@@ -1,6 +1,5 @@
-import { act, createElement } from "react";
-import { createRoot } from "react-dom/client";
-import { describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   DatabaseMetadata,
   DbObjectMetadata,
@@ -10,10 +9,8 @@ import {
   diagramFromMetadata,
   useSchemaDiagramStore,
 } from "@/features/schema-diagram";
-
-(
-  globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
-).IS_REACT_ACT_ENVIRONMENT = true;
+import { usePreferencesStore } from "@/features/preferences";
+import { componentRenderer } from "@/tests/helpers/render";
 
 function table(
   schema: string,
@@ -67,55 +64,60 @@ const metadata: DatabaseMetadata = {
   ],
 };
 
-function tableNames(host: HTMLElement): string[] {
-  return Array.from(
-    host.querySelectorAll<HTMLInputElement>('input[aria-label="Table name"]'),
-  ).map((input) => input.value);
+const renderDialog = componentRenderer(SchemaDiagramDialog, () => ({
+  onClose: vi.fn(),
+  onPutSqlInEditor: vi.fn(),
+  onCopySql: vi.fn(),
+  onSeedFromDb: vi.fn(),
+  canSeedFromDb: true,
+}));
+
+/** Every table card's name field, queried by its accessible name. */
+function tableNames(): string[] {
+  return screen
+    .getAllByRole("textbox", { name: "Table name" })
+    .map((input) => (input as HTMLInputElement).value);
 }
 
+beforeEach(() => {
+  usePreferencesStore.setState({ locale: "en" });
+  useSchemaDiagramStore.setState({
+    open: true,
+    document: diagramFromMetadata(metadata),
+    selectedTableId: null,
+  });
+});
+
 describe("SchemaDiagramDialog interactions", () => {
-  it("renders the seeded diagram, adds tables, and emits CREATE SQL", () => {
-    useSchemaDiagramStore.setState({
-      open: true,
-      document: diagramFromMetadata(metadata),
-      selectedTableId: null,
-    });
-    const onPutSqlInEditor = vi.fn();
+  it("renders the seeded diagram, adds tables, and emits CREATE SQL", async () => {
+    const { user, props } = renderDialog();
 
-    const host = document.createElement("div");
-    document.body.append(host);
-    const root = createRoot(host);
-    act(() => {
-      root.render(
-        createElement(SchemaDiagramDialog, {
-          onClose: () => {},
-          onPutSqlInEditor,
-          onCopySql: () => {},
-          onSeedFromDb: () => {},
-          canSeedFromDb: true,
-        }),
-      );
-    });
-
-    expect(tableNames(host)).toEqual(
+    expect(tableNames()).toEqual(
       expect.arrayContaining(["customers", "orders"]),
     );
 
-    const addButton = host.querySelector<HTMLButtonElement>(
-      'button[title="Add a new table"]',
+    await user.click(screen.getByRole("button", { name: "Table" }));
+    expect(tableNames()).toHaveLength(3);
+
+    await user.click(screen.getByRole("button", { name: "Create DB SQL" }));
+
+    expect(props.onPutSqlInEditor).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(props.onPutSqlInEditor).mock.calls[0][0]).toContain(
+      "CREATE TABLE",
     );
-    act(() => addButton?.click());
-    expect(tableNames(host)).toHaveLength(3);
+  });
 
-    const createButton = Array.from(
-      host.querySelectorAll<HTMLButtonElement>("button"),
-    ).find((button) => button.textContent === "Create DB SQL");
-    act(() => createButton?.click());
+  // #133 wired this dialog into i18n; pin that the toolbar actually follows the
+  // locale, since the queries above depend on the accessible names.
+  it("labels its toolbar in the active locale", () => {
+    usePreferencesStore.setState({ locale: "ja" });
+    renderDialog();
 
-    expect(onPutSqlInEditor).toHaveBeenCalledTimes(1);
-    expect(onPutSqlInEditor.mock.calls[0][0]).toContain("CREATE TABLE");
-
-    act(() => root.unmount());
-    host.remove();
+    expect(
+      screen.getByRole("button", { name: "DB 作成 SQL" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Create DB SQL" }),
+    ).not.toBeInTheDocument();
   });
 });

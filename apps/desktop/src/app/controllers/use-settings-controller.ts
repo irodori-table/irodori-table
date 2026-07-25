@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
 import type { ShowActionNotice } from "@/app/ActionToast";
-import { clampNumber, emptyJobList, isRecord } from "@/app/app-workbench-utils";
+import { emptyJobList } from "@/app/app-workbench-utils";
 import type { KeybindingManager } from "@/app/controllers/use-keybinding-manager";
 import type { ThemeManager } from "@/app/controllers/use-theme-manager";
 import {
   CURRENT_SETTINGS_SCHEMA_VERSION,
   migrateSettingsJson,
 } from "@/app/settings-schema";
-import { errorMessage, type Keymap } from "@/core";
+import {
+  clampInt,
+  clampNumber,
+  errorMessage,
+  isRecord,
+  type Keymap,
+} from "@/core";
 import {
   portableProfile,
   settingsProfileFromJson,
@@ -492,13 +498,13 @@ export function useSettingsController({
         const nextMaxItems = Number(parsed.queryHistory.maxItems);
         if (Number.isFinite(nextMaxItems)) {
           setQueryHistoryMaxItems(
-            clampNumber(nextMaxItems, 0, queryHistoryMaxItemsHardLimit),
+            clampInt(nextMaxItems, 0, queryHistoryMaxItemsHardLimit),
           );
         }
         const nextResultRows = Number(parsed.queryHistory.resultRows);
         if (Number.isFinite(nextResultRows)) {
           setQueryHistoryResultRows(
-            clampNumber(nextResultRows, 0, queryHistoryResultRowsHardLimit),
+            clampInt(nextResultRows, 0, queryHistoryResultRowsHardLimit),
           );
         }
       }

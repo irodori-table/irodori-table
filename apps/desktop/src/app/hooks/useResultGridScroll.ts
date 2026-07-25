@@ -1,11 +1,10 @@
 import { type RefObject, type UIEvent, useEffect, useRef } from "react";
+import type { ValueUpdater } from "@/core";
 import {
   useResultGridStore,
   type SelectedCell,
   type ResultCellRange,
 } from "@/features/results";
-
-type ValueUpdater<T> = T | ((current: T) => T);
 
 type UseResultGridScrollParams = {
   gridRef: RefObject<HTMLDivElement | null>;

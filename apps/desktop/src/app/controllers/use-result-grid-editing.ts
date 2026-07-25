@@ -21,7 +21,7 @@ import {
 } from "@/features/results";
 import { writeTextToClipboard } from "@/features/erd";
 import { queryService } from "@/features/workbench";
-import { errorMessage } from "@/core";
+import { type ValueUpdater, errorMessage } from "@/core";
 import type { Translator } from "@/i18n";
 import type {
   CellValue,
@@ -49,7 +49,6 @@ import {
 
 // Mirrors the result-grid-store setter contract: accept either the next value or
 // an updater that derives it from the current value.
-type ValueUpdater<T> = T | ((current: T) => T);
 
 type ResultGridViewModel = ReturnType<typeof buildResultGridViewModel>;
 type ResultGridDisplayRow = NonNullable<

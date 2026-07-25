@@ -34,7 +34,7 @@ import {
 import { toCount } from "@/features/results";
 import type { SqlEditorHandle } from "@/features/query-editor";
 import type { Translator } from "@/i18n";
-import { errorMessage } from "@/core";
+import { type ValueUpdater, localizedErrorMessage } from "@/core";
 import type { SqlMetadataTarget } from "@/sql/metadata-inspection";
 import type {
   DbEngine,
@@ -42,8 +42,6 @@ import type {
   QueryParameterInput,
 } from "@/generated/irodori-api";
 import type { WorkspaceConnection } from "@/features/connections";
-
-type ValueUpdater<T> = T | ((current: T) => T);
 
 export type WorkspaceActionsDeps = {
   query: string;
@@ -161,7 +159,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.importFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -200,7 +198,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.copyFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -261,7 +259,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.copyFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -283,7 +281,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.querySaveFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -323,7 +321,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.exitFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -346,7 +344,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.copyFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }
@@ -358,7 +356,7 @@ export function useWorkspaceActions({
       showActionNotice(
         "error",
         t("notice.workbench.devToolsUnavailable"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }

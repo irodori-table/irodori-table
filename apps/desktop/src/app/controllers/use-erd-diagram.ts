@@ -30,13 +30,12 @@ import {
 } from "@/features/erd";
 import type { SqlEditorHandle } from "@/features/query-editor";
 import type { Translator } from "@/i18n";
-import { errorMessage } from "@/core";
+import { clampNumber, localizedErrorMessage } from "@/core";
 import type {
   DatabaseMetadata,
   DbObjectMetadata,
 } from "@/generated/irodori-api";
 import type { IrodoriTheme } from "@/theme";
-import { clampNumber } from "../app-workbench-utils";
 
 export type ErdDiagramDeps = {
   activeConnectionId: string;
@@ -179,7 +178,7 @@ export function useErdDiagram({
         );
       }
     } catch (error) {
-      const message = errorMessage(error);
+      const message = localizedErrorMessage(t, error);
       setDiagramError(message);
       showActionNotice("error", t("notice.workbench.erdExportFailed"), message);
     }
@@ -204,7 +203,7 @@ export function useErdDiagram({
         );
       }
     } catch (error) {
-      const message = errorMessage(error);
+      const message = localizedErrorMessage(t, error);
       setDiagramError(message);
       showActionNotice("error", t("notice.workbench.erdExportFailed"), message);
     }
@@ -217,7 +216,7 @@ export function useErdDiagram({
       setDiagramError(null);
       showActionNotice("success", t("notice.workbench.erdSvgCopied"));
     } catch (error) {
-      const message = errorMessage(error);
+      const message = localizedErrorMessage(t, error);
       setDiagramError(message);
       showActionNotice("error", t("notice.workbench.copyFailed"), message);
     }
@@ -231,7 +230,7 @@ export function useErdDiagram({
       setDiagramError(null);
       showActionNotice("success", t("notice.workbench.erdPngCopied"));
     } catch (error) {
-      const message = errorMessage(error);
+      const message = localizedErrorMessage(t, error);
       setDiagramError(message);
       showActionNotice("error", t("notice.workbench.copyFailed"), message);
     }
@@ -265,7 +264,7 @@ export function useErdDiagram({
         );
       }
     } catch (error) {
-      const message = errorMessage(error);
+      const message = localizedErrorMessage(t, error);
       setDiagramError(message);
       showActionNotice(
         "error",
@@ -291,7 +290,7 @@ export function useErdDiagram({
         );
       }
     } catch (error) {
-      const message = errorMessage(error);
+      const message = localizedErrorMessage(t, error);
       setDiagramError(message);
       showActionNotice(
         "error",
@@ -311,7 +310,7 @@ export function useErdDiagram({
       showActionNotice("success", t("notice.workbench.ddlFromSpec"), file.name);
       window.setTimeout(() => activeEditorApi()?.focus(), 0);
     } catch (error) {
-      const message = errorMessage(error);
+      const message = localizedErrorMessage(t, error);
       setDiagramError(message);
       showActionNotice(
         "error",
@@ -334,7 +333,7 @@ export function useErdDiagram({
       showActionNotice("success", t("notice.workbench.createDbSqlGenerated"));
       window.setTimeout(() => activeEditorApi()?.focus(), 0);
     } catch (error) {
-      const message = errorMessage(error);
+      const message = localizedErrorMessage(t, error);
       setDiagramError(message);
       showActionNotice(
         "error",
@@ -400,7 +399,7 @@ export function useErdDiagram({
       showActionNotice(
         "error",
         t("notice.workbench.copyFailed"),
-        errorMessage(error),
+        localizedErrorMessage(t, error),
       );
     }
   }

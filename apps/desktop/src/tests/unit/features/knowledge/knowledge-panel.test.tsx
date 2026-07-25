@@ -1,9 +1,10 @@
-import { flushSync } from "react-dom";
-import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { KnowledgePanel } from "@/features/knowledge/KnowledgePanel";
 import type { KnowledgePack } from "@/features/knowledge/knowledge-pack";
 import { usePreferencesStore } from "@/features/preferences";
+import type { DbEngine } from "@/generated/irodori-api";
+import { componentRenderer } from "@/tests/helpers/render";
 
 // Mirror how KnowledgePanel renders pack.updatedAt (a plain local date, not the
 // raw ISO), so the assertions stay correct across locales and time zones.
@@ -12,18 +13,7 @@ const expectedUpdatedAt = (iso: string) =>
     dateStyle: "medium",
   });
 
-let container: HTMLDivElement;
-let root: Root;
-
-beforeEach(() => {
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  root = createRoot(container);
-});
-
 afterEach(() => {
-  flushSync(() => root.unmount());
-  container.remove();
   vi.unstubAllGlobals();
 });
 
@@ -72,101 +62,86 @@ const samplePack: KnowledgePack = {
   ],
 };
 
-function renderPanel(
-  overrides: Partial<Parameters<typeof KnowledgePanel>[0]> = {},
-) {
-  const props: Parameters<typeof KnowledgePanel>[0] = {
-    editorEngine: "postgres",
-    activeConnectionName: "Local Postgres",
-    onClose: vi.fn(),
-    initialPack: samplePack,
-    ...overrides,
-  };
-  flushSync(() => root.render(<KnowledgePanel {...props} />));
-  return props;
-}
+const renderPanel = componentRenderer(KnowledgePanel, () => ({
+  editorEngine: "postgres" as DbEngine,
+  activeConnectionName: "Local Postgres",
+  onClose: vi.fn(),
+  initialPack: samplePack,
+}));
 
-function factTitles() {
-  return Array.from(
-    container.querySelectorAll(".knowledge-fact strong"),
-    (node) => node.textContent,
-  );
-}
+const ALL_FACT_TITLES = [
+  "PostgreSQL: MERGE improvements",
+  "PostgreSQL: SCRAM notes",
+  "DBeaver: release cadence",
+];
 
-function setFilter(value: string) {
-  const input = container.querySelector<HTMLInputElement>(
-    ".knowledge-toolbar input",
-  );
-  if (!input) {
-    throw new Error("filter input not found");
-  }
-  const setter = Object.getOwnPropertyDescriptor(
-    window.HTMLInputElement.prototype,
-    "value",
-  )?.set;
-  setter?.call(input, value);
-  flushSync(() => {
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-}
-
-function clickScope(label: "connection" | "all") {
-  const buttons = Array.from(
-    container.querySelectorAll<HTMLButtonElement>(
-      '.knowledge-scope button[role="radio"]',
-    ),
-  );
-  const button = label === "connection" ? buttons[0] : buttons[1];
-  flushSync(() => button?.click());
+/**
+ * Fact titles as a user sees them. Queried by text rather than by
+ * `.knowledge-fact strong`, so a markup change that hides a fact — or moves it
+ * out of the list — fails here instead of passing on a still-present node
+ * (#153, #172).
+ */
+function visibleFactTitles(): string[] {
+  return ALL_FACT_TITLES.filter((title) => screen.queryByText(title) !== null);
 }
 
 describe("KnowledgePanel", () => {
   it("scopes facts to the active connection engine by default", () => {
     renderPanel();
-    expect(factTitles()).toEqual([
+
+    expect(visibleFactTitles()).toEqual([
       "PostgreSQL: MERGE improvements",
       "PostgreSQL: SCRAM notes",
     ]);
-    expect(container.textContent).toContain("Local Postgres");
-    expect(container.textContent).toContain(
-      expectedUpdatedAt("2026-07-11T00:00:00Z"),
-    );
+    expect(screen.getByText(/Local Postgres/)).toBeVisible();
+    expect(
+      screen.getByText(new RegExp(expectedUpdatedAt("2026-07-11T00:00:00Z"))),
+    ).toBeVisible();
   });
 
-  it("shows every product when the scope is switched to all", () => {
-    renderPanel();
-    clickScope("all");
-    expect(factTitles()).toHaveLength(3);
-    expect(container.textContent).toContain("DBeaver: release cadence");
+  it("shows every product when the scope is switched to all", async () => {
+    const { user } = renderPanel();
+
+    await user.click(screen.getByRole("radio", { name: "All products" }));
+
+    expect(visibleFactTitles()).toEqual(ALL_FACT_TITLES);
   });
 
   it("falls back to all products with a callout when the engine has no facts", () => {
     renderPanel({ editorEngine: "mysql" });
-    expect(container.querySelector(".knowledge-callout")).toBeTruthy();
-    expect(factTitles()).toHaveLength(3);
+
+    expect(visibleFactTitles()).toEqual(ALL_FACT_TITLES);
+    expect(screen.getByText(/no .*facts|No facts/i)).toBeVisible();
   });
 
-  it("filters facts by substring across title and summary", () => {
-    renderPanel();
-    setFilter("scram");
-    expect(factTitles()).toEqual(["PostgreSQL: SCRAM notes"]);
+  it("filters facts by substring across title and summary", async () => {
+    const { user } = renderPanel();
+    const filter = screen.getByRole("searchbox", { name: "Filter facts" });
 
-    setFilter("no-such-fact");
-    expect(factTitles()).toHaveLength(0);
-    expect(
-      container.querySelector(".knowledge-fact-list .knowledge-callout"),
-    ).toBeTruthy();
+    await user.type(filter, "scram");
+    expect(visibleFactTitles()).toEqual(["PostgreSQL: SCRAM notes"]);
+
+    await user.clear(filter);
+    await user.type(filter, "no-such-fact");
+    expect(visibleFactTitles()).toEqual([]);
+    expect(screen.getByText(/No facts match/)).toBeVisible();
   });
 
   it("renders priority badges and official source links", () => {
     renderPanel();
-    expect(
-      container.querySelector(".knowledge-badge.priority-high")?.textContent,
-    ).toBe("high");
-    const link =
-      container.querySelector<HTMLAnchorElement>(".knowledge-fact a");
-    expect(link?.href).toBe("https://www.postgresql.org/docs/current/");
-    expect(link?.textContent).toContain("postgres-docs-current");
+
+    expect(screen.getByText("high")).toBeVisible();
+    // The anchor's aria-label deliberately overrides its visible text, so the
+    // accessible name is the generic "open the source" phrasing and the id is
+    // asserted as content.
+    const link = screen.getByRole("link", {
+      name: "Open the official source page",
+    });
+    expect(link).toHaveAttribute(
+      "href",
+      "https://www.postgresql.org/docs/current/",
+    );
+    expect(link).toHaveTextContent("postgres-docs-current");
   });
 
   it("replaces the pack after a successful refresh", async () => {
@@ -181,46 +156,42 @@ describe("KnowledgePanel", () => {
         },
       ],
     };
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => nextPack,
-    });
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: async () => nextPack }),
+    );
 
-    renderPanel();
-    container
-      .querySelector<HTMLButtonElement>(".knowledge-header button")
-      ?.click();
+    const { user } = renderPanel();
+    await user.click(screen.getByRole("button", { name: /refresh/i }));
+
     await vi.waitFor(() => {
-      expect(container.textContent).toContain(
-        expectedUpdatedAt("2026-08-01T00:00:00Z"),
-      );
+      expect(
+        screen.getByText(new RegExp(expectedUpdatedAt("2026-08-01T00:00:00Z"))),
+      ).toBeVisible();
     });
-    expect(factTitles()).toEqual(["PostgreSQL: MERGE improvements"]);
+    expect(visibleFactTitles()).toEqual(["PostgreSQL: MERGE improvements"]);
   });
 
   it("keeps the bundled pack and shows an error when refresh fails", async () => {
-    const fetchMock = vi.fn().mockRejectedValue(new Error("offline"));
-    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
 
-    renderPanel();
-    container
-      .querySelector<HTMLButtonElement>(".knowledge-header button")
-      ?.click();
+    const { user } = renderPanel();
+    await user.click(screen.getByRole("button", { name: /refresh/i }));
+
     await vi.waitFor(() => {
-      expect(
-        container.querySelector(".knowledge-callout.error")?.textContent,
-      ).toContain("offline");
+      expect(screen.getByText(/offline/)).toBeVisible();
     });
-    expect(factTitles()).toHaveLength(2);
+    expect(visibleFactTitles()).toEqual([
+      "PostgreSQL: MERGE improvements",
+      "PostgreSQL: SCRAM notes",
+    ]);
   });
 
-  it("closes from the header button", () => {
-    const props = renderPanel();
-    const buttons = container.querySelectorAll<HTMLButtonElement>(
-      ".knowledge-header button",
-    );
-    flushSync(() => buttons[1]?.click());
+  it("closes from the header button", async () => {
+    const { user, props } = renderPanel();
+
+    await user.click(screen.getByRole("button", { name: /close/i }));
+
     expect(props.onClose).toHaveBeenCalledTimes(1);
   });
 });

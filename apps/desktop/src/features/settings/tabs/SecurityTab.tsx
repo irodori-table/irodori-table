@@ -14,8 +14,8 @@ import {
   type PasskeyCredentialRecord,
 } from "@/features/security";
 import { usePreferencesStore } from "@/features/preferences";
-import type { BooleanUpdater, TranslateFn } from "./shared";
-import { errorMessage } from "@/core";
+import type { TranslateFn } from "./shared";
+import { localizedErrorMessage, type BooleanUpdater } from "@/core";
 
 export interface SecurityTabProps {
   t: TranslateFn;
@@ -70,7 +70,7 @@ export function SecurityTab({
       setPasskeyLockEnabled(true);
       setNotice(t("settings.security.passkey.setupSuccess"));
     } catch (setupError) {
-      setError(errorMessage(setupError));
+      setError(localizedErrorMessage(t, setupError));
     } finally {
       setBusy(null);
     }

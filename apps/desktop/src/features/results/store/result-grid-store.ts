@@ -6,14 +6,13 @@ import type {
   ResultSortRule,
 } from "../result-grid";
 import type { ResultGridDraftCell as GridCellDraft } from "../result-view-model";
+import { resolveValue, type ValueUpdater } from "@/core";
 import type {
   EditingCell,
   ResultCellRange,
   ResultMode,
   SelectedCell,
 } from "../types";
-
-type ValueUpdater<T> = T | ((current: T) => T);
 
 type SpillInfo = {
   handle: string;
@@ -87,12 +86,6 @@ type ResultGridState = {
   resetEdits: () => void;
   resetGridView: () => void;
 };
-
-function resolveValue<T>(current: T, value: ValueUpdater<T>): T {
-  return typeof value === "function"
-    ? (value as (current: T) => T)(current)
-    : value;
-}
 
 function cloneEditDraft(draft: ResultGridEditDraft): ResultGridEditDraft {
   return {

@@ -1,3 +1,4 @@
+import { localizedError } from "@/core";
 const ERD_EXPORT_MAX_CANVAS_SIDE = 16_384;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
@@ -109,7 +110,7 @@ function canvasToPngBlob(canvas: HTMLCanvasElement): Promise<Blob> {
         if (blob) {
           resolve(blob);
         } else {
-          reject(new Error("Could not encode PNG"));
+          reject(localizedError("erd.export.error.pngEncodeFailed"));
         }
       }, "image/png");
       return;
@@ -129,14 +130,14 @@ function erdPngScale(width: number, height: number) {
     width <= 0 ||
     height <= 0
   ) {
-    throw new Error("ERD has invalid dimensions");
+    throw localizedError("erd.export.error.invalidDimensions");
   }
   const maxSafeScale = Math.min(
     ERD_EXPORT_MAX_CANVAS_SIDE / width,
     ERD_EXPORT_MAX_CANVAS_SIDE / height,
   );
   if (maxSafeScale < 1) {
-    throw new Error("ERD is too large to export as PNG; export SVG instead");
+    throw localizedError("erd.export.error.tooLargeForPng");
   }
   const deviceScale = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
   return Math.min(deviceScale, maxSafeScale);
@@ -161,7 +162,7 @@ export function svgMarkupToPngBlob(
         canvas.height = Math.ceil(height * scale);
         const context = canvas.getContext("2d");
         if (!context) {
-          throw new Error("Canvas is not available");
+          throw localizedError("erd.export.error.canvasUnavailable");
         }
         context.setTransform(scale, 0, 0, scale, 0, 0);
         context.drawImage(image, 0, 0, width, height);
@@ -174,7 +175,7 @@ export function svgMarkupToPngBlob(
     };
     image.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("Could not render SVG"));
+      reject(localizedError("erd.export.error.svgRenderFailed"));
     };
     image.src = url;
   });
@@ -210,7 +211,7 @@ export async function writeTextToClipboard(text: string) {
     }
   }
   if (!legacyCopyTextToClipboard(text)) {
-    throw new Error("Text clipboard is not available in this environment");
+    throw localizedError("erd.export.error.textClipboardUnavailable");
   }
 }
 
@@ -222,13 +223,13 @@ export async function writePngBlobToClipboard(blob: Blob) {
     typeof clipboard.write !== "function" ||
     typeof ClipboardItemCtor !== "function"
   ) {
-    throw new Error("PNG clipboard is not available in this environment");
+    throw localizedError("erd.export.error.pngClipboardUnavailable");
   }
   if (
     typeof ClipboardItemCtor.supports === "function" &&
     !ClipboardItemCtor.supports("image/png")
   ) {
-    throw new Error("PNG clipboard is not supported in this environment");
+    throw localizedError("erd.export.error.pngClipboardUnsupported");
   }
   const pngBlob =
     blob.type === "image/png" ? blob : new Blob([blob], { type: "image/png" });

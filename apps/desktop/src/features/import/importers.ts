@@ -1,3 +1,9 @@
+import {
+  LocalizedError,
+  isRecord,
+  keyMessage,
+  type LocalizedMessage,
+} from "@/core";
 export type ImportTextFormat = "csv" | "tsv" | "json" | "jsonl";
 export type ImportFileKind = ImportTextFormat | "sql" | "excel";
 
@@ -45,7 +51,7 @@ export function parseImportText(
 ): ParsedImport {
   const normalizedFormat = normalizeImportTextFormat(format);
   if (!normalizedFormat) {
-    throw new Error(unsupportedImportFormatMessage(format));
+    throw new LocalizedError(unsupportedImportFormatMessage(format));
   }
   return importTextParsers[normalizedFormat](text, maxRows);
 }
@@ -66,18 +72,31 @@ const supportedImportTextFormats = new Set<string>([
   "jsonl",
 ]);
 
-export function unsupportedImportFormatMessage(format: string): string {
+const supportedImportFormatList = "CSV, TSV, JSON, JSONL/NDJSON";
+
+/**
+ * Describe why a file cannot be imported, as a key the caller resolves (#135).
+ * The format string is the user's own filename extension, so it is interpolated
+ * rather than translated.
+ */
+export function unsupportedImportFormatMessage(
+  format: string,
+): LocalizedMessage {
   const normalized = normalizeFormatName(format);
-  const supported = "CSV, TSV, JSON, JSONL/NDJSON";
   switch (normalized) {
     case "sql":
-      return "SQL files are loaded into the editor and are not parsed as table data.";
+      return keyMessage("import.error.sqlNotTableData");
     case "excel":
     case "xls":
     case "xlsx":
-      return `Native XLSX/XLS import is not supported. Import ${supported}, or load a SQL file instead.`;
+      return keyMessage("import.error.xlsxUnsupported", {
+        supported: supportedImportFormatList,
+      });
     default:
-      return `Unsupported import format "${format}". Supported text import formats: ${supported}.`;
+      return keyMessage("import.error.unsupportedFormat", {
+        format,
+        supported: supportedImportFormatList,
+      });
   }
 }
 
@@ -471,8 +490,4 @@ function jsonSafeValue(value: unknown): unknown {
 
 function quoteIdentifier(name: string) {
   return `"${name.replace(/"/g, '""')}"`;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

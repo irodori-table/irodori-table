@@ -1,51 +1,33 @@
-import { flushSync } from "react-dom";
-import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { ErrorDetails } from "@/components/ErrorDetails";
-
-let container: HTMLDivElement;
-let root: Root;
-
-beforeEach(() => {
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  root = createRoot(container);
-});
-
-afterEach(() => {
-  flushSync(() => root.unmount());
-  container.remove();
-});
+import { renderUi } from "@/tests/helpers/render";
 
 describe("ErrorDetails", () => {
   it("frames structured backend errors with a summary and raw details", () => {
-    flushSync(() =>
-      root.render(
-        <ErrorDetails
-          error={{
-            kind: "timeout",
-            message: "connect timed out after 30s",
-            code: "ETIMEDOUT",
-            retryable: true,
-          }}
-        />,
-      ),
+    renderUi(
+      <ErrorDetails
+        error={{
+          kind: "timeout",
+          message: "connect timed out after 30s",
+          code: "ETIMEDOUT",
+          retryable: true,
+        }}
+      />,
     );
 
-    expect(container.textContent).toContain("Timed out");
-    expect(container.textContent).toContain("connect timed out after 30s");
-    expect(container.querySelector("details summary")?.textContent).toBe(
-      "Details",
-    );
-    expect(container.querySelector("pre")?.textContent).toContain(
-      '"kind": "timeout"',
-    );
+    expect(screen.getByText("Timed out")).toBeVisible();
+    expect(screen.getByText("connect timed out after 30s")).toBeVisible();
+    expect(screen.getByText("Details")).toBeVisible();
+    // The raw payload sits inside a collapsed <details>, so it is in the
+    // document but deliberately not visible until the user opens it.
+    expect(screen.getByText(/"kind": "timeout"/)).toBeInTheDocument();
   });
 
   it("keeps plain string errors compact", () => {
-    flushSync(() => root.render(<ErrorDetails error="Invalid host" />));
+    const { container } = renderUi(<ErrorDetails error="Invalid host" />);
 
-    expect(container.textContent).toContain("Invalid host");
+    expect(screen.getByText("Invalid host")).toBeVisible();
     expect(container.querySelector("details")).toBeNull();
   });
 });

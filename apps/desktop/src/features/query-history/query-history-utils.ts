@@ -1,3 +1,4 @@
+import type { Translator } from "@/i18n";
 import type { QueryHistoryItem } from "./query-history-store";
 
 export type QueryHistoryConnection = {
@@ -30,12 +31,13 @@ export function formatHistoryTime(value: string, locale?: string) {
  */
 export function formatHistoryDateTime(
   value: string,
+  t: Translator["t"],
   locale?: string,
   now = new Date(),
 ) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    return "Unknown time";
+    return t("history.unknownTime");
   }
   return date.toLocaleString(locale, {
     year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
@@ -52,13 +54,29 @@ export function toCount(value: bigint | number, locale?: string) {
   return Number(value).toLocaleString(locale);
 }
 
-export function formatHistoryOutcome(item: QueryHistoryItem, locale?: string) {
+/**
+ * The chip on every query-history row — the most repeated string in the panel,
+ * so it takes `t` rather than baking English in (#135). The driver's own error
+ * text stays verbatim; only the labels around it are translated.
+ */
+export function formatHistoryOutcome(
+  item: QueryHistoryItem,
+  t: Translator["t"],
+  locale?: string,
+) {
   if (item.status === "error") {
-    return item.error ? compactSql(item.error, 72) : "failed";
+    return item.error
+      ? compactSql(item.error, 72)
+      : t("history.outcome.failed");
   }
-  return `${toCount(item.rowCount, locale)} rows${
-    item.truncated ? " capped" : ""
-  } · ${toCount(item.elapsedMs, locale)} ms`;
+  const rows = t(
+    item.truncated ? "history.outcome.rowsCapped" : "history.outcome.rows",
+    { count: toCount(item.rowCount, locale) },
+  );
+  const elapsed = t("history.outcome.elapsed", {
+    ms: toCount(item.elapsedMs, locale),
+  });
+  return `${rows} · ${elapsed}`;
 }
 
 export function historySearchText(

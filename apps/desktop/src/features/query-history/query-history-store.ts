@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { parseStoredNumber } from "@/core";
+import { clampInt, isRecord, parseStoredNumber } from "@/core";
 
 export const queryHistoryMaxItemsDefault = 200;
 export const queryHistoryMaxItemsHardLimit = 500;
@@ -73,10 +73,6 @@ type QueryHistoryState = {
   clearItems: (ids: Iterable<string>) => void;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function storage(): Storage | null {
   try {
     return typeof window !== "undefined" && window.localStorage
@@ -87,16 +83,12 @@ function storage(): Storage | null {
   }
 }
 
-function clampNumber(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, Math.round(value)));
-}
-
 export function clampQueryHistoryMaxItems(value: number) {
-  return clampNumber(value, 0, queryHistoryMaxItemsHardLimit);
+  return clampInt(value, 0, queryHistoryMaxItemsHardLimit);
 }
 
 export function clampQueryHistoryResultRows(value: number) {
-  return clampNumber(value, 0, queryHistoryResultRowsHardLimit);
+  return clampInt(value, 0, queryHistoryResultRowsHardLimit);
 }
 
 function numberValue(value: unknown) {

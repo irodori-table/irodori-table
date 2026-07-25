@@ -522,7 +522,7 @@
         "executionBackends": ["hive", "spark", "trino"],
         "tableFormats": ["hive", "iceberg"]
       },
-      "notes": "catalog/metastore shape still pending"
+      "notes": "catalog/metastore shape still pending; connector currently globs read_parquet under the table root and ignores the metastore, so results can be silently wrong (#117, irodori-extension-hive#6)"
     },
     {
       "id": "athena",

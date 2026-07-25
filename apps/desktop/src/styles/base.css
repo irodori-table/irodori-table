@@ -995,6 +995,10 @@ body:has(.modal-overlay, .palette-overlay) .action-toast-stack {
   border-left-color: var(--green);
 }
 
+.action-toast.warning {
+  border-left-color: var(--amber);
+}
+
 .action-toast.error {
   border-left-color: var(--red);
 }
@@ -1012,6 +1016,10 @@ body:has(.modal-overlay, .palette-overlay) .action-toast-stack {
 
 .action-toast.success .action-toast-mark {
   background: var(--green);
+}
+
+.action-toast.warning .action-toast-mark {
+  background: var(--amber);
 }
 
 .action-toast.error .action-toast-mark {

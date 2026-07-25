@@ -4,8 +4,8 @@ import type {
   RefObject,
 } from "react";
 import type { EditorSplitMode } from "./store/workbench-store";
+import { clampNumber, type ValueUpdater } from "@/core";
 
-type ValueUpdater<T> = T | ((current: T) => T);
 type NumberSetter = (value: ValueUpdater<number>) => void;
 
 export type PanelResizeKind =
@@ -24,10 +24,6 @@ export const RESULTS_HEIGHT_MIN = 220;
 export const RESULTS_HEIGHT_MAX = 560;
 export const EDITOR_SPLIT_MIN = 28;
 export const EDITOR_SPLIT_MAX = 72;
-
-function clampNumber(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
 
 type PanelResizeControllerOptions = {
   sidebarWidth: number;

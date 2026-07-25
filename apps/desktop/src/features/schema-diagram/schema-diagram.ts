@@ -10,6 +10,7 @@
 // designer never re-implements DDL generation.
 
 import type { DatabaseMetadata } from "@/generated/irodori-api";
+import { isRecord, localizedError } from "@/core";
 import {
   buildCreateDatabaseSql,
   buildTableSpecDocument,
@@ -282,12 +283,12 @@ export function serializeDiagramDocument(document: DiagramDocument): string {
 export function parseDiagramDocument(text: string): DiagramDocument {
   const parsed = JSON.parse(text) as unknown;
   if (!isRecord(parsed) || parsed.format !== schemaDiagramFormat) {
-    throw new Error(
-      `Unsupported schema diagram format. Expected ${schemaDiagramFormat}.`,
-    );
+    throw localizedError("schemaDiagram.error.unsupportedFormat", {
+      format: schemaDiagramFormat,
+    });
   }
   if (!Array.isArray(parsed.tables)) {
-    throw new Error("Schema diagram is missing tables.");
+    throw localizedError("schemaDiagram.error.missingTables");
   }
   return {
     format: schemaDiagramFormat,
@@ -297,7 +298,7 @@ export function parseDiagramDocument(text: string): DiagramDocument {
 
 function parseDiagramTable(value: unknown): DiagramTable {
   if (!isRecord(value)) {
-    throw new Error("Invalid table entry in schema diagram.");
+    throw localizedError("schemaDiagram.error.invalidTableEntry");
   }
   const schema = stringValue(value.schema);
   const name = stringValue(value.name) || "table";
@@ -394,10 +395,6 @@ export function clampTablePosition(
     x: Math.max(0, Math.round(x)),
     y: Math.max(0, Math.round(y)),
   };
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function stringValue(value: unknown): string {

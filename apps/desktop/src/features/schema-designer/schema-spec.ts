@@ -1,3 +1,4 @@
+import { isRecord, localizedError } from "@/core";
 import type {
   DatabaseMetadata,
   DbObjectMetadata,
@@ -140,12 +141,12 @@ export function exportTableSpecMarkdown(
 export function parseTableSpecDocument(text: string): TableSpecDocument {
   const parsed = JSON.parse(text) as unknown;
   if (!isRecord(parsed) || parsed.format !== tableSpecFormat) {
-    throw new Error(
-      `Unsupported table specification format. Expected ${tableSpecFormat}.`,
-    );
+    throw localizedError("schemaSpec.error.unsupportedFormat", {
+      format: tableSpecFormat,
+    });
   }
   if (!Array.isArray(parsed.schemas)) {
-    throw new Error("Table specification is missing schemas.");
+    throw localizedError("schemaSpec.error.missingSchemas");
   }
   return {
     format: tableSpecFormat,
@@ -535,14 +536,14 @@ function specForeignKeyDraft(
 
 function parseSpecSchema(value: unknown): TableSpecSchema {
   if (!isRecord(value)) {
-    throw new Error("Invalid schema entry in table specification.");
+    throw localizedError("schemaSpec.error.invalidSchemaEntry");
   }
   const name = stringValue(value.name);
   if (!name) {
-    throw new Error("Schema entry is missing a name.");
+    throw localizedError("schemaSpec.error.schemaMissingName");
   }
   if (!Array.isArray(value.tables)) {
-    throw new Error(`Schema '${name}' is missing tables.`);
+    throw localizedError("schemaSpec.error.schemaMissingTables", { name });
   }
   return {
     name,
@@ -552,14 +553,14 @@ function parseSpecSchema(value: unknown): TableSpecSchema {
 
 function parseSpecTable(value: unknown): TableSpecTable {
   if (!isRecord(value)) {
-    throw new Error("Invalid table entry in table specification.");
+    throw localizedError("schemaSpec.error.invalidTableEntry");
   }
   const name = stringValue(value.name);
   if (!name) {
-    throw new Error("Table entry is missing a name.");
+    throw localizedError("schemaSpec.error.tableMissingName");
   }
   if (!Array.isArray(value.columns)) {
-    throw new Error(`Table '${name}' is missing columns.`);
+    throw localizedError("schemaSpec.error.tableMissingColumns", { name });
   }
   return {
     name,
@@ -577,12 +578,12 @@ function parseSpecTable(value: unknown): TableSpecTable {
 
 function parseSpecColumn(value: unknown): TableSpecColumn {
   if (!isRecord(value)) {
-    throw new Error("Invalid column entry in table specification.");
+    throw localizedError("schemaSpec.error.invalidColumnEntry");
   }
   const name = stringValue(value.name);
   const dataType = stringValue(value.dataType);
   if (!name || !dataType) {
-    throw new Error("Column entry is missing name or dataType.");
+    throw localizedError("schemaSpec.error.columnMissingNameOrType");
   }
   return {
     name,
@@ -595,7 +596,7 @@ function parseSpecColumn(value: unknown): TableSpecColumn {
 
 function parseSpecIndex(value: unknown): TableSpecIndex {
   if (!isRecord(value)) {
-    throw new Error("Invalid index entry in table specification.");
+    throw localizedError("schemaSpec.error.invalidIndexEntry");
   }
   return {
     name: stringValue(value.name) || "idx",
@@ -606,11 +607,11 @@ function parseSpecIndex(value: unknown): TableSpecIndex {
 
 function parseSpecForeignKey(value: unknown): TableSpecForeignKey {
   if (!isRecord(value)) {
-    throw new Error("Invalid foreign key entry in table specification.");
+    throw localizedError("schemaSpec.error.invalidForeignKeyEntry");
   }
   const referencesTable = stringValue(value.referencesTable);
   if (!referencesTable) {
-    throw new Error("Foreign key entry is missing referencesTable.");
+    throw localizedError("schemaSpec.error.foreignKeyMissingReferencesTable");
   }
   return {
     name: optionalString(value.name),
@@ -661,10 +662,6 @@ function sanitizeFileNamePart(value: string) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
   return sanitized || "connection";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
 }
 
 function stringValue(value: unknown) {

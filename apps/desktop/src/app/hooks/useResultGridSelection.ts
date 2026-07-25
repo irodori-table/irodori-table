@@ -9,9 +9,7 @@ import {
   type SelectedCell,
   type ResultCellRange,
 } from "@/features/results";
-import { clampNumber } from "../app-workbench-utils";
-
-type ValueUpdater<T> = T | ((current: T) => T);
+import { clampNumber, type ValueUpdater } from "@/core";
 
 type ResultGridViewModel = ReturnType<typeof buildResultGridViewModel>;
 

@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { LocalizedError, localizedErrorMessage } from "@/core";
+import { createTranslator } from "@/i18n";
+
 import {
   bundledKnowledgePack,
   defaultKnowledgePackUrl,
@@ -138,7 +141,7 @@ describe("knowledge pack", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(fetchKnowledgePack()).rejects.toThrow(
-      "knowledge pack has an unsupported schema",
+      "Knowledge pack has an unsupported schema",
     );
   });
 
@@ -151,7 +154,31 @@ describe("knowledge pack", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(fetchKnowledgePack()).rejects.toThrow(
-      "knowledge pack request failed: HTTP 503",
+      "Knowledge pack request failed: HTTP 503",
+    );
+  });
+
+  // The pack errors carry a translation key now (#135); Error.message stays
+  // English so plain errorMessage() call sites keep reading sensibly, and
+  // localizedErrorMessage() renders the user's language.
+  it("carries a translation key alongside the English message", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue({ ok: false, status: 503, json: async () => ({}) }),
+    );
+
+    const error = await fetchKnowledgePack().catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(LocalizedError);
+    expect((error as LocalizedError).localized).toEqual({
+      kind: "key",
+      key: "knowledge.pack.error.requestFailed",
+      values: { status: 503 },
+    });
+    expect(localizedErrorMessage(createTranslator("ja").t, error)).toBe(
+      "ナレッジパックの取得に失敗しました: HTTP 503",
     );
   });
 });

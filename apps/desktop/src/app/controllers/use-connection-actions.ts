@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import type { ShowActionNotice } from "@/app/ActionToast";
 import {
   describeConnection,
+  engineCorrectnessWarning,
   engineLabel,
   exportConnectionProfiles,
   importConnectionProfiles,
@@ -23,14 +24,18 @@ import {
 import { toCount } from "@/features/results";
 import { downloadBlob } from "@/features/erd";
 import { queryService } from "@/features/workbench";
-import { errorDisplay, errorMessage, isRetryableError } from "@/core";
+import {
+  type ValueUpdater,
+  errorDisplay,
+  errorMessage,
+  isRetryableError,
+} from "@/core";
 import type { Translator } from "@/i18n";
 import type { DatabaseMetadata } from "@/generated/irodori-api";
 import { tauriRuntimeError } from "../app-workbench-utils";
 
 // Mirrors the connection-store setter contract: accept either the next value or
 // an updater that derives it from the current value.
-type ValueUpdater<T> = T | ((current: T) => T);
 
 export type ConnectionActionsDeps = {
   draft: ConnectionDraft;
@@ -394,6 +399,18 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
           ms: elapsedMs,
         }),
       );
+      // A connector that can return wrong rows has to say so on every connect,
+      // not once in the docs (#117). This rides after the success notice
+      // because the connection genuinely opened; it is the results that cannot
+      // be trusted. Warnings do not auto-dismiss.
+      const correctness = engineCorrectnessWarning(profile.engine);
+      if (correctness) {
+        showActionNotice(
+          "warning",
+          t(correctness.titleKey),
+          t(correctness.detailKey),
+        );
+      }
     } catch (error) {
       const display = errorDisplay(error);
       setConnectionError(error);
