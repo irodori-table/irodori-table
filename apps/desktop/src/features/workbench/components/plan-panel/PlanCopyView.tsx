@@ -1,4 +1,6 @@
 import { Copy } from "lucide-react";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import type {
   QueryPlanAnalysis,
   QueryPlanCopyFormat,
@@ -18,11 +20,13 @@ export function CopyView({
   selectedNodeFindings: QueryPlanFinding[];
   onCopyFormat: (format: QueryPlanCopyFormat) => void;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
     <section className="plan-section flush">
       <div className="plan-section-title">
         <Copy size={14} />
-        <span>Copy</span>
+        <span>{t("plan.view.copy")}</span>
       </div>
       <div className="plan-copy-list">
         {plan.copyFormats.map((format) => (
@@ -43,7 +47,7 @@ export function CopyView({
             }
           >
             <Copy size={13} />
-            <span>Selected Node</span>
+            <span>{t("plan.selectedNodeHeading")}</span>
           </button>
         ) : null}
       </div>

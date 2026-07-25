@@ -443,7 +443,9 @@ export function ProviderPicker({ notify }: ProviderPickerProps) {
                 <span>{t("ai.provider.args")}</span>
                 <input
                   value={config.args.join(" ")}
-                  placeholder="-p  (or use {prompt})"
+                  placeholder={t("ai.cliArgsShortPlaceholder", {
+                    token: "{prompt}",
+                  })}
                   onChange={(e) =>
                     setConfig((c) => ({
                       ...c,

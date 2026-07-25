@@ -45,79 +45,33 @@ const NO_OWN_TEXT = new Set<string>(["main.tsx", "App.tsx"]);
 const TEXT_ATTRIBUTES = ["title", "aria-label", "placeholder"];
 
 /**
- * Values that are not prose: SQL keywords, format names, symbols, and short
- * lowercase type tokens the app deliberately shows verbatim in both languages.
+ * Values that are not prose and so are shown verbatim in both languages:
+ * symbols, SQL keywords, short lowercase type tokens — and sample values a user
+ * is meant to read literally, like an example URL (`https://api.openai.com`) or
+ * an example identifier (`new-branch`). Translating a sample would make it
+ * wrong, not localised.
  */
-const NOT_PROSE = /^(?:[\W\d]*|[A-Z][A-Z0-9_ ]*|[a-z_]+(?:_[a-z]+)*)$/;
+const NOT_PROSE =
+  /^(?:[\W\d]*|[A-Z][A-Z0-9_ ]*|[a-z_]+(?:_[a-z]+)*|[a-z][a-z0-9]*(?:-[a-z0-9]+)+|https?:\/\/\S+)$/;
 
 /**
- * Dialogs and panels that still contain no `t()` call at all. #133 cleared
- * SchemaDesignerDialog, SchemaDiagramDialog, ImportDialog and
- * SearchReplacePanel; these three are what remains.
- */
-const PANELS_WITHOUT_I18N = [
-  "features/results/components/BiPanel.tsx",
-  "features/workbench/components/LakehousePanel.tsx",
-  "features/workbench/components/PlanPanel.tsx",
-];
-
-/**
- * Hardcoded `title`/`aria-label`/`placeholder` values that have not been swept
- * yet. Each one renders in English regardless of the app language.
+ * Dialogs and panels that contain no `t()` call at all.
  *
- * Keyed by file and value, deliberately without a line number: a baseline that
- * pins line numbers breaks on any unrelated edit above an entry, and the
- * failure says nothing about what actually changed.
+ * Empty since #170 cleared the last three (BiPanel, LakehousePanel,
+ * PlanPanel). Keeping the constant rather than inlining `[]` keeps the failure
+ * message legible when something regresses: the diff names the file.
  */
-const HARDCODED_TEXT_ATTRIBUTES = [
-  'components/ColorPicker.tsx aria-label="Saturation and brightness"',
-  'components/ColorPicker.tsx aria-label="Hue"',
-  'components/ColorPicker.tsx aria-label="Hex color"',
-  'components/ColorPicker.tsx title="Remove"',
-  'components/ColorPicker.tsx aria-label="Add current color to custom palette"',
-  'components/ColorPicker.tsx title="Add current color"',
-  'features/ai/AiGenerateDialog.tsx placeholder="sk-… (kept in memory only)"',
-  'features/ai/AiGenerateDialog.tsx placeholder="-p   (use {prompt} as a placeholder, else prompt is piped to stdin)"',
-  'features/ai/chat/ProviderPicker.tsx placeholder="https://api.openai.com"',
-  'features/ai/chat/ProviderPicker.tsx placeholder="-p  (or use {prompt})"',
-  'features/erd/erd-svg.tsx aria-label="Entity relationship diagram"',
-  'features/git/GitDrawer.tsx placeholder="new-branch"',
-  'features/query-editor/EditorSplitLayout.tsx aria-label="Resize editor split"',
-  'features/query-editor/MetadataToolWindow.tsx aria-label="Find tool window"',
-  'features/query-editor/MetadataToolWindow.tsx title="Edit Source"',
-  'features/query-editor/MetadataToolWindow.tsx aria-label="Edit Source"',
-  'features/query-editor/MetadataToolWindow.tsx title="Close"',
-  'features/query-editor/MetadataToolWindow.tsx aria-label="Close"',
-  'features/query-editor/QueryEditorPane.tsx aria-label="SQL query actions"',
-  'features/results/components/BiPanel.tsx title="Close BI"',
-  'features/results/components/BiPanel.tsx aria-label="Close BI"',
-  'features/results/components/BiPanel.tsx aria-label="BI result summary"',
-  'features/results/components/BiPanel.tsx aria-label="BI fields"',
-  'features/results/components/ChartResultView.tsx aria-label="Chart window"',
-  'features/results/components/ChartResultView.tsx aria-label="Chart type"',
-  'features/results/components/ChartResultView.tsx title="Series color"',
-  'features/results/components/ChartResultView.tsx title="Reset to theme color"',
-  'features/results/components/ChartResultView.tsx aria-label="Reset series color"',
-  'features/results/components/ChartResultView.tsx title="Open chart window"',
-  'features/results/components/GraphResultView.tsx aria-label="Query result graph"',
-  'features/workbench/components/Inspector.tsx aria-label="Close completion"',
-  'features/workbench/components/Inspector.tsx title="Close completion"',
-  'features/workbench/components/Inspector.tsx aria-label="Close completion"',
-  'features/workbench/components/Inspector.tsx title="Close completion"',
-  'features/workbench/components/Inspector.tsx aria-label="Loading metadata"',
-  'features/workbench/components/LakehousePanel.tsx aria-label="Lakehouse"',
-  'features/workbench/components/LakehousePanel.tsx title="Close Lakehouse"',
-  'features/workbench/components/LakehousePanel.tsx aria-label="Close Lakehouse"',
-  'features/workbench/components/PlanPanel.tsx aria-label="Explain plan"',
-  'features/workbench/components/PlanPanel.tsx title="Close Plan"',
-  'features/workbench/components/PlanPanel.tsx aria-label="Close Plan"',
-  'features/workbench/components/PlanPanel.tsx title="Explain Plan"',
-  'features/workbench/components/PlanPanel.tsx title="Explain Analyse"',
-  'features/workbench/components/plan-panel/PlanAiExplanation.tsx aria-label="Explain this query plan with AI"',
-  'features/workbench/components/plan-panel/PlanAnalysis.tsx aria-label="Plan analysis views"',
-  'features/workbench/components/plan-panel/PlanNodeDetail.tsx aria-label="Selected plan node"',
-  'features/workbench/components/plan-panel/PlanNodeDetail.tsx title="Copy selected node"',
-];
+const PANELS_WITHOUT_I18N: string[] = [];
+
+/**
+ * Hardcoded `title`/`aria-label`/`placeholder` values that render in English
+ * regardless of the app language.
+ *
+ * Empty since #170. Entries are keyed by file and value, deliberately without a
+ * line number: a baseline that pins line numbers breaks on any unrelated edit
+ * above an entry, and the failure says nothing about what actually changed.
+ */
+const HARDCODED_TEXT_ATTRIBUTES: string[] = [];
 
 function scannedComponents(): [path: string, source: string][] {
   return Object.entries(sources)
@@ -130,7 +84,7 @@ describe("untranslated UI surfaces", () => {
   // The exact check that would have caught SchemaDesignerDialog,
   // SchemaDiagramDialog, ImportDialog and SearchReplacePanel the moment each
   // was written (#133).
-  it("only the known panels bypass i18n entirely", () => {
+  it("no dialog or panel bypasses i18n entirely", () => {
     const bypassing = scannedComponents()
       .filter(([path]) =>
         /(?:Dialog|Panel|Drawer|Sidebar|Tab)\.tsx$/.test(path),
@@ -144,7 +98,7 @@ describe("untranslated UI surfaces", () => {
     expect(bypassing).toEqual([...PANELS_WITHOUT_I18N].sort());
   });
 
-  it("only the known text attributes are hardcoded", () => {
+  it("no user-facing text attribute is a bare string literal", () => {
     const pattern = new RegExp(
       `\\b(${TEXT_ATTRIBUTES.join("|")})="([^"]+)"`,
       "g",

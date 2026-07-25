@@ -1,6 +1,8 @@
 import type { RefObject } from "react";
 import type { ErdLayout, ErdLayoutTable } from "./erd";
 import type { IrodoriTheme } from "@/theme";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 
 export function erdSvgStyle(theme: IrodoriTheme) {
   const { ui, syntax } = theme;
@@ -45,6 +47,8 @@ export function ErdSvg({
   svgStyle: string;
   onSelectTable?: (tableId: string) => void;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
     <svg
       ref={svgRef}
@@ -54,7 +58,7 @@ export function ErdSvg({
       height={layout.height}
       viewBox={`0 0 ${layout.width} ${layout.height}`}
       role="img"
-      aria-label="Entity relationship diagram"
+      aria-label={t("erd.diagramLabel")}
     >
       <style>{svgStyle}</style>
       <defs>

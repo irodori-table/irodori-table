@@ -2,6 +2,8 @@ import { Network } from "lucide-react";
 import type { QueryPlanEdge, QueryPlanNode } from "@/generated/irodori-api";
 import { formatPercent } from "./plan-format";
 import type { PlanNodeSelector } from "./plan-types";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 
 export function GraphView({
   nodes,
@@ -16,11 +18,13 @@ export function GraphView({
   selectedNodeId: string | null;
   onSelectNode: PlanNodeSelector;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
     <section className="plan-section flush">
       <div className="plan-section-title">
         <Network size={14} />
-        <span>Graph</span>
+        <span>{t("plan.view.graph")}</span>
       </div>
       <div className="plan-diagram">
         {nodes.map((node) => (

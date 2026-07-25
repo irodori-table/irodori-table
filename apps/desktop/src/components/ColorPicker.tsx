@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Plus, X } from "lucide-react";
 import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import {
   CUSTOM_PALETTE_MAX,
   clamp01,
@@ -83,6 +84,8 @@ export function ColorPicker({
   onChange,
   fallbackColor,
 }: ColorPickerProps) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const initialHex =
     normalizeHexColor(value) ?? normalizeHexColor(fallbackColor);
   const hsvRef = useRef<Hsv>(
@@ -175,7 +178,7 @@ export function ColorPicker({
         className="color-picker-sv"
         style={{ background: hueHex }}
         role="slider"
-        aria-label="Saturation and brightness"
+        aria-label={t("colorPicker.saturationBrightness")}
         aria-valuetext={currentHex}
         onPointerDown={(event) => {
           event.currentTarget.setPointerCapture(event.pointerId);
@@ -207,7 +210,7 @@ export function ColorPicker({
         ref={hueRef}
         className="color-picker-hue"
         role="slider"
-        aria-label="Hue"
+        aria-label={t("colorPicker.hue")}
         aria-valuemin={0}
         aria-valuemax={360}
         aria-valuenow={Math.round(hsv.h)}
@@ -242,7 +245,7 @@ export function ColorPicker({
           value={hexDraft.replace(/^#/, "")}
           spellCheck={false}
           maxLength={7}
-          aria-label="Hex color"
+          aria-label={t("colorPicker.hexColor")}
           onChange={(event) => setHexDraft(event.currentTarget.value)}
           onBlur={() => applyHex(hexDraft)}
           onKeyDown={(event) => {
@@ -292,7 +295,7 @@ export function ColorPicker({
                 type="button"
                 className="color-swatch-remove"
                 aria-label={`Remove ${color}`}
-                title="Remove"
+                title={t("colorPicker.removeSwatch")}
                 onClick={() => removeCustomColor(color)}
               >
                 <X size={9} />
@@ -302,8 +305,8 @@ export function ColorPicker({
           <button
             type="button"
             className="color-swatch-add"
-            aria-label="Add current color to custom palette"
-            title="Add current color"
+            aria-label={t("colorPicker.addCurrentColorToPalette")}
+            title={t("colorPicker.addCurrentColor")}
             onClick={() => addCustomColor(currentHex)}
           >
             <Plus size={13} />

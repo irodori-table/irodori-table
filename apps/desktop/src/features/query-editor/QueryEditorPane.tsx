@@ -13,6 +13,8 @@ import type {
   SqlMetadataToolWindowRequest,
 } from "./SqlEditor";
 import type { DatabaseMetadata, DbEngine } from "../../generated/irodori-api";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import type { SqlSnippetDefinition } from "../../sql/completion";
 import type { SqlFormatterId } from "../../sql/formatter";
 import type { SqlMetadataTarget } from "../../sql/metadata-inspection";
@@ -136,6 +138,8 @@ export function QueryEditorPane({
   sqlFileDropLabel = "Drop .sql file to load",
   onMetadataJump,
 }: QueryEditorPaneProps) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -258,7 +262,7 @@ export function QueryEditorPane({
         <div
           className="editor-action-dock"
           role="toolbar"
-          aria-label="SQL query actions"
+          aria-label={t("editor.queryActions")}
         >
           <EditorCommandBar
             formatter={formatter}

@@ -2,6 +2,8 @@ import { Table2 } from "lucide-react";
 import type { QueryPlanNode } from "@/generated/irodori-api";
 import { formatMaybe, formatPercent } from "./plan-format";
 import type { PlanNodeSelector } from "./plan-types";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 
 export function TableView({
   nodes,
@@ -12,22 +14,24 @@ export function TableView({
   selectedNodeId: string | null;
   onSelectNode: PlanNodeSelector;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
     <section className="plan-section flush">
       <div className="plan-section-title">
         <Table2 size={14} />
-        <span>Table</span>
+        <span>{t("plan.view.table")}</span>
       </div>
       <div className="plan-table-wrap">
         <table className="plan-table">
           <thead>
             <tr>
-              <th>Operation</th>
-              <th>Object</th>
-              <th>Rows</th>
-              <th>Cost</th>
-              <th>Time</th>
-              <th>Impact</th>
+              <th>{t("plan.column.operation")}</th>
+              <th>{t("plan.column.object")}</th>
+              <th>{t("plan.column.rows")}</th>
+              <th>{t("plan.column.cost")}</th>
+              <th>{t("plan.column.time")}</th>
+              <th>{t("plan.column.impact")}</th>
             </tr>
           </thead>
           <tbody>

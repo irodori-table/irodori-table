@@ -6,6 +6,8 @@ import type {
   QueryPlanNode,
 } from "@/generated/irodori-api";
 import type { PlanNodeSelector } from "./plan-types";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 
 export function OverviewView({
   plan,
@@ -20,12 +22,14 @@ export function OverviewView({
   selectedNodeId: string | null;
   onSelectNode: PlanNodeSelector;
 }) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   return (
     <>
       <section className="plan-section compact">
         <div className="plan-section-title">
           <AlertTriangle size={14} />
-          <span>Findings</span>
+          <span>{t("plan.findings")}</span>
         </div>
         <FindingList
           findings={findings}
@@ -37,7 +41,7 @@ export function OverviewView({
       <section className="plan-section compact">
         <div className="plan-section-title">
           <Table2 size={14} />
-          <span>Metrics</span>
+          <span>{t("plan.metrics")}</span>
         </div>
         <div className="plan-metric-grid">
           {plan.metrics.map((metric) => (
@@ -49,7 +53,7 @@ export function OverviewView({
       <section className="plan-section compact">
         <div className="plan-section-title">
           <Flame size={14} />
-          <span>Hot Path</span>
+          <span>{t("plan.hotPath")}</span>
         </div>
         <HotNodeList
           nodes={hotNodes}

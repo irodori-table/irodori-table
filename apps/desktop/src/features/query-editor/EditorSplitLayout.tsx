@@ -11,6 +11,8 @@ import type {
   SqlMetadataToolWindowRequest,
 } from "./SqlEditor";
 import { EditorGroupShell } from "./EditorGroupShell";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import type { DatabaseMetadata, DbEngine } from "../../generated/irodori-api";
 import type { SqlSnippetDefinition } from "../../sql/completion";
 import type { SqlFormatterId } from "../../sql/formatter";
@@ -82,6 +84,8 @@ export function EditorSplitLayout({
   beginEditorSplitResize,
   onEditorSplitResizeKey,
 }: EditorSplitLayoutProps) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
   const renderEditorGroup = (group: EditorGroup, state: EditorGroupState) => (
     <EditorGroupShell
       group={group}
@@ -118,7 +122,7 @@ export function EditorSplitLayout({
           <div
             className={`panel-resizer editor-split-resizer ${editorSplitMode}`}
             role="separator"
-            aria-label="Resize editor split"
+            aria-label={t("editor.resizeSplit")}
             aria-orientation={
               editorSplitMode === "down" ? "horizontal" : "vertical"
             }

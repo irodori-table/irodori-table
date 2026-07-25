@@ -1,6 +1,8 @@
 import { currentAppLocale } from "@/features/preferences";
 import type { QueryResultSet } from "@/generated/irodori-api";
-import type { ChartResultColumn, ChartResultModel } from "./chart-result";
+import { createTranslator, type TranslationKey, type Translator } from "@/i18n";
+import type { ChartColumnKind, ChartResultColumn } from "./chart-result";
+import type { ChartResultModel } from "./chart-result";
 import { toCount } from "./result-format";
 
 export const biColumnRoles = ["dimension", "measure", "time", "field"] as const;
@@ -11,6 +13,7 @@ export type BiColumnProfile = {
   index: number;
   name: string;
   role: BiColumnRole;
+  roleLabel: string;
   filledLabel: string;
   distinctLabel: string | null;
   kindLabel: string;
@@ -25,6 +28,26 @@ export type BiResultSummary = {
   profiles: BiColumnProfile[];
 };
 
+const roleKeys = {
+  dimension: "bi.role.dimension",
+  measure: "bi.role.measure",
+  time: "bi.role.time",
+  field: "bi.role.field",
+} as const satisfies Record<BiColumnRole, TranslationKey>;
+
+const kindKeys = {
+  category: "bi.kind.category",
+  date: "bi.kind.date",
+  number: "bi.kind.number",
+} as const satisfies Record<ChartColumnKind, TranslationKey>;
+
+/**
+ * Build the BI panel's labels.
+ *
+ * The locale drives both halves: number grouping through `toLocaleString`, and
+ * the words around the numbers through the translator. Before #170 only the
+ * first half followed the setting, so a Japanese user saw "1,234 rows".
+ */
 export function buildBiResultSummary(
   result: QueryResultSet | null,
   chartModel: ChartResultModel | null,
@@ -33,48 +56,68 @@ export function buildBiResultSummary(
   if (!result) {
     return null;
   }
+  const { t } = createTranslator(locale);
 
   const profiles = chartModel
-    ? chartModel.columns.map((column) => profileFromChartColumn(column, locale))
+    ? chartModel.columns.map((column) =>
+        profileFromChartColumn(column, t, locale),
+      )
     : result.columns.map((name, index) => ({
         index,
         name,
         role: "field" as const,
-        filledLabel: "not sampled",
+        roleLabel: t("bi.role.field"),
+        filledLabel: t("bi.summary.notSampled"),
         distinctLabel: null,
-        kindLabel: "field",
+        kindLabel: t("bi.kind.field"),
       }));
 
   return {
-    rowCountLabel: `${toCount(result.rowCount, locale)} rows`,
-    columnCountLabel: `${toCount(result.columns.length, locale)} columns`,
-    elapsedLabel: formatElapsed(result.elapsedMs, locale),
+    rowCountLabel: t("bi.summary.rows", {
+      count: toCount(result.rowCount, locale),
+    }),
+    columnCountLabel: t("bi.summary.columns", {
+      count: toCount(result.columns.length, locale),
+    }),
+    elapsedLabel: formatElapsed(result.elapsedMs, t, locale),
     sampleLabel: chartModel
-      ? `${toCount(chartModel.sampledRows, locale)} sampled${
-          chartModel.truncated
-            ? ` of ${toCount(chartModel.sourceRows, locale)}`
-            : ""
-        }`
+      ? chartModel.truncated
+        ? t("bi.summary.sampledOf", {
+            count: toCount(chartModel.sampledRows, locale),
+            total: toCount(chartModel.sourceRows, locale),
+          })
+        : t("bi.summary.sampled", {
+            count: toCount(chartModel.sampledRows, locale),
+          })
       : null,
-    statusLabel: result.truncated ? "truncated result" : "current result",
+    statusLabel: result.truncated
+      ? t("bi.summary.statusTruncated")
+      : t("bi.summary.statusCurrent"),
     profiles,
   };
 }
 
 function profileFromChartColumn(
   column: ChartResultColumn,
+  t: Translator["t"],
   locale: string,
 ): BiColumnProfile {
+  const role = roleFromChartColumn(column);
   return {
     index: column.index,
     name: column.name,
-    role: roleFromChartColumn(column),
-    filledLabel: `${toCount(column.filledCount, locale)} filled`,
+    role,
+    roleLabel: t(roleKeys[role]),
+    filledLabel: t("bi.field.filled", {
+      count: toCount(column.filledCount, locale),
+    }),
     distinctLabel:
       column.kind === "category"
-        ? `${toCount(column.distinctCount, locale)} distinct`
+        ? t("bi.field.distinct", {
+            count: toCount(column.distinctCount, locale),
+          })
         : null,
-    kindLabel: column.kind,
+    kindLabel: t(kindKeys[column.kind]),
   };
 }
 
@@ -88,15 +131,17 @@ function roleFromChartColumn(column: ChartResultColumn): BiColumnRole {
   return "dimension";
 }
 
-function formatElapsed(elapsedMs: bigint, locale: string) {
+function formatElapsed(elapsedMs: bigint, t: Translator["t"], locale: string) {
   const elapsed = Number(elapsedMs);
   if (!Number.isFinite(elapsed)) {
-    return "elapsed unknown";
+    return t("bi.summary.elapsedUnknown");
   }
   if (elapsed < 1_000) {
-    return `${elapsed.toLocaleString(locale)} ms`;
+    return t("bi.summary.elapsedMs", { value: elapsed.toLocaleString(locale) });
   }
-  return `${(elapsed / 1_000).toLocaleString(locale, {
-    maximumFractionDigits: 2,
-  })} s`;
+  return t("bi.summary.elapsedSeconds", {
+    value: (elapsed / 1_000).toLocaleString(locale, {
+      maximumFractionDigits: 2,
+    }),
+  });
 }
