@@ -1478,7 +1478,7 @@ export const ja = {
   "search.resultCountOne": "1 件",
   "search.tabCount": "{count} タブ",
   "search.tabCountOne": "1 タブ",
-  "search.summary": "{tabs}中に{results}",
+  "search.summary": "{tabs}中に {results}",
   "search.replaceAllInTab": "このタブ内をすべて置換",
   "search.replaceThisMatch": "この箇所を置換",
   "search.matchPosition": "{line} 行 {column} 列",
