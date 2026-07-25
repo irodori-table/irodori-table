@@ -1,24 +1,16 @@
-import { flushSync } from "react-dom";
-import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { EngineIcon } from "@/components/EngineIcon";
+import { renderUi } from "@/tests/helpers/render";
 
-let container: HTMLDivElement;
-let root: Root;
-
-beforeEach(() => {
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  root = createRoot(container);
-});
-
-afterEach(() => {
-  flushSync(() => root.unmount());
-  container.remove();
-});
-
+/**
+ * The assertions here are about which *glyph* rendered, which is a DOM-shape
+ * question rather than a user-visible-text one — an icon has no accessible name
+ * of its own. So this file still reaches for the container, but through the
+ * shared render helper so cleanup and act() wrapping stay consistent with every
+ * other component test (#172).
+ */
 function renderedSvg(engine: string): SVGSVGElement | null {
-  flushSync(() => root.render(<EngineIcon engine={engine} />));
+  const { container } = renderUi(<EngineIcon engine={engine} />);
   return container.querySelector("svg");
 }
 

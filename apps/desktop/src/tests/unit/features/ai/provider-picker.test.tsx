@@ -1,6 +1,4 @@
-import { act } from "react";
-import { flushSync } from "react-dom";
-import { createRoot, type Root } from "react-dom/client";
+import { screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   aiEngineStatus,
@@ -9,6 +7,7 @@ import {
 } from "@/generated/irodori-api";
 import { ProviderPicker } from "@/features/ai/chat/ProviderPicker";
 import { cloudProviderConsentStorageKey } from "@/features/ai/provider-disclosure";
+import { renderUi } from "@/tests/helpers/render";
 
 vi.mock("@/generated/irodori-api", () => ({
   aiEngineStatus: vi.fn(),
@@ -25,27 +24,9 @@ const mockAiEngineStatus = vi.mocked(aiEngineStatus);
 const mockAiGetProvider = vi.mocked(aiGetProvider);
 const mockAiSetProvider = vi.mocked(aiSetProvider);
 
-let container: HTMLDivElement;
-let root: Root;
-let localStorageStore: Record<string, string>;
-
 beforeEach(() => {
-  localStorageStore = {};
-  Object.defineProperty(window, "localStorage", {
-    configurable: true,
-    value: {
-      clear: vi.fn(() => {
-        localStorageStore = {};
-      }),
-      getItem: vi.fn((key: string) => localStorageStore[key] ?? null),
-      removeItem: vi.fn((key: string) => {
-        delete localStorageStore[key];
-      }),
-      setItem: vi.fn((key: string, value: string) => {
-        localStorageStore[key] = value;
-      }),
-    },
-  });
+  // The real jsdom Storage is restored in src/tests/setup.ts, so this no longer
+  // needs the hand-rolled localStorage stand-in it used to carry (#172).
   window.localStorage.clear();
   mockAiEngineStatus.mockResolvedValue({
     compiled: true,
@@ -61,99 +42,76 @@ beforeEach(() => {
     args: [],
   });
   mockAiSetProvider.mockResolvedValue(undefined);
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  root = createRoot(container);
 });
 
 afterEach(() => {
-  if (root) {
-    flushSync(() => root.unmount());
-  }
-  container?.remove();
   vi.clearAllMocks();
 });
 
-async function flushEffects() {
-  await act(async () => {
-    await Promise.resolve();
-  });
-}
-
-function renderPicker() {
-  flushSync(() => root.render(<ProviderPicker />));
+/** The picker loads its provider state in an effect; wait for that to settle. */
+async function renderPicker() {
+  const rendered = renderUi(<ProviderPicker />);
+  await screen.findByRole("combobox", { name: "Model" });
+  return rendered;
 }
 
 describe("ProviderPicker", () => {
   it("requires one-time disclosure before saving a cloud provider", async () => {
-    renderPicker();
-    await flushEffects();
+    const { user } = await renderPicker();
 
-    const presetSelect = container.querySelector<HTMLSelectElement>(
-      ".aichat-provider-select select",
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Model" }),
+      "openai",
     );
-    expect(presetSelect).not.toBeNull();
 
-    flushSync(() => {
-      presetSelect!.value = "openai";
-      presetSelect!.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    // Scoped to the disclosure callout: the endpoint also appears in the
+    // endpoint field's placeholder, so an unscoped query matches twice.
+    const disclosure = screen.getByRole("status");
+    expect(
+      within(disclosure).getByText("Cloud provider disclosure"),
+    ).toBeVisible();
+    expect(disclosure).toHaveTextContent("api.openai.com");
 
-    expect(container.textContent).toContain("Cloud provider disclosure");
-    expect(container.textContent).toContain("api.openai.com");
+    const save = screen.getByRole("button", { name: "Use this model" });
+    expect(save).toBeDisabled();
 
-    const saveButton = Array.from(
-      container.querySelectorAll<HTMLButtonElement>("button"),
-    ).find((button) => button.textContent === "Use this model");
-    expect(saveButton?.disabled).toBe(true);
-
-    const acceptButton = Array.from(
-      container.querySelectorAll<HTMLButtonElement>("button"),
-    ).find((button) => button.textContent === "I understand");
-    flushSync(() => acceptButton?.click());
+    await user.click(screen.getByRole("button", { name: "I understand" }));
 
     expect(window.localStorage.getItem(cloudProviderConsentStorageKey)).toBe(
       "accepted",
     );
-    expect(saveButton?.disabled).toBe(false);
+    expect(save).toBeEnabled();
 
-    flushSync(() => saveButton?.click());
-    await flushEffects();
+    await user.click(save);
 
-    expect(mockAiSetProvider).toHaveBeenCalledWith(
-      expect.objectContaining({
-        kind: "openaiCompat",
-        endpoint: "https://api.openai.com",
-        model: "gpt-4o-mini",
-      }),
-    );
+    await vi.waitFor(() => {
+      expect(mockAiSetProvider).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: "openaiCompat",
+          endpoint: "https://api.openai.com",
+          model: "gpt-4o-mini",
+        }),
+      );
+    });
   });
 
   it("shows the local-model install hint for Ollama, not for CLI providers", async () => {
-    renderPicker();
-    await flushEffects();
-
-    const presetSelect = container.querySelector<HTMLSelectElement>(
-      ".aichat-provider-select select",
-    );
-    expect(presetSelect).not.toBeNull();
+    const { user, container } = await renderPicker();
+    const preset = screen.getByRole("combobox", { name: "Model" });
 
     // CLI presets (Claude Code / Codex / Copilot) are cloud-backed agents;
     // they do not install local models, so the hint must stay hidden.
-    flushSync(() => {
-      presetSelect!.value = "claude";
-      presetSelect!.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    expect(container.textContent).not.toContain("Install local models");
+    await user.selectOptions(preset, "claude");
+    expect(screen.queryByText(/Install local models/)).not.toBeInTheDocument();
 
     // Ollama does pull models from a terminal. The full-sentence assertion is
     // also the whitespace regression guard: the copy used to render glued as
     // "withclaude / codexfrom a terminal.".
-    flushSync(() => {
-      presetSelect!.value = "ollama";
-      presetSelect!.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    expect(container.textContent).toContain(
+    await user.selectOptions(preset, "ollama");
+    // Asserted on the container because the sentence spans several elements —
+    // which is the point: toHaveTextContent collapses whitespace runs but never
+    // invents a missing space, so glued copy still fails here.
+    expect(container).toHaveTextContent(
       "Install local models with ollama pull from a terminal.",
     );
   });

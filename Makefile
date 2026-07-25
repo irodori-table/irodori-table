@@ -9,7 +9,7 @@ EXTENSION_SDK_DIR ?= $(firstword $(wildcard ../irodori-kit/packages/extension-sd
 
 .PHONY: help setup setup-desktop setup-fast \
         dev test build typegen e2e doctor \
-        desktop-dev desktop-vite desktop-typegen desktop-typegen-check desktop-format desktop-format-check desktop-lint desktop-test desktop-test-rust-ts desktop-test-watch desktop-build desktop-build-verified desktop-e2e \
+        desktop-dev desktop-vite desktop-typegen desktop-typegen-check desktop-format desktop-format-check desktop-lint desktop-test desktop-test-browser desktop-test-rust-ts desktop-test-watch desktop-build desktop-build-verified desktop-e2e \
         rust-clippy cargo-deny workflow-lint \
         check security security-strict extension-manifests kit-link kit-unlink kit-patch-check foundation-release foundation-release-check db db-verify db-all db-up db-down \
         extension-scenarios extension-fleet-audit \
@@ -47,6 +47,7 @@ help:
 	@printf "  make desktop-format-check verify desktop JS/TS formatting with oxfmt\n"
 	@printf "  make desktop-lint      lint desktop JS/TS sources with oxlint\n"
 	@printf "  make desktop-test      Vitest\n"
+	@printf "  make desktop-test-browser Vitest in a real Chromium (layout/clipping guards)\n"
 	@printf "  make desktop-test-rust-ts Vitest + cargo test in parallel\n"
 	@printf "  make desktop-test-watch Vitest watch mode\n"
 	@printf "  make desktop-build     TypeScript + Vite production build (fast, no typegen)\n"
@@ -129,6 +130,9 @@ desktop-lint:
 
 desktop-test:
 	$(call js-run,apps/desktop,test)
+
+desktop-test-browser:
+	$(call js-run,apps/desktop,test:browser)
 
 desktop-test-rust-ts:
 	$(call js-run,apps/desktop,test:rust-ts)

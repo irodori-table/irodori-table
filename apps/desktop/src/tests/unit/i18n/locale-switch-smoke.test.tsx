@@ -1,48 +1,38 @@
-import { flushSync } from "react-dom";
-import { createRoot, type Root } from "react-dom/client";
+import { act, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CommandPalette } from "@/app/CommandPalette";
 import { ErrorDetails } from "@/components/ErrorDetails";
 import { usePreferencesStore } from "@/features/preferences";
-
-let container: HTMLDivElement;
-let root: Root;
+import { renderUi } from "@/tests/helpers/render";
 
 function renderSmokeSurface() {
-  flushSync(() =>
-    root.render(
-      <>
-        <CommandPalette
-          query=""
-          commands={[]}
-          keymap={{}}
-          onQueryChange={vi.fn()}
-          onRunCommand={vi.fn()}
-          onClose={vi.fn()}
-        />
-        <ErrorDetails
-          error={{
-            kind: "timeout",
-            message: "connect timed out after 30s",
-            code: "ETIMEDOUT",
-            retryable: true,
-          }}
-        />
-      </>,
-    ),
+  return renderUi(
+    <>
+      <CommandPalette
+        query=""
+        commands={[]}
+        keymap={{}}
+        onQueryChange={vi.fn()}
+        onRunCommand={vi.fn()}
+        onClose={vi.fn()}
+      />
+      <ErrorDetails
+        error={{
+          kind: "timeout",
+          message: "connect timed out after 30s",
+          code: "ETIMEDOUT",
+          retryable: true,
+        }}
+      />
+    </>,
   );
 }
 
 beforeEach(() => {
   usePreferencesStore.setState({ locale: "en" });
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  root = createRoot(container);
 });
 
 afterEach(() => {
-  flushSync(() => root.unmount());
-  container.remove();
   usePreferencesStore.setState({ locale: "en" });
 });
 
@@ -50,22 +40,22 @@ describe("locale switch smoke", () => {
   it("walks shell and backend-error surfaces when switching to Japanese", () => {
     renderSmokeSurface();
 
-    expect(
-      container.querySelector<HTMLInputElement>(".palette-input")?.placeholder,
-    ).toBe("Search commands");
-    expect(container.textContent).toContain("No commands match");
-    expect(container.textContent).toContain("Timed out");
-    expect(container.textContent).toContain("Details");
+    expect(screen.getByPlaceholderText("Search commands")).toBeVisible();
+    expect(screen.getByText("No commands match")).toBeVisible();
+    expect(screen.getByText("Timed out")).toBeVisible();
+    expect(screen.getByText("Details")).toBeVisible();
 
-    flushSync(() => {
+    act(() => {
       usePreferencesStore.getState().setLocale("ja");
     });
 
+    expect(screen.getByPlaceholderText("コマンドを検索")).toBeVisible();
+    expect(screen.getByText("一致するコマンドはありません")).toBeVisible();
+    expect(screen.getByText("タイムアウトしました")).toBeVisible();
+    expect(screen.getByText("詳細")).toBeVisible();
+    // The English strings are gone, not merely joined by Japanese ones.
     expect(
-      container.querySelector<HTMLInputElement>(".palette-input")?.placeholder,
-    ).toBe("コマンドを検索");
-    expect(container.textContent).toContain("一致するコマンドはありません");
-    expect(container.textContent).toContain("タイムアウトしました");
-    expect(container.textContent).toContain("詳細");
+      screen.queryByPlaceholderText("Search commands"),
+    ).not.toBeInTheDocument();
   });
 });

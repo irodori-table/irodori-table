@@ -34,6 +34,15 @@ function restoreWebStorage() {
 
 restoreWebStorage();
 
+// jsdom implements no layout, so it ships no `scrollIntoView` at all — calling
+// it throws "not a function" rather than doing nothing. Components that keep an
+// active item in view (EditorTabStrip, result grids) therefore cannot be
+// rendered in a unit test without this. A no-op is the honest stand-in: jsdom
+// has no scrollport to move, so only the browser suite can assert the outcome.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function scrollIntoView() {};
+}
+
 // Vitest runs without `globals`, so Testing Library cannot find the `afterEach`
 // it normally auto-registers cleanup on. Register it here, or every rendered
 // tree — including anything portaled to <body> — leaks into the next test's

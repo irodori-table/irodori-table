@@ -4,6 +4,44 @@ import { createPortal } from "react-dom";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator, type Translator } from "@/i18n";
 
+// The reserved box for the run menu: `min-width: 260px` from
+// `.run-menu-popover`, and the tallest the option list gets with every entry
+// shown. EditorTabStrip reserves the same way (#115).
+const menuWidth = 260;
+const menuHeight = 200;
+const menuMargin = 8;
+/** Gap between the control's top edge and the menu opening above it. */
+const menuGap = 6;
+
+/**
+ * Place the menu above the control, anchored to its right edge, without letting
+ * either inset push the box off-screen.
+ *
+ * The menu opens upward because the control is pinned to the bottom of the
+ * editor pane. It anchors on `right` so it lines up with the control, which
+ * means a *large* right inset pushes it off the LEFT edge — the mirror image of
+ * the off-screen menu fixed in the tab strip (#115). Without the clamp a narrow
+ * editor pane produced exactly that.
+ */
+function clampMenuToViewport(anchorRect: DOMRect) {
+  const bottom = window.innerHeight - anchorRect.top + menuGap;
+  const right = window.innerWidth - anchorRect.right;
+  return {
+    bottom: `${Math.round(
+      Math.max(
+        menuMargin,
+        Math.min(bottom, window.innerHeight - menuHeight - menuMargin),
+      ),
+    )}px`,
+    right: `${Math.round(
+      Math.max(
+        menuMargin,
+        Math.min(right, window.innerWidth - menuWidth - menuMargin),
+      ),
+    )}px`,
+  };
+}
+
 export type RunControlProps = {
   running: boolean;
   runControlRef: RefObject<HTMLDivElement | null>;
@@ -125,10 +163,7 @@ export function RunControl({
                 className="run-menu-portal"
                 style={{
                   position: "fixed",
-                  // Open upward: the control is pinned to the bottom of the
-                  // editor pane, so downward would run off-screen.
-                  bottom: `${Math.round(window.innerHeight - anchorRect.top + 6)}px`,
-                  right: `${Math.round(window.innerWidth - anchorRect.right)}px`,
+                  ...clampMenuToViewport(anchorRect),
                   zIndex: 60,
                 }}
               >
