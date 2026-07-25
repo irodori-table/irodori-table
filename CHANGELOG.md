@@ -16,6 +16,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.8.1] - 2026-07-25
+
+### Fixed
+
+- Japanese users can now operate the Schema Designer, Schema Diagram, Import,
+  and Search & Replace dialogs in Japanese. All four rendered entirely in
+  English regardless of the language setting, action buttons included (#133).
+- Git panel errors, the outcome chip on every query-history row, background job
+  kinds and statuses, theme kind suffixes, and the import, ERD export, table
+  specification, knowledge pack, and passkey error messages are translated
+  instead of always English (#135).
+- Five JSON parsers accepted an array where they required an object — their own
+  error messages said "must be an object" — and then read string keys off it,
+  yielding `undefined` for every field instead of a clear failure. Affects
+  table-specification import, schema-diagram import, SQL keyword and snippet
+  configuration, and passkey credential parsing (#167).
+- Query-history retention limits set through Settings ▸ JSON are rounded to
+  whole numbers, matching what the settings UI already did. A fractional value
+  previously persisted as-is (#167).
+- The run menu in the SQL editor no longer opens off the left edge of the
+  window when the editor pane is narrow (#172).
+
+### Changed
+
+- Connecting with the Hive connector now raises a warning that stays until
+  dismissed: it reads Parquet files under the table root and ignores the
+  metastore, so partitions stored elsewhere and ORC/Avro/text tables read as
+  empty or fail to resolve. Hudi and Delta Lake were corrected upstream and no
+  longer warn (#117).
+- Notifications gained a warning level for outcomes that succeeded but cannot be
+  trusted. Like errors, warnings stay until dismissed rather than disappearing
+  after a few seconds.
+- The remove buttons in the Schema Designer's column, index, and foreign-key
+  rows now have accessible names (#133).
+
 ## [0.8.0] - 2026-07-22
 
 ### Added
