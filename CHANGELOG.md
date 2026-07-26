@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.8.3] - 2026-07-26
+
+Repository maintenance only. The application is unchanged from 0.8.2 — the
+packages for this tag are rebuilt from identical sources.
+
+### Changed
+
+- The before/after screenshots embedded in pull requests #155 and #156 now live
+  in `docs/assets/pr/`. They were hosted on two branches that existed only to
+  serve those images, which meant the branches could never be deleted without
+  breaking the merged pull requests that linked them (#200).
+
 ## [0.8.2] - 2026-07-25
 
 ### Added
