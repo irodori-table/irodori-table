@@ -36,7 +36,7 @@ irodori-migration.workspace = true
 # external/subscription models work without the heavy embedded `llama` build.
 irodori-generate = { workspace = true, features = ["http"] }
 irodori-knowledge.workspace = true
-sql-dialect-fmt-formatter = { git = "https://github.com/hjosugi/sql-dialect-fmt", tag = "v1.16.1" }
+sql-dialect-fmt-formatter = { git = "https://github.com/hjosugi/sql-dialect-fmt", tag = "v1.18.0" }
 ts-rs = { version = "12.0.1", features = ["serde-json-impl"] }
 
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs", "io-util"] }
@@ -64,7 +64,7 @@ async-trait = "0.1"
 # Integrated terminal: cross-platform PTY (wezterm's crate). Output is base64'd
 # over a Tauri channel to preserve bytes across chunk boundaries.
 portable-pty = "0.9"
-base64 = "0.22"
+base64 = "0.23"
 # Optional connector implementations. Long-term these move to installable
 # extensions; keeping them feature-gated here avoids compiling them in normal
 # desktop builds while preserving a local escape hatch.
