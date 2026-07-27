@@ -116,7 +116,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -127,7 +127,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -459,6 +459,12 @@ name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
+
+[[package]]
+name = "base64"
+version = "0.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b25655df2c3cdd83c5e5b293b88acd880332b2ddadd7c30ac43144fdc0033da9"
 
 [[package]]
 name = "base64ct"
@@ -1851,7 +1857,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2073,7 +2079,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3056,7 +3062,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "system-configuration",
  "tokio",
  "tower-service",
@@ -3429,7 +3435,7 @@ name = "irodori-table-desktop"
 version = "0.8.3"
 dependencies = [
  "async-trait",
- "base64 0.22.1",
+ "base64 0.23.0",
  "flate2",
  "futures-util",
  "irodori-completion",
@@ -4176,7 +4182,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.18",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5853,7 +5859,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5933,7 +5939,7 @@ dependencies = [
  "security-framework 3.7.0",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6314,9 +6320,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.150"
+version = "1.0.151"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8014e44b4736ed0538adeecded0fce2a272f22dc9578a7eb6b2d9993c74cfb9"
+checksum = "c841b55ecdae098c80dcae9cf767f6f8a0c2cdb3416bbef72181df4d0fe73f14"
 dependencies = [
  "indexmap 2.14.0",
  "itoa",
@@ -6596,7 +6602,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6668,8 +6674,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-formatter"
-version = "1.16.1"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.16.1#f7799c05db12db28a06501ff4fe15bed26e6e831"
+version = "1.18.0"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
 dependencies = [
  "biome_console",
  "biome_deserialize",
@@ -6698,8 +6704,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-lexer"
-version = "1.16.1"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.16.1#f7799c05db12db28a06501ff4fe15bed26e6e831"
+version = "1.18.0"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
 dependencies = [
  "sql-dialect-fmt-syntax",
  "sql-dialect-fmt-text",
@@ -6707,8 +6713,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-parser"
-version = "1.16.1"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.16.1#f7799c05db12db28a06501ff4fe15bed26e6e831"
+version = "1.18.0"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
 dependencies = [
  "rowan",
  "sql-dialect-fmt-lexer",
@@ -6718,16 +6724,16 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-syntax"
-version = "1.16.1"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.16.1#f7799c05db12db28a06501ff4fe15bed26e6e831"
+version = "1.18.0"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
 dependencies = [
  "rowan",
 ]
 
 [[package]]
 name = "sql-dialect-fmt-text"
-version = "1.16.1"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.16.1#f7799c05db12db28a06501ff4fe15bed26e6e831"
+version = "1.18.0"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
 
 [[package]]
 name = "sqlx"
@@ -7508,7 +7514,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7676,9 +7682,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.53.0"
+version = "1.53.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d988bcd52dbe076d3d46903332f58c912b87a2c49b1428419a5845154762ffee"
+checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
 dependencies = [
  "bytes",
  "libc",
@@ -7725,15 +7731,16 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.18"
+version = "0.7.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ae9cec805b01e8fc3fd2fe289f89149a9b66dd16786abd8b19cfa7b48cb0098"
+checksum = "494815d09bf52b5548659851081238f0ca39ff638363907596da739561c62c52"
 dependencies = [
  "bytes",
  "futures-core",
  "futures-io",
  "futures-sink",
  "futures-util",
+ "libc",
  "pin-project-lite",
  "tokio",
 ]
@@ -7955,7 +7962,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.18",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8042,15 +8049,15 @@ checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
 
 [[package]]
 name = "typeship"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6764e0c5aaaad4ae540577c4240ffec6e28d1869b08f4166399ec9b9538dca2"
+checksum = "e175955090f72c40fa91f5da980bcd608db2e702d42e6f4a0e47201e19bb5928"
 
 [[package]]
 name = "typeship-ts-rs"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aeea710e369ea3b6112998d6422c9d78e306a40de5cf03a2fa6c621272b7cd2b"
+checksum = "edac4705d6edd3d1323c6157f7099e81908527086aab61ffd088fd9ce4df3df2"
 dependencies = [
  "ts-rs",
  "typeship",
@@ -8064,7 +8071,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset 0.9.1",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8567,7 +8574,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
