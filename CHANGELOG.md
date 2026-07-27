@@ -16,6 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.8.4] - 2026-07-27
+
+Dependency maintenance release with no intentional user-facing behavior
+changes.
+
+### Changed
+
+- Updated the desktop npm dependency group, including Dockview 7.0.4, React
+  19.2.8, Playwright 1.62.0, Testing Library jest-dom 7.0.0, and the current
+  formatting and linting tools (#202).
+- Updated the Rust dependency group, including base64 0.23.0, serde_json
+  1.0.151, Tokio 1.53.1, tokio-util 0.7.19, typeship 0.2.1, and
+  sql-dialect-fmt 1.18.0 (#203).
+- Updated the OpenSSF Scorecard action from 2.4.3 to 2.4.4 (#201).
+
 ## [0.8.3] - 2026-07-26
 
 Repository maintenance only. The application is unchanged from 0.8.2 — the
