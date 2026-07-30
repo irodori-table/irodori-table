@@ -16,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.8.5] - 2026-07-30
+
+Repository tooling release with no intentional user-facing application
+changes.
+
+### Changed
+
+- Added repository-local Graphify guidance and integrations for Codex, Claude,
+  and GitHub Copilot so each agent can query and refresh the project knowledge
+  graph consistently.
+
 ## [0.8.4] - 2026-07-27
 
 Dependency maintenance release with no intentional user-facing behavior
