@@ -5376,9 +5376,9 @@ checksum = "20675572f6f24e9e76ef639bc5552774ed45f1c30e2951e1e99c59888861c539"
 
 [[package]]
 name = "redis"
-version = "1.4.1"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0b9503711b03773e43b31668c7b5bd279ee7cd9b7d18cff7c23a42cc1d08e5a"
+checksum = "3257df217f7eab0044627a268c9cc6cdb60c0c421c88f83ac41c4e31520b6b84"
 dependencies = [
  "arcstr",
  "async-lock",
@@ -5864,9 +5864,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.42"
+version = "0.23.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c54fcab019b409d04215d3a17cb438fd7fbf192ee61461f20f4fe18704bc138"
+checksum = "0283386ce02abc0151e1761d08802dfe86c173b0b494af5cbc086574e453da06"
 dependencies = [
  "aws-lc-rs",
  "log",
@@ -6674,8 +6674,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-formatter"
-version = "1.18.0"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
+version = "1.20.1"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.20.1#2afcc5dfec8e84b4a7fb6dba2ca4d61e42ce4ccc"
 dependencies = [
  "biome_console",
  "biome_deserialize",
@@ -6704,8 +6704,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-lexer"
-version = "1.18.0"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
+version = "1.20.1"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.20.1#2afcc5dfec8e84b4a7fb6dba2ca4d61e42ce4ccc"
 dependencies = [
  "sql-dialect-fmt-syntax",
  "sql-dialect-fmt-text",
@@ -6713,8 +6713,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-parser"
-version = "1.18.0"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
+version = "1.20.1"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.20.1#2afcc5dfec8e84b4a7fb6dba2ca4d61e42ce4ccc"
 dependencies = [
  "rowan",
  "sql-dialect-fmt-lexer",
@@ -6724,16 +6724,16 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-syntax"
-version = "1.18.0"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
+version = "1.20.1"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.20.1#2afcc5dfec8e84b4a7fb6dba2ca4d61e42ce4ccc"
 dependencies = [
  "rowan",
 ]
 
 [[package]]
 name = "sql-dialect-fmt-text"
-version = "1.18.0"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.18.0#1555fc148c61f40ee9271a32fe5e3ced5ba9679b"
+version = "1.20.1"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.20.1#2afcc5dfec8e84b4a7fb6dba2ca4d61e42ce4ccc"
 
 [[package]]
 name = "sqlx"
