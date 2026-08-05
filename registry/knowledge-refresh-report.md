@@ -1,16 +1,16 @@
 # Knowledge Refresh Report
 
-Run started 2026-07-11T08:30:10.878Z, finished 2026-07-11T08:30:21.046Z (UTC).
+Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
 
 | Metric | Count |
 | --- | ---: |
 | Sources checked | 92 |
-| Changed (new snapshot) | 90 |
+| Changed (new snapshot) | 89 |
 | Unchanged | 0 |
-| Failed | 2 |
-| New facts | 455 |
+| Failed | 3 |
+| New facts | 453 |
 
-## Changed sources (90)
+## Changed sources (89)
 
 | Source | Product | Latest title |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ Run started 2026-07-11T08:30:10.878Z, finished 2026-07-11T08:30:21.046Z (UTC).
 | cassandra-docs | Apache Cassandra | Welcome to Apache Cassandra&#8217;s documentation! |
 | cassandra-release-notes | Apache Cassandra | Downloading Cassandra |
 | clickhouse-changelog | ClickHouse | Changelog 2026 |
-| clickhouse-docs | ClickHouse | ClickHouse Docs \| ClickHouse Docs |
+| clickhouse-docs | ClickHouse | Home - ClickHouse Documentation |
 | cloud-spanner-docs | Cloud Spanner | Spanner documentation |
 | cloud-spanner-release-notes | Cloud Spanner | Spanner release notes Stay organized with collections Save and categorize content based on your preferences. |
 | cockroachdb-release-notes | CockroachDB | CockroachDB Releases Overview |
@@ -42,8 +42,6 @@ Run started 2026-07-11T08:30:10.878Z, finished 2026-07-11T08:30:21.046Z (UTC).
 | dynamodb-release-notes | DynamoDB | Document history for DynamoDB |
 | elasticsearch-docs | Elasticsearch | Elasticsearch documentation |
 | elasticsearch-release-notes | Elasticsearch | Elasticsearch release notes |
-| firebird-docs | Firebird | Firebird: Firebird RDBMS |
-| firebird-release-notes | Firebird | Firebird: Release Notes |
 | gcs-docs | Google Cloud Storage | Cloud Storage documentation |
 | github-copilot-mcp | GitHub Copilot | About Model Context Protocol (MCP) |
 | h2-docs | H2 | H2 Database Engine |
@@ -78,6 +76,7 @@ Run started 2026-07-11T08:30:10.878Z, finished 2026-07-11T08:30:21.046Z (UTC).
 | pinecone-docs | Pinecone | Pinecone documentation |
 | postgres-docs-current | PostgreSQL | PostgreSQL 18.4 Documentation |
 | postgres-release-notes-current | PostgreSQL | PostgreSQL: Documentation: 18: Appendix E. Release Notes |
+| presto-docs | Presto | Presto Documentation ¶ |
 | qdrant-docs | Qdrant | Qdrant Documentation |
 | questdb-docs | QuestDB | Introduction |
 | redis-commands | Redis | Commands |
@@ -105,14 +104,15 @@ Run started 2026-07-11T08:30:10.878Z, finished 2026-07-11T08:30:21.046Z (UTC).
 | yugabytedb-release-notes | YugabyteDB | Releases |
 | yugabytedb-ysql-api | YugabyteDB | YSQL API reference |
 
-## Failed sources (2)
+## Failed sources (3)
 
 | Source | Product | Error |
 | --- | --- | --- |
 | arangodb-docs | ArangoDB | HTTP 403 |
-| presto-docs | Presto | HTTP 403 |
+| firebird-docs | Firebird | HTTP 403 |
+| firebird-release-notes | Firebird | HTTP 403 |
 
-## New facts by product (455)
+## New facts by product (453)
 
 | Product | New facts |
 | --- | ---: |
@@ -126,23 +126,23 @@ Run started 2026-07-11T08:30:10.878Z, finished 2026-07-11T08:30:21.046Z (UTC).
 | InfluxDB | 12 |
 | Neo4j | 12 |
 | OpenSearch | 12 |
-| PostgreSQL | 12 |
 | Redshift | 12 |
 | SQLite | 12 |
 | Snowflake | 12 |
+| PostgreSQL | 11 |
 | MongoDB | 10 |
 | MySQL | 10 |
 | SQL Server | 10 |
-| MariaDB | 9 |
-| ClickHouse | 8 |
+| Redis | 8 |
 | Apache Cassandra | 7 |
-| Redis | 7 |
+| MariaDB | 7 |
 | Trino | 7 |
 | AWS S3 Tables | 6 |
 | Amazon S3 | 6 |
 | Apache Hive | 6 |
 | Apache Iceberg | 6 |
 | Azure Blob Storage | 6 |
+| ClickHouse | 6 |
 | CockroachDB | 6 |
 | DataGrip | 6 |
 | Databricks | 6 |
@@ -160,6 +160,7 @@ Run started 2026-07-11T08:30:10.878Z, finished 2026-07-11T08:30:21.046Z (UTC).
 | Neo4j Graph Data Science | 6 |
 | Neon | 6 |
 | OpenAI API | 6 |
+| Presto | 6 |
 | Qdrant | 6 |
 | RedisInsight | 6 |
 | Schemars | 6 |
@@ -173,9 +174,8 @@ Run started 2026-07-11T08:30:10.878Z, finished 2026-07-11T08:30:21.046Z (UTC).
 | Oracle | 5 |
 | Pinecone | 5 |
 | Delta Lake | 4 |
-| Firebird | 3 |
-| TiDB | 3 |
 | Apache Hudi | 2 |
+| TiDB | 2 |
 | Apache IoTDB | 1 |
 | H2 | 1 |
 | QuestDB | 1 |
