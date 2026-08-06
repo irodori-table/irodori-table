@@ -16,6 +16,25 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+/**
+ * Where a bundled extension's pinned release archive may come from.
+ *
+ * What this is really guarding is the *shape* of an install source — a GitHub
+ * release tag under a known connector repository — because the installer trusts
+ * this URL and the digest beside it. The owner segment was pinned to `hjosugi`
+ * until the connector repositories moved to the `irodori-table` organisation;
+ * the sync job (`tools/extensions/sync-release-catalog.mjs`) then wrote the new
+ * canonical URLs and this assertion failed on `main` rather than in the PR that
+ * caused it, because the catalog is refreshed by a scheduled job.
+ *
+ * Both owners stay accepted: `hjosugi/*` still resolves by GitHub's rename
+ * redirect, so a catalog entry that predates the move is not wrong. Adding an
+ * owner here should be a deliberate edit, which is why this is an allow-list
+ * and not `[^/]+`.
+ */
+const extensionReleaseUrl =
+  /^https:\/\/github\.com\/(?:hjosugi|irodori-table)\/irodori-extension-.+\/releases\/tag\/v/;
+
 describe("plugin store catalog", () => {
   it("uses the installable marketplace index as the default remote source", () => {
     expect(defaultPluginStoreCatalogUrl).toBe(
@@ -30,9 +49,7 @@ describe("plugin store catalog", () => {
       expect(extension.topics.length, extension.id).toBeGreaterThan(0);
       expect(extension.install, extension.id).toBeDefined();
       expect(extension.install?.kind, extension.id).toBe("githubRelease");
-      expect(extension.install?.url, extension.id).toMatch(
-        /^https:\/\/github\.com\/hjosugi\/irodori-extension-.+\/releases\/tag\/v/,
-      );
+      expect(extension.install?.url, extension.id).toMatch(extensionReleaseUrl);
       expect(extension.install?.tag, extension.id).toBe(
         `v${extension.version}`,
       );
