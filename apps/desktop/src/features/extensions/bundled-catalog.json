@@ -57,7 +57,7 @@
       "publishedAt": "2026-07-22T23:28:16Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-duckdb/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-duckdb/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -142,7 +142,7 @@
       "publishedAt": "2026-07-11T00:54:30Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-motherduck/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-motherduck/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -222,7 +222,7 @@
       "publishedAt": "2026-07-22T23:21:12Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-hive/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-hive/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -302,7 +302,7 @@
       "publishedAt": "2026-07-22T23:33:56Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-iceberg/releases/tag/v0.3.1",
+        "url": "https://github.com/irodori-table/irodori-extension-iceberg/releases/tag/v0.3.1",
         "tag": "v0.3.1",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -387,7 +387,7 @@
       "publishedAt": "2026-07-11T01:01:04Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-s3-tables/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-s3-tables/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -467,7 +467,7 @@
       "publishedAt": "2026-07-11T00:50:34Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-athena/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-athena/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -547,7 +547,7 @@
       "publishedAt": "2026-07-22T23:32:34Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-delta-lake/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-delta-lake/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -627,7 +627,7 @@
       "publishedAt": "2026-07-22T23:27:19Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-hudi/releases/tag/v0.2.1",
+        "url": "https://github.com/irodori-table/irodori-extension-hudi/releases/tag/v0.2.1",
         "tag": "v0.2.1",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -683,7 +683,7 @@
       "publishedAt": "2026-07-22T23:26:41Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-cloud-spanner/releases/tag/v0.1.5",
+        "url": "https://github.com/irodori-table/irodori-extension-cloud-spanner/releases/tag/v0.1.5",
         "tag": "v0.1.5",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -739,7 +739,7 @@
       "publishedAt": "2026-07-22T23:23:47Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-redis/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-redis/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -795,7 +795,7 @@
       "publishedAt": "2026-07-22T23:26:46Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-dynamodb/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-dynamodb/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -852,7 +852,7 @@
       "publishedAt": "2026-07-22T23:24:01Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-snowflake/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-snowflake/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -908,7 +908,7 @@
       "publishedAt": "2026-07-22T23:24:58Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-bigquery/releases/tag/v0.1.5",
+        "url": "https://github.com/irodori-table/irodori-extension-bigquery/releases/tag/v0.1.5",
         "tag": "v0.1.5",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -964,7 +964,7 @@
       "publishedAt": "2026-07-22T23:23:09Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-bigtable/releases/tag/v0.1.5",
+        "url": "https://github.com/irodori-table/irodori-extension-bigtable/releases/tag/v0.1.5",
         "tag": "v0.1.5",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1020,7 +1020,7 @@
       "publishedAt": "2026-07-22T23:19:42Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-mongodb/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-mongodb/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1076,7 +1076,7 @@
       "publishedAt": "2026-07-22T23:21:46Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-clickhouse/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-clickhouse/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1132,7 +1132,7 @@
       "publishedAt": "2026-07-22T23:27:32Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-cassandra/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-cassandra/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1188,7 +1188,7 @@
       "publishedAt": "2026-07-22T23:23:50Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-scylladb/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-scylladb/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1244,7 +1244,7 @@
       "publishedAt": "2026-07-22T23:25:54Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-neo4j/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-neo4j/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1300,7 +1300,7 @@
       "publishedAt": "2026-07-22T23:23:47Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-memgraph/releases/tag/v0.1.5",
+        "url": "https://github.com/irodori-table/irodori-extension-memgraph/releases/tag/v0.1.5",
         "tag": "v0.1.5",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1356,7 +1356,7 @@
       "publishedAt": "2026-07-22T23:28:38Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-elasticsearch/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-elasticsearch/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1412,7 +1412,7 @@
       "publishedAt": "2026-07-22T23:27:41Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-opensearch/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-opensearch/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1468,7 +1468,7 @@
       "publishedAt": "2026-07-22T23:24:07Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-sqlserver/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-sqlserver/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1524,7 +1524,7 @@
       "publishedAt": "2026-07-22T23:28:44Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-oracle/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-oracle/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1580,7 +1580,7 @@
       "publishedAt": "2026-07-22T23:29:11Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-influxdb/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-influxdb/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1658,7 +1658,7 @@
       "publishedAt": "2026-07-11T01:11:25Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-qdrant/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-qdrant/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1736,7 +1736,7 @@
       "publishedAt": "2026-07-11T00:44:31Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-milvus/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-milvus/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1819,7 +1819,7 @@
       "publishedAt": "2026-07-11T00:52:28Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-pinecone/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-pinecone/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1875,7 +1875,7 @@
       "publishedAt": "2026-07-11T00:59:18Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-couchbase/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-couchbase/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1931,7 +1931,7 @@
       "publishedAt": "2026-07-22T23:17:45Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-arangodb/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-arangodb/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -1987,7 +1987,7 @@
       "publishedAt": "2026-07-22T23:19:50Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-questdb/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-questdb/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -2043,7 +2043,7 @@
       "publishedAt": "2026-07-22T23:23:36Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-iotdb/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-iotdb/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -2099,7 +2099,7 @@
       "publishedAt": "2026-07-11T01:03:59Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-trino-presto/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-trino-presto/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -2155,7 +2155,7 @@
       "publishedAt": "2026-07-22T23:17:08Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-firebird/releases/tag/v0.1.4",
+        "url": "https://github.com/irodori-table/irodori-extension-firebird/releases/tag/v0.1.4",
         "tag": "v0.1.4",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -2235,7 +2235,7 @@
       "publishedAt": "2026-07-11T01:07:06Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-databricks/releases/tag/v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-databricks/releases/tag/v0.1.3",
         "tag": "v0.1.3",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -2285,7 +2285,7 @@
       "publishedAt": "2026-07-21T20:51:44Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-knowledge/releases/tag/v0.1.0",
+        "url": "https://github.com/irodori-table/irodori-extension-knowledge/releases/tag/v0.1.0",
         "tag": "v0.1.0",
         "manifestPath": "irodori.extension.json",
         "assets": {
@@ -2335,7 +2335,7 @@
       "publishedAt": "2026-07-21T20:51:44Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/hjosugi/irodori-extension-datalake/releases/tag/v0.1.0",
+        "url": "https://github.com/irodori-table/irodori-extension-datalake/releases/tag/v0.1.0",
         "tag": "v0.1.0",
         "manifestPath": "irodori.extension.json",
         "assets": {
