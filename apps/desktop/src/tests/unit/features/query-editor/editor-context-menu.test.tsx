@@ -2,6 +2,7 @@ import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePreferencesStore } from "@/features/preferences";
 import { EditorContextMenu } from "@/features/query-editor/EditorContextMenu";
+import { stubPopoverSize } from "@/tests/helpers/popover";
 import { expectPortaledIntoViewport } from "@/tests/helpers/portal";
 import { componentRenderer } from "@/tests/helpers/render";
 
@@ -12,14 +13,16 @@ import { componentRenderer } from "@/tests/helpers/render";
  * `position: fixed` and offset the menu from the pointer — the rationale is
  * documented at EditorContextMenu.tsx:97.
  *
- * Its `position: fixed` comes from the `.editor-context-menu` stylesheet rule
- * rather than an inline style, so jsdom cannot read it back; the browser suite
- * carries that half. What is asserted here is the portal boundary, the pointer
- * coordinates and the localisation of the items.
+ * Since #168 it takes its position from the shared popover primitive, so
+ * `position: fixed` is now declared inline (the primitive sets it, rather than
+ * depending on a stylesheet rule that a CSS edit could silently drop) — and it
+ * is clamped to the viewport, which it never was before: a right-click near the
+ * bottom-right of the editor used to open the menu partly off-screen.
  */
 
-// The menu's reserved box (`min-width: 250px` on .editor-context-menu, plus the
-// full 16-item list).
+// The box the menu occupies once laid out (`min-width: 250px` on
+// .editor-context-menu, plus the full 16-item list). jsdom lays nothing out, so
+// the measuring step needs it supplied.
 const MENU_WIDTH = 250;
 const MENU_HEIGHT = 400;
 
@@ -37,6 +40,10 @@ const renderMenu = componentRenderer(EditorContextMenu, () => ({
 
 beforeEach(() => {
   usePreferencesStore.setState({ locale: "en" });
+  stubPopoverSize(".editor-context-menu", {
+    width: MENU_WIDTH,
+    height: MENU_HEIGHT,
+  });
 });
 
 describe("EditorContextMenu", () => {
@@ -47,12 +54,34 @@ describe("EditorContextMenu", () => {
       clippedBy: CLIPPING_ANCESTOR,
       width: MENU_WIDTH,
       height: MENU_HEIGHT,
-      // The rule lives in styles/workbench.css, not the style prop.
-      fixedPositionFrom: "stylesheet",
     });
     expect(screen.getByRole("menu")).toHaveStyle({
       left: "220px",
       top: "140px",
+    });
+  });
+
+  // The gap #168 closed for this surface: it had no clamp of any kind, so the
+  // pointer coordinates went straight to `left`/`top`.
+  it("clamps a menu opened past the bottom-right corner", () => {
+    renderMenu({
+      position: { x: window.innerWidth - 4, y: window.innerHeight - 4 },
+    });
+
+    expectPortaledIntoViewport(screen.getByRole("menu"), {
+      clippedBy: CLIPPING_ANCESTOR,
+      width: MENU_WIDTH,
+      height: MENU_HEIGHT,
+    });
+  });
+
+  it("clamps a menu opened above and left of the viewport", () => {
+    renderMenu({ position: { x: -320, y: -320 } });
+
+    expectPortaledIntoViewport(screen.getByRole("menu"), {
+      clippedBy: CLIPPING_ANCESTOR,
+      width: MENU_WIDTH,
+      height: MENU_HEIGHT,
     });
   });
 

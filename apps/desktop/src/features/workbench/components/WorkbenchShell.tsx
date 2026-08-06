@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
+import { usePopoverPosition, type PopoverRect } from "@/components/popover";
 import { ChevronDown } from "lucide-react";
 import type { AppMenuSection } from "@/app/app-config";
 import {
@@ -183,15 +184,23 @@ export function WorkbenchShell({
   // anchor button's rect: the titlebar/menubar set `overflow: hidden` to clip
   // horizontal label overflow, which would otherwise also clip the dropdown
   // that hangs below the titlebar (so the menu appeared to never open).
-  const [menuAnchor, setMenuAnchor] = useState<{
-    left: number;
-    top: number;
-  } | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<PopoverRect | null>(null);
   const [contextMenu, setContextMenu] = useState<WorkbenchContextMenu | null>(
     null,
   );
   const menubarRef = useRef<HTMLElement | null>(null);
-  const menuPopoverRef = useRef<HTMLDivElement | null>(null);
+  // Both surfaces take their position from the shared primitive (#168): the
+  // menubar dropdown had no clamp at all, and the context menu clamped at open
+  // time against a guessed 270x246 box.
+  const menubarMenu = usePopoverPosition<HTMLDivElement>(
+    activeMenuLabel && menuAnchor
+      ? { at: "element", rect: menuAnchor, gap: 1 }
+      : null,
+  );
+  const menuPopoverRef = menubarMenu.ref;
+  const workbenchContextMenu = usePopoverPosition<HTMLDivElement>(
+    contextMenu ? { at: "pointer", x: contextMenu.x, y: contextMenu.y } : null,
+  );
   const menubarButtonRefs = useRef(new Map<string, HTMLButtonElement>());
   // Where keyboard focus should land inside the popover once it renders.
   const pendingMenuFocusRef = useRef<"first" | "last" | null>(null);
@@ -205,7 +214,14 @@ export function WorkbenchShell({
 
   const openMenuFromButton = (label: string, button: HTMLElement) => {
     const rect = button.getBoundingClientRect();
-    setMenuAnchor({ left: rect.left, top: rect.bottom + 1 });
+    // The whole rect, not a pre-computed corner: the primitive needs both edges
+    // to clamp a dropdown opened from a button near the right of the menubar.
+    setMenuAnchor({
+      top: rect.top,
+      bottom: rect.bottom,
+      left: rect.left,
+      right: rect.right,
+    });
     setActiveMenuLabel(label);
     setMenubarFocusLabel(label);
   };
@@ -492,7 +508,8 @@ export function WorkbenchShell({
       selectedText || editable?.value || readableTextFrom(target) || label;
 
     setContextMenu({
-      ...clampWorkbenchContextMenuPosition(event.clientX, event.clientY),
+      x: event.clientX,
+      y: event.clientY,
       label,
       copyText: copyText || null,
       selectedText: selectedText || null,
@@ -745,15 +762,11 @@ export function WorkbenchShell({
       {activeMenuLabel && menuAnchor
         ? createPortal(
             <div
-              ref={menuPopoverRef}
+              ref={menubarMenu.ref}
               className="app-menu-popover menubar-popover"
               role="menu"
               aria-label={activeMenuLabel}
-              style={{
-                position: "fixed",
-                left: menuAnchor.left,
-                top: menuAnchor.top,
-              }}
+              style={menubarMenu.style}
               onKeyDown={handleMenuPopoverKeyDown}
             >
               {menuBarSections
@@ -828,9 +841,10 @@ export function WorkbenchShell({
 
       {contextMenu ? (
         <div
+          ref={workbenchContextMenu.ref}
           className="app-menu-popover workbench-context-menu"
           role="menu"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          style={workbenchContextMenu.style}
           onContextMenu={(event) => event.preventDefault()}
           onPointerDown={(event) => event.stopPropagation()}
         >
@@ -993,16 +1007,4 @@ function isDisabledElement(target: HTMLElement) {
     target.getAttribute("aria-disabled") === "true" ||
     (target instanceof HTMLButtonElement && target.disabled)
   );
-}
-
-function clampWorkbenchContextMenuPosition(x: number, y: number) {
-  if (typeof window === "undefined") {
-    return { x, y };
-  }
-  const menuWidth = 270;
-  const menuHeight = 246;
-  return {
-    x: Math.max(8, Math.min(x, window.innerWidth - menuWidth - 8)),
-    y: Math.max(8, Math.min(y, window.innerHeight - menuHeight - 8)),
-  };
 }
