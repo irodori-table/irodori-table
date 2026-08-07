@@ -376,11 +376,21 @@ jobs:
           # warm-release-cache.yml is the single writer.
           save-if: false
 
+      # ~/.cache/tauri, not .cache/tauri: that is where the bundler downloads
+      # linuxdeploy and its plugins (dirs::cache_dir()). The repo-relative path
+      # this used to name never exists, so the step cached nothing and every
+      # release re-downloaded ~30MB of tooling.
       - name: Cache AppImage runtime
         uses: actions/cache@v6
         with:
-          path: .cache/tauri
+          path: ~/.cache/tauri
           key: appimage-runtime-${{ runner.os }}-${{ runner.arch }}
+
+      # Must run before the bundler, and it is the bundler's own AppDir that
+      # gets cleaned — repacking afterwards would invalidate the updater
+      # signature Tauri attaches to the AppImage (#214).
+      - name: Exclude host-provided libraries from the AppImage
+        run: scripts/appimage-exclude-host-libs.sh
 
       - name: Install frontend dependencies
         working-directory: apps/desktop
