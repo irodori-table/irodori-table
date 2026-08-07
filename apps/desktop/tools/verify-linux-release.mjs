@@ -15,6 +15,22 @@ import { newestFileByExtension } from "../../../tools/lib/files.mjs";
 import { fromDesktopRoot, fromRepoRoot } from "../../../tools/lib/paths.mjs";
 import { runWithTimeout } from "../../../tools/lib/process.mjs";
 
+/**
+ * Libraries the AppImage must leave to the host (#214).
+ *
+ * `libwayland-client.so.0` talks to the running compositor. Shipped inside the
+ * bundle, the host's Mesa `libEGL` resolves against our copy instead of the
+ * system one and `eglGetPlatformDisplay` fails, so the app aborts with
+ * `EGL_BAD_PARAMETER` before a window appears — on every host whose wayland
+ * stack is newer than the build runner's. It is on the upstream AppImage
+ * excludelist for that reason.
+ *
+ * `scripts/appimage-exclude-host-libs.sh` strips it during bundling. This is
+ * the guard: if that shim ever stops being applied, the release fails here
+ * rather than shipping an AppImage that cannot start.
+ */
+const excludedLibraries = ["libwayland-client.so.0"];
+
 const options = parseArgs(process.argv.slice(2));
 const profile = options.debug ? "debug" : "release";
 const cargoTargetDir = resolve(
@@ -153,22 +169,10 @@ async function verifyDesktopEntry(file) {
   }
 }
 
-/**
- * Libraries the AppImage must leave to the host (#214).
- *
- * `libwayland-client.so.0` talks to the running compositor. Shipped inside the
- * bundle, the host's Mesa `libEGL` resolves against our copy instead of the
- * system one and `eglGetPlatformDisplay` fails, so the app aborts with
- * `EGL_BAD_PARAMETER` before a window appears — on every host whose wayland
- * stack is newer than the build runner's. It is on the upstream AppImage
- * excludelist for that reason.
- *
- * `scripts/appimage-exclude-host-libs.sh` strips it during bundling. This is
- * the guard: if that shim ever stops being applied, the release fails here
- * rather than shipping an AppImage that cannot start.
- */
-const excludedLibraries = ["libwayland-client.so.0"];
-
+// `excludedLibraries` is declared at the top of the file, above the top-level
+// `await`, because that await calls this function: a `const` further down is
+// still in its temporal dead zone by then, and this threw
+// `Cannot access 'excludedLibraries' before initialization` on every run.
 async function verifyExcludedLibraries(file) {
   // `--appimage-extract <pattern>` is served by the AppImage runtime embedded
   // in the file itself, so this needs no squashfs tooling on the runner. It
