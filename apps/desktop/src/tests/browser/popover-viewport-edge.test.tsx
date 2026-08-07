@@ -1,9 +1,11 @@
+import { useRef } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EditorTabStrip } from "@/app/EditorTabStrip";
 import type { EditorTabStripProps } from "@/app/EditorTabStrip";
 import { usePopoverPosition, type PopoverAnchor } from "@/components/popover";
+import { RunControl } from "@/features/query-editor/RunControl";
 import "@/App.css";
 
 /**
@@ -273,5 +275,120 @@ describe("anchored popover (real layout)", () => {
       rect.top + rect.height / 2,
     );
     expect(menu.contains(centre)).toBe(true);
+  });
+});
+
+/**
+ * RunControl's integration, in real layout (#168).
+ *
+ * This surface is the one whose rendering actually moved: it used to position a
+ * zero-size `.run-menu-portal` wrapper with `bottom`/`right`, and the menu was
+ * then placed *relative to that wrapper* by `.app-menu-popover`'s stylesheet
+ * rules — `position: absolute; top: calc(100% + 5px)`. So the box the clamp
+ * reserved and the box on screen were different boxes, and the menu did not in
+ * fact open above the control the way its comments said.
+ *
+ * The wrapper is gone and the menu itself carries the resolved position, which
+ * makes this worth an integration check rather than only a primitive one: the
+ * inline `position: fixed; left; top` has to win against those stylesheet
+ * rules.
+ */
+function RunControlHarness({ bottom }: { bottom: number }) {
+  const runControlRef = useRef<HTMLDivElement>(null);
+  return (
+    <div
+      className="workbench-dock-panel editor"
+      style={{
+        position: "fixed",
+        left: "0px",
+        top: "0px",
+        width: "420px",
+        height: `${bottom}px`,
+        overflow: "hidden",
+      }}
+    >
+      <RunControl
+        running={false}
+        runControlRef={runControlRef}
+        runMenuOpen
+        setRunMenuOpen={() => {}}
+        runPrimaryLabel="Run"
+        runShortcutLabel="Ctrl+Enter"
+        runCurrentShortcutLabel="Ctrl+Shift+Enter"
+        runFromStartShortcutLabel="Ctrl+Alt+Enter"
+        runAllShortcutLabel="Ctrl+Alt+A"
+        hasSelectedEditorSql={false}
+        runQuery={vi.fn().mockResolvedValue(undefined)}
+        runSelectionQuery={vi.fn().mockResolvedValue(undefined)}
+        runCurrentQuery={vi.fn().mockResolvedValue(undefined)}
+        runFromStartQuery={vi.fn().mockResolvedValue(undefined)}
+        runAllQuery={vi.fn().mockResolvedValue(undefined)}
+      />
+    </div>
+  );
+}
+
+/**
+ * RunControl measures its anchor in an effect, so the menu appears on a later
+ * commit than the mount — `flushSync` alone leaves it absent. Wait for it
+ * rather than assuming a fixed number of frames.
+ */
+async function mountRunControl(bottom: number) {
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  flushSync(() => {
+    root.render(<RunControlHarness bottom={bottom} />);
+  });
+  mounted.push(() => {
+    flushSync(() => root.unmount());
+    host.remove();
+  });
+
+  let menu: HTMLElement | null = null;
+  for (let attempt = 0; attempt < 50 && !menu; attempt += 1) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    menu = document.querySelector<HTMLElement>(".run-menu-popover");
+  }
+  expect(menu, "run menu should have rendered").not.toBeNull();
+  return {
+    control: document.querySelector<HTMLElement>(".run-control")!,
+    menu: menu!,
+  };
+}
+
+describe("run menu (real layout)", () => {
+  it("opens above the control with their right edges aligned", async () => {
+    const { control, menu } = await mountRunControl(600);
+    const controlRect = control.getBoundingClientRect();
+    const menuRect = menu.getBoundingClientRect();
+
+    expect(menu.parentElement).toBe(document.body);
+    expect(menuRect.width).toBeGreaterThan(0);
+    // Above, not below: the assertion the old wrapper could not have satisfied.
+    expect(menuRect.bottom).toBeLessThanOrEqual(controlRect.top);
+    expect(Math.abs(menuRect.right - controlRect.right)).toBeLessThan(2);
+  });
+
+  it("stays on screen when the control sits near the top of the window", async () => {
+    // Opening upward from a control near the top computes a negative `top`.
+    const { menu } = await mountRunControl(80);
+    const rect = menu.getBoundingClientRect();
+
+    expect(rect.top).toBeGreaterThanOrEqual(0);
+    expect(rect.left).toBeGreaterThanOrEqual(0);
+    expect(rect.bottom).toBeLessThanOrEqual(window.innerHeight);
+
+    const centre = hitTest(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+    );
+    expect(menu.contains(centre)).toBe(true);
+  });
+
+  it("escapes the overflow:hidden editor panel", async () => {
+    const { menu } = await mountRunControl(600);
+
+    expect(menu.closest(".workbench-dock-panel")).toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { usePreferencesStore } from "@/features/preferences";
 import { RunControl } from "@/features/query-editor/RunControl";
+import { stubPopoverSize } from "@/tests/helpers/popover";
 import { expectPortaledIntoViewport } from "@/tests/helpers/portal";
 import { renderUi } from "@/tests/helpers/render";
 
@@ -14,13 +15,15 @@ import { renderUi } from "@/tests/helpers/render";
  * opacity 1 — while the panel clipped every pixel and the button looked dead
  * (#114). The fix is documented at RunControl.tsx.
  *
- * Unlike the sidebar menus this one opens *upward* and anchors with
- * `bottom`/`right`, because the control is pinned to the bottom of the editor
- * pane. That makes a large `right` inset push it off the LEFT edge, which is
- * why it needs a clamp of its own.
+ * This one opens *upward*, because the control is pinned to the bottom of the
+ * editor pane, and right-aligns with it. Since #168 that comes from the shared
+ * popover primitive: the menu element itself is placed at a clamped
+ * `left`/`top`, replacing a zero-size `.run-menu-portal` wrapper that was
+ * positioned with `bottom`/`right` while stylesheet rules placed the real menu
+ * relative to it — so the box the clamp reserved was never the box on screen.
  */
 
-// Mirrors the reserved box in RunControl.clampMenuToViewport.
+/** The box the menu occupies once laid out; jsdom lays nothing out. */
 const MENU_WIDTH = 260;
 const MENU_HEIGHT = 200;
 
@@ -33,6 +36,8 @@ const CLIPPING_ANCESTOR = ".workbench-dock-panel";
  * under test gets realistic input.
  */
 function stubAnchorRect(rect: { top: number; right: number }) {
+  // Only the control's rect: the primitive measures the *menu* through
+  // offsetWidth/offsetHeight, which `stubPopoverSize` supplies separately.
   vi.spyOn(HTMLDivElement.prototype, "getBoundingClientRect").mockReturnValue({
     ...new DOMRect(),
     top: rect.top,
@@ -71,20 +76,17 @@ function Harness({ startOpen = false }: { startOpen?: boolean }) {
   );
 }
 
-/** The positioned wrapper; the role="menu" node is its child. */
+/** The menu is now the positioned element itself, with no wrapper. */
 function openMenuPortal(): HTMLElement {
-  const portal = screen
-    .getByRole("menu")
-    .closest<HTMLElement>(".run-menu-portal");
-  expect(
-    portal,
-    "run menu should render inside .run-menu-portal",
-  ).not.toBeNull();
-  return portal!;
+  return screen.getByRole("menu");
 }
 
 beforeEach(() => {
   usePreferencesStore.setState({ locale: "en" });
+  stubPopoverSize(".run-menu-popover", {
+    width: MENU_WIDTH,
+    height: MENU_HEIGHT,
+  });
 });
 
 afterEach(() => {
@@ -112,7 +114,6 @@ describe("RunControl run menu", () => {
       clippedBy: CLIPPING_ANCESTOR,
       width: MENU_WIDTH,
       height: MENU_HEIGHT,
-      anchor: "bottomRight",
     });
   });
 
@@ -130,7 +131,6 @@ describe("RunControl run menu", () => {
       clippedBy: CLIPPING_ANCESTOR,
       width: MENU_WIDTH,
       height: MENU_HEIGHT,
-      anchor: "bottomRight",
     });
   });
 
@@ -144,7 +144,6 @@ describe("RunControl run menu", () => {
       clippedBy: CLIPPING_ANCESTOR,
       width: MENU_WIDTH,
       height: MENU_HEIGHT,
-      anchor: "bottomRight",
     });
   });
 

@@ -9,6 +9,11 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import {
+  popoverSurfaceStyle,
+  usePopoverPosition,
+  type PopoverRect,
+} from "@/components/popover";
+import {
   AlertTriangle,
   Check,
   ChevronDown,
@@ -317,7 +322,6 @@ export function ConnectionManagerDialog({
   onConnect: FormEventHandler<HTMLFormElement>;
 }) {
   const importInputRef = useRef<HTMLInputElement | null>(null);
-  const transferMenuRef = useRef<HTMLDivElement | null>(null);
   const transferMenuAnchorRef = useRef<HTMLDivElement | null>(null);
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = createTranslator(locale);
@@ -326,10 +330,7 @@ export function ConnectionManagerDialog({
   const { confirm, confirmElement } = useConfirm();
   // Anchored below the "…" button but portaled to <body>: the dialog clips
   // overflowing children, which previously cut this menu off.
-  const [transferMenu, setTransferMenu] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const [transferMenu, setTransferMenu] = useState<PopoverRect | null>(null);
   const transferMenuOpen = transferMenu !== null;
   // Right-click menu for the profile list: bulk actions live here rather than in
   // a footer button whose "(14)" count read as noise. Anchored at the cursor and
@@ -339,7 +340,17 @@ export function ConnectionManagerDialog({
     y: number;
     profileId: string;
   } | null>(null);
-  const rowMenuRef = useRef<HTMLDivElement | null>(null);
+  // Both menus are placed and clamped by the shared primitive (#168); neither
+  // had a clamp of its own, so a row near the bottom of a tall profile list or
+  // a "…" button near the window edge opened partly off-screen.
+  const transferPopover = usePopoverPosition<HTMLDivElement>(
+    transferMenu ? { at: "element", rect: transferMenu } : null,
+  );
+  const transferMenuRef = transferPopover.ref;
+  const rowPopover = usePopoverPosition<HTMLDivElement>(
+    rowMenu ? { at: "pointer", x: rowMenu.x, y: rowMenu.y } : null,
+  );
+  const rowMenuRef = rowPopover.ref;
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     () => new Set(),
   );
@@ -698,9 +709,7 @@ export function ConnectionManagerDialog({
               aria-expanded={transferMenuOpen}
               onClick={(event) => {
                 const rect = event.currentTarget.getBoundingClientRect();
-                setTransferMenu((open) =>
-                  open ? null : { x: rect.left, y: rect.bottom + 4 },
-                );
+                setTransferMenu((open) => (open ? null : rect));
               }}
             >
               <MoreHorizontal size={16} />
@@ -711,13 +720,7 @@ export function ConnectionManagerDialog({
                     ref={transferMenuRef}
                     className="connection-action-menu"
                     role="menu"
-                    style={{
-                      position: "fixed",
-                      left: transferMenu.x,
-                      top: transferMenu.y,
-                      right: "auto",
-                      zIndex: 60,
-                    }}
+                    style={{ ...popoverSurfaceStyle, ...transferPopover.style }}
                   >
                     <button
                       type="button"
@@ -1092,13 +1095,7 @@ export function ConnectionManagerDialog({
               ref={rowMenuRef}
               className="connection-action-menu"
               role="menu"
-              style={{
-                position: "fixed",
-                left: rowMenu.x,
-                top: rowMenu.y,
-                right: "auto",
-                zIndex: 60,
-              }}
+              style={{ ...popoverSurfaceStyle, ...rowPopover.style }}
             >
               {selectedIds.size > 1 ? (
                 <button

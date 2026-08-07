@@ -279,12 +279,21 @@ export function usePopoverPosition<T extends HTMLElement>(
  * that item's own `click` fire afterwards, because the ref check keeps it open.
  */
 export function usePopoverDismiss(
-  ref: RefObject<HTMLElement | null>,
+  ref: RefObject<HTMLElement | null> | readonly RefObject<HTMLElement | null>[],
   onDismiss: () => void,
   active = true,
 ): void {
   const dismiss = useRef(onDismiss);
   dismiss.current = onDismiss;
+  // A menu opened from a toggle button has *two* insides. Press the toggle
+  // while the menu is open and a menu-only check dismisses on `pointerdown`,
+  // then the button's `click` reopens it — so the menu appears not to close at
+  // all. The control counts as inside for dismissal; its own handler decides
+  // what the press means.
+  const refs = useRef<readonly RefObject<HTMLElement | null>[]>([]);
+  refs.current = Array.isArray(ref)
+    ? ref
+    : [ref as RefObject<HTMLElement | null>];
 
   useEffect(() => {
     if (!active) {
@@ -292,7 +301,10 @@ export function usePopoverDismiss(
     }
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target;
-      if (target instanceof Node && ref.current?.contains(target)) {
+      if (
+        target instanceof Node &&
+        refs.current.some((candidate) => candidate.current?.contains(target))
+      ) {
         return;
       }
       dismiss.current();
@@ -314,7 +326,9 @@ export function usePopoverDismiss(
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("blur", onBlur);
     };
-  }, [active, ref]);
+    // `refs` is a ref box, so the listener always reads the current array and
+    // does not need re-binding when the caller passes a new one.
+  }, [active]);
 }
 
 /** Convenience for callers that need both hooks against the same element. */
@@ -327,3 +341,20 @@ export function useAnchoredMenu<T extends HTMLElement>(
   usePopoverDismiss(ref, dismiss, anchor !== null);
   return { ref, style };
 }
+
+/**
+ * The non-positional styling a portaled popover needs, in one place.
+ *
+ * `zIndex` reads the `--popover-z` token rather than repeating a literal: three
+ * components used to set `z-index: 60` inline while `.app-menu-popover`'s
+ * stylesheet rule said 25, so which popover won depended on which code path had
+ * opened it (#52 was the first shipped symptom of that ad-hoc styling).
+ *
+ * `right: auto` cancels the `right: 0` those menu classes inherit for their
+ * non-portaled, anchor-relative layout. Left in place it would fight the `left`
+ * this module resolves.
+ */
+export const popoverSurfaceStyle: CSSProperties = {
+  right: "auto",
+  zIndex: "var(--popover-z)",
+};
