@@ -10,13 +10,23 @@ const repositoryInventories = [
   "registry/catalog/connector-repositories.json",
   "registry/catalog/feature-repositories.json",
 ].map((path) => JSON.parse(readFileSync(resolve(root, path), "utf8")));
+// No default owner. Leaving it implicit is what let the sync break itself when
+// the extension repositories were transferred: the fallback kept resolving them
+// to the old account, while the catalog — written from the GitHub API, which
+// answers with the canonical owner after a redirect — moved to the new one. The
+// job then rejected its own previous output on every run and could not
+// converge. 8ec85c5 pointed the fallback at the organisation; this removes the
+// fallback, so the next transfer fails loudly instead of looping.
 const repositoriesByExtensionId = new Map(
-  repositoryInventories.flatMap((inventory) =>
-    (inventory.repositories ?? []).map((repository) => [
+  repositoryInventories.flatMap((inventory) => {
+    if (!inventory.owner) {
+      throw new Error("repository inventory is missing an `owner`");
+    }
+    return (inventory.repositories ?? []).map((repository) => [
       repository.extensionId,
-      `${inventory.owner ?? "irodori-table"}/${repository.name}`,
-    ]),
-  ),
+      `${inventory.owner}/${repository.name}`,
+    ]);
+  }),
 );
 const check = process.argv.includes("--check");
 const write = process.argv.includes("--write");
