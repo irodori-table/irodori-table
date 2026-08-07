@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { EditorTabStrip } from "@/app/EditorTabStrip";
 import type { EditorTabStripProps } from "@/app/EditorTabStrip";
+import { usePopoverPosition, type PopoverAnchor } from "@/components/popover";
 import "@/App.css";
 
 /**
@@ -171,5 +172,106 @@ describe("popover viewport edge (real layout)", () => {
     expect(menu!.getBoundingClientRect().height).toBeGreaterThan(
       host.getBoundingClientRect().height,
     );
+  });
+});
+
+/**
+ * The anchored path, exercised directly against the primitive (#168).
+ *
+ * The surfaces that hang a menu off a button used to fake right-alignment by
+ * subtracting a hardcoded width from the control's right edge — `rect.right -
+ * 218` in the sidebar, `- 190` for the create menu, a reserved 260 in
+ * RunControl. Whenever the real menu was wider than the guess it overhung the
+ * control; whenever it was narrower it floated away from it. Only real layout
+ * can tell those apart, so the check belongs here rather than in jsdom.
+ */
+function AnchoredMenu({
+  anchor,
+  width,
+}: {
+  anchor: PopoverAnchor;
+  width: number;
+}) {
+  const menu = usePopoverPosition<HTMLDivElement>(anchor);
+  return (
+    <div
+      className="app-menu-popover anchored-probe"
+      role="menu"
+      ref={menu.ref}
+      style={{ ...menu.style, minWidth: width, width }}
+    >
+      <button type="button" role="menuitem">
+        <span>Item</span>
+      </button>
+    </div>
+  );
+}
+
+function mountAnchored(anchor: PopoverAnchor, width: number) {
+  const host = document.createElement("div");
+  document.body.append(host);
+  const root = createRoot(host);
+  flushSync(() => {
+    root.render(<AnchoredMenu anchor={anchor} width={width} />);
+  });
+  mounted.push(() => {
+    flushSync(() => root.unmount());
+    host.remove();
+  });
+  return document.querySelector<HTMLElement>(".anchored-probe")!;
+}
+
+describe("anchored popover (real layout)", () => {
+  it("right-aligns with its control using the menu's real width", () => {
+    const control = { top: 300, bottom: 328, left: 600, right: 640 };
+
+    for (const width of [180, 320]) {
+      const menu = mountAnchored(
+        { at: "element", rect: control, align: "end" },
+        width,
+      );
+      const rect = menu.getBoundingClientRect();
+
+      // The point of measuring: whatever the menu's width turns out to be, its
+      // right edge lands on the control's. A guessed width cannot do this for
+      // both sizes at once.
+      expect(Math.round(rect.right)).toBe(control.right);
+      expect(rect.left).toBeGreaterThanOrEqual(0);
+      mounted.pop()?.();
+    }
+  });
+
+  it("stacks above its control by the menu's real height", () => {
+    const control = { top: 600, bottom: 628, left: 400, right: 460 };
+    const menu = mountAnchored(
+      { at: "element", rect: control, side: "above" },
+      240,
+    );
+    const rect = menu.getBoundingClientRect();
+
+    expect(rect.bottom).toBeLessThan(control.top);
+    expect(rect.top).toBeGreaterThanOrEqual(0);
+  });
+
+  it("keeps an end-aligned menu on screen when its control hugs the left edge", () => {
+    // Right-aligning against a control at x=0 computes a negative left; this is
+    // the mirror of #115 that RunControl shipped.
+    const menu = mountAnchored(
+      {
+        at: "element",
+        rect: { top: 300, bottom: 328, left: 0, right: 40 },
+        align: "end",
+      },
+      320,
+    );
+    const rect = menu.getBoundingClientRect();
+
+    expect(rect.left).toBeGreaterThanOrEqual(0);
+    expect(rect.right).toBeLessThanOrEqual(window.innerWidth);
+    const centre = hitTest(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+    );
+    expect(menu.contains(centre)).toBe(true);
   });
 });

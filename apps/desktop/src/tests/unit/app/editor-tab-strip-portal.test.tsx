@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EditorTabStrip } from "@/app/EditorTabStrip";
 import type { EditorTabStripProps } from "@/app/EditorTabStrip";
 import { usePreferencesStore } from "@/features/preferences";
+import { stubPopoverSize } from "@/tests/helpers/popover";
 import { expectPortaledIntoViewport } from "@/tests/helpers/portal";
 import { componentRenderer } from "@/tests/helpers/render";
 
@@ -13,13 +14,18 @@ import { componentRenderer } from "@/tests/helpers/render";
  * with enough tabs open the "..." button sits far enough right that the menu
  * landed past the window edge entirely and nothing showed.
  *
- * The fix — portal to <body>, `position: fixed`, clamp to the viewport — is
- * `clampMenuToViewport` in EditorTabStrip.tsx. These assertions pin the
- * mechanism; `expectPortaledIntoViewport` documents what jsdom can and cannot
- * prove.
+ * The fix — portal to <body>, `position: fixed`, clamp to the viewport — now
+ * comes from the shared `usePopoverPosition` primitive (#168) rather than a
+ * clamp private to this file. These assertions pin the mechanism;
+ * `expectPortaledIntoViewport` documents what jsdom can and cannot prove.
  */
 
-// Mirrors the reserved box in EditorTabStrip.clampMenuToViewport.
+/**
+ * The box the menu occupies once the stylesheet has laid it out. The primitive
+ * clamps against the *measured* size, and jsdom measures nothing, so the test
+ * has to supply it — see `stubPopoverSize`. Previously these numbers were a
+ * constant inside the component, which is exactly the guess #168 removes.
+ */
 const MENU_WIDTH = 220;
 const MENU_HEIGHT = 240;
 
@@ -54,6 +60,10 @@ const renderStrip = componentRenderer(EditorTabStrip, () => ({
 
 beforeEach(() => {
   usePreferencesStore.setState({ locale: "en" });
+  stubPopoverSize(".editor-tab-menu", {
+    width: MENU_WIDTH,
+    height: MENU_HEIGHT,
+  });
 });
 
 describe("EditorTabStrip tab menu", () => {

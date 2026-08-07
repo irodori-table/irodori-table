@@ -1,5 +1,6 @@
-import { Fragment, useEffect, useRef } from "react";
+import { Fragment } from "react";
 import { createPortal } from "react-dom";
+import { useAnchoredMenu } from "@/components/popover";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator, type TranslationKey } from "@/i18n";
 import {
@@ -29,7 +30,14 @@ export function EditorContextMenu({
   onCommand,
   onClose,
 }: EditorContextMenuProps) {
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  // Position and dismissal come from the shared popover primitive (#168). This
+  // menu previously set `left`/`top` straight from the pointer with no clamp at
+  // all, so a right-click near the bottom-right of the editor opened it partly
+  // off-screen — the same failure the tab strip shipped as #115.
+  const menu = useAnchoredMenu<HTMLDivElement>(
+    { at: "pointer", x: position.x, y: position.y },
+    onClose,
+  );
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = createTranslator(locale);
 
@@ -43,36 +51,6 @@ export function EditorContextMenu({
     const translated = t(key);
     return translated === key ? fallback : translated;
   };
-
-  useEffect(() => {
-    // The menu is portaled outside the React root, so a pointerdown inside it no
-    // longer stops propagation to this window listener; guard with the ref
-    // instead so clicking a menu item does not close before its click fires.
-    const closeOnOutsidePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (target instanceof Node && menuRef.current?.contains(target)) {
-        return;
-      }
-      onClose();
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") {
-        return;
-      }
-      event.preventDefault();
-      onClose();
-    };
-    const close = () => onClose();
-
-    window.addEventListener("pointerdown", closeOnOutsidePointerDown);
-    window.addEventListener("keydown", closeOnEscape);
-    window.addEventListener("blur", close);
-    return () => {
-      window.removeEventListener("pointerdown", closeOnOutsidePointerDown);
-      window.removeEventListener("keydown", closeOnEscape);
-      window.removeEventListener("blur", close);
-    };
-  }, [onClose]);
 
   const renderContextCommand = (command: EditorContextCommand) => {
     const label =
@@ -100,12 +78,11 @@ export function EditorContextMenu({
   // offset it from the pointer.
   return createPortal(
     <div
-      ref={menuRef}
+      ref={menu.ref}
       className="app-menu-popover editor-context-menu"
       role="menu"
-      style={{ left: position.x, top: position.y }}
+      style={menu.style}
       onContextMenu={(event) => event.preventDefault()}
-      onPointerDown={(event) => event.stopPropagation()}
     >
       {editorContextCommandGroups.map((group, index) => (
         <Fragment key={index}>

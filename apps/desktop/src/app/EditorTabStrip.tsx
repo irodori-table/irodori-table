@@ -7,6 +7,7 @@ import {
   type EditorGroupState,
 } from "@/app/editor-tabs";
 import type { EditorTabMenuState } from "@/app/controllers/use-editor-groups";
+import { usePopoverPosition } from "@/components/popover";
 import { usePreferencesStore } from "@/features/preferences";
 import type { EditorGroup } from "@/features/query-editor";
 import { createTranslator } from "@/i18n";
@@ -25,28 +26,6 @@ export type EditorTabStripProps = {
   onCloseOtherTabs: (group: EditorGroup, tabId: string) => void;
   onReopenClosedTab: (group: EditorGroup) => void;
 };
-
-// Keep the popover inside the window. Without this a "..." button near the
-// right edge — which is where it ends up once several tabs are open — opens a
-// menu that runs off-screen.
-const menuWidth = 220;
-const menuHeight = 240;
-const menuMargin = 8;
-
-function clampMenuToViewport(x: number, y: number) {
-  if (typeof window === "undefined") {
-    return { position: "fixed" as const, left: x, top: y };
-  }
-  const left = Math.max(
-    menuMargin,
-    Math.min(x, window.innerWidth - menuWidth - menuMargin),
-  );
-  const top = Math.max(
-    menuMargin,
-    Math.min(y, window.innerHeight - menuHeight - menuMargin),
-  );
-  return { position: "fixed" as const, left, top };
-}
 
 export function EditorTabStrip({
   group,
@@ -69,6 +48,9 @@ export function EditorTabStrip({
     (tab) => !state.openTabIds.includes(tab.id),
   );
   const menuOpenForGroup = menu?.group === group;
+  const tabMenu = usePopoverPosition<HTMLDivElement>(
+    menuOpenForGroup && menu ? { at: "pointer", x: menu.x, y: menu.y } : null,
+  );
 
   // Tabs keep a legible width and the strip scrolls past it, so the active tab
   // can sit outside the scrollport -- opening a new tab would otherwise look
@@ -191,9 +173,10 @@ export function EditorTabStrip({
       {menuOpenForGroup && menu
         ? createPortal(
             <div
+              ref={tabMenu.ref}
               className="app-menu-popover editor-tab-menu"
               role="menu"
-              style={clampMenuToViewport(menu.x, menu.y)}
+              style={tabMenu.style}
               onContextMenu={(event) => event.preventDefault()}
               onPointerDown={(event) => event.stopPropagation()}
             >

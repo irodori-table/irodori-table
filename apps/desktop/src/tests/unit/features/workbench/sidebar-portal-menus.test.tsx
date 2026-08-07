@@ -8,6 +8,7 @@ import type {
   DbObjectMetadata,
 } from "@/generated/irodori-api";
 import type { WorkspaceConnection } from "@/lib/workspace-connection";
+import { stubPopoverSize } from "@/tests/helpers/popover";
 import { expectPortaledIntoViewport } from "@/tests/helpers/portal";
 import { renderUi } from "@/tests/helpers/render";
 
@@ -26,7 +27,7 @@ import { renderUi } from "@/tests/helpers/render";
  * and the coordinate clamp, not the painted result.
  */
 
-// Mirrors `clampObjectMenuPosition` in Sidebar.tsx: the box the clamp reserves.
+/** The box these menus occupy once the stylesheet has laid them out. */
 const MENU_WIDTH = 218;
 const MENU_HEIGHT = 150;
 
@@ -141,6 +142,10 @@ function bottomRightCorner() {
 
 beforeEach(() => {
   usePreferencesStore.setState({ locale: "en" });
+  stubPopoverSize(".object-action-menu, .schema-create-menu", {
+    width: MENU_WIDTH,
+    height: MENU_HEIGHT,
+  });
 });
 
 describe("Sidebar portaled menus", () => {

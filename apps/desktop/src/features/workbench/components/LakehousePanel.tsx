@@ -1,12 +1,12 @@
 import {
   useEffect,
   useMemo,
-  useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
 import { Cloud, Copy, Database, FileText, Play, Wrench, X } from "lucide-react";
+import { usePopoverPosition } from "@/components/popover";
 import type { DatabaseMetadata, DbEngine } from "@/generated/irodori-api";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator, type TranslationKey } from "@/i18n";
@@ -185,7 +185,14 @@ export function LakehousePanel({
     ) ?? 0;
   const lakehouseEngine = isLakehouseEngine(editorEngine);
   const contextAction = contextMenu?.action;
-  const contextMenuRef = useRef<HTMLDivElement | null>(null);
+  // Clamping happens here, at render time, against the menu's measured box
+  // (#168). Clamping at open time — against a guessed 238x136 — is what made
+  // #124 possible: the numbers were computed in viewport space before the dock
+  // offset was applied.
+  const menu = usePopoverPosition<HTMLDivElement>(
+    contextMenu ? { at: "pointer", x: contextMenu.x, y: contextMenu.y } : null,
+  );
+  const contextMenuRef = menu.ref;
 
   useEffect(() => {
     if (!contextMenu) {
@@ -229,10 +236,7 @@ export function LakehousePanel({
   ) => {
     event.preventDefault();
     event.stopPropagation();
-    setContextMenu({
-      ...clampLakehouseMenuPosition(event.clientX, event.clientY),
-      action,
-    });
+    setContextMenu({ x: event.clientX, y: event.clientY, action });
   };
 
   const loadSql = (sql: string) => {
@@ -371,14 +375,10 @@ export function LakehousePanel({
       {contextAction
         ? createPortal(
             <div
-              ref={contextMenuRef}
+              ref={menu.ref}
               className="app-menu-popover lakehouse-context-menu"
               role="menu"
-              style={{
-                position: "fixed",
-                left: contextMenu.x,
-                top: contextMenu.y,
-              }}
+              style={menu.style}
               onContextMenu={(event) => event.preventDefault()}
             >
               <button
@@ -424,16 +424,4 @@ export function LakehousePanel({
         : null}
     </section>
   );
-}
-
-function clampLakehouseMenuPosition(x: number, y: number) {
-  if (typeof window === "undefined") {
-    return { x, y };
-  }
-  const menuWidth = 238;
-  const menuHeight = 136;
-  return {
-    x: Math.max(8, Math.min(x, window.innerWidth - menuWidth - 8)),
-    y: Math.max(8, Math.min(y, window.innerHeight - menuHeight - 8)),
-  };
 }

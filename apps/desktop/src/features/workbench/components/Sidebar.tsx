@@ -8,6 +8,11 @@ import type {
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  usePopoverPosition,
+  type PopoverAnchor,
+  type PopoverRect,
+} from "@/components/popover";
+import {
   AlertTriangle,
   BarChart3,
   BookOpen,
@@ -51,7 +56,10 @@ import type { WorkbenchViewId } from "../types";
 import type { WorkbenchSide } from "../types";
 
 type SnapshotObject = WorkspaceConnection["objects"][number];
-type ObjectActionMenuPosition = { key: string; x: number; y: number } | null;
+type ObjectActionMenuPosition = {
+  key: string;
+  anchor: PopoverAnchor;
+} | null;
 type SidebarViewId = WorkbenchViewId;
 
 type ViewTabMeta = {
@@ -131,15 +139,14 @@ const containerLabelKeyByEngine: Record<string, TranslationKey> = {
 // viewport coordinates: the sidebar lives inside scroll containers and
 // dockview panels whose overflow/stacking clips absolutely-positioned
 // popovers (menus silently appeared "not to open" near panel edges).
-function floatingMenuStyle(x: number, y: number) {
-  return {
-    position: "fixed",
-    left: x,
-    top: y,
-    right: "auto",
-    zIndex: 60,
-  } as const;
-}
+// Layering and the `right: auto` reset only. Position comes from the shared
+// popover primitive (#168), which measures the menu instead of guessing its
+// width — the sidebar's `⋯` and `+` buttons used to fake right-alignment by
+// subtracting a hardcoded 218/190 from the button's right edge.
+const floatingMenuStyle = {
+  right: "auto",
+  zIndex: 60,
+} as const;
 
 // A custom drag payload type carries the dragged view id across the two
 // Sidebar instances (left and right). `text/plain` is also set for legacy
@@ -354,25 +361,34 @@ export function Sidebar({
 }: SidebarProps) {
   const [objectActionMenuPosition, setObjectActionMenuPosition] =
     useState<ObjectActionMenuPosition>(null);
-  const objectActionMenuRef = useRef<HTMLDivElement | null>(null);
   const createMenuAnchorRef = useRef<HTMLDivElement | null>(null);
-  const createMenuRef = useRef<HTMLDivElement | null>(null);
-  const [createMenu, setCreateMenu] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const [createMenu, setCreateMenu] = useState<PopoverRect | null>(null);
   const [connectionMenu, setConnectionMenu] = useState<{
     id: string;
-    x: number;
-    y: number;
+    anchor: PopoverAnchor;
   } | null>(null);
-  const connectionMenuRef = useRef<HTMLDivElement | null>(null);
   const [viewMenu, setViewMenu] = useState<{
     id: SidebarViewId;
-    x: number;
-    y: number;
+    anchor: PopoverAnchor;
   } | null>(null);
-  const viewMenuRef = useRef<HTMLDivElement | null>(null);
+  // One hook per menu, at the top level: only one instance of each renders at
+  // a time, so the ref and style can be shared by the mapped render sites.
+  const objectMenu = usePopoverPosition<HTMLDivElement>(
+    objectActionMenuPosition?.anchor ?? null,
+  );
+  const objectActionMenuRef = objectMenu.ref;
+  const createMenuPopover = usePopoverPosition<HTMLDivElement>(
+    createMenu ? { at: "element", rect: createMenu, align: "end" } : null,
+  );
+  const createMenuRef = createMenuPopover.ref;
+  const connectionMenuPopover = usePopoverPosition<HTMLDivElement>(
+    connectionMenu?.anchor ?? null,
+  );
+  const connectionMenuRef = connectionMenuPopover.ref;
+  const viewMenuPopover = usePopoverPosition<HTMLDivElement>(
+    viewMenu?.anchor ?? null,
+  );
+  const viewMenuRef = viewMenuPopover.ref;
   const draggedViewRef = useRef<SidebarViewId | null>(null);
   const [viewDragOver, setViewDragOver] = useState<{
     id: SidebarViewId;
@@ -526,7 +542,7 @@ export function Sidebar({
     onSetObjectActionMenu(objectKey);
     setObjectActionMenuPosition({
       key: objectKey,
-      ...clampObjectMenuPosition(event.clientX, event.clientY),
+      anchor: { at: "pointer", x: event.clientX, y: event.clientY },
     });
   }
 
@@ -539,11 +555,13 @@ export function Sidebar({
     event.preventDefault();
     event.stopPropagation();
     const rect = event.currentTarget.getBoundingClientRect();
-    const anchor = clampObjectMenuPosition(rect.right - 218, rect.bottom + 4);
     onSetObjectActionMenu((current) =>
       current === objectKey ? null : objectKey,
     );
-    setObjectActionMenuPosition({ key: objectKey, ...anchor });
+    setObjectActionMenuPosition({
+      key: objectKey,
+      anchor: { at: "element", rect, align: "end" },
+    });
   }
 
   function openViewMenu(
@@ -557,7 +575,7 @@ export function Sidebar({
     event.stopPropagation();
     setViewMenu({
       id: viewId,
-      ...clampObjectMenuPosition(event.clientX, event.clientY),
+      anchor: { at: "pointer", x: event.clientX, y: event.clientY },
     });
   }
 
@@ -735,7 +753,11 @@ export function Sidebar({
                     event.stopPropagation();
                     setConnectionMenu({
                       id: connection.id,
-                      ...clampObjectMenuPosition(event.clientX, event.clientY),
+                      anchor: {
+                        at: "pointer",
+                        x: event.clientX,
+                        y: event.clientY,
+                      },
                     });
                   }}
                 >
@@ -772,10 +794,10 @@ export function Sidebar({
                     ref={connectionMenuRef}
                     className="object-action-menu"
                     role="menu"
-                    style={floatingMenuStyle(
-                      connectionMenu.x,
-                      connectionMenu.y,
-                    )}
+                    style={{
+                      ...floatingMenuStyle,
+                      ...connectionMenuPopover.style,
+                    }}
                   >
                     <button
                       type="button"
@@ -895,7 +917,7 @@ export function Sidebar({
                   className="object-action-menu"
                   role="menu"
                   aria-label={t("sidebar.viewMenu")}
-                  style={floatingMenuStyle(viewMenu.x, viewMenu.y)}
+                  style={{ ...floatingMenuStyle, ...viewMenuPopover.style }}
                 >
                   {onMoveView ? (
                     <button
@@ -981,14 +1003,7 @@ export function Sidebar({
                       onClick={(event) => {
                         const rect =
                           event.currentTarget.getBoundingClientRect();
-                        setCreateMenu((open) =>
-                          open
-                            ? null
-                            : clampObjectMenuPosition(
-                                rect.right - 190,
-                                rect.bottom + 4,
-                              ),
-                        );
+                        setCreateMenu((open) => (open ? null : rect));
                       }}
                     >
                       <Plus size={14} />
@@ -999,10 +1014,10 @@ export function Sidebar({
                             ref={createMenuRef}
                             className="schema-create-menu"
                             role="menu"
-                            style={floatingMenuStyle(
-                              createMenu.x,
-                              createMenu.y,
-                            )}
+                            style={{
+                              ...floatingMenuStyle,
+                              ...createMenuPopover.style,
+                            }}
                           >
                             <button
                               type="button"
@@ -1163,10 +1178,10 @@ export function Sidebar({
                                         ref={objectActionMenuRef}
                                         className="object-action-menu"
                                         role="menu"
-                                        style={floatingMenuStyle(
-                                          objectActionMenuPosition.x,
-                                          objectActionMenuPosition.y,
-                                        )}
+                                        style={{
+                                          ...floatingMenuStyle,
+                                          ...objectMenu.style,
+                                        }}
                                       >
                                         <button
                                           type="button"
@@ -1334,16 +1349,4 @@ export function Sidebar({
       ) : null}
     </>
   );
-}
-
-function clampObjectMenuPosition(x: number, y: number) {
-  if (typeof window === "undefined") {
-    return { x, y };
-  }
-  const menuWidth = 218;
-  const menuHeight = 150;
-  return {
-    x: Math.max(8, Math.min(x, window.innerWidth - menuWidth - 8)),
-    y: Math.max(8, Math.min(y, window.innerHeight - menuHeight - 8)),
-  };
 }
