@@ -77,4 +77,4 @@ The **Sources** footer is load-bearing: it ties each page back to the official d
 in the knowledge registry so a refresh can detect when a page is stale.
 
 Human-facing mdBook pages that are not required as table-repo generator
-snapshots live in `hjosugi/irodori-docs` under `src/cheatsheets/`.
+snapshots live in `irodori-table/irodori-docs` under `src/cheatsheets/`.

@@ -60,8 +60,8 @@ fn parses_branch_lines_with_tracking_counts() {
 fn detects_remote_providers_and_web_urls() {
     let remotes = parse_remotes(
         "\
-origin\tgit@github.com:hjosugi/irodori-table.git (fetch)
-origin\tgit@github.com:hjosugi/irodori-table.git (push)
+origin\tgit@github.com:irodori-table/irodori-table.git (fetch)
+origin\tgit@github.com:irodori-table/irodori-table.git (push)
 gitlab\thttps://gitlab.com/group/project.git (fetch)
 bb\tgit@bitbucket.org:team/repo.git (fetch)
 azure\tgit@ssh.dev.azure.com:v3/org/project/repo (fetch)
