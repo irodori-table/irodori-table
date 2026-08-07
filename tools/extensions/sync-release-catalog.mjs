@@ -14,7 +14,7 @@ const repositoriesByExtensionId = new Map(
   repositoryInventories.flatMap((inventory) =>
     (inventory.repositories ?? []).map((repository) => [
       repository.extensionId,
-      `${inventory.owner ?? "hjosugi"}/${repository.name}`,
+      `${inventory.owner ?? "irodori-table"}/${repository.name}`,
     ]),
   ),
 );

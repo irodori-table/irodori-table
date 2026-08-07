@@ -1,17 +1,21 @@
 {
   "publisher": "irodori",
-  "owner": "hjosugi",
+  "owner": "irodori-table",
   "visibility": "public",
   "repositories": [
     {
       "name": "irodori-extension-knowledge",
       "extensionId": "irodori.knowledge",
-      "hostFeatures": ["knowledge"]
+      "hostFeatures": [
+        "knowledge"
+      ]
     },
     {
       "name": "irodori-extension-datalake",
       "extensionId": "irodori.datalake",
-      "hostFeatures": ["datalake"]
+      "hostFeatures": [
+        "datalake"
+      ]
     }
   ]
 }
