@@ -164,7 +164,7 @@ database seeded with a small `products` / `orders` schema, which is enough to
 exercise the editor, results grid, and ERD without any server. There are also
 local Postgres and MySQL profiles pointing at the sample containers from the
 [`irodori-samples`](https://github.com/irodori-table/irodori-samples) repository
-(`make db-up DB=postgres`).
+(`task db-up DB=postgres`).
 
 ## Gaps
 

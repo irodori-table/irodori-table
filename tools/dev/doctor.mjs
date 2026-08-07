@@ -18,10 +18,15 @@ checkCommand("rustc", ["--version"], { required: true });
 checkCommand("cargo", ["--version"], { required: true });
 checkCommand("node", ["--version"], { required: true });
 checkCommand("npm", ["--version"], { required: true });
+// Every entry point in this repo is a go-task target; there is no Makefile.
+checkCommand("task", ["--version"], {
+  required: true,
+  hint: "https://taskfile.dev/installation — the repo entry points are `task <name>`",
+});
 checkRustVersion();
 checkCommand("bun", ["--version"], {
   required: false,
-  hint: "optional fast path: JS_PM=bun make test",
+  hint: "optional fast path: JS_PM=bun task test",
 });
 if (process.platform === "linux" && arch() === "x64") {
   checkCommand("mold", ["--version"], {
@@ -34,7 +39,7 @@ checkContainerEngine();
 section("Repository setup");
 checkPath("apps/desktop/node_modules", {
   required: true,
-  hint: "run: make setup-desktop",
+  hint: "run: task setup-desktop",
 });
 checkPath("../irodori-kit/packages/extension-sdk", {
   required: false,
@@ -73,7 +78,7 @@ if (process.platform === "linux") {
 }
 
 if (issues.length > 0) {
-  console.log("\nFix the required items above, then rerun `make doctor`.");
+  console.log("\nFix the required items above, then rerun `task doctor`.");
   process.exit(1);
 }
 
@@ -192,7 +197,7 @@ function checkPlaywright() {
   report(playwrightBin, existsSync(fromRepoRoot(playwrightBin)), {
     required: false,
     warn: true,
-    hint: "run `make setup`, then `cd apps/desktop && npx playwright install --with-deps chromium` for browser/e2e tests",
+    hint: "run `task setup`, then `cd apps/desktop && npx playwright install --with-deps chromium` for browser/e2e tests",
   });
 }
 
@@ -207,7 +212,7 @@ function checkTmpDir() {
       {
         required: false,
         warn: true,
-        hint: "large Rust/Tauri builds may fail on small tmpfs; try `mkdir -p .irodori-local/tmp && TMPDIR=$PWD/.irodori-local/tmp make desktop-build-verified`",
+        hint: "large Rust/Tauri builds may fail on small tmpfs; try `mkdir -p .irodori-local/tmp && TMPDIR=$PWD/.irodori-local/tmp task desktop-build-verified`",
       },
       `${freeGiB.toFixed(1)} GiB available`,
     );
@@ -229,7 +234,7 @@ function checkCargoPatchClean() {
   report("Cargo.toml has no local irodori-kit patch", !hasKitPatch, {
     required: false,
     warn: true,
-    hint: "run `make kit-unlink` before committing release-bound changes",
+    hint: "run `task kit-unlink` before committing release-bound changes",
   });
 }
 

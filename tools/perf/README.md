@@ -12,7 +12,7 @@ movement.
 Run:
 
 ```sh
-make perf-hot-surfaces
+task perf-hot-surfaces
 node tools/perf/hot-surface-benchmark.mjs --json
 node tools/perf/hot-surface-benchmark.mjs --rows 1000000 --columns 300 --steps 240
 ```

@@ -18,7 +18,7 @@ Status legend:
 - **Wired** — has a production connect path and a dedicated adapter or a
   wire-compatible adapter it routes through.
 - **Verified** — Wired *and* exercised against a real instance in
-  `tests/integration_db.rs` through the sample harness (`make db-verify`).
+  `tests/integration_db.rs` through the sample harness (`task db-verify`).
 - **Pending** — recognized by the engine enum, adapter scaffolding exists, but the
   connector intentionally returns a "not ready" result.
 - **Extension** — recognized by the engine enum and published through the

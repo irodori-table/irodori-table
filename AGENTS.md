@@ -56,22 +56,22 @@ These instructions apply to the whole repository. More specific `AGENTS.md` or
 Use the root `Makefile` first. The root is not an npm workspace; JS commands run
 against `apps/desktop`.
 
-- Setup: `make setup`
-- Environment check: `make doctor`
+- Setup: `task setup`
+- Environment check: `task doctor`
 - Rust tests: `cargo test --workspace`
-- Desktop unit tests: `make desktop-test`
-- Desktop Rust/TS combined loop: `make desktop-test-rust-ts`
-- Type generation drift check: `make desktop-typegen-check`
-- Desktop JS/TS formatting: `make desktop-format`
-- Desktop JS/TS formatting check: `make desktop-format-check`
-- Frontend build: `make desktop-build`
-- Verified desktop build: `make desktop-build-verified`
-- Browser/e2e tests: `make desktop-e2e`
-- Generated docs/catalog checks: `make docs-check`
-- Extension manifest validation: `make extension-manifests` delegates to
+- Desktop unit tests: `task desktop-test`
+- Desktop Rust/TS combined loop: `task desktop-test-rust-ts`
+- Type generation drift check: `task desktop-typegen-check`
+- Desktop JS/TS formatting: `task desktop-format`
+- Desktop JS/TS formatting check: `task desktop-format-check`
+- Frontend build: `task desktop-build`
+- Verified desktop build: `task desktop-build-verified`
+- Browser/e2e tests: `task desktop-e2e`
+- Generated docs/catalog checks: `task docs-check`
+- Extension manifest validation: `task extension-manifests` delegates to
   `../irodori-kit/packages/extension-sdk` when present.
-- Security/license checks: `make security`
-- Broad local validation: `make check`
+- Security/license checks: `task security`
+- Broad local validation: `task check`
 
 For local JS-heavy loops, `JS_PM=bun` is allowed with Make targets, but keep npm
 lockfiles as the reproducible path.
@@ -82,13 +82,13 @@ lockfiles as the reproducible path.
   contract, generated file, release path, dependency, or user-facing workflow is
   touched.
 - Frontend UI changes usually need a focused Vitest test or existing browser/e2e
-  test plus `make desktop-build`.
+  test plus `task desktop-build`.
 - Rust command, DTO, or generated binding changes need
-  `make desktop-typegen-check` and the relevant Cargo tests.
+  `task desktop-typegen-check` and the relevant Cargo tests.
 - Generated docs/catalog changes must edit source data or generators first, then
-  run `make docs-check`.
+  run `task docs-check`.
 - Dependency, build, release, extension, or credential-handling changes need
-  `make security`.
+  `task security`.
 - If a required check is too slow, unavailable, or blocked, state that clearly
   with the reason.
 
@@ -117,7 +117,7 @@ lockfiles as the reproducible path.
 ## Generated Files And Boundaries
 
 - Do not hand-edit generated Rust-to-TypeScript bindings; run
-  `make desktop-typegen` or check drift with `make desktop-typegen-check`.
+  `task desktop-typegen` or check drift with `task desktop-typegen-check`.
 - Do not hand-edit generated docs snapshots without changing their source data
   or generator.
 - Use `https://irodori-table.github.io/irodori-docs/repository-boundaries.html` to decide whether new durable docs belong

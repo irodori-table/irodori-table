@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     # nixpkgs ships whatever Rust it happens to carry, but this repo pins an
-    # exact toolchain and `make doctor` fails on a mismatch. rust-overlay can
+    # exact toolchain and `task doctor` fails on a mismatch. rust-overlay can
     # read rust-toolchain.toml directly, so the pin stays in one place.
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -52,8 +52,11 @@
 
             nodejs_24
 
+            # The repo entry points are go-task, not make.
+            go-task
+
             # .cargo/config.toml links x86_64 Linux through mold, and
-            # `make doctor` treats it as required. Without it in the shell,
+            # `task doctor` treats it as required. Without it in the shell,
             # every local link fails with "cannot find 'ld'".
             mold
 

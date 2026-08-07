@@ -7,9 +7,9 @@ under `MIT OR 0BSD`.
 ## Quick Start
 
 ```sh
-make doctor
-make setup
-make desktop-dev
+task doctor
+task setup
+task desktop-dev
 ```
 
 The root is not an npm workspace. Run JavaScript commands through the root
@@ -25,7 +25,7 @@ Required local versions are pinned in `.nvmrc`, `rust-toolchain.toml`, and
 - Linux desktop build prerequisites are documented in
   <https://irodori-table.github.io/irodori-docs/linux-development.html>.
 
-Run `make doctor` after installing tools. It checks the pinned Node/Rust
+Run `task doctor` after installing tools. It checks the pinned Node/Rust
 versions, Linux desktop prerequisites, Playwright readiness, sample/kit sibling
 checkouts, temp-directory capacity, and local Cargo patch leakage.
 
@@ -76,20 +76,20 @@ contracts, release paths, generated files, or user-facing workflows are touched.
 
 | Change | Run |
 | --- | --- |
-| Frontend TypeScript/React | `make desktop-format-check`, `make desktop-lint`, `make desktop-test` |
-| Frontend build or release path | `make desktop-build-verified` |
-| Rust backend or Tauri command payloads | `cargo test --workspace`, `make desktop-typegen-check` |
-| Generated registry/docs snapshots | edit the source/generator, then `make docs-check` |
-| Extension manifests/templates | `make extension-manifests` |
-| Browser behavior | `cd apps/desktop && npx playwright install --with-deps chromium`, then `make desktop-e2e` |
-| Dependency, build, CI, release, or credential handling | `make security` |
-| Broad pre-PR confidence | `make check` |
+| Frontend TypeScript/React | `task desktop-format-check`, `task desktop-lint`, `task desktop-test` |
+| Frontend build or release path | `task desktop-build-verified` |
+| Rust backend or Tauri command payloads | `cargo test --workspace`, `task desktop-typegen-check` |
+| Generated registry/docs snapshots | edit the source/generator, then `task docs-check` |
+| Extension manifests/templates | `task extension-manifests` |
+| Browser behavior | `cd apps/desktop && npx playwright install --with-deps chromium`, then `task desktop-e2e` |
+| Dependency, build, CI, release, or credential handling | `task security` |
+| Broad pre-PR confidence | `task check` |
 
 Formatting and linting use Oxc-family tooling for the desktop app:
 
 ```sh
-make desktop-format-check
-make desktop-lint
+task desktop-format-check
+task desktop-lint
 ```
 
 ## Cross-Repo Development
@@ -99,17 +99,17 @@ against `irodori-kit`, clone the sibling repo and add a temporary Cargo patch:
 
 ```sh
 git clone https://github.com/irodori-table/irodori-kit ../irodori-kit
-make kit-link
+task kit-link
 ```
 
 Before committing, remove the local patch and verify it is gone:
 
 ```sh
-make kit-unlink
-make kit-patch-check
+task kit-unlink
+task kit-patch-check
 ```
 
-`make extension-manifests` validates the extension SDK templates when
+`task extension-manifests` validates the extension SDK templates when
 `../irodori-kit/packages/extension-sdk` or `irodori-kit/packages/extension-sdk`
 is present. In CI, missing SDK checkout is a failure.
 
@@ -117,8 +117,8 @@ Sample databases live in the sibling samples repo:
 
 ```sh
 git clone https://github.com/irodori-table/irodori-samples ../irodori-samples
-make db-up DB=postgres
-make db-verify DB=postgres
+task db-up DB=postgres
+task db-verify DB=postgres
 ```
 
 ## Issue And PR Intake

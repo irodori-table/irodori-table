@@ -1,8 +1,8 @@
 //! Real-database integration tests against the Docker `samples` stack.
 //!
 //! Skipped unless the matching `IRODORI_*` environment variable is set. Run one
-//! engine through the root harness with `make db-verify DB=postgres`, or keep it
-//! running for manual checks with `make db-up DB=postgres`.
+//! engine through the root harness with `task db-verify DB=postgres`, or keep it
+//! running for manual checks with `task db-up DB=postgres`.
 //!
 //! Queries stay within sqlx `Any`'s supported types (int, bigint, text). Rich
 //! type coverage (decimal, timestamp, json, bytea) needs the per-engine native
@@ -44,7 +44,10 @@ async fn exercise(engine: DbEngine, url: String) {
     assert!(!info.server_version.is_empty(), "server version present");
     eprintln!("connected: {engine:?} {}", info.server_version);
 
-    // 4 sample customers are seeded by samples/<engine>/01_samples.sql.
+    // samples/<engine>/01_samples.sql seeds a few hundred customers. The exact
+    // number is a property of the sample generator and is allowed to change, so
+    // this asserts the table is populated rather than pinning a count — a pinned
+    // count only ever fails for the wrong reason.
     let count = run_query_impl(
         &state,
         "it".into(),
@@ -57,7 +60,10 @@ async fn exercise(engine: DbEngine, url: String) {
     let n = count.rows[0][0]
         .as_i64()
         .or_else(|| count.rows[0][0].as_str().and_then(|s| s.parse().ok()));
-    assert_eq!(n, Some(4), "expected 4 seeded customers");
+    assert!(
+        n.is_some_and(|n| n >= 100),
+        "expected the seeded customers table to be populated, got {n:?}"
+    );
 
     let metadata = list_objects_impl(&state, "it".into())
         .await
@@ -122,12 +128,12 @@ async fn exercise(engine: DbEngine, url: String) {
     let rich = run_query_impl(
         &state,
         "it".into(),
-        "select total, created_at from orders order by id limit 1".into(),
+        "select total, ordered_at from orders order by id limit 1".into(),
         None,
     )
     .await
     .expect("rich types");
-    assert_eq!(rich.columns, vec!["total", "created_at"]);
+    assert_eq!(rich.columns, vec!["total", "ordered_at"]);
     assert!(
         rich.rows[0][0].is_string(),
         "decimal -> string, got {:?}",
@@ -139,7 +145,7 @@ async fn exercise(engine: DbEngine, url: String) {
         rich.rows[0][1]
     );
     eprintln!(
-        "rich types: total={} created_at={}",
+        "rich types: total={} ordered_at={}",
         rich.rows[0][0], rich.rows[0][1]
     );
 

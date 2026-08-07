@@ -8,10 +8,10 @@
 
 ## Local Environment Checklist
 
-- [ ] `make doctor` passes, or the remaining warnings are explained below.
-- [ ] `make kit-patch-check` passes if `irodori-kit` was used locally.
+- [ ] `task doctor` passes, or the remaining warnings are explained below.
+- [ ] `task kit-patch-check` passes if `irodori-kit` was used locally.
 - [ ] Formatting/linting ran when JS/TS/Rust files changed:
-      `make desktop-format-check`, `make desktop-lint`, or
+      `task desktop-format-check`, `task desktop-lint`, or
       `cargo fmt --all -- --check` as appropriate.
 
 ## Clean-Room And Licensing Checklist

@@ -6,7 +6,7 @@ released from sibling repositories first, then consumed here by git tag.
 ## Preconditions
 
 - `git status --short` is clean except for intentional release edits.
-- `make kit-patch-check` passes; local `irodori-kit` patches must not ship.
+- `task kit-patch-check` passes; local `irodori-kit` patches must not ship.
 - `irodori-kit`, `irodori-sql`, and `irodori-knowledge` tags referenced in
   `Cargo.toml` exist and contain the intended release code.
 - If extension SDK APIs changed, `irodori-kit/packages/extension-sdk` has been
@@ -19,15 +19,15 @@ released from sibling repositories first, then consumed here by git tag.
 Run the narrowest loop while preparing a change, then run the release gate:
 
 ```sh
-make doctor
-make desktop-format-check
-make desktop-lint
-make desktop-typegen-check
-make desktop-test
+task doctor
+task desktop-format-check
+task desktop-lint
+task desktop-typegen-check
+task desktop-test
 cargo test --workspace
-make docs-check
-make security
-make desktop-build-verified
+task docs-check
+task security
+task desktop-build-verified
 ```
 
 For browser-facing changes, also run:
@@ -36,7 +36,7 @@ For browser-facing changes, also run:
 cd apps/desktop
 npx playwright install --with-deps chromium
 cd ../..
-make desktop-e2e
+task desktop-e2e
 ```
 
 ## Version Bump
@@ -46,9 +46,9 @@ Use the repo-root release targets. They delegate to
 Cargo manifests, lockfiles, commit, tag, and push.
 
 ```sh
-make release-patch
-make release-minor
-make release-major
+task release-patch
+task release-minor
+task release-major
 ```
 
 Before running a release target, update any sibling git tags in `Cargo.toml`
@@ -66,7 +66,7 @@ immutable tags:
    those tags in kit before tagging kit.
 4. `irodori-table` - update `[workspace.dependencies]` in `Cargo.toml`, run
    `cargo update`, verify generated bindings and docs, then run the appropriate
-   `make release-*` target.
+   `task release-*` target.
 
 For each sibling repo, update its changelog or release notes before tagging.
 For `irodori-table`, mention the consumed sibling tags in the release notes when

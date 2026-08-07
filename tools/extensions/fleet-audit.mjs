@@ -356,7 +356,7 @@ function printHelp() {
       "Usage: node tools/extensions/fleet-audit.mjs [--repo <name>] [--limit <n>] [--strict-abi]",
       "",
       "Audits the post-migration connector fleet checklist tracked by irodori-table#44.",
-      "Use this with `make extension-manifests` for the SDK/template manifests and `make extension-scenarios` for package assets.",
+      "Use this with `task extension-manifests` for the SDK/template manifests and `task extension-scenarios` for package assets.",
       "Set IRODORI_EXTENSIONS_ROOT to point at the directory containing irodori-extension-* checkouts.",
       "Set IRODORI_EXPECTED_EXTENSION_MANIFESTS to override the selected-repository manifest count.",
       "Pass --strict-abi to fail on pending shared ABI migration items instead of warning.",

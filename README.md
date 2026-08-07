@@ -43,15 +43,15 @@ handling and security scope.
 ### 5-Minute Quickstart
 
 1. Get a toolchain. On Linux with Nix, the repository ships a dev shell that
-   pins everything `make doctor` checks — the exact Rust from
+   pins everything `task doctor` checks — the exact Rust from
    `rust-toolchain.toml`, Node 24, mold, and the WebKitGTK/GTK libraries:
 
    ```sh
    nix develop        # or `direnv allow` to enter it automatically
    ```
 
-   Inside that shell, start the app with `make run-dev` rather than
-   `make desktop-dev`. WebKit from the Nix store cannot use a non-NixOS host's
+   Inside that shell, start the app with `task run-dev` rather than
+   `task desktop-dev`. WebKit from the Nix store cannot use a non-NixOS host's
    GL drivers and aborts before a window appears; `run-dev` wraps the launch in
    nixGL to supply matching ones. Set `IRODORI_NO_NIXGL=1` to opt out.
 
@@ -65,17 +65,17 @@ handling and security scope.
 2. From the repository root, install dependencies and check the local setup:
 
    ```sh
-   make setup
-   make doctor
+   task setup
+   task doctor
    ```
 
 3. Start the desktop development shell:
 
    ```sh
-   make desktop-dev
+   task desktop-dev
    ```
 
-`make desktop-dev` starts the Tauri shell and Vite dev server. Run `make help`
+`task desktop-dev` starts the Tauri shell and Vite dev server. Run `make help`
 for the full list of root commands.
 
 Contributor setup, troubleshooting, and deeper development notes live in the

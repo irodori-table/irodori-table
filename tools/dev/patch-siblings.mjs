@@ -26,7 +26,7 @@ const current = readFileSync(cargoTomlPath, "utf8");
 
 if (mode === "check") {
   if (hasKitPatch(current)) {
-    console.error("Cargo.toml contains a local irodori-kit [patch]. Run `make kit-unlink` before committing.");
+    console.error("Cargo.toml contains a local irodori-kit [patch]. Run `task kit-unlink` before committing.");
     process.exit(1);
   }
   console.log("Cargo.toml has no local irodori-kit patch.");
