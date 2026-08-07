@@ -1,4 +1,8 @@
 import { useEffect, useMemo } from "react";
+import {
+  isViewUnavailable,
+  unavailableHostFeatureViews,
+} from "@/features/extensions/host-feature-views";
 import { useExtensionRuntimeStore } from "@/features/extensions/runtime-store";
 import { useGitStore } from "@/features/git";
 import {
@@ -15,6 +19,24 @@ import {
 // Views can be moved between sides, hidden, and reordered (VS Code-style);
 // the object browser is pinned to the left side and always visible so the
 // left sidebar always has a fallback view.
+/**
+ * A view is hidden when the user hid it *or* its host feature is missing. Both
+ * the render path and the fallback path need that merge, and they had drifted
+ * into two hand-written copies naming the gated views individually.
+ */
+function withUnavailableHidden(
+  viewHidden: Record<WorkbenchViewId, boolean>,
+  unavailable: Partial<Record<WorkbenchViewId, boolean>>,
+): Record<WorkbenchViewId, boolean> {
+  const merged = { ...viewHidden };
+  for (const viewId of workbenchViewIds) {
+    if (unavailable[viewId]) {
+      merged[viewId] = true;
+    }
+  }
+  return merged;
+}
+
 export function useSidebarViews() {
   const sidebarOpen = useWorkbenchStore((state) => state.sidebarOpen);
   const setSidebarOpen = useWorkbenchStore((state) => state.setSidebarOpen);
@@ -53,18 +75,11 @@ export function useSidebarViews() {
   }, [extensionRuntimeLoaded, refreshInstalledExtensions]);
 
   const unavailableFeatureViews = useMemo(
-    () => ({
-      knowledge: !enabledHostFeatures.includes("knowledge"),
-      lakehouse: !enabledHostFeatures.includes("datalake"),
-    }),
+    () => unavailableHostFeatureViews(enabledHostFeatures),
     [enabledHostFeatures],
   );
   const effectiveViewHidden = useMemo(
-    () => ({
-      ...viewHidden,
-      knowledge: viewHidden.knowledge || unavailableFeatureViews.knowledge,
-      lakehouse: viewHidden.lakehouse || unavailableFeatureViews.lakehouse,
-    }),
+    () => withUnavailableHidden(viewHidden, unavailableFeatureViews),
     [unavailableFeatureViews, viewHidden],
   );
   useEffect(() => {
@@ -72,11 +87,10 @@ export function useSidebarViews() {
       return;
     }
     const state = useWorkbenchStore.getState();
-    if (unavailableFeatureViews.knowledge && state.viewVisibility.knowledge) {
-      state.setViewOpen("knowledge", false);
-    }
-    if (unavailableFeatureViews.lakehouse && state.viewVisibility.lakehouse) {
-      state.setViewOpen("lakehouse", false);
+    for (const viewId of workbenchViewIds) {
+      if (unavailableFeatureViews[viewId] && state.viewVisibility[viewId]) {
+        state.setViewOpen(viewId, false);
+      }
     }
   }, [extensionRuntimeLoaded, unavailableFeatureViews]);
   const leftSidebarViews = workbenchViewsForSide(
@@ -128,10 +142,7 @@ export function useSidebarViews() {
   }
 
   function setActiveSidebarView(viewId: WorkbenchViewId) {
-    if (
-      (viewId === "knowledge" && unavailableFeatureViews.knowledge) ||
-      (viewId === "lakehouse" && unavailableFeatureViews.lakehouse)
-    ) {
+    if (isViewUnavailable(viewId, enabledHostFeatures)) {
       return;
     }
     // Read the latest placements so activation directly after a move/hide
@@ -203,13 +214,7 @@ export function useSidebarViews() {
       state.viewPlacements,
       side,
       state.viewOrder,
-      {
-        ...state.viewHidden,
-        knowledge:
-          state.viewHidden.knowledge || unavailableFeatureViews.knowledge,
-        lakehouse:
-          state.viewHidden.lakehouse || unavailableFeatureViews.lakehouse,
-      },
+      withUnavailableHidden(state.viewHidden, unavailableFeatureViews),
     );
     if (remaining.length > 0) {
       setActiveSidebarView(
@@ -246,10 +251,7 @@ export function useSidebarViews() {
     if (viewId === "objectBrowser") {
       return;
     }
-    if (
-      (viewId === "knowledge" && unavailableFeatureViews.knowledge) ||
-      (viewId === "lakehouse" && unavailableFeatureViews.lakehouse)
-    ) {
+    if (isViewUnavailable(viewId, enabledHostFeatures)) {
       return;
     }
     const side = viewPlacements[viewId] ?? "left";
