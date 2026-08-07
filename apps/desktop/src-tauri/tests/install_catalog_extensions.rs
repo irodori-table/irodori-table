@@ -84,7 +84,11 @@ fn request_for(catalog: &Value, id: &str, target: &str) -> ExtensionInstallReque
 async fn install_ids_from_env() {
     let ids = std::env::var("IRODORI_INSTALL_IDS")
         .expect("set IRODORI_INSTALL_IDS to a comma-separated list of extension ids");
-    let ids: Vec<&str> = ids.split(',').map(str::trim).filter(|s| !s.is_empty()).collect();
+    let ids: Vec<&str> = ids
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .collect();
     assert!(!ids.is_empty(), "IRODORI_INSTALL_IDS is empty");
 
     let _ = rustls::crypto::ring::default_provider().install_default();
@@ -126,8 +130,15 @@ async fn install_ids_from_env() {
         .expect("list installed");
     println!("\ninstalled.json now holds {} extensions:", listed.len());
     for e in &listed {
-        println!("  {:<28} {:<8} {:<12} enabled={}", e.id, e.version, e.runtime, e.enabled);
+        println!(
+            "  {:<28} {:<8} {:<12} enabled={}",
+            e.id, e.version, e.runtime, e.enabled
+        );
     }
 
-    assert!(failures.is_empty(), "install failures:\n{}", failures.join("\n"));
+    assert!(
+        failures.is_empty(),
+        "install failures:\n{}",
+        failures.join("\n")
+    );
 }
