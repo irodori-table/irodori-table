@@ -225,7 +225,7 @@ function checkCargoPatchClean() {
   if (!cargoToml) {
     return;
   }
-  const hasKitPatch = cargoToml.includes('[patch."https://github.com/hjosugi/irodori-kit"]');
+  const hasKitPatch = cargoToml.includes('[patch."https://github.com/irodori-table/irodori-kit"]');
   report("Cargo.toml has no local irodori-kit patch", !hasKitPatch, {
     required: false,
     warn: true,

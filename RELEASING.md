@@ -219,7 +219,7 @@ Configure the updater secrets before dispatching a stable release:
 | `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | updater artifact signing | Optional; required only if the updater private key was generated with a password. |
 
 The updater endpoint is
-`https://github.com/hjosugi/irodori-table/releases/latest/download/latest.json`.
+`https://github.com/irodori-table/irodori-table/releases/latest/download/latest.json`.
 Override it only for a deliberate channel split by setting the
 `IRODORI_UPDATER_ENDPOINT` repository variable. Draft releases are not visible
 to the updater; publish the GitHub Release only after the artifacts and

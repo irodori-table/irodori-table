@@ -5,7 +5,7 @@
 Do not open a public issue for a suspected vulnerability.
 
 Report privately via GitHub private vulnerability reporting:
-<https://github.com/hjosugi/irodori-table/security/advisories/new>.
+<https://github.com/irodori-table/irodori-table/security/advisories/new>.
 
 Include in the report:
 

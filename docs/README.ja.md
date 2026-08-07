@@ -8,7 +8,7 @@
 は、その旨を明記し、今日時点で何ができるかを示します。
 
 インストール手順、プラットフォーム別セットアップ、ポリシーページ、機能マトリクス
-といった恒久的な公開ドキュメントは <https://hjosugi.github.io/irodori-docs/>
+といった恒久的な公開ドキュメントは <https://irodori-table.github.io/irodori-docs/>
 にあります。本ガイドはアプリに付属する補助資料であり、このリポジトリのコードを
 追跡し、同じプルリクエストで更新されます。
 
@@ -18,8 +18,8 @@
 ## インストールから最初のクエリまで
 
 1. **インストール。** インストールガイドからデスクトップ版を入手します：
-   <https://hjosugi.github.io/irodori-docs/install-guide.html>。リリース
-   アセットは <https://github.com/hjosugi/irodori-table/releases> で公開されて
+   <https://irodori-table.github.io/irodori-docs/install-guide.html>。リリース
+   アセットは <https://github.com/irodori-table/irodori-table/releases> で公開されて
    います。ソースから実行する場合は[ルートREADME](../README.ja.md)の
    クイックスタートを参照してください。
 

@@ -7,7 +7,7 @@ Generated or app-consumed reference data for Irodori Table.
 
 Public docs live here:
 
-<https://hjosugi.github.io/irodori-docs/>
+<https://irodori-table.github.io/irodori-docs/>
 
 ## Files
 

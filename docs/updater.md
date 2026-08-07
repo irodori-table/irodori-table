@@ -48,7 +48,7 @@ In practice:
 In a build without it, both the startup check and **Check for Updates** fail and
 report **Update check failed**. That is expected, not a fault in the app —
 update those installs by downloading a new build from
-<https://github.com/hjosugi/irodori-table/releases>.
+<https://github.com/irodori-table/irodori-table/releases>.
 
 On Windows the installer runs in passive mode. Release and signing mechanics are
 documented in [RELEASING.md](../RELEASING.md).

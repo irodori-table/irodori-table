@@ -7,7 +7,7 @@ Irodori Table用に生成またはアプリで利用される参照データ。
 
 公開ドキュメントはこちら：
 
-<https://hjosugi.github.io/irodori-docs/>
+<https://irodori-table.github.io/irodori-docs/>
 
 ## ファイル
 

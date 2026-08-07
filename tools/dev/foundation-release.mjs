@@ -7,7 +7,7 @@ import { repoRoot } from "../lib/paths.mjs";
 
 const groups = {
   kit: {
-    repository: "https://github.com/hjosugi/irodori-kit",
+    repository: "https://github.com/irodori-table/irodori-kit",
     crates: [
       "irodori-connection",
       "irodori-security",
@@ -18,11 +18,11 @@ const groups = {
     ],
   },
   knowledge: {
-    repository: "https://github.com/hjosugi/irodori-knowledge",
+    repository: "https://github.com/irodori-table/irodori-knowledge",
     crates: ["irodori-error", "irodori-jobs", "irodori-knowledge"],
   },
   sql: {
-    repository: "https://github.com/hjosugi/irodori-sql",
+    repository: "https://github.com/irodori-table/irodori-sql",
     crates: ["irodori-sql"],
   },
 };

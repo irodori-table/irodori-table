@@ -2270,12 +2270,12 @@ bundled-duckdb = ["duckdb/bundled"]
 
 [dependencies]
 duckdb = { version = "1", default-features = false }
-irodori-connector-abi = { git = "https://github.com/hjosugi/irodori-kit", tag = "v0.6.0" }
+irodori-connector-abi = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.6.0" }
 serde_json = "1"
 `
     : `
 [dependencies]
-irodori-connector-abi = { git = "https://github.com/hjosugi/irodori-kit", tag = "v0.6.0" }
+irodori-connector-abi = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.6.0" }
 serde_json = "1"
 `;
   return `[package]

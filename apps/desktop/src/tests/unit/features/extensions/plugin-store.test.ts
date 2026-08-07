@@ -164,7 +164,7 @@ describe("plugin store catalog", () => {
 describe("assertSupportedInstallKind (#160)", () => {
   const install: PluginStoreInstallSource = {
     kind: "githubRelease",
-    url: "https://github.com/hjosugi/irodori-extension-demo/releases",
+    url: "https://github.com/irodori-table/irodori-extension-demo/releases",
     tag: "v1.0.0",
     manifestPath: "irodori.extension.json",
     assets: {

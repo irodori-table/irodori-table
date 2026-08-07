@@ -730,7 +730,7 @@ mod tests {
             id: "irodori.memgraph".into(),
             version: "0.1.3".into(),
             kind: ExtensionInstallKind::GithubRelease,
-            repository: "https://github.com/hjosugi/irodori-extension-memgraph".into(),
+            repository: "https://github.com/irodori-table/irodori-extension-memgraph".into(),
             asset_name: "irodori-extension-memgraph.tar.gz".into(),
             tag: "v0.1.3".into(),
             sha256: "dc6deb44e1ecb1d0a4153917cc809692e37d1a5d814be4752af60649c5595232".into(),
@@ -739,7 +739,7 @@ mod tests {
         };
         assert_eq!(
             github_release_asset_url(&request).unwrap(),
-            "https://github.com/hjosugi/irodori-extension-memgraph/releases/download/v0.1.3/irodori-extension-memgraph.tar.gz"
+            "https://github.com/irodori-table/irodori-extension-memgraph/releases/download/v0.1.3/irodori-extension-memgraph.tar.gz"
         );
 
         let invalid = ExtensionInstallRequest {

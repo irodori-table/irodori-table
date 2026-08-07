@@ -587,19 +587,19 @@ packages for this tag are rebuilt from identical sources.
 ## [0.5.0] - 2026-07-01
 
 - Foundation crates extracted to the sibling repo
-  [irodori-kit](https://github.com/hjosugi/irodori-kit) (consumed via git
+  [irodori-kit](https://github.com/irodori-table/irodori-kit) (consumed via git
   tags); this repository is app-only.
 - Packaging templates moved to irodori-kit.
 - Bundled sample connections and the seeded demo workspace were removed;
   a fresh install starts with an empty workspace.
 
-[0.7.33]: https://github.com/hjosugi/irodori-table/compare/v0.7.32...v0.7.33
-[0.7.6]: https://github.com/hjosugi/irodori-table/compare/v0.7.5...v0.7.6
-[0.7.5]: https://github.com/hjosugi/irodori-table/compare/v0.7.4...v0.7.5
-[0.7.4]: https://github.com/hjosugi/irodori-table/compare/v0.7.3...v0.7.4
-[0.7.3]: https://github.com/hjosugi/irodori-table/compare/v0.7.2...v0.7.3
-[0.7.2]: https://github.com/hjosugi/irodori-table/compare/v0.7.1...v0.7.2
-[0.7.1]: https://github.com/hjosugi/irodori-table/compare/v0.7.0...v0.7.1
-[0.7.0]: https://github.com/hjosugi/irodori-table/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/hjosugi/irodori-table/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/hjosugi/irodori-table/releases/tag/v0.5.0
+[0.7.33]: https://github.com/irodori-table/irodori-table/compare/v0.7.32...v0.7.33
+[0.7.6]: https://github.com/irodori-table/irodori-table/compare/v0.7.5...v0.7.6
+[0.7.5]: https://github.com/irodori-table/irodori-table/compare/v0.7.4...v0.7.5
+[0.7.4]: https://github.com/irodori-table/irodori-table/compare/v0.7.3...v0.7.4
+[0.7.3]: https://github.com/irodori-table/irodori-table/compare/v0.7.2...v0.7.3
+[0.7.2]: https://github.com/irodori-table/irodori-table/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/irodori-table/irodori-table/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/irodori-table/irodori-table/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/irodori-table/irodori-table/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/irodori-table/irodori-table/releases/tag/v0.5.0

@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const updaterConfigPath = resolve(root, "src-tauri/tauri.updater.conf.json");
 const defaultEndpoint =
-  "https://github.com/hjosugi/irodori-table/releases/latest/download/latest.json";
+  "https://github.com/irodori-table/irodori-table/releases/latest/download/latest.json";
 
 const publicKey = requiredEnv("TAURI_UPDATER_PUBLIC_KEY");
 requiredEnv("TAURI_SIGNING_PRIVATE_KEY");

@@ -4,14 +4,14 @@
 # エンジン チートシート
 
 各データベースごとに1ページで、素早く答えます：**Irodoriからどう接続するか、クエリモデルは何か、そしてエンジンごとの注意点は何か。** これらは、より詳細な
-<https://hjosugi.github.io/irodori-docs/engine-syntax-reference.html>
+<https://irodori-table.github.io/irodori-docs/engine-syntax-reference.html>
 （ドライバー／デコードの内部仕様）や
 [`registry/data-source-support-status.md`](../data-source-support-status.md)
 （対応状況）の人間向け、コピー＆ペースト可能な補助資料です。
 
 各チートシートは、ローカルの知識ベース
 (`knowledge/irodori-knowledge.sqlite`)から**生成**されることを想定しています。ジェネレーターが完成するまでは、ページが手動で種付けされている場合があります（`<!-- seed -->`でマーク）。生成の契約とそれを支える自動データ収集は
-<https://hjosugi.github.io/irodori-docs/knowledge-base.html>
+<https://irodori-table.github.io/irodori-docs/knowledge-base.html>
 に記載されています。
 
 ## インデックス

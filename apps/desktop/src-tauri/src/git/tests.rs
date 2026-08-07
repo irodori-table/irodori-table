@@ -70,7 +70,7 @@ aws\tssh://git-codecommit.us-east-1.amazonaws.com/v1/repos/my-repo (fetch)",
     assert_eq!(remotes[0].provider, GitRemoteProvider::Github);
     assert_eq!(
         remotes[0].web_url.as_deref(),
-        Some("https://github.com/hjosugi/irodori-table")
+        Some("https://github.com/irodori-table/irodori-table")
     );
     assert_eq!(remotes[1].provider, GitRemoteProvider::Gitlab);
     assert_eq!(remotes[2].provider, GitRemoteProvider::Bitbucket);

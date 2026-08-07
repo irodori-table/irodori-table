@@ -3,7 +3,7 @@ import type { AiProviderConfig } from "@/generated/irodori-api";
 export const cloudProviderConsentStorageKey =
   "irodori.ai.cloudProviderConsent.v1";
 export const cloudProviderPrivacyUrl =
-  "https://hjosugi.github.io/irodori-docs/privacy.html";
+  "https://irodori-table.github.io/irodori-docs/privacy.html";
 
 const consentValue = "accepted";
 const localHosts = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0"]);

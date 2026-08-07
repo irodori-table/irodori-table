@@ -25,7 +25,7 @@ clients, and developer tooling unrelated to querying.
 If you are looking for engine syntax help, this is the wrong panel. Use the
 cheatsheets in
 [`registry/cheatsheets/`](../registry/cheatsheets/README.md) or the engine
-syntax reference at <https://hjosugi.github.io/irodori-docs/>.
+syntax reference at <https://irodori-table.github.io/irodori-docs/>.
 
 ## Using it
 

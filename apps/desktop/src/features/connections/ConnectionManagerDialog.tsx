@@ -78,7 +78,7 @@ const environmentLabelKeys: Record<
   other: "connection.group.other",
 };
 const connectorStatusDocUrl =
-  "https://hjosugi.github.io/irodori-docs/data-source-support-status.html";
+  "https://irodori-table.github.io/irodori-docs/data-source-support-status.html";
 
 function connectionSearchText(profile: ConnectionDraft) {
   return [profile.id, profile.name, profile.host, profile.database, profile.url]

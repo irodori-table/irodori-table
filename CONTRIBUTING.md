@@ -23,7 +23,7 @@ Required local versions are pinned in `.nvmrc`, `rust-toolchain.toml`, and
 - Use npm for reproducible installs. `JS_PM=bun` is allowed for local loops, but
   do not replace the committed npm lockfile.
 - Linux desktop build prerequisites are documented in
-  <https://hjosugi.github.io/irodori-docs/linux-development.html>.
+  <https://irodori-table.github.io/irodori-docs/linux-development.html>.
 
 Run `make doctor` after installing tools. It checks the pinned Node/Rust
 versions, Linux desktop prerequisites, Playwright readiness, sample/kit sibling
@@ -33,12 +33,12 @@ checkouts, temp-directory capacity, and local Cargo patch leakage.
 
 Linux package lists, build temp-directory workarounds, and desktop runtime
 troubleshooting are maintained in
-<https://hjosugi.github.io/irodori-docs/linux-development.html>.
+<https://irodori-table.github.io/irodori-docs/linux-development.html>.
 
 ## Repo Boundaries
 
 The public boundary policy is
-<https://hjosugi.github.io/irodori-docs/repository-boundaries.html>.
+<https://irodori-table.github.io/irodori-docs/repository-boundaries.html>.
 
 - `irodori-table`: desktop app, app-local tooling, generated snapshots consumed
   by the app or CI.
@@ -56,7 +56,7 @@ hand-edit generated output alone.
 ## Clean-Room Rules
 
 Read and follow
-<https://hjosugi.github.io/irodori-docs/clean-room.html> before using any
+<https://irodori-table.github.io/irodori-docs/clean-room.html> before using any
 reference product, repository, docs, issue, screenshot, icon, theme, snippet, or
 sample code for implementation work.
 
@@ -98,7 +98,7 @@ The app consumes sibling foundation crates by git tag. For local co-development
 against `irodori-kit`, clone the sibling repo and add a temporary Cargo patch:
 
 ```sh
-git clone https://github.com/hjosugi/irodori-kit ../irodori-kit
+git clone https://github.com/irodori-table/irodori-kit ../irodori-kit
 make kit-link
 ```
 
@@ -116,7 +116,7 @@ is present. In CI, missing SDK checkout is a failure.
 Sample databases live in the sibling samples repo:
 
 ```sh
-git clone https://github.com/hjosugi/irodori-samples ../irodori-samples
+git clone https://github.com/irodori-table/irodori-samples ../irodori-samples
 make db-up DB=postgres
 make db-verify DB=postgres
 ```
@@ -157,4 +157,4 @@ Example PR body:
 
 Project-authored code, official examples, and official templates use
 `MIT OR 0BSD` by default. Asset and dependency rules are documented at
-<https://hjosugi.github.io/irodori-docs/licensing.html>.
+<https://irodori-table.github.io/irodori-docs/licensing.html>.

@@ -13,11 +13,11 @@
 
 現在のデスクトップ版ダウンロードおよびOS別インストール手順については、以下の公開インストールガイドをご利用ください：
 
-<https://hjosugi.github.io/irodori-docs/install-guide.html>
+<https://irodori-table.github.io/irodori-docs/install-guide.html>
 
 リリースアセットはGitHub Releasesから公開されています：
 
-<https://github.com/hjosugi/irodori-table/releases>
+<https://github.com/irodori-table/irodori-table/releases>
 
 ## コード署名ポリシー (Code signing policy)
 
@@ -42,9 +42,9 @@ Irodori Table はテレメトリーやクラッシュレポートをアップロ
 ### 5分クイックスタート
 
 1. ご利用のOSに応じたプラットフォームの前提条件をインストールしてください：
-   [Windows](https://hjosugi.github.io/irodori-docs/windows-development.html)、
-   [macOS](https://hjosugi.github.io/irodori-docs/macos-development.html)、または
-   [Linux](https://hjosugi.github.io/irodori-docs/linux-development.html)。
+   [Windows](https://irodori-table.github.io/irodori-docs/windows-development.html)、
+   [macOS](https://irodori-table.github.io/irodori-docs/macos-development.html)、または
+   [Linux](https://irodori-table.github.io/irodori-docs/linux-development.html)。
    Linuxユーザーは、デスクトップアプリを実行する前にそのガイドにあるWebKitGTKおよびリンカーパッケージをインストールしてください。
 2. リポジトリのルートから依存関係をインストールし、ローカルセットアップを確認します：
 
@@ -64,10 +64,10 @@ Irodori Table はテレメトリーやクラッシュレポートをアップロ
 コントリビューター向けセットアップ、トラブルシューティング、より詳細な開発ノートはプロジェクトドキュメントにあります：
 
 - [コントリビューション](CONTRIBUTING.md)
-- [Windows開発](https://hjosugi.github.io/irodori-docs/windows-development.html)
-- [macOS開発](https://hjosugi.github.io/irodori-docs/macos-development.html)
-- [Linux開発](https://hjosugi.github.io/irodori-docs/linux-development.html)
-- [拡張機能開発](https://hjosugi.github.io/irodori-docs/extension-development.html)
+- [Windows開発](https://irodori-table.github.io/irodori-docs/windows-development.html)
+- [macOS開発](https://irodori-table.github.io/irodori-docs/macos-development.html)
+- [Linux開発](https://irodori-table.github.io/irodori-docs/linux-development.html)
+- [拡張機能開発](https://irodori-table.github.io/irodori-docs/extension-development.html)
 
 ## リポジトリ
 
@@ -83,8 +83,8 @@ Irodori Table はテレメトリーやクラッシュレポートをアップロ
 ## リンク
 
 - ユーザーガイド: [docs/README.ja.md](docs/README.ja.md)
-- ドキュメント: <https://hjosugi.github.io/irodori-docs/>
-- インストールガイド: <https://hjosugi.github.io/irodori-docs/install-guide.html>
+- ドキュメント: <https://irodori-table.github.io/irodori-docs/>
+- インストールガイド: <https://irodori-table.github.io/irodori-docs/install-guide.html>
 - ロードマップ: [ROADMAP.md](ROADMAP.md)
 - コントリビューション: [CONTRIBUTING.md](CONTRIBUTING.md)
 - リリース手順: [RELEASING.md](RELEASING.md)

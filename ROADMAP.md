@@ -50,7 +50,7 @@ status.
 
 Reference material is used for requirements and behavior study, not for copying
 protected expression. The canonical policy is
-<https://hjosugi.github.io/irodori-docs/clean-room.html>.
+<https://irodori-table.github.io/irodori-docs/clean-room.html>.
 
 Primary product benchmarks:
 
@@ -158,9 +158,9 @@ For coverage state, use:
 
 For public roadmap details, keep these docs aligned:
 
-- <https://hjosugi.github.io/irodori-docs/roadmap-1.0.html>
-- <https://hjosugi.github.io/irodori-docs/data-source-support-status.html>
-- <https://hjosugi.github.io/irodori-docs/repository-boundaries.html>
+- <https://irodori-table.github.io/irodori-docs/roadmap-1.0.html>
+- <https://irodori-table.github.io/irodori-docs/data-source-support-status.html>
+- <https://irodori-table.github.io/irodori-docs/repository-boundaries.html>
 
 ## Research Watchlist
 

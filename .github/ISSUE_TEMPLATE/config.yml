@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Roadmap and backlog source of truth
-    url: https://github.com/hjosugi/irodori-docs
+    url: https://github.com/irodori-table/irodori-docs
     about: Product planning lives in the docs repo; issues are mirrors or bug intake.
   - name: Phase-level roadmap
-    url: https://github.com/hjosugi/irodori-table/blob/main/ROADMAP.md
+    url: https://github.com/irodori-table/irodori-table/blob/main/ROADMAP.md
     about: Read the current product direction and immediate next steps.

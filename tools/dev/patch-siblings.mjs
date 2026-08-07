@@ -8,7 +8,7 @@ const cargoTomlPath = fromRepoRoot("Cargo.toml");
 const kitRoot = fromRepoRoot("../irodori-kit");
 const markerStart = "# BEGIN IRODORI LOCAL KIT PATCH";
 const markerEnd = "# END IRODORI LOCAL KIT PATCH";
-const patchHeader = '[patch."https://github.com/hjosugi/irodori-kit"]';
+const patchHeader = '[patch."https://github.com/irodori-table/irodori-kit"]';
 const crates = [
   "irodori-core",
   "irodori-proxy",
@@ -46,7 +46,7 @@ if (mode === "unlink") {
 
 if (!existsSync(kitRoot)) {
   console.error("Expected sibling checkout at ../irodori-kit.");
-  console.error("Clone it with: git clone https://github.com/hjosugi/irodori-kit ../irodori-kit");
+  console.error("Clone it with: git clone https://github.com/irodori-table/irodori-kit ../irodori-kit");
   process.exit(1);
 }
 

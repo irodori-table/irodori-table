@@ -10,8 +10,8 @@ the new PR.
 
 | Directory | PR |
 | --- | --- |
-| `155-theme-default-redesign/` | [#155](https://github.com/hjosugi/irodori-table/pull/155) — rebuild the default theme around the app icon's palette |
-| `156-typography-layout/` | [#156](https://github.com/hjosugi/irodori-table/pull/156) — anchor the type scale on the menu, stop the top row squeezing |
+| `155-theme-default-redesign/` | [#155](https://github.com/irodori-table/irodori-table/pull/155) — rebuild the default theme around the app icon's palette |
+| `156-typography-layout/` | [#156](https://github.com/irodori-table/irodori-table/pull/156) — anchor the type scale on the menu, stop the top row squeezing |
 
 Both sets previously lived on orphan branches (`assets/theme-default-redesign`,
 `assets/typography-layout-shots`) that existed only to host the images for a PR

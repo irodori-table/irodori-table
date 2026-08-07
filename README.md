@@ -15,11 +15,11 @@ checking data across many engines.
 Use the public install guide for the current desktop downloads and
 OS-specific install paths:
 
-<https://hjosugi.github.io/irodori-docs/install-guide.html>
+<https://irodori-table.github.io/irodori-docs/install-guide.html>
 
 Release assets are published from GitHub Releases:
 
-<https://github.com/hjosugi/irodori-table/releases>
+<https://github.com/irodori-table/irodori-table/releases>
 
 ## Code signing policy
 
@@ -56,9 +56,9 @@ handling and security scope.
    nixGL to supply matching ones. Set `IRODORI_NO_NIXGL=1` to opt out.
 
    Without Nix, install the platform prerequisites for your OS:
-   [Windows](https://hjosugi.github.io/irodori-docs/windows-development.html),
-   [macOS](https://hjosugi.github.io/irodori-docs/macos-development.html), or
-   [Linux](https://hjosugi.github.io/irodori-docs/linux-development.html).
+   [Windows](https://irodori-table.github.io/irodori-docs/windows-development.html),
+   [macOS](https://irodori-table.github.io/irodori-docs/macos-development.html), or
+   [Linux](https://irodori-table.github.io/irodori-docs/linux-development.html).
    Linux users should install the WebKitGTK and linker packages from that guide
    before running the desktop app. `mold` in particular is required:
    `.cargo/config.toml` links through it, and without it every link fails.
@@ -82,10 +82,10 @@ Contributor setup, troubleshooting, and deeper development notes live in the
 project docs:
 
 - [Contributing](CONTRIBUTING.md)
-- [Windows development](https://hjosugi.github.io/irodori-docs/windows-development.html)
-- [macOS development](https://hjosugi.github.io/irodori-docs/macos-development.html)
-- [Linux development](https://hjosugi.github.io/irodori-docs/linux-development.html)
-- [Extension development](https://hjosugi.github.io/irodori-docs/extension-development.html)
+- [Windows development](https://irodori-table.github.io/irodori-docs/windows-development.html)
+- [macOS development](https://irodori-table.github.io/irodori-docs/macos-development.html)
+- [Linux development](https://irodori-table.github.io/irodori-docs/linux-development.html)
+- [Extension development](https://irodori-table.github.io/irodori-docs/extension-development.html)
 
 ## Repos
 
@@ -101,8 +101,8 @@ project docs:
 ## Links
 
 - User guide: [docs/README.md](docs/README.md)
-- Docs: <https://hjosugi.github.io/irodori-docs/>
-- Install guide: <https://hjosugi.github.io/irodori-docs/install-guide.html>
+- Docs: <https://irodori-table.github.io/irodori-docs/>
+- Install guide: <https://irodori-table.github.io/irodori-docs/install-guide.html>
 - Roadmap: [ROADMAP.md](ROADMAP.md)
 - Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Releasing: [RELEASING.md](RELEASING.md)

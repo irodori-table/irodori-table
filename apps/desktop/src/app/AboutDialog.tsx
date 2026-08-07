@@ -20,8 +20,8 @@ import {
   type CrashReportStatus,
 } from "@/generated/irodori-api";
 
-const REPO_URL = "https://github.com/hjosugi/irodori-table";
-const ISSUES_URL = "https://github.com/hjosugi/irodori-table/issues";
+const REPO_URL = "https://github.com/irodori-table/irodori-table";
+const ISSUES_URL = "https://github.com/irodori-table/irodori-table/issues";
 
 type TransientStatus = "idle" | "copied" | "failed";
 

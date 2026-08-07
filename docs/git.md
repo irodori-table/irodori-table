@@ -9,7 +9,7 @@ A commit graph, a working-tree changes view, and branch controls, driven by the
 > until a repository has been resolved. That combination makes a first-time
 > panel look broken. The [Getting the panel to load](#getting-the-panel-to-load)
 > section below is the workaround; the underlying bug is
-> [issue #123](https://github.com/hjosugi/irodori-table/issues/123).
+> [issue #123](https://github.com/irodori-table/irodori-table/issues/123).
 
 ## Opening it
 
@@ -63,7 +63,7 @@ directory or `/`, step 2 fails, step 3 fails, and you get the error banner.
 repository has been resolved. When resolution fails there is nothing on screen to
 point the panel somewhere else.
 
-Until [#123](https://github.com/hjosugi/irodori-table/issues/123) is fixed, the
+Until [#123](https://github.com/irodori-table/irodori-table/issues/123) is fixed, the
 options are:
 
 - **Launch from inside the repository.** Start Irodori Table from a terminal
@@ -138,7 +138,7 @@ repositories are visually distinguishable.
 ## Gaps
 
 - **The panel does not load on mount, and the repo-path controls are hidden
-  until it has** — [#123](https://github.com/hjosugi/irodori-table/issues/123).
+  until it has** — [#123](https://github.com/irodori-table/irodori-table/issues/123).
   Described above.
 - **No repository picker before first resolution.** There is no "open
   repository" affordance outside the branch card.

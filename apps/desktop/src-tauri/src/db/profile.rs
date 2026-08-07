@@ -2,7 +2,7 @@ use super::engine::{DbEngine, Wire};
 use super::{DbError, DbResult};
 
 pub(super) const CONNECTOR_STATUS_DOC_URL: &str =
-    "https://hjosugi.github.io/irodori-docs/data-source-support-status.html";
+    "https://irodori-table.github.io/irodori-docs/data-source-support-status.html";
 const MAX_CONNECTION_ID_LEN: usize = 128;
 
 pub type ConnectionProfile = irodori_connection::DesktopConnectionProfile<DbEngine>;

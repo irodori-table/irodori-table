@@ -8,7 +8,7 @@ How to actually use the app, one page per feature area. These pages describe
 half-built, the page says so and tells you what works today.
 
 Durable public documentation — install paths, platform setup, policy pages, the
-feature matrix — lives at <https://hjosugi.github.io/irodori-docs/>. This guide
+feature matrix — lives at <https://irodori-table.github.io/irodori-docs/>. This guide
 is the app-local companion: it tracks the code in this repository and is updated
 in the same pull requests.
 
@@ -19,9 +19,9 @@ English.
 ## Install to first query
 
 1. **Install.** Download a desktop build from the install guide:
-   <https://hjosugi.github.io/irodori-docs/install-guide.html>. Release assets
+   <https://irodori-table.github.io/irodori-docs/install-guide.html>. Release assets
    are published at
-   <https://github.com/hjosugi/irodori-table/releases>. To run from source
+   <https://github.com/irodori-table/irodori-table/releases>. To run from source
    instead, follow the quickstart in the [root README](../README.md).
 
 2. **Open the connection manager.** **File ▸ Open Connection Manager**. There is

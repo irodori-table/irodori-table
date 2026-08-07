@@ -6,7 +6,7 @@ export const APP_NAME = "Irodori Table";
 export const APP_VERSION = "0.8.5";
 export const APP_IDENTIFIER = "dev.irodori.table";
 /** Published user documentation; the target of Help ▸ Open Help. */
-export const DOCS_URL = "https://hjosugi.github.io/irodori-docs/";
+export const DOCS_URL = "https://irodori-table.github.io/irodori-docs/";
 
 const resultCopyCommands: CommandMeta[] = [
   {

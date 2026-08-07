@@ -168,7 +168,7 @@ pipelines need feature properties in the projected graph before training.
 - **Results are tabular today.** Node/relationship records show as JSON property
   cells. A query-result **graph visualization** is a planned shared capability
   (P1, see
-  `https://hjosugi.github.io/irodori-docs/data-source-coverage-strategy.html`
+  `https://irodori-table.github.io/irodori-docs/data-source-coverage-strategy.html`
   → Graph), not yet in the UI.
 - **No SQL.** Engines like advanced filters / inline editing that assume relational
   semantics do not apply; use Cypher `SET` / `MERGE` / `DELETE`.
