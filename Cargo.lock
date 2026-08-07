@@ -116,7 +116,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -127,7 +127,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -1857,7 +1857,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2079,7 +2079,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -3061,7 +3061,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.6.4",
+ "socket2 0.5.10",
  "system-configuration",
  "tokio",
  "tower-service",
@@ -3324,7 +3324,7 @@ name = "irodori-connection"
 version = "0.7.1"
 source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
- "irodori-error",
+ "irodori-error 0.3.1",
  "serde",
  "ts-rs",
 ]
@@ -3339,11 +3339,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "irodori-generate"
-version = "0.7.1"
-source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
+name = "irodori-error"
+version = "0.3.2"
+source = "git+https://github.com/hjosugi/irodori-knowledge?tag=v0.3.2#cf4c30cb1e8b137fd49ca2e7fb6d1c8ba4e31bf1"
 dependencies = [
- "irodori-error",
+ "serde",
+ "ts-rs",
+]
+
+[[package]]
+name = "irodori-generate"
+version = "0.7.5"
+source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.5#d2a0422e91ffc7f722d6b6b8928f6f9be963361d"
+dependencies = [
+ "irodori-error 0.3.2",
  "irodori-sql",
  "llama-cpp-2",
  "reqwest",
@@ -3356,7 +3365,7 @@ name = "irodori-jobs"
 version = "0.3.1"
 source = "git+https://github.com/hjosugi/irodori-knowledge?tag=v0.3.1#3148176dab174d223c43126d6572b5133a75dc96"
 dependencies = [
- "irodori-error",
+ "irodori-error 0.3.1",
  "serde",
  "ts-rs",
 ]
@@ -3366,7 +3375,7 @@ name = "irodori-knowledge"
 version = "0.3.1"
 source = "git+https://github.com/hjosugi/irodori-knowledge?tag=v0.3.1#3148176dab174d223c43126d6572b5133a75dc96"
 dependencies = [
- "irodori-error",
+ "irodori-error 0.3.1",
  "irodori-jobs",
  "serde",
  "sha2 0.11.0",
@@ -3391,7 +3400,7 @@ version = "0.7.1"
 source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
  "irodori-connection",
- "irodori-error",
+ "irodori-error 0.3.1",
  "serde",
  "ssh2",
  "thiserror 2.0.18",
@@ -3407,7 +3416,7 @@ version = "0.7.1"
 source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
  "irodori-connection",
- "irodori-error",
+ "irodori-error 0.3.1",
  "windows-sys 0.61.2",
 ]
 
@@ -3439,7 +3448,7 @@ dependencies = [
  "futures-util",
  "irodori-completion",
  "irodori-connection",
- "irodori-error",
+ "irodori-error 0.3.1",
  "irodori-generate",
  "irodori-jobs",
  "irodori-knowledge",
@@ -4181,7 +4190,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.18",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5858,7 +5867,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5938,7 +5947,7 @@ dependencies = [
  "security-framework 3.7.0",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6601,7 +6610,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -7513,7 +7522,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -7961,7 +7970,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.18",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -8070,7 +8079,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset 0.9.1",
  "tempfile",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -8573,7 +8582,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
