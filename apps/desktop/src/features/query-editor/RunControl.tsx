@@ -1,46 +1,22 @@
-import { useEffect, useState, type RefObject } from "react";
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type Ref,
+  type RefObject,
+} from "react";
 import { ChevronDown, Play } from "lucide-react";
 import { createPortal } from "react-dom";
+import {
+  usePopoverDismiss,
+  usePopoverPosition,
+  type PopoverRect,
+} from "@/components/popover";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator, type Translator } from "@/i18n";
 
-// The reserved box for the run menu: `min-width: 260px` from
-// `.run-menu-popover`, and the tallest the option list gets with every entry
-// shown. EditorTabStrip reserves the same way (#115).
-const menuWidth = 260;
-const menuHeight = 200;
-const menuMargin = 8;
 /** Gap between the control's top edge and the menu opening above it. */
 const menuGap = 6;
-
-/**
- * Place the menu above the control, anchored to its right edge, without letting
- * either inset push the box off-screen.
- *
- * The menu opens upward because the control is pinned to the bottom of the
- * editor pane. It anchors on `right` so it lines up with the control, which
- * means a *large* right inset pushes it off the LEFT edge — the mirror image of
- * the off-screen menu fixed in the tab strip (#115). Without the clamp a narrow
- * editor pane produced exactly that.
- */
-function clampMenuToViewport(anchorRect: DOMRect) {
-  const bottom = window.innerHeight - anchorRect.top + menuGap;
-  const right = window.innerWidth - anchorRect.right;
-  return {
-    bottom: `${Math.round(
-      Math.max(
-        menuMargin,
-        Math.min(bottom, window.innerHeight - menuHeight - menuMargin),
-      ),
-    )}px`,
-    right: `${Math.round(
-      Math.max(
-        menuMargin,
-        Math.min(right, window.innerWidth - menuWidth - menuMargin),
-      ),
-    )}px`,
-  };
-}
 
 export type RunControlProps = {
   running: boolean;
@@ -85,7 +61,7 @@ export function RunControl({
   // but its box started 3px below the panel's bottom edge, so the panel clipped
   // every pixel of it and the button looked dead. Anchor coordinates have to be
   // measured, since a portaled node no longer inherits the control's position.
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const [anchorRect, setAnchorRect] = useState<PopoverRect | null>(null);
   useEffect(() => {
     if (!runMenuOpen) {
       setAnchorRect(null);
@@ -94,7 +70,13 @@ export function RunControl({
     const measure = () => {
       const node = runControlRef.current;
       if (node) {
-        setAnchorRect(node.getBoundingClientRect());
+        const rect = node.getBoundingClientRect();
+        setAnchorRect({
+          top: rect.top,
+          bottom: rect.bottom,
+          left: rect.left,
+          right: rect.right,
+        });
       }
     };
     measure();
@@ -106,27 +88,28 @@ export function RunControl({
     };
   }, [runControlRef, runMenuOpen]);
 
-  useEffect(() => {
-    if (!runMenuOpen) {
-      return;
-    }
-
-    const closeOnPointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (target instanceof Node && runControlRef.current?.contains(target)) {
-        return;
-      }
-      setRunMenuOpen(false);
-    };
-    const closeOnBlur = () => setRunMenuOpen(false);
-
-    window.addEventListener("pointerdown", closeOnPointerDown);
-    window.addEventListener("blur", closeOnBlur);
-    return () => {
-      window.removeEventListener("pointerdown", closeOnPointerDown);
-      window.removeEventListener("blur", closeOnBlur);
-    };
-  }, [runControlRef, runMenuOpen, setRunMenuOpen]);
+  // Above the control, right edges aligned, clamped against the menu's measured
+  // box (#168). The old code positioned a zero-size `.run-menu-portal` wrapper
+  // with `bottom`/`right` and let stylesheet rules place the real menu relative
+  // to it, so the box the clamp reserved was not the box the user saw.
+  const menu = usePopoverPosition<HTMLDivElement>(
+    runMenuOpen && anchorRect
+      ? {
+          at: "element",
+          rect: anchorRect,
+          side: "above",
+          align: "end",
+          gap: menuGap,
+        }
+      : null,
+  );
+  // The control counts as inside: a press on the toggle must not dismiss here
+  // and then be re-opened by the button's own click.
+  usePopoverDismiss(
+    [menu.ref, runControlRef],
+    () => setRunMenuOpen(false),
+    runMenuOpen,
+  );
 
   return (
     <div className="editor-primary-actions">
@@ -159,29 +142,22 @@ export function RunControl({
         </button>
         {runMenuOpen && anchorRect
           ? createPortal(
-              <div
-                className="run-menu-portal"
-                style={{
-                  position: "fixed",
-                  ...clampMenuToViewport(anchorRect),
-                  zIndex: 60,
-                }}
-              >
-                <RunOptionsMenu
-                  t={t}
-                  runPrimaryLabel={runPrimaryLabel}
-                  runShortcutLabel={runShortcutLabel}
-                  runCurrentShortcutLabel={runCurrentShortcutLabel}
-                  runFromStartShortcutLabel={runFromStartShortcutLabel}
-                  runAllShortcutLabel={runAllShortcutLabel}
-                  hasSelectedEditorSql={hasSelectedEditorSql}
-                  runQuery={runQuery}
-                  runSelectionQuery={runSelectionQuery}
-                  runCurrentQuery={runCurrentQuery}
-                  runFromStartQuery={runFromStartQuery}
-                  runAllQuery={runAllQuery}
-                />
-              </div>,
+              <RunOptionsMenu
+                menuRef={menu.ref}
+                style={menu.style}
+                t={t}
+                runPrimaryLabel={runPrimaryLabel}
+                runShortcutLabel={runShortcutLabel}
+                runCurrentShortcutLabel={runCurrentShortcutLabel}
+                runFromStartShortcutLabel={runFromStartShortcutLabel}
+                runAllShortcutLabel={runAllShortcutLabel}
+                hasSelectedEditorSql={hasSelectedEditorSql}
+                runQuery={runQuery}
+                runSelectionQuery={runSelectionQuery}
+                runCurrentQuery={runCurrentQuery}
+                runFromStartQuery={runFromStartQuery}
+                runAllQuery={runAllQuery}
+              />,
               document.body,
             )
           : null}
@@ -191,6 +167,8 @@ export function RunControl({
 }
 
 function RunOptionsMenu({
+  menuRef,
+  style,
   t,
   runPrimaryLabel,
   runShortcutLabel,
@@ -206,9 +184,18 @@ function RunOptionsMenu({
 }: Omit<
   RunControlProps,
   "running" | "runControlRef" | "runMenuOpen" | "setRunMenuOpen"
-> & { t: Translator["t"] }) {
+> & {
+  t: Translator["t"];
+  menuRef: Ref<HTMLDivElement>;
+  style: CSSProperties;
+}) {
   return (
-    <div className="app-menu-popover run-menu-popover" role="menu">
+    <div
+      className="app-menu-popover run-menu-popover"
+      role="menu"
+      ref={menuRef}
+      style={style}
+    >
       <button type="button" role="menuitem" onClick={() => void runQuery()}>
         <span>{runPrimaryLabel}</span>
         {runShortcutLabel ? <kbd>{runShortcutLabel}</kbd> : null}

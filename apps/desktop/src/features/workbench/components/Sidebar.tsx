@@ -8,6 +8,7 @@ import type {
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
+  popoverSurfaceStyle,
   usePopoverPosition,
   type PopoverAnchor,
   type PopoverRect,
@@ -139,14 +140,6 @@ const containerLabelKeyByEngine: Record<string, TranslationKey> = {
 // viewport coordinates: the sidebar lives inside scroll containers and
 // dockview panels whose overflow/stacking clips absolutely-positioned
 // popovers (menus silently appeared "not to open" near panel edges).
-// Layering and the `right: auto` reset only. Position comes from the shared
-// popover primitive (#168), which measures the menu instead of guessing its
-// width — the sidebar's `⋯` and `+` buttons used to fake right-alignment by
-// subtracting a hardcoded 218/190 from the button's right edge.
-const floatingMenuStyle = {
-  right: "auto",
-  zIndex: 60,
-} as const;
 
 // A custom drag payload type carries the dragged view id across the two
 // Sidebar instances (left and right). `text/plain` is also set for legacy
@@ -795,7 +788,7 @@ export function Sidebar({
                     className="object-action-menu"
                     role="menu"
                     style={{
-                      ...floatingMenuStyle,
+                      ...popoverSurfaceStyle,
                       ...connectionMenuPopover.style,
                     }}
                   >
@@ -917,7 +910,7 @@ export function Sidebar({
                   className="object-action-menu"
                   role="menu"
                   aria-label={t("sidebar.viewMenu")}
-                  style={{ ...floatingMenuStyle, ...viewMenuPopover.style }}
+                  style={{ ...popoverSurfaceStyle, ...viewMenuPopover.style }}
                 >
                   {onMoveView ? (
                     <button
@@ -1015,7 +1008,7 @@ export function Sidebar({
                             className="schema-create-menu"
                             role="menu"
                             style={{
-                              ...floatingMenuStyle,
+                              ...popoverSurfaceStyle,
                               ...createMenuPopover.style,
                             }}
                           >
@@ -1179,7 +1172,7 @@ export function Sidebar({
                                         className="object-action-menu"
                                         role="menu"
                                         style={{
-                                          ...floatingMenuStyle,
+                                          ...popoverSurfaceStyle,
                                           ...objectMenu.style,
                                         }}
                                       >

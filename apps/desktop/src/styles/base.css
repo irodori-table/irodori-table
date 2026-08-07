@@ -107,6 +107,12 @@ textarea:disabled {
  *   xl 15px  rare       modal and empty-state titles
  */
 :root {
+  /* One layer for every portaled popover (#168). Three components used to set
+   * `z-index: 60` inline while `.app-menu-popover` said 25, so which menu won
+   * depended on which code path opened it. Above `--modal-z` (50) on purpose: a
+   * menu opened from inside a dialog has to paint over it, and popovers are
+   * dismissed on the next outside press, so they never linger over one. */
+  --popover-z: 60;
   --font-ui-xs: 10px;
   --font-ui-sm: 11px;
   --font-ui-md: 12px;
@@ -494,7 +500,7 @@ textarea:disabled {
 .app-menu-popover,
 .object-action-menu {
   position: absolute;
-  z-index: 25;
+  z-index: var(--popover-z);
   display: grid;
   min-width: 210px;
   padding: 4px;
