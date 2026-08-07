@@ -41,7 +41,7 @@ jobs:
       - name: Check out sample fixtures
         uses: actions/checkout@v7
         with:
-          repository: hjosugi/irodori-samples
+          repository: irodori-table/irodori-samples
           path: irodori-samples
 
       - uses: actions/setup-node@v7
