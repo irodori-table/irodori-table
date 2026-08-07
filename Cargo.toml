@@ -1,5 +1,5 @@
 # Foundation crates were extracted into the sibling repo `irodori-kit`
-# (https://github.com/irodori-table/irodori-kit) and are consumed via git tag below.
+# (https://github.com/hjosugi/irodori-kit) and are consumed via git tag below.
 # This repo is the app only.
 [workspace]
 members = ["apps/desktop/src-tauri"]
