@@ -1,6 +1,7 @@
 import { constants } from "node:fs";
-import { access, open, readFile, stat } from "node:fs/promises";
-import { resolve } from "node:path";
+import { access, mkdtemp, open, readFile, rm, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 import { newestFileByExtension } from "../../../tools/lib/files.mjs";
 import { fromDesktopRoot, fromRepoRoot } from "../../../tools/lib/paths.mjs";
@@ -78,7 +79,60 @@ async function verifyAppImage(file, version) {
 
   if (!options.skipExec) {
     await runAppImageHelp(file);
+    await verifyExcludedLibraries(file);
   }
+}
+
+/**
+ * Libraries the AppImage must leave to the host (#214).
+ *
+ * `libwayland-client.so.0` talks to the running compositor. Shipped inside the
+ * bundle, the host's Mesa `libEGL` resolves against our copy instead of the
+ * system one and `eglGetPlatformDisplay` fails, so the app aborts with
+ * `EGL_BAD_PARAMETER` before a window appears — on every host whose wayland
+ * stack is newer than the build runner's. It is on the upstream AppImage
+ * excludelist for that reason.
+ *
+ * `scripts/appimage-exclude-host-libs.sh` strips it during bundling. This is
+ * the guard: if that shim ever stops being applied, the release fails here
+ * rather than shipping an AppImage that cannot start.
+ */
+const excludedLibraries = ["libwayland-client.so.0"];
+
+async function verifyExcludedLibraries(file) {
+  // `--appimage-extract <pattern>` is served by the AppImage runtime embedded
+  // in the file itself, so this needs no squashfs tooling on the runner. It
+  // writes into ./squashfs-root, hence the scratch directory.
+  const scratch = await mkdtemp(join(tmpdir(), "irodori-appimage-"));
+  try {
+    for (const library of excludedLibraries) {
+      const { code, output } = await runWithTimeout(
+        file,
+        ["--appimage-extract", `usr/lib/${library}`],
+        60_000,
+        { cwd: scratch },
+      );
+      if (code !== 0) {
+        fail(`AppImage --appimage-extract exited ${code}: ${output.trim()}`);
+      }
+      const extracted = join(scratch, "squashfs-root", "usr", "lib", library);
+      if (await exists(extracted)) {
+        fail(
+          `AppImage bundles ${library}, which must come from the host: ${file}. ` +
+            `See scripts/appimage-exclude-host-libs.sh (#214).`,
+        );
+      }
+    }
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+}
+
+async function exists(path) {
+  return access(path, constants.F_OK).then(
+    () => true,
+    () => false,
+  );
 }
 
 async function verifyPackage(file, version, label, magic) {
