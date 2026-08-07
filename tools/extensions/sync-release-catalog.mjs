@@ -10,13 +10,22 @@ const repositoryInventories = [
   "registry/catalog/connector-repositories.json",
   "registry/catalog/feature-repositories.json",
 ].map((path) => JSON.parse(readFileSync(resolve(root, path), "utf8")));
+// No default owner. The inventories used to leave it implicit, and when the
+// extension repositories were transferred to an organisation the fallback kept
+// resolving them to the old account while the catalog — written from the
+// GitHub API, which answers with the canonical owner after a redirect — moved
+// to the new one. The sync then rejected its own output on the next run and
+// stayed broken. An owner every inventory has to state cannot drift like that.
 const repositoriesByExtensionId = new Map(
-  repositoryInventories.flatMap((inventory) =>
-    (inventory.repositories ?? []).map((repository) => [
+  repositoryInventories.flatMap((inventory) => {
+    if (!inventory.owner) {
+      throw new Error("repository inventory is missing an `owner`");
+    }
+    return (inventory.repositories ?? []).map((repository) => [
       repository.extensionId,
-      `${inventory.owner ?? "hjosugi"}/${repository.name}`,
-    ]),
-  ),
+      `${inventory.owner}/${repository.name}`,
+    ]);
+  }),
 );
 const check = process.argv.includes("--check");
 const write = process.argv.includes("--write");

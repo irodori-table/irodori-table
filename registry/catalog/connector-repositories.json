@@ -1,5 +1,6 @@
 {
   "publisher": "irodori",
+  "owner": "irodori-table",
   "visibility": "public",
   "repositories": [
     { "name": "irodori-extension-duckdb", "extensionId": "irodori.duckdb", "engines": ["duckdb"] },
