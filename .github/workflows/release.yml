@@ -329,72 +329,11 @@ jobs:
         with:
           ref: ${{ needs.release-gates.outputs.release_tag }}
 
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            curl \
-            file \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libssl-dev \
-            libwebkit2gtk-4.1-dev \
-            libxdo-dev \
-            mold \
-            wget
+      - name: Set up Linux bundling
+        uses: ./.github/actions/setup-linux-bundling
 
-      # No npm cache here on purpose. The release bump rewrites the version in
-      # package-lock.json, so setup-node's hashFiles() key is new on every
-      # release and the cache could never hit — it only wrote ~760MB of dead
-      # entries that pushed the repo over its 10GB cache quota and evicted the
-      # far more expensive Rust caches. `npm ci` costs 7-29s uncached.
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
-      # Pinned to match rust-toolchain.toml; see the macOS lane for why.
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
-
-      # Cache the Cargo registry and workspace target dir so external deps
-      # don't recompile from scratch every run. Keep this aligned with
-      # .cargo/config.toml.
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: '. -> .irodori-local/target'
-          shared-key: release-${{ runner.os }}
-          # Restore only. rust-cache skips saving when the key already exists,
-          # so whichever workflow writes first owns that key until the
-          # dependency set changes — and a release lane's target dir is not the
-          # complete dependency set the warm workflow builds. When a release
-          # won the race the warm run could only restore its partial entry,
-          # rebuild two crates, and decline to save, leaving macOS recompiling
-          # 81 crates on every release behind a "full match: true" log line.
-          # warm-release-cache.yml is the single writer.
-          save-if: false
-
-      # ~/.cache/tauri, not .cache/tauri: that is where the bundler downloads
-      # linuxdeploy and its plugins (dirs::cache_dir()). The repo-relative path
-      # this used to name never exists, so the step cached nothing and every
-      # release re-downloaded ~30MB of tooling.
-      - name: Cache AppImage runtime
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/tauri
-          key: appimage-runtime-${{ runner.os }}-${{ runner.arch }}
-
-      # Must run before the bundler, and it is the bundler's own AppDir that
-      # gets cleaned — repacking afterwards would invalidate the updater
-      # signature Tauri attaches to the AppImage (#214).
-      - name: Exclude host-provided libraries from the AppImage
-        run: scripts/appimage-exclude-host-libs.sh
-
-      - name: Install frontend dependencies
-        working-directory: apps/desktop
-        run: npm ci
+      - name: Set up the desktop build toolchain
+        uses: ./.github/actions/setup-desktop-toolchain
 
       - name: Prepare stable updater signing config
         if: needs.release-gates.outputs.upload_updater == 'true'
@@ -443,44 +382,10 @@ jobs:
         with:
           ref: ${{ needs.release-gates.outputs.release_tag }}
 
-      # No npm cache here on purpose. The release bump rewrites the version in
-      # package-lock.json, so setup-node's hashFiles() key is new on every
-      # release and the cache could never hit — it only wrote ~760MB of dead
-      # entries that pushed the repo over its 10GB cache quota and evicted the
-      # far more expensive Rust caches. `npm ci` costs 7-29s uncached.
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
+      - name: Set up the desktop build toolchain
+        uses: ./.github/actions/setup-desktop-toolchain
         with:
-          node-version: 24
-
-      # Pinned to match rust-toolchain.toml. With @stable the runner installed
-      # a newer toolchain that rust-toolchain.toml then overrode, so the
-      # download was discarded — and because rust-cache hashes every installed
-      # toolchain into its key, each new Rust stable silently invalidated the
-      # release caches.
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
-        with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
-
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: '. -> .irodori-local/target'
-          shared-key: release-${{ runner.os }}
-          # Restore only. rust-cache skips saving when the key already exists,
-          # so whichever workflow writes first owns that key until the
-          # dependency set changes — and a release lane's target dir is not the
-          # complete dependency set the warm workflow builds. When a release
-          # won the race the warm run could only restore its partial entry,
-          # rebuild two crates, and decline to save, leaving macOS recompiling
-          # 81 crates on every release behind a "full match: true" log line.
-          # warm-release-cache.yml is the single writer.
-          save-if: false
-
-      - name: Install frontend dependencies
-        working-directory: apps/desktop
-        run: npm ci
+          rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
 
       - name: Prepare stable updater signing config
         if: needs.release-gates.outputs.upload_updater == 'true'
@@ -546,38 +451,8 @@ jobs:
         with:
           ref: ${{ needs.release-gates.outputs.release_tag }}
 
-      # No npm cache here on purpose. The release bump rewrites the version in
-      # package-lock.json, so setup-node's hashFiles() key is new on every
-      # release and the cache could never hit — it only wrote ~760MB of dead
-      # entries that pushed the repo over its 10GB cache quota and evicted the
-      # far more expensive Rust caches. `npm ci` costs 7-29s uncached.
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
-      # Pinned to match rust-toolchain.toml; see the macOS lane for why.
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
-
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: '. -> .irodori-local/target'
-          shared-key: release-${{ runner.os }}
-          # Restore only. rust-cache skips saving when the key already exists,
-          # so whichever workflow writes first owns that key until the
-          # dependency set changes — and a release lane's target dir is not the
-          # complete dependency set the warm workflow builds. When a release
-          # won the race the warm run could only restore its partial entry,
-          # rebuild two crates, and decline to save, leaving macOS recompiling
-          # 81 crates on every release behind a "full match: true" log line.
-          # warm-release-cache.yml is the single writer.
-          save-if: false
-
-      - name: Install frontend dependencies
-        working-directory: apps/desktop
-        run: npm ci
+      - name: Set up the desktop build toolchain
+        uses: ./.github/actions/setup-desktop-toolchain
 
       - name: Prepare stable updater signing config
         if: needs.release-gates.outputs.upload_updater == 'true'

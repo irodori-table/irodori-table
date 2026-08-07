@@ -1,0 +1,47 @@
+name: Set up Linux bundling
+description: >-
+  System libraries, the AppImage tooling cache, and the AppImage library
+  exclusion, for any job that produces Linux desktop packages.
+
+  These three steps have to move together. release.yml carried a corrected
+  version while release-dry-run.yml carried the original, which is how the dry
+  run ended up rehearsing a release that no longer existed: it cached a path
+  that is never written and skipped the exclusion that stops the AppImage
+  shipping libwayland-client.so.0 (#214). Since release:verify-linux now fails
+  on that library, the dry run had become a job that could only fail.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Linux build dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          curl \
+          file \
+          libayatana-appindicator3-dev \
+          librsvg2-dev \
+          libssl-dev \
+          libwebkit2gtk-4.1-dev \
+          libxdo-dev \
+          mold \
+          wget
+
+    # ~/.cache/tauri, not .cache/tauri: that is where the bundler downloads
+    # linuxdeploy and its plugins (dirs::cache_dir()). The repo-relative path
+    # this used to name never exists, so the step cached nothing and every run
+    # re-downloaded ~30MB of tooling behind a green cache line.
+    - name: Cache AppImage runtime
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/tauri
+        key: appimage-runtime-${{ runner.os }}-${{ runner.arch }}
+
+    # Must run before the bundler, and it is the bundler's own AppDir that gets
+    # cleaned — repacking afterwards would invalidate the updater signature
+    # Tauri attaches to the AppImage (#214).
+    - name: Exclude host-provided libraries from the AppImage
+      shell: bash
+      run: scripts/appimage-exclude-host-libs.sh
