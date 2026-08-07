@@ -6,12 +6,16 @@
     {
       "name": "irodori-extension-knowledge",
       "extensionId": "irodori.knowledge",
-      "hostFeatures": ["knowledge"]
+      "hostFeatures": [
+        "knowledge"
+      ]
     },
     {
       "name": "irodori-extension-datalake",
       "extensionId": "irodori.datalake",
-      "hostFeatures": ["datalake"]
+      "hostFeatures": [
+        "datalake"
+      ]
     }
   ]
 }

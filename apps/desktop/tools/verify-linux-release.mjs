@@ -1,6 +1,15 @@
 import { constants } from "node:fs";
-import { access, open, readFile, stat } from "node:fs/promises";
-import { resolve } from "node:path";
+import {
+  access,
+  mkdtemp,
+  open,
+  readdir,
+  readFile,
+  rm,
+  stat,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 import { newestFileByExtension } from "../../../tools/lib/files.mjs";
 import { fromDesktopRoot, fromRepoRoot } from "../../../tools/lib/paths.mjs";
@@ -78,7 +87,122 @@ async function verifyAppImage(file, version) {
 
   if (!options.skipExec) {
     await runAppImageHelp(file);
+    await verifyExcludedLibraries(file);
+    await verifyDesktopEntry(file);
   }
+}
+
+/**
+ * The bundled desktop entry has to be one a menu implementation will place.
+ *
+ * It shipped with an empty `Categories=`, which is invalid per the desktop
+ * entry spec — the key must either be absent or hold a non-empty
+ * semicolon-terminated list, and an AppImage that no menu will place is an
+ * AppImage the user cannot find after "installing" it. `bundle.category` in
+ * tauri.conf.json is what fills the key; leaving it unset is what produced the
+ * empty one. Asserted against the artifact because the value is written by the
+ * bundler, so nothing in the source tree proves what actually landed (#214).
+ *
+ * Read through the AppImage runtime's own `--appimage-extract <pattern>`, so
+ * this needs no squashfs tooling on the runner.
+ */
+async function verifyDesktopEntry(file) {
+  const scratch = await mkdtemp(join(tmpdir(), "irodori-desktop-"));
+  try {
+    const { code, output } = await runWithTimeout(
+      file,
+      // The root-level `*.desktop` is a symlink into usr/share/applications,
+      // and extracting by pattern copies the link without its target — so ask
+      // for the real file.
+      ["--appimage-extract", "usr/share/applications/*.desktop"],
+      60_000,
+      { cwd: scratch },
+    );
+    if (code !== 0) {
+      fail(`AppImage --appimage-extract exited ${code}: ${output.trim()}`);
+    }
+    const root = join(scratch, "squashfs-root", "usr", "share", "applications");
+    const entries = (await readdir(root)).filter((name) =>
+      name.endsWith(".desktop"),
+    );
+    if (entries.length === 0) {
+      fail(`AppImage ships no .desktop entry: ${file}`);
+    }
+    for (const entry of entries) {
+      const text = await readFile(join(root, entry), "utf8");
+      const match = /^Categories=(.*)$/m.exec(text);
+      if (!match) {
+        continue;
+      }
+      const value = match[1].trim();
+      if (value === "") {
+        fail(
+          `${entry} has an empty Categories=, which no menu will place. ` +
+            `Set bundle.category in tauri.conf.json (#214).`,
+        );
+      }
+      if (!value.endsWith(";")) {
+        fail(
+          `${entry} Categories must be a semicolon-terminated list, got ` +
+            `"${value}" (#214).`,
+        );
+      }
+    }
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Libraries the AppImage must leave to the host (#214).
+ *
+ * `libwayland-client.so.0` talks to the running compositor. Shipped inside the
+ * bundle, the host's Mesa `libEGL` resolves against our copy instead of the
+ * system one and `eglGetPlatformDisplay` fails, so the app aborts with
+ * `EGL_BAD_PARAMETER` before a window appears — on every host whose wayland
+ * stack is newer than the build runner's. It is on the upstream AppImage
+ * excludelist for that reason.
+ *
+ * `scripts/appimage-exclude-host-libs.sh` strips it during bundling. This is
+ * the guard: if that shim ever stops being applied, the release fails here
+ * rather than shipping an AppImage that cannot start.
+ */
+const excludedLibraries = ["libwayland-client.so.0"];
+
+async function verifyExcludedLibraries(file) {
+  // `--appimage-extract <pattern>` is served by the AppImage runtime embedded
+  // in the file itself, so this needs no squashfs tooling on the runner. It
+  // writes into ./squashfs-root, hence the scratch directory.
+  const scratch = await mkdtemp(join(tmpdir(), "irodori-appimage-"));
+  try {
+    for (const library of excludedLibraries) {
+      const { code, output } = await runWithTimeout(
+        file,
+        ["--appimage-extract", `usr/lib/${library}`],
+        60_000,
+        { cwd: scratch },
+      );
+      if (code !== 0) {
+        fail(`AppImage --appimage-extract exited ${code}: ${output.trim()}`);
+      }
+      const extracted = join(scratch, "squashfs-root", "usr", "lib", library);
+      if (await exists(extracted)) {
+        fail(
+          `AppImage bundles ${library}, which must come from the host: ${file}. ` +
+            `See scripts/appimage-exclude-host-libs.sh (#214).`,
+        );
+      }
+    }
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+}
+
+async function exists(path) {
+  return access(path, constants.F_OK).then(
+    () => true,
+    () => false,
+  );
 }
 
 async function verifyPackage(file, version, label, magic) {

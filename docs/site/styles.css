@@ -1,0 +1,743 @@
+/*
+ * Irodori Table — public site.
+ *
+ * Deliberately plain: the shape of an early-web document rather than a landing
+ * page. One column, a readable measure, ruled sections, underlined links, no
+ * shadows, no gradients, no motion. The product is a workbench; the site should
+ * read like its manual, not like an advertisement for it.
+ *
+ * "Retro" here is a constraint on decoration, not on quality. Everything below
+ * still has to hold up: visible focus, real landmarks, a layout that reflows
+ * without media-query special cases, both colour schemes, and type that stays
+ * legible from 320px to a wide desktop.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Two inks and one accent. A third colour would have to earn its place. */
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --paper: #fbfbf9;
+  --rule: #c9c7bd;
+  --rule-soft: #e2e0d6;
+  --link: #14507a;
+  --link-visited: #5a3f7a;
+  --mark: #f3edcd;
+
+  /* One measure, used by every text block, so the eye never has to re-anchor. */
+  --measure: 68ch;
+  --page-max: 60rem;
+  --gap: 1.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e6e4dc;
+    --ink-soft: #b0ada2;
+    --paper: #17181a;
+    --rule: #45474a;
+    --rule-soft: #2c2e31;
+    --link: #7fb4dd;
+    --link-visited: #b9a3d8;
+    --mark: #3d3a1f;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Anchors land below the sticky-free header with room to breathe. */
+  scroll-padding-top: 1rem;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--ink);
+  background: var(--paper);
+  /* The system UI stack, at a size that does not shout. */
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN",
+    "Noto Sans JP", Meiryo, sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  text-size-adjust: 100%;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+/* ---------------------------------------------------------------- links --
+ * Underlined and coloured, the way a document's links have always been.
+ * `text-underline-offset` is the one modern nicety kept: it stops the
+ * underline cutting through the descenders of Japanese glyphs.
+ */
+a {
+  color: var(--link);
+  text-underline-offset: 0.15em;
+}
+
+a:visited {
+  color: var(--link-visited);
+}
+
+a:hover {
+  background: var(--mark);
+}
+
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus {
+  position: static;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+}
+
+/* --------------------------------------------------------------- header --
+ * A title and a row of links. No logo lockup, no sticky bar; the page is
+ * short enough that a persistent header would only take space from it.
+ */
+.site-header {
+  border-bottom: 1px solid var(--rule);
+}
+
+.header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem var(--gap);
+  padding-block: 1rem;
+}
+
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.brand-link:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+.brand-link img {
+  width: 20px;
+  height: 20px;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-inline-start: auto;
+  font-size: 0.9375rem;
+}
+
+/* ------------------------------------------------------------ headings --
+ * The complaint this design answers: the old hero set the headline at a size
+ * that pushed everything the reader came for below the fold. Headings here
+ * are only slightly larger than body text and lean on rules and weight
+ * instead of scale.
+ */
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: 1.5rem;
+}
+
+h2 {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--rule);
+  font-size: 1.1875rem;
+}
+
+h3 {
+  font-size: 1rem;
+}
+
+p {
+  max-width: var(--measure);
+  margin-block: 0.75rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lead {
+  color: var(--ink-soft);
+}
+
+/* ----------------------------------------------------------------- hero --
+ * One column: sentence, actions, facts, screenshot. The screenshot follows
+ * the words rather than competing with them for the first screen.
+ */
+.hero-section {
+  border-bottom: 1px solid var(--rule);
+}
+
+.hero-grid {
+  padding-block: 2rem;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block: 1.25rem;
+}
+
+/* Buttons are links that look like buttons, and say so to assistive tech
+ * through their element rather than a role. A 1px box, no radius, no fill
+ * except on the primary action. */
+.button {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.button:hover,
+.button:focus-visible {
+  border-color: var(--link);
+  background: var(--mark);
+}
+
+.button.primary {
+  border-color: var(--ink);
+  font-weight: 700;
+}
+
+.hero-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem var(--gap);
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule-soft);
+}
+
+.hero-facts > div {
+  margin: 0;
+}
+
+.hero-facts dt {
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
+.hero-facts dd {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    monospace;
+  font-size: 0.875rem;
+}
+
+/* ------------------------------------------------------------- sections */
+.section {
+  padding-block: 2.25rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.section:last-of-type {
+  border-bottom: 0;
+}
+
+/* Feature and link lists: a plain grid of short blocks, each one a heading
+ * and a sentence. No cards, no borders around every item — the whitespace
+ * and the heading weight already separate them. */
+.card-grid,
+.feature-grid,
+.doc-grid,
+.perf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.25rem var(--gap);
+  margin-top: 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.card-grid p,
+.feature-grid p,
+.doc-grid p,
+.perf-grid p {
+  margin-block: 0.25rem 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+/* --------------------------------------------------------------- figure --
+ * The product shot, framed like a document illustration: a hairline box and
+ * a caption, not a floating device mockup.
+ */
+figure {
+  margin: 1.5rem 0 0;
+}
+
+figure img,
+.hero-figure img,
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+figcaption {
+  margin-top: 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+}
+
+/* ----------------------------------------------------------------- code */
+code,
+kbd,
+pre,
+samp {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    monospace;
+  font-size: 0.9em;
+}
+
+/* Inline code is usually a path or a command, which has no spaces to break at
+ * and so pushes the whole page wider on a narrow screen. Blocks scroll instead
+ * (see `pre` below): breaking a command mid-token would make it wrong to copy,
+ * while breaking a path inside a sentence only makes it wrap. */
+:not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
+pre {
+  max-width: 100%;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--rule-soft);
+  background: var(--paper);
+}
+
+/* ---------------------------------------------------------------- table --
+ * Tables are a first-class element here rather than a fallback: comparison
+ * data reads better in one than in a grid of boxes.
+ */
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+th,
+td {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--rule-soft);
+  text-align: start;
+  vertical-align: top;
+}
+
+thead th {
+  border-bottom: 1px solid var(--rule);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------- forms */
+input[type="search"],
+input[type="text"] {
+  width: min(100%, 24rem);
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  color: inherit;
+  background: var(--paper);
+  font: inherit;
+}
+
+/* ---------------------------------------------------------------- footer */
+.site-footer {
+  padding-block: 1.5rem 2.5rem;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+.site-footer ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+hr {
+  height: 0;
+  margin-block: 1.5rem;
+  border: 0;
+  border-top: 1px solid var(--rule-soft);
+}
+
+/* Nothing on this site needs to move. Honoured unconditionally rather than
+ * only under prefers-reduced-motion, because there is no animation whose
+ * absence costs the reader anything. */
+* {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ================================================================ pages --
+ * The rest of the site (docs, blog, support, legal) shares this sheet. Its
+ * markup carries a vocabulary of cards, panels and accent colours from the
+ * previous design. Rather than rewrite five pages, those names are mapped
+ * onto the same handful of primitives used above — a grid, a hairline box,
+ * a plain list — so every page inherits the document look without churn.
+ */
+
+/* Grids. All of them are "a row of short blocks that reflows"; there is no
+ * reason for each to have its own breakpoint behaviour. */
+.docs-grid,
+.doc-grid,
+.db-guide-grid,
+.metric-grid,
+.resource-list,
+.link-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.25rem var(--gap);
+  margin-top: 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+/* Cards lose their chrome. A heading and a sentence separate themselves
+ * perfectly well; a border around each one only adds noise. */
+.doc-card,
+.db-guide-card,
+.feature-card,
+.metric-card {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.doc-card p,
+.db-guide-card p,
+.feature-card p,
+.metric-card p {
+  margin-block: 0.25rem 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+/* The two surfaces that do earn a box: a callout interrupts the reading
+ * order, and the download panel is the page's one call to action. */
+.callout,
+.download-panel {
+  margin-block: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--rule);
+}
+
+.callout > :first-child,
+.download-panel > :first-child {
+  margin-top: 0;
+}
+
+.callout > :last-child,
+.download-panel > :last-child {
+  margin-bottom: 0;
+}
+
+.download-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Two-column pages: article plus a table of contents. The sidebar drops
+ * under the article on narrow screens without a media query. */
+/* A table of contents beside an article. `auto-fit` gave the two equal
+ * columns, which left the article at half width and the index column empty for
+ * the whole scroll of a long page. The index only needs its own width; the
+ * article should have the rest.
+ *
+ * The one media query on this sheet. Everything else reflows on its own, but a
+ * navigation column that becomes a header is a different layout, not a
+ * narrower one. */
+.docs-layout,
+.blog-layout {
+  display: grid;
+  gap: 1.5rem var(--gap);
+  padding-block: 2rem;
+}
+
+@media (min-width: 56rem) {
+  .docs-layout,
+  .blog-layout {
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: 2rem calc(var(--gap) * 1.5);
+  }
+}
+
+.docs-article,
+.blog-article,
+.legal-page {
+  min-width: 0;
+}
+
+.docs-sidebar {
+  align-self: start;
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 56rem) {
+  /* Sticky only where there is a column for it to sit in. On a narrow screen
+   * it is a header above the article and pinning it would eat the viewport. */
+  .docs-sidebar {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+}
+
+.docs-sidebar ul,
+.footer-links {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docs-sidebar li {
+  padding-block: 0.15rem;
+}
+
+/* The table of contents is a run of bare <a> elements, not a list, so without
+ * this it reflows into a paragraph of links and stops reading as an index. */
+.docs-sidebar a {
+  display: block;
+  padding-block: 0.15rem;
+}
+
+/* Sub-page headers use the same rule-under-a-line treatment as the home
+ * page, so arriving from any link feels like the same document. */
+.page-hero,
+.article-hero {
+  padding-block: 1.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.page-hero-inner,
+.doc-section,
+.docs-section,
+.cta-section {
+  padding-block: 1.25rem;
+}
+
+.docs-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem var(--gap);
+  margin: 1rem 0 0;
+}
+
+/* A run of engine names reads as prose, not as chips. */
+.engine-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  padding-block: 1.25rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+.code-block {
+  margin-block: 1rem;
+}
+
+.compact {
+  margin-block: 0.25rem;
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem var(--gap);
+  align-items: baseline;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.nav-download {
+  font-weight: 700;
+}
+
+/* The old palette assigned a colour per feature. Two inks and one link
+ * colour carry the whole site now, so these become no-ops rather than
+ * being hunted out of five files. */
+.accent-blue,
+.accent-coral,
+.accent-gold,
+.accent-green,
+.accent-teal,
+.accent-violet {
+  color: inherit;
+}
+
+/* A feature matrix is a table; let it be one. */
+.feature-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* ---------------------------------------------------------------- search --
+ * A label, a field, a status line, and a list of results. The status line is
+ * a live region so a screen reader hears the result count change; that is the
+ * one piece of behaviour this page has, and it should be announced.
+ */
+.search-section {
+  padding-block: 2.25rem;
+}
+
+/* `search-layout` also carries `.container`, which centres itself. Capping its
+ * width here would centre the *narrower* box and leave the search section
+ * indented relative to every other section on the page. The measure belongs on
+ * the panel inside it; paragraphs cap themselves. */
+.search-panel {
+  max-width: var(--measure);
+}
+
+.search-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+}
+
+.search-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.search-status {
+  margin-block: 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+.search-results {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-results li {
+  padding-block: 0.5rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.search-results li:last-child {
+  border-bottom: 0;
+}
+
+.search-results p {
+  margin-block: 0.15rem 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+/* `hero-copy` wraps the words in the hero. With the two-column grid gone it
+ * needs no rule of its own beyond keeping the measure honest. */
+.hero-copy {
+  max-width: var(--measure);
+}
+
+/* `.primary` / `.secondary` only ever qualify `.button`, styled above. Named
+ * here so the audit that lists unstyled classes stays at zero and a genuinely
+ * missing rule is visible. */
+.button.secondary {
+  font-weight: 400;
+}
+
+/* -------------------------------------------------------------- status --
+ * The support page's status board. A pill is a coloured badge in the old
+ * design; here it is a bordered word, which survives both colour schemes and
+ * carries its meaning in the text rather than the fill.
+ */
+.section-heading {
+  margin-top: 1.5rem;
+}
+
+.status-band {
+  padding-block: 1.25rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1rem var(--gap);
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A run of engine names, not a set of cards. In a grid each one stretched to
+ * fill its cell and read as a full-width bar. */
+.status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 0 0.5rem;
+  border: 1px solid var(--rule);
+  font-size: 0.8125rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}

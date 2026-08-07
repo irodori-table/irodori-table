@@ -13,6 +13,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useWorkbenchContext } from "@/app/workbench-context";
 import { ConnectionManagerDialog } from "@/features/connections";
 import { ErdDialog, hasDiagram } from "@/features/erd";
+import { commandsAvailableForHostFeatures } from "@/features/extensions/host-feature-commands";
 import { useExtensionRuntimeStore } from "@/features/extensions/runtime-store";
 import { ImportDialog } from "@/features/import";
 import { usePreferencesStore } from "@/features/preferences";
@@ -144,8 +145,8 @@ export function WorkbenchDialogs() {
   const setResultMemoryBudget = useResultsStore(
     (state) => state.setResultMemoryBudget,
   );
-  const knowledgeFeatureEnabled = useExtensionRuntimeStore((state) =>
-    state.enabledHostFeatures.includes("knowledge"),
+  const enabledHostFeatures = useExtensionRuntimeStore(
+    (state) => state.enabledHostFeatures,
   );
   const queryHistoryDialogOpen = useQueryHistoryStore((state) => state.open);
   const schemaDesignerOpen = useSchemaDesignerStore((state) => state.open);
@@ -160,11 +161,11 @@ export function WorkbenchDialogs() {
   );
   const availableAppCommandCatalog = useMemo(
     () =>
-      localizedAppCommandCatalog.filter(
-        (command) =>
-          command.id !== "view.knowledge.toggle" || knowledgeFeatureEnabled,
+      commandsAvailableForHostFeatures(
+        localizedAppCommandCatalog,
+        enabledHostFeatures,
       ),
-    [knowledgeFeatureEnabled, localizedAppCommandCatalog],
+    [enabledHostFeatures, localizedAppCommandCatalog],
   );
   const paletteResults = availableAppCommandCatalog.filter((command) =>
     `${command.title} ${command.category}`

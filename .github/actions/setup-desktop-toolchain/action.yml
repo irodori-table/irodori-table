@@ -1,0 +1,73 @@
+name: Set up the desktop build toolchain
+description: >-
+  Node, Rust, the shared Rust cache, and frontend dependencies, configured the
+  way every desktop build in this repository needs them.
+
+  Extracted because the same steps were copied into four jobs across two
+  workflows, and the copies drifted: release.yml was corrected to cache
+  ~/.cache/tauri while release-dry-run.yml kept caching a repo-relative path
+  that never exists, so the dry run stopped resembling the release it exists to
+  rehearse. One definition is the only way that stays fixed.
+
+inputs:
+  rust-targets:
+    description: >-
+      Comma-separated Rust targets to install, e.g.
+      aarch64-apple-darwin,x86_64-apple-darwin. Empty installs only the host
+      target.
+    required: false
+    default: ''
+  node-version:
+    description: Node.js major version.
+    required: false
+    default: '24'
+  install-frontend-dependencies:
+    description: Run `npm ci` in apps/desktop.
+    required: false
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    # No npm cache on purpose. The release bump rewrites the version in
+    # package-lock.json, so setup-node's hashFiles() key is new on every release
+    # and the cache could never hit — it only wrote ~760MB of dead entries that
+    # pushed the repo over its 10GB cache quota and evicted the far more
+    # expensive Rust caches. `npm ci` costs 7-29s uncached.
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    # Pinned to match rust-toolchain.toml rather than @stable: with @stable the
+    # runner installs a newer toolchain that rust-toolchain.toml then overrides,
+    # so the download is discarded — and because rust-cache hashes every
+    # installed toolchain into its key, each new Rust stable silently
+    # invalidated the release caches.
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@1.96.0
+      with:
+        targets: ${{ inputs.rust-targets }}
+
+    # Cache the Cargo registry and workspace target dir so external deps don't
+    # recompile from scratch every run. Keep aligned with .cargo/config.toml.
+    - name: Cache Rust build
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: '. -> .irodori-local/target'
+        shared-key: release-${{ runner.os }}
+        # Restore only. rust-cache skips saving when the key already exists, so
+        # whichever workflow writes first owns that key until the dependency set
+        # changes — and a release lane's target dir is not the complete
+        # dependency set the warm workflow builds. When a release won the race
+        # the warm run could only restore its partial entry, rebuild two crates,
+        # and decline to save, leaving macOS recompiling 81 crates on every
+        # release behind a "full match: true" log line. warm-release-cache.yml
+        # is the single writer.
+        save-if: false
+
+    - name: Install frontend dependencies
+      if: inputs.install-frontend-dependencies == 'true'
+      working-directory: apps/desktop
+      shell: bash
+      run: npm ci

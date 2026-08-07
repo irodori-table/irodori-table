@@ -1,5 +1,5 @@
 # Foundation crates were extracted into the sibling repo `irodori-kit`
-# (https://github.com/irodori-table/irodori-kit) and are consumed via git tag below.
+# (https://github.com/hjosugi/irodori-kit) and are consumed via git tag below.
 # This repo is the app only.
 [workspace]
 members = ["apps/desktop/src-tauri"]
@@ -12,16 +12,16 @@ license = "0BSD"
 authors = ["Irodori Table contributors"]
 
 [workspace.dependencies]
-irodori-sql = { git = "https://github.com/irodori-table/irodori-sql", tag = "v0.3.0" }
-irodori-error = { git = "https://github.com/irodori-table/irodori-knowledge", tag = "v0.3.1" }
-irodori-jobs = { git = "https://github.com/irodori-table/irodori-knowledge", tag = "v0.3.1" }
-irodori-knowledge = { git = "https://github.com/irodori-table/irodori-knowledge", tag = "v0.3.1" }
+irodori-sql = { git = "https://github.com/hjosugi/irodori-sql", tag = "v0.3.0" }
+irodori-error = { git = "https://github.com/hjosugi/irodori-knowledge", tag = "v0.3.1" }
+irodori-jobs = { git = "https://github.com/hjosugi/irodori-knowledge", tag = "v0.3.1" }
+irodori-knowledge = { git = "https://github.com/hjosugi/irodori-knowledge", tag = "v0.3.1" }
 # Foundation crates, extracted to the irodori-kit sibling repo. For local
 # co-development, override with a `[patch]` pointing at a `../irodori-kit` checkout.
-irodori-connection = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.7.1" }
-irodori-security = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.7.1" }
-irodori-proxy = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.7.1" }
-irodori-secure-store = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.7.1" }
-irodori-completion = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.7.1" }
-irodori-generate = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.7.1" }
+irodori-connection = { git = "https://github.com/hjosugi/irodori-kit", tag = "v0.7.1" }
+irodori-security = { git = "https://github.com/hjosugi/irodori-kit", tag = "v0.7.1" }
+irodori-proxy = { git = "https://github.com/hjosugi/irodori-kit", tag = "v0.7.1" }
+irodori-secure-store = { git = "https://github.com/hjosugi/irodori-kit", tag = "v0.7.1" }
+irodori-completion = { git = "https://github.com/hjosugi/irodori-kit", tag = "v0.7.1" }
+irodori-generate = { git = "https://github.com/hjosugi/irodori-kit", tag = "v0.7.1" }
 irodori-migration = "0.4"

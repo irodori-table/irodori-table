@@ -12,54 +12,11 @@ jobs:
       - name: Checkout irodori-table
         uses: actions/checkout@v7
 
-      - name: Install Linux build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            curl \
-            file \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libssl-dev \
-            libwebkit2gtk-4.1-dev \
-            libxdo-dev \
-            mold \
-            wget
+      - name: Set up Linux bundling
+        uses: ./.github/actions/setup-linux-bundling
 
-      # No npm cache: the release bump rewrites package-lock.json's version,
-      # so setup-node's hashFiles() key is new every release and never hits.
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
-      # Pinned to rust-toolchain.toml. @stable installed a toolchain that was
-      # then overridden and discarded, and rust-cache hashes every installed
-      # toolchain into its key, so each new Rust stable invalidated this cache.
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
-
-      - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: '. -> .irodori-local/target'
-          # Share the release lanes' cache instead of keeping a third ~800MB
-          # copy of the same dependency build. Restore only: warm-release-cache
-          # is the single writer, because rust-cache will not overwrite an
-          # existing key and a second writer strands whatever it wrote there.
-          shared-key: release-${{ runner.os }}
-          save-if: false
-
-      - name: Cache AppImage runtime
-        uses: actions/cache@v6
-        with:
-          path: .cache/tauri
-          key: appimage-runtime-${{ runner.os }}-${{ runner.arch }}
-
-      - name: Install frontend dependencies
-        working-directory: apps/desktop
-        run: npm ci
+      - name: Set up the desktop build toolchain
+        uses: ./.github/actions/setup-desktop-toolchain
 
       - name: Build Linux packages
         working-directory: apps/desktop
