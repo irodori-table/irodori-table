@@ -50,6 +50,7 @@
   },
   "bundle": {
     "active": true,
+    "category": "DeveloperTool",
     "targets": "all",
     "icon": [
       "icons/32x32.png",
