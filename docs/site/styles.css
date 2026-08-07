@@ -330,6 +330,14 @@ samp {
   font-size: 0.9em;
 }
 
+/* Inline code is usually a path or a command, which has no spaces to break at
+ * and so pushes the whole page wider on a narrow screen. Blocks scroll instead
+ * (see `pre` below): breaking a command mid-token would make it wrong to copy,
+ * while breaking a path inside a sentence only makes it wrap. */
+:not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
 pre {
   max-width: 100%;
   padding: 0.75rem 1rem;
@@ -482,12 +490,27 @@ hr {
 
 /* Two-column pages: article plus a table of contents. The sidebar drops
  * under the article on narrow screens without a media query. */
+/* A table of contents beside an article. `auto-fit` gave the two equal
+ * columns, which left the article at half width and the index column empty for
+ * the whole scroll of a long page. The index only needs its own width; the
+ * article should have the rest.
+ *
+ * The one media query on this sheet. Everything else reflows on its own, but a
+ * navigation column that becomes a header is a different layout, not a
+ * narrower one. */
 .docs-layout,
 .blog-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  gap: 2rem var(--gap);
+  gap: 1.5rem var(--gap);
   padding-block: 2rem;
+}
+
+@media (min-width: 56rem) {
+  .docs-layout,
+  .blog-layout {
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: 2rem calc(var(--gap) * 1.5);
+  }
 }
 
 .docs-article,
@@ -499,6 +522,17 @@ hr {
 .docs-sidebar {
   align-self: start;
   font-size: 0.9375rem;
+}
+
+@media (min-width: 56rem) {
+  /* Sticky only where there is a column for it to sit in. On a narrow screen
+   * it is a header above the article and pinning it would eat the viewport. */
+  .docs-sidebar {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
 }
 
 .docs-sidebar ul,
@@ -677,11 +711,21 @@ hr {
   border-bottom: 1px solid var(--rule-soft);
 }
 
-.status-grid,
-.status-list {
+.status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   gap: 1rem var(--gap);
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A run of engine names, not a set of cards. In a grid each one stretched to
+ * fill its cell and read as a full-width bar. */
+.status-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
   margin: 1rem 0 0;
   padding: 0;
   list-style: none;
