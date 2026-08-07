@@ -37,3 +37,9 @@ Thumbs.db
 
 # direnv cache for the Nix dev shell.
 .direnv/
+.claude/skills/graphify/
+.claude/settings.local.json
+.copilot/skills/graphify/
+.codex/skills/graphify/
+.codex/hooks.json
+graphify-out/
