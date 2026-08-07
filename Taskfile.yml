@@ -1,0 +1,322 @@
+version: '3'
+
+# Irodori Table root commands. Run `task` for the list.
+#
+# Replaces the previous Makefile one-for-one; every former `make <target>` is
+# now `task <target>` with the same name. Variables that used to be make
+# overrides still work the same way: `task db-verify DB=mysql`, `task test
+# JS_PM=bun`, `task knowledge-refresh LIMIT=8`.
+
+silent: true
+
+vars:
+  RELEASE: node apps/desktop/tools/release.mjs
+  # Declared so the templates below never dereference a missing key.
+  DB: ''
+  LIMIT: ''
+  JS_PM: ''
+  FOUNDATION_ARGS: ''
+  # npm by default; JS_PM=bun switches the desktop scripts to Bun.
+  PM: '{{.JS_PM | default "npm"}}'
+  ENGINE_BIN:
+    sh: command -v podman >/dev/null 2>&1 && echo podman || echo docker
+  # Present only when irodori-kit is checked out alongside or inside this repo.
+  # `sh:` vars are evaluated eagerly for every task, and a non-zero exit aborts
+  # the run — so this must end successfully even when nothing matches.
+  EXTENSION_SDK_DIR:
+    sh: |
+      for d in ../irodori-kit/packages/extension-sdk irodori-kit/packages/extension-sdk; do
+        if [ -d "$d" ]; then echo "$d"; break; fi
+      done
+      exit 0
+
+tasks:
+  default:
+    desc: List the available tasks
+    cmds: ['task --list --sort none']
+
+  # --- guard ----------------------------------------------------------------
+  # The Makefile failed at parse time on an unsupported JS_PM; go-task has no
+  # equivalent, so the check runs as a dependency of anything that uses it.
+  _check-pm:
+    internal: true
+    cmds:
+      - |
+        case "{{.PM}}" in
+          npm|bun) ;;
+          *) echo 'Unsupported JS_PM="{{.PM}}"; use JS_PM=npm or JS_PM=bun' >&2; exit 1 ;;
+        esac
+
+  # --- setup ----------------------------------------------------------------
+  setup:
+    desc: 'npm ci for the desktop app'
+    cmds: [{ task: setup-desktop }]
+
+  setup-desktop:
+    desc: 'npm ci for apps/desktop'
+    cmds: ['npm --prefix apps/desktop ci']
+
+  setup-fast:
+    desc: 'Bun install without lockfile writes (local only)'
+    cmds: ['bun --cwd=apps/desktop install --no-save']
+
+  doctor:
+    desc: 'Check local tools and common missing setup'
+    cmds: ['node tools/dev/doctor.mjs']
+
+  # --- shortcuts ------------------------------------------------------------
+  dev:
+    desc: 'desktop-dev'
+    cmds: [{ task: desktop-dev }]
+  test:
+    desc: 'desktop-test'
+    cmds: [{ task: desktop-test }]
+  build:
+    desc: 'desktop-build'
+    cmds: [{ task: desktop-build }]
+  typegen:
+    desc: 'desktop-typegen'
+    cmds: [{ task: desktop-typegen }]
+  e2e:
+    desc: 'desktop-e2e'
+    cmds: [{ task: desktop-e2e }]
+
+  # --- desktop app ----------------------------------------------------------
+  # `js` runs an apps/desktop package script through npm or Bun. Kept as one
+  # internal task rather than repeated in every recipe, which is what the
+  # Makefile's js-run macro did.
+  _js:
+    internal: true
+    deps: [_check-pm]
+    cmds:
+      - |
+        if [ "{{.PM}}" = bun ]; then
+          bun --cwd=apps/desktop run {{.SCRIPT}}
+        else
+          npm --prefix apps/desktop run {{.SCRIPT}}
+        fi
+
+  desktop-dev:
+    desc: 'Tauri dev shell + Vite (:1420)'
+    interactive: true
+    cmds: [{ task: _js, vars: { SCRIPT: 'tauri dev' } }]
+
+  run-dev:
+    desc: 'desktop-dev, wrapped in nixGL when the Nix dev shell needs it'
+    # WebKit from the Nix store cannot use a non-NixOS host's GL drivers and
+    # aborts at EGL display creation. IRODORI_NO_NIXGL=1 forces the passthrough.
+    interactive: true
+    cmds: ['scripts/run-desktop-dev.sh']
+
+  desktop-vite:
+    desc: 'Vite only, for manual debug binaries'
+    interactive: true
+    cmds: [{ task: _js, vars: { SCRIPT: dev } }]
+
+  desktop-typegen:
+    desc: 'Regenerate Rust -> TypeScript bindings'
+    cmds: [{ task: _js, vars: { SCRIPT: typegen } }]
+
+  desktop-typegen-check:
+    desc: 'Verify generated bindings are current'
+    cmds: [{ task: _js, vars: { SCRIPT: 'typegen:check' } }]
+
+  desktop-format:
+    desc: 'Format desktop JS/TS sources with oxfmt'
+    cmds: [{ task: _js, vars: { SCRIPT: format } }]
+
+  desktop-format-check:
+    desc: 'Verify desktop JS/TS formatting with oxfmt'
+    cmds: [{ task: _js, vars: { SCRIPT: 'format:check' } }]
+
+  desktop-lint:
+    desc: 'Lint desktop JS/TS sources with oxlint'
+    cmds: [{ task: _js, vars: { SCRIPT: lint } }]
+
+  desktop-test:
+    desc: 'Vitest'
+    cmds: [{ task: _js, vars: { SCRIPT: test } }]
+
+  desktop-test-browser:
+    desc: 'Vitest in a real Chromium (layout/clipping guards)'
+    cmds: [{ task: _js, vars: { SCRIPT: 'test:browser' } }]
+
+  desktop-test-rust-ts:
+    desc: 'Vitest + cargo test in parallel'
+    cmds: [{ task: _js, vars: { SCRIPT: 'test:rust-ts' } }]
+
+  desktop-test-watch:
+    desc: 'Vitest watch mode'
+    interactive: true
+    cmds: [{ task: _js, vars: { SCRIPT: 'test:watch' } }]
+
+  desktop-build:
+    desc: 'TypeScript + Vite production build (fast, no typegen)'
+    cmds: [{ task: _js, vars: { SCRIPT: build } }]
+
+  desktop-build-verified:
+    desc: 'typegen check + TypeScript + Vite build'
+    cmds: [{ task: _js, vars: { SCRIPT: 'build:verified' } }]
+
+  desktop-e2e:
+    desc: 'Playwright'
+    cmds: [{ task: _js, vars: { SCRIPT: 'test:e2e' } }]
+
+  run-linux:
+    desc: 'Build, install and launch a local Linux AppImage (NO_LAUNCH=1 to skip opening)'
+    cmds: ['node apps/desktop/tools/install-linux.mjs']
+
+  run-linux-release:
+    desc: 'run-linux, optimized build'
+    cmds: ['RELEASE=1 node apps/desktop/tools/install-linux.mjs']
+
+  # --- checks ---------------------------------------------------------------
+  check:
+    desc: 'cargo test + desktop test/build'
+    cmds:
+      - cargo test --workspace
+      - { task: desktop-typegen-check }
+      - { task: test }
+      - { task: build }
+
+  rust-clippy:
+    desc: 'cargo clippy warning gate'
+    cmds: ['scripts/rust-clippy.sh']
+
+  cargo-deny:
+    desc: 'Rust dependency advisories/licenses/sources gate'
+    cmds: ['scripts/cargo-deny.sh']
+
+  workflow-lint:
+    desc: 'actionlint for GitHub Actions workflows'
+    cmds: ['actionlint']
+
+  security:
+    desc: 'License, lockfile, npm audit/signature, RustSec checks'
+    cmds: ['scripts/security-check.sh']
+
+  security-strict:
+    desc: 'security, but requires cargo-audit locally'
+    cmds: ['REQUIRE_CARGO_AUDIT=1 scripts/security-check.sh']
+
+  # --- extensions and foundation -------------------------------------------
+  extension-scaffold-check:
+    desc: 'Check scaffolded connector repos preserve hand-edits'
+    cmds: ['node tools/extensions/scaffold-preserve-check.mjs']
+
+  extension-manifests:
+    desc: 'Validate kit extension SDK templates when irodori-kit is present'
+    cmds:
+      - |
+        if [ -n "{{.EXTENSION_SDK_DIR}}" ]; then
+          npm --prefix "{{.EXTENSION_SDK_DIR}}" run validate
+        elif [ -n "$CI" ]; then
+          printf "irodori-kit/packages/extension-sdk not found; CI must check out irodori-kit\n"
+          exit 1
+        else
+          printf "irodori-kit/packages/extension-sdk not found; skipping SDK manifest validation\n"
+        fi
+
+  extension-scenarios:
+    desc: 'Run connector extension scenario tests'
+    cmds: ['node tools/extensions/scenario-test.mjs --all --strict-package --require-archive']
+
+  extension-fleet-audit:
+    desc: 'Run post-ABI-migration connector fleet audit (#44)'
+    cmds: ['node tools/extensions/fleet-audit.mjs']
+
+  kit-link:
+    desc: 'Add a local Cargo [patch] for ../irodori-kit'
+    cmds: ['node tools/dev/patch-siblings.mjs link']
+
+  kit-unlink:
+    desc: 'Remove the managed local irodori-kit Cargo [patch]'
+    cmds: ['node tools/dev/patch-siblings.mjs unlink']
+
+  kit-patch-check:
+    desc: 'Fail if a local irodori-kit Cargo [patch] remains'
+    cmds: ['node tools/dev/patch-siblings.mjs check']
+
+  foundation-release-check:
+    desc: 'Verify foundation git-tag pins are lockstep'
+    cmds: ['node tools/dev/foundation-release.mjs --check']
+
+  foundation-release:
+    desc: "Update foundation pins (FOUNDATION_ARGS='--kit vX.Y.Z --knowledge vX.Y.Z --sql vX.Y.Z')"
+    cmds: ['node tools/dev/foundation-release.mjs --apply {{.FOUNDATION_ARGS}}']
+
+  # --- sample databases -----------------------------------------------------
+  # Fixtures live in the sibling irodori-samples repo; override with
+  # IRODORI_SAMPLES=/path. Engines: postgres mysql mariadb timescaledb
+  # cockroachdb yugabytedb tidb sqlserver mongodb oracle clickhouse redis neo4j
+  # memgraph cassandra scylladb questdb influxdb sqlite duckdb.
+  db:
+    desc: 'db-verify'
+    cmds: [{ task: db-verify }]
+
+  db-verify:
+    desc: 'Start one sample DB, integration-test it, then stop it (DB=postgres)'
+    cmds: ['scripts/verify-db.sh {{.DB | default "postgres"}}']
+
+  db-all:
+    desc: 'Verify the normal bootable DB set'
+    cmds: ['scripts/verify-db.sh all']
+
+  db-up:
+    desc: 'Start one sample DB and print its env export (DB=postgres)'
+    cmds: ['scripts/verify-db.sh up {{.DB | default "postgres"}}']
+
+  db-down:
+    desc: 'Stop and remove one sample DB (DB=postgres)'
+    cmds: ['scripts/verify-db.sh down {{.DB | default "postgres"}}']
+
+  # --- release --------------------------------------------------------------
+  # Each release task bumps the version across package.json, tauri.conf.json,
+  # both Cargo.toml files and the lockfiles, then commits, tags vX.Y.Z and pushes.
+  release:
+    desc: 'release-patch'
+    cmds: [{ task: release-patch }]
+  release-patch:
+    desc: 'Bump the patch version, tag and push'
+    cmds: ['{{.RELEASE}} patch']
+  release-minor:
+    desc: 'Bump the minor version, tag and push'
+    cmds: ['{{.RELEASE}} minor']
+  release-major:
+    desc: 'Bump the major version, tag and push'
+    cmds: ['{{.RELEASE}} major']
+
+  # --- knowledge base and generated docs ------------------------------------
+  knowledge-refresh:
+    desc: 'Fetch official docs, then extract facts (changed-only). LIMIT=16'
+    cmds:
+      - 'node tools/knowledge/refresh.mjs --limit {{.LIMIT | default "16"}}'
+      - 'node tools/knowledge/analyze.mjs --changed-only'
+
+  knowledge-analyze:
+    desc: 'Extract facts from already-fetched docs (changed-only)'
+    cmds: ['node tools/knowledge/analyze.mjs --changed-only']
+
+  ml-extract:
+    desc: 'Model-backed cheatsheet extraction (needs IRODORI_LLM_*)'
+    cmds: ['node tools/knowledge/ml-extract.mjs --all --limit 12']
+
+  perf-hot-surfaces:
+    desc: 'Benchmark editor/result-grid hot-surface paths'
+    cmds: ['node tools/perf/hot-surface-benchmark.mjs']
+
+  docs:
+    desc: 'Regenerate generated docs'
+    cmds:
+      - 'node tools/docs/build-extension-catalog.mjs'
+      - 'node tools/knowledge/cheatsheet.mjs'
+
+  docs-check:
+    desc: 'CI guards: registry drift + cheatsheets up to date'
+    cmds:
+      - 'node tools/docs/agent-workstreams.mjs'
+      - 'node tools/extensions/sync-release-catalog.mjs --check'
+      - 'node tools/docs/build-extension-catalog.mjs --check'
+      - 'node tools/docs/support-status.mjs'
+      - 'node tools/docs/db-feature-samples.mjs'
+      - 'node tools/knowledge/cheatsheet.mjs --check'

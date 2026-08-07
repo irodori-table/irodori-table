@@ -49,17 +49,17 @@ Irodori Table はテレメトリーやクラッシュレポートをアップロ
 2. リポジトリのルートから依存関係をインストールし、ローカルセットアップを確認します：
 
    ```sh
-   make setup
-   make doctor
+   task setup
+   task doctor
    ```
 
 3. デスクトップ開発用シェルを起動します：
 
    ```sh
-   make desktop-dev
+   task desktop-dev
    ```
 
-`make desktop-dev` はTauriシェルとVite開発サーバーを起動します。ルートコマンドの一覧は `make help` を実行してください。
+`task desktop-dev` はTauriシェルとVite開発サーバーを起動します。ルートコマンドの一覧は `make help` を実行してください。
 
 コントリビューター向けセットアップ、トラブルシューティング、より詳細な開発ノートはプロジェクトドキュメントにあります：
 

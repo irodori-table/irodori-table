@@ -60,7 +60,7 @@ if (options.list) {
 console.log("Irodori extension scenario tests");
 console.log(`  extensions root: ${extensionsRoot}`);
 console.log(`  repositories: ${selectedRepositories.length}`);
-console.log(`  make check: ${options.skipCheck ? "skip" : "run"}`);
+console.log(`  task check: ${options.skipCheck ? "skip" : "run"}`);
 console.log(`  make package: ${options.skipPackage ? "skip" : "run"}`);
 console.log(`  archive gate: ${options.requireArchive ? "required" : "warning"}`);
 
@@ -562,7 +562,7 @@ Options:
   --repo <name|id>   Select one repository name or extension id; repeatable
   --engine <engine>  Select repositories by engine id; repeatable
   --limit <n>        Run only the first n selected repositories
-  --skip-check       Skip connector repo make check
+  --skip-check       Skip connector repo task check
   --skip-package     Skip connector repo make package and native artifact checks
   --require-archive  Fail when catalog .tar.gz install assets are not produced
   --strict-package   Fail when dist/native contains undeclared dynamic libraries

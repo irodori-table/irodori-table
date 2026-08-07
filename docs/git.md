@@ -54,7 +54,7 @@ empty. The Rust side resolves it like this:
    the call fails with `default workspace is not a git repository`.
 
 So the panel works out of the box when you start the app from a terminal inside
-a repository — which is what `make desktop-dev` and `make run-dev` do. Launched
+a repository — which is what `task desktop-dev` and `task run-dev` do. Launched
 from a desktop launcher or dock icon, the working directory is usually your home
 directory or `/`, step 2 fails, step 3 fails, and you get the error banner.
 

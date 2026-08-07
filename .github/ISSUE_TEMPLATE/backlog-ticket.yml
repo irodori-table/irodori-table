@@ -61,6 +61,6 @@ body:
     attributes:
       label: Verification plan
       description: Tests, builds, smoke checks, or manual evidence expected before closing.
-      placeholder: "npm test, cargo test, make docs-check, Playwright smoke, etc."
+      placeholder: "npm test, cargo test, task docs-check, Playwright smoke, etc."
     validations:
       required: true

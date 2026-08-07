@@ -3202,7 +3202,7 @@ function readme(entry, engineMeta, visibility, realDriverLinked, connection, exp
     : "Driver operations such as `connect`, `query`, and `metadata` intentionally return `connector.driverNotLinked` until the engine implementation is connected.";
   const localBuildNote = realDriverLinked
     ? `
-DuckDB-linked builds share \`../target\` across sibling extension repositories. Normal \`make check\` and CI set \`DUCKDB_DOWNLOAD_LIB=1\` so libduckdb comes from the prebuilt upstream archive instead of a local C++ build. Run \`make check-duckdb-bundled\` only when a fully self-contained DuckDB build is required, because it compiles libduckdb C++ and can consume significant CPU.
+DuckDB-linked builds share \`../target\` across sibling extension repositories. Normal \`task check\` and CI set \`DUCKDB_DOWNLOAD_LIB=1\` so libduckdb comes from the prebuilt upstream archive instead of a local C++ build. Run \`task check-duckdb-bundled\` only when a fully self-contained DuckDB build is required, because it compiles libduckdb C++ and can consume significant CPU.
 `
     : `
 Generated extension repositories share \`../target\` across sibling repositories so Rust dependencies are compiled once per checkout. DuckDB and MotherDuck are driver-linked by default; set \`IRODORI_CONNECTOR_LINK_DUCKDB=0\` only when you need metadata-only DuckDB-compatible scaffolds.
@@ -3267,8 +3267,8 @@ ${driverOperationNote}
 ${localBuildNote}
 
 \`\`\`sh
-make check
-make build
+task check
+task build
 \`\`\`
 
 Release packages place platform-specific native artifacts under \`dist/native\`.

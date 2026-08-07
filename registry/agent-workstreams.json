@@ -61,7 +61,7 @@
         "apps/desktop/tools/typegen.mjs"
       ],
       "checks": [
-        "make desktop-typegen-check",
+        "task desktop-typegen-check",
         "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml"
       ]
     },
@@ -127,7 +127,7 @@
         "npm --prefix ../irodori-kit/packages/extension-sdk run validate",
         "npm --prefix ../irodori-kit/packages/extension-sdk run typegen:check",
         "npm --prefix ../irodori-kit/packages/extension-sdk run build",
-        "make desktop-typegen-check",
+        "task desktop-typegen-check",
         "npm --prefix apps/desktop run build"
       ],
       "mergeRule": "Serialize changes that alter the manifest schema, connector ABI, or generated extension SDK."
@@ -150,7 +150,7 @@
       "sharedContracts": ["portable-connection", "desktop-command-api", "connector-registry"],
       "checks": [
         "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml db",
-        "make desktop-typegen-check"
+        "task desktop-typegen-check"
       ],
       "mergeRule": "Serialize command payload, connection profile, and cancellation contract changes before UI or connector agents consume them."
     },
@@ -204,7 +204,7 @@
       "exclusiveWriteGlobs": ["registry/**", "knowledge/**", "tools/docs/**", "tools/knowledge/**"],
       "coordinatorWriteGlobs": ["registry/catalog/*.json", "knowledge/engines.json"],
       "sharedContracts": ["connector-registry"],
-      "checks": ["make docs-check"],
+      "checks": ["task docs-check"],
       "mergeRule": "Generated docs change with their source data or generator; do not hand-edit generated snapshots alone."
     }
   ]

@@ -1,9 +1,9 @@
 // Local "ship to my machine" helper for real-device testing on Linux
 // (CachyOS/Arch and anything else that runs AppImages).
 //
-//   make run-linux            # fast debug build, install, and launch
-//   RELEASE=1 make run-linux  # optimized build instead of debug
-//   NO_LAUNCH=1 make run-linux # install but don't open it
+//   task run-linux            # fast debug build, install, and launch
+//   RELEASE=1 task run-linux  # optimized build instead of debug
+//   NO_LAUNCH=1 task run-linux # install but don't open it
 //
 // It reuses tools/build-linux-release.mjs to produce the AppImage (with the
 // cached AppImage runtime), copies it to ~/Applications under a stable name so

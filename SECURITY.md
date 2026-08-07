@@ -57,9 +57,9 @@ and redact those files before sharing them; the app does not upload telemetry.
 Run these before releasing or merging dependency changes:
 
 ```sh
-make security
-make security-strict
-make check
+task security
+task security-strict
+task check
 ```
 
 The security target verifies project license metadata, locked dependency
