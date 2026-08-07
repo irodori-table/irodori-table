@@ -61,7 +61,9 @@ test("run options menu opens above the control, right edges aligned", async ({
 
   const geometry = await page.evaluate((selector) => {
     const menu = document.querySelector(selector) as HTMLElement | null;
-    const control = document.querySelector(".run-control") as HTMLElement | null;
+    const control = document.querySelector(
+      ".run-control",
+    ) as HTMLElement | null;
     if (!menu || !control) return null;
     const m = menu.getBoundingClientRect();
     const c = control.getBoundingClientRect();
