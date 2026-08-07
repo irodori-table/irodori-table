@@ -3312,7 +3312,7 @@ dependencies = [
 [[package]]
 name = "irodori-completion"
 version = "0.7.1"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
+source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
  "irodori-sql",
  "serde",
@@ -3322,7 +3322,7 @@ dependencies = [
 [[package]]
 name = "irodori-connection"
 version = "0.7.1"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
+source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
  "irodori-error",
  "serde",
@@ -3332,7 +3332,7 @@ dependencies = [
 [[package]]
 name = "irodori-error"
 version = "0.3.1"
-source = "git+https://github.com/irodori-table/irodori-knowledge?tag=v0.3.1#3148176dab174d223c43126d6572b5133a75dc96"
+source = "git+https://github.com/hjosugi/irodori-knowledge?tag=v0.3.1#3148176dab174d223c43126d6572b5133a75dc96"
 dependencies = [
  "serde",
  "ts-rs",
@@ -3341,7 +3341,7 @@ dependencies = [
 [[package]]
 name = "irodori-generate"
 version = "0.7.1"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
+source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
  "irodori-error",
  "irodori-sql",
@@ -3354,7 +3354,7 @@ dependencies = [
 [[package]]
 name = "irodori-jobs"
 version = "0.3.1"
-source = "git+https://github.com/irodori-table/irodori-knowledge?tag=v0.3.1#3148176dab174d223c43126d6572b5133a75dc96"
+source = "git+https://github.com/hjosugi/irodori-knowledge?tag=v0.3.1#3148176dab174d223c43126d6572b5133a75dc96"
 dependencies = [
  "irodori-error",
  "serde",
@@ -3364,7 +3364,7 @@ dependencies = [
 [[package]]
 name = "irodori-knowledge"
 version = "0.3.1"
-source = "git+https://github.com/irodori-table/irodori-knowledge?tag=v0.3.1#3148176dab174d223c43126d6572b5133a75dc96"
+source = "git+https://github.com/hjosugi/irodori-knowledge?tag=v0.3.1#3148176dab174d223c43126d6572b5133a75dc96"
 dependencies = [
  "irodori-error",
  "irodori-jobs",
@@ -3388,7 +3388,7 @@ dependencies = [
 [[package]]
 name = "irodori-proxy"
 version = "0.7.1"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
+source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
  "irodori-connection",
  "irodori-error",
@@ -3404,7 +3404,7 @@ dependencies = [
 [[package]]
 name = "irodori-secure-store"
 version = "0.7.1"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
+source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
  "irodori-connection",
  "irodori-error",
@@ -3414,7 +3414,7 @@ dependencies = [
 [[package]]
 name = "irodori-security"
 version = "0.7.1"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
+source = "git+https://github.com/hjosugi/irodori-kit?tag=v0.7.1#8ba2427b7ce01e0a43f26c371062c37f7eb61703"
 dependencies = [
  "serde",
  "ts-rs",
@@ -3423,7 +3423,7 @@ dependencies = [
 [[package]]
 name = "irodori-sql"
 version = "0.3.0"
-source = "git+https://github.com/irodori-table/irodori-sql?tag=v0.3.0#548197a3bcef4f5a2550359cf2287701f1e95bfe"
+source = "git+https://github.com/hjosugi/irodori-sql?tag=v0.3.0#548197a3bcef4f5a2550359cf2287701f1e95bfe"
 dependencies = [
  "thiserror 2.0.18",
  "tracing",
