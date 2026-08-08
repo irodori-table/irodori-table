@@ -4,10 +4,9 @@ description: >-
   way every desktop build in this repository needs them.
 
   Extracted because the same steps were copied into four jobs across two
-  workflows, and the copies drifted: release.yml was corrected to cache
-  ~/.cache/tauri while release-dry-run.yml kept caching a repo-relative path
-  that never exists, so the dry run stopped resembling the release it exists to
-  rehearse. One definition is the only way that stays fixed.
+  workflows and the copies drifted. Keep the shared Node/Rust setup here;
+  platform-specific package dependencies and caches belong in their sibling
+  setup actions.
 
 inputs:
   rust-targets:

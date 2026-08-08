@@ -16,17 +16,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
-## [0.8.9] - 2026-08-08
+## [0.8.10] - 2026-08-08
 
 Release packaging fix with no application behavior changes.
 
 ### Fixed
 
-- Linux release builds now install the AppImage host-library exclusion shim in
-  the same XDG cache that Tauri uses and keep its payload outside linuxdeploy's
-  plugin-name pattern. This prevents plugin discovery from bypassing the shim
-  and bundling `libwayland-client.so.0`, which shadows the host compositor
-  library (#214).
+- Direct `tauri-action` releases and local release commands now install the
+  AppImage host-library exclusion shim in the same XDG cache that Tauri uses.
+  The shim payload stays outside linuxdeploy's plugin-name pattern so plugin
+  discovery cannot bypass it and bundle `libwayland-client.so.0`, which shadows
+  the host compositor library. The dry run now rehearses the direct release
+  path as well (#214).
+
+## [0.8.9] - 2026-08-08
+
+Release pipeline repair attempt. The GitHub Release was created, but the run
+was canceled before package upload when the final consumer audit found that
+the direct `tauri-action` path bypassed the local build wrapper.
+
+### Changed
+
+- Routed local Linux release commands through the repository-local AppImage
+  tooling cache and kept the exclusion shim payload outside linuxdeploy's
+  plugin-name pattern (#214).
 
 ## [0.8.8] - 2026-08-08
 

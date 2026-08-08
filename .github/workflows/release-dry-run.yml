@@ -20,7 +20,10 @@ jobs:
 
       - name: Build Linux packages
         working-directory: apps/desktop
-        run: npm run release:linux
+        # Match the real release's tauri-action execution path. In particular,
+        # this proves setup-linux-bundling protects a direct Tauri invocation;
+        # build-linux-release.mjs also installs the shim for local commands.
+        run: npm run tauri -- build --bundles appimage,deb,rpm
 
       - name: Verify Linux package artifacts
         working-directory: apps/desktop

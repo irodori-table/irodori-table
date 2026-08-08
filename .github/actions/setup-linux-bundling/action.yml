@@ -1,10 +1,11 @@
 name: Set up Linux bundling
 description: >-
-  System libraries and the AppImage tooling cache for any job that produces
-  Linux desktop packages.
+  System libraries, the repository-local AppImage tooling cache, and the
+  host-library exclusion shim for any job that produces Linux desktop packages.
 
-  The build wrapper owns AppImage library exclusion because it must prepare the
-  same XDG cache directory that it passes to Tauri (#214).
+  The exported XDG cache applies to later workflow steps, including tauri-action.
+  The local build wrapper repeats the shim setup idempotently so direct local
+  release commands have the same protection (#214).
 
 runs:
   using: composite
@@ -25,11 +26,26 @@ runs:
           mold \
           wget
 
+    # Persist the override for later workflow steps. The release workflow uses
+    # tauri-action directly instead of build-linux-release.mjs, so setting the
+    # environment only inside the wrapper would leave the real release on a
+    # different cache path than the dry run.
+    - name: Use the repository-local XDG cache
+      shell: bash
+      run: echo "XDG_CACHE_HOME=${GITHUB_WORKSPACE}/.cache" >> "${GITHUB_ENV}"
+
     # build-linux-release.mjs sets XDG_CACHE_HOME to the repo-relative .cache
     # directory, so Tauri downloads linuxdeploy and its plugins here. Keep this
     # path in sync with that wrapper; dirs::cache_dir() observes the override.
-    - name: Cache AppImage runtime
+    - name: Cache AppImage tooling
       uses: actions/cache@v6
       with:
         path: .cache/tauri
         key: appimage-tools-v2-${{ runner.os }}-${{ runner.arch }}
+
+    # tauri-action invokes Tauri directly and therefore does not pass through
+    # build-linux-release.mjs. Prepare the same shim here for that consumer;
+    # the wrapper's repeat call is intentionally idempotent.
+    - name: Exclude host-provided libraries from the AppImage
+      shell: bash
+      run: scripts/appimage-exclude-host-libs.sh
