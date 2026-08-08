@@ -16,6 +16,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.8.8] - 2026-08-08
+
+Dependency maintenance release with no intentional user-facing behavior
+changes.
+
+### Changed
+
+- Updated the desktop npm tooling group, including Testing Library user-event
+  14.6.3, oxfmt 0.62.0, and oxlint 1.77.0 (#211).
+- Updated the shared foundation pins to Irodori Knowledge 0.3.2 and Irodori Kit
+  0.7.5, keeping every direct workspace dependency and the Cargo lockfile on
+  one source revision (#212).
+
+### Security
+
+- Updated the lockfile resolutions for DOMPurify 3.4.13, Mermaid 11.16.1, and
+  nanoid 3.3.18 so the current npm advisory audit is clean (#211).
+
 ## [0.8.5] - 2026-07-30
 
 Repository tooling release with no intentional user-facing application
