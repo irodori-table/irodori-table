@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.8.9] - 2026-08-08
+
+Release packaging fix with no application behavior changes.
+
+### Fixed
+
+- Linux release builds now install the AppImage host-library exclusion shim in
+  the same XDG cache that Tauri uses, preventing `libwayland-client.so.0` from
+  being bundled and shadowing the host compositor library (#214).
+
 ## [0.8.8] - 2026-08-08
 
 Dependency maintenance release with no intentional user-facing behavior

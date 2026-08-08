@@ -25,14 +25,24 @@ if (process.platform !== "linux") {
 await mkdir(tauriCache, { recursive: true });
 await ensureRuntime(runtimeUrl, runtimeFile);
 
+const tauriEnv = buildTauriEnv(process.env, {
+  cacheRoot,
+  cargoTargetDir,
+  configRoot,
+  runtimeFile,
+});
+
+// Install the AppImage plugin shim with the exact XDG cache that Tauri will
+// use below. Keeping this beside the build prevents CI setup and local builds
+// from preparing a different cache directory than the bundler actually reads.
+await run(fromRepoRoot("scripts/appimage-exclude-host-libs.sh"), [], {
+  cwd: fromRepoRoot(),
+  env: tauriEnv,
+});
+
 await run("tauri", buildTauriArgs(options), {
   cwd: fromDesktopRoot(),
-  env: buildTauriEnv(process.env, {
-    cacheRoot,
-    cargoTargetDir,
-    configRoot,
-    runtimeFile,
-  }),
+  env: tauriEnv,
 });
 
 function buildLinuxReleaseOptions(argv, nodeArch) {
