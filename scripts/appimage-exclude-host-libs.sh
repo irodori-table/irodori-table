@@ -30,7 +30,11 @@ set -euo pipefail
 
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tauri"
 plugin="$cache_dir/linuxdeploy-plugin-appimage.AppImage"
-real="$cache_dir/linuxdeploy-plugin-appimage.real.AppImage"
+# The payload must not match linuxdeploy's `linuxdeploy-plugin-*` discovery
+# pattern. If it does, directory iteration can register the payload before the
+# shim and silently bypass the exclusion step.
+real="$cache_dir/.irodori-linuxdeploy-plugin-appimage.real.AppImage"
+legacy_real="$cache_dir/linuxdeploy-plugin-appimage.real.AppImage"
 plugin_url="https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/releases/download/continuous/linuxdeploy-plugin-appimage-x86_64.AppImage"
 
 # Libraries the host must always provide. Extend deliberately: every entry here
@@ -42,6 +46,12 @@ excluded_libs=(
 mkdir -p "$cache_dir"
 
 shim_marker="irodori-appimage-exclude-shim"
+
+# Migrate the old payload name, which itself looked like an output plugin and
+# could win plugin discovery ahead of the shim on a warm cache.
+if [ -f "$legacy_real" ]; then
+  mv -f "$legacy_real" "$real"
+fi
 
 # A previous run already installed the shim; the real plugin is beside it.
 if [ -f "$plugin" ] && grep -q "$shim_marker" "$plugin" 2>/dev/null; then

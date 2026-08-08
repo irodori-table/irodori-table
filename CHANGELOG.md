@@ -23,8 +23,10 @@ Release packaging fix with no application behavior changes.
 ### Fixed
 
 - Linux release builds now install the AppImage host-library exclusion shim in
-  the same XDG cache that Tauri uses, preventing `libwayland-client.so.0` from
-  being bundled and shadowing the host compositor library (#214).
+  the same XDG cache that Tauri uses and keep its payload outside linuxdeploy's
+  plugin-name pattern. This prevents plugin discovery from bypassing the shim
+  and bundling `libwayland-client.so.0`, which shadows the host compositor
+  library (#214).
 
 ## [0.8.8] - 2026-08-08
 
