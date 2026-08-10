@@ -55,7 +55,7 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Install go-task
-        uses: arduino/setup-task@v2
+        uses: arduino/setup-task@v3
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -93,7 +93,7 @@ jobs:
         run: npm ci
 
       - name: Install go-task
-        uses: arduino/setup-task@v2
+        uses: arduino/setup-task@v3
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -138,7 +138,7 @@ jobs:
         run: command -v cargo-deny || cargo install cargo-deny --locked --version 0.19.9
 
       - name: Install go-task
-        uses: arduino/setup-task@v2
+        uses: arduino/setup-task@v3
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -236,7 +236,7 @@ jobs:
           shared-key: rust-${{ runner.os }}
 
       - name: Install go-task
-        uses: arduino/setup-task@v2
+        uses: arduino/setup-task@v3
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
