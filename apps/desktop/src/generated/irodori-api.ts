@@ -128,7 +128,7 @@ export type WorkspaceSnapshot = { connections: Array<Connection>, activeConnecti
 
 export type CrashReportStatus = { hasReport: boolean, logDir: string, latestBundleDir?: string, latestManifestPath?: string, telemetryEnabled: boolean, appVersion: string, platform: string, };
 
-export type DbEngine = "postgres" | "mysql" | "sqlite" | "oracle" | "sqlserver" | "duckdb" | "motherduck" | "mongodb" | "cockroachdb" | "yugabytedb" | "redshift" | "timescaledb" | "mariadb" | "tidb" | "neon" | "h2" | "clickhouse" | "neo4j" | "memgraph" | "influxdb" | "qdrant" | "milvus" | "pinecone" | "snowflake" | "bigquery" | "athena" | "redis" | "cassandra" | "bigtable" | "cloudSpanner" | "trinoPresto" | "firebird" | "databricks" | "elasticsearch" | "openSearch" | "couchbase" | "dynamodb" | "scylladb" | "arangodb" | "questdb" | "iotdb" | "hive" | "iceberg" | "s3Tables" | "deltaLake" | "hudi";
+export type DbEngine = "postgres" | "mysql" | "sqlite" | "oracle" | "sqlserver" | "duckdb" | "motherduck" | "mongodb" | "cockroachdb" | "yugabytedb" | "redshift" | "timescaledb" | "mariadb" | "tidb" | "neon" | "supabase" | "h2" | "clickhouse" | "neo4j" | "memgraph" | "influxdb" | "qdrant" | "milvus" | "pinecone" | "snowflake" | "bigquery" | "athena" | "redis" | "cassandra" | "bigtable" | "cloudSpanner" | "trinoPresto" | "firebird" | "databricks" | "elasticsearch" | "openSearch" | "couchbase" | "dynamodb" | "scylladb" | "arangodb" | "questdb" | "iotdb" | "hive" | "iceberg" | "s3Tables" | "deltaLake" | "hudi";
 
 export type EngineBuildSupport = { engine: DbEngine, includedInCurrentBuild: boolean, requiredFeature?: string, };
 

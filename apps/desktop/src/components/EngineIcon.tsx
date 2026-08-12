@@ -84,6 +84,7 @@ const FALLBACK: Record<string, LucideIcon> = {
   sqlserver: Database,
   yugabytedb: Database,
   neon: Database,
+  supabase: Database,
   firebird: Database,
   redshift: Warehouse,
   athena: Warehouse,

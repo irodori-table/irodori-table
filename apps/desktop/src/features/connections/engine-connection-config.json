@@ -379,6 +379,17 @@
         "showPassword": true,
         "transportLabelKey": "connection.transport.lakehouseCatalog"
       }
+    },
+    {
+      "engines": ["supabase"],
+      "settings": {
+        "urlPlaceholder": "postgres://postgres.<project-ref>:password@aws-0-<region>.pooler.supabase.com:6543/postgres",
+        "hostPlaceholder": "db.<project-ref>.supabase.co",
+        "userLabelKey": "connection.field.supabaseUser",
+        "userPlaceholder": "postgres or postgres.<project-ref>",
+        "databaseLabelKey": "connection.field.database",
+        "databasePlaceholder": "postgres"
+      }
     }
   ],
   "optionFields": [
@@ -530,12 +541,50 @@
           "placeholder": "/etc/ssl/private/client.key"
         }
       ]
+    },
+    {
+      "engines": ["supabase"],
+      "fields": [
+        {
+          "key": "poolMode",
+          "labelKey": "connection.field.supabasePoolMode",
+          "choices": ["direct", "session", "transaction"]
+        },
+        {
+          "key": "sslMode",
+          "labelKey": "connection.field.sslMode",
+          "choices": [
+            "disable",
+            "allow",
+            "prefer",
+            "require",
+            "verify-ca",
+            "verify-full"
+          ]
+        },
+        {
+          "key": "sslRootCert",
+          "labelKey": "connection.field.sslRootCert",
+          "placeholder": "/etc/ssl/certs/server-ca.pem"
+        },
+        {
+          "key": "sslCert",
+          "labelKey": "connection.field.sslCert",
+          "placeholder": "/etc/ssl/certs/client.pem"
+        },
+        {
+          "key": "sslKey",
+          "labelKey": "connection.field.sslKey",
+          "placeholder": "/etc/ssl/private/client.key"
+        }
+      ]
     }
   ],
   "defaultPorts": {
     "postgres": "5432",
     "timescaledb": "5432",
     "neon": "5432",
+    "supabase": "5432",
     "cockroachdb": "26257",
     "yugabytedb": "5433",
     "redshift": "5439",

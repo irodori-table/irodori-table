@@ -62,6 +62,9 @@ pub enum DbEngine {
     #[serde(rename = "neon")]
     #[ts(rename = "neon")]
     Neon,
+    #[serde(rename = "supabase")]
+    #[ts(rename = "supabase")]
+    Supabase,
     #[serde(rename = "h2")]
     #[ts(rename = "h2")]
     H2,
@@ -209,6 +212,7 @@ impl DbEngine {
         DbEngine::MariaDb,
         DbEngine::TiDb,
         DbEngine::Neon,
+        DbEngine::Supabase,
         DbEngine::H2,
         DbEngine::ClickHouse,
         DbEngine::Neo4j,
@@ -296,6 +300,7 @@ impl DbEngine {
             | DbEngine::Redshift
             | DbEngine::Timescale
             | DbEngine::Neon
+            | DbEngine::Supabase
             | DbEngine::H2 => Wire::Postgres,
             DbEngine::Mysql | DbEngine::MariaDb | DbEngine::TiDb => Wire::Mysql,
             DbEngine::Sqlite => Wire::Sqlite,
@@ -348,14 +353,14 @@ impl DbEngine {
     /// wants TLS on those sets it in the form.
     pub(crate) fn default_ssl_mode(self) -> Option<SslMode> {
         match self {
-            DbEngine::Neon | DbEngine::Redshift => Some(SslMode::Require),
+            DbEngine::Neon | DbEngine::Redshift | DbEngine::Supabase => Some(SslMode::Require),
             _ => None,
         }
     }
 
     pub(crate) fn default_port(self) -> u16 {
         match self {
-            DbEngine::Postgres | DbEngine::Timescale | DbEngine::Neon => 5432,
+            DbEngine::Postgres | DbEngine::Timescale | DbEngine::Neon | DbEngine::Supabase => 5432,
             DbEngine::H2 => 5435,
             DbEngine::CockroachDb => 26257,
             DbEngine::YugabyteDb => 5433,
@@ -686,6 +691,31 @@ impl<'a> SslSettings<'a> {
     }
 }
 
+/// Supabase's default port for the Supavisor pooler in transaction mode.
+const SUPAVISOR_TRANSACTION_PORT: u16 = 6543;
+
+/// Whether this profile talks to a connection pooler that cannot carry named
+/// prepared statements across round trips.
+///
+/// Supabase exposes three endpoints and the port is what distinguishes them —
+/// `5432` is either the direct connection or Supavisor in *session* mode, both
+/// of which keep a server connection per client and prepare fine; `6543` is
+/// transaction mode, which does not. An explicit `poolMode` option wins, for
+/// the self-hosted Supavisor deployments that pick their own ports.
+fn uses_transaction_pooler(p: &ConnectionProfile) -> bool {
+    match p
+        .options
+        .get("poolMode")
+        .map(|mode| mode.trim().to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("transaction") => return true,
+        Some("direct") | Some("session") => return false,
+        _ => {}
+    }
+    p.engine == DbEngine::Supabase && p.port == Some(SUPAVISOR_TRANSACTION_PORT)
+}
+
 fn build_tcp_url(scheme: &str, p: &ConnectionProfile) -> String {
     let host = p.host.clone().unwrap_or_else(|| "localhost".into());
     let port = p.port.unwrap_or_else(|| p.engine.default_port());
@@ -710,6 +740,14 @@ fn build_tcp_url(scheme: &str, p: &ConnectionProfile) -> String {
         return url;
     }
     SslSettings::from_profile(p).append_to(&mut url, wire);
+    if uses_transaction_pooler(p) {
+        // Supavisor's transaction mode multiplexes one server connection across
+        // clients, so a prepared statement named on one round trip is not there
+        // on the next. sqlx prepares by default and caches by name, which turns
+        // the *second* query on a connection into `prepared statement "sqlx_s_1"
+        // already exists`. A zero cache makes every statement unnamed.
+        append_query_param(&mut url, "statement-cache-capacity", "0");
+    }
     url
 }
 
@@ -733,6 +771,7 @@ mod tests {
         (DbEngine::MariaDb, Wire::Mysql, 3306),
         (DbEngine::TiDb, Wire::Mysql, 4000),
         (DbEngine::Neon, Wire::Postgres, 5432),
+        (DbEngine::Supabase, Wire::Postgres, 5432),
         (DbEngine::H2, Wire::Postgres, 5435),
         (DbEngine::ClickHouse, Wire::ClickHouse, 8123),
         (DbEngine::Neo4j, Wire::Neo4j, 7687),
@@ -1161,6 +1200,75 @@ mod tests {
             build_url(&profile).unwrap(),
             "postgres://user@host/db?sslmode=disable"
         );
+    }
+
+    #[test]
+    fn supabase_requires_tls_and_rides_the_postgres_wire() {
+        let profile = profile(DbEngine::Supabase);
+        assert_eq!(DbEngine::Supabase.wire(), Wire::Postgres);
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://db.example.test:5432/sample?sslmode=require"
+        );
+    }
+
+    #[test]
+    fn the_supavisor_transaction_port_disables_the_statement_cache() {
+        // Transaction mode multiplexes one server connection across clients, so
+        // a named prepared statement is gone by the next round trip. Without
+        // this the *second* query on a connection fails with
+        // `prepared statement "sqlx_s_1" already exists`.
+        let mut profile = profile(DbEngine::Supabase);
+        profile.host = Some("aws-0-ap-northeast-1.pooler.supabase.com".into());
+        profile.port = Some(6543);
+        profile.user = Some("postgres.abcdefghijklmnop".into());
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://postgres.abcdefghijklmnop@aws-0-ap-northeast-1.pooler.supabase.com:6543/sample\
+             ?sslmode=require\
+             &statement-cache-capacity=0"
+        );
+    }
+
+    #[test]
+    fn direct_and_session_endpoints_keep_the_statement_cache() {
+        for port in [5432, 5432] {
+            let mut profile = profile(DbEngine::Supabase);
+            profile.port = Some(port);
+            let url = build_url(&profile).unwrap();
+            assert!(
+                !url.contains("statement-cache-capacity"),
+                "port {port} should keep prepared statements, got {url}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_explicit_pool_mode_overrides_the_port_inference() {
+        // Self-hosted Supavisor picks its own ports, and a proxy can put
+        // transaction mode on 5432.
+        let mut profile = with_options(DbEngine::Supabase, [("poolMode", "transaction")]);
+        profile.port = Some(5432);
+        assert!(build_url(&profile)
+            .unwrap()
+            .contains("statement-cache-capacity=0"));
+
+        let mut profile = with_options(DbEngine::Supabase, [("poolMode", "session")]);
+        profile.port = Some(6543);
+        assert!(!build_url(&profile)
+            .unwrap()
+            .contains("statement-cache-capacity"));
+    }
+
+    #[test]
+    fn only_supabase_infers_a_pooler_from_the_port() {
+        // 6543 means nothing on a plain Postgres profile.
+        let mut profile = profile(DbEngine::Postgres);
+        profile.port = Some(6543);
+        assert!(!build_url(&profile)
+            .unwrap()
+            .contains("statement-cache-capacity"));
     }
 
     #[test]

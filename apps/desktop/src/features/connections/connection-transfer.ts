@@ -1065,6 +1065,7 @@ function buildPgAdminExport(
       "postgres",
       "timescaledb",
       "neon",
+      "supabase",
       "cockroachdb",
       "yugabytedb",
       "redshift",
@@ -1321,6 +1322,7 @@ function urlScheme(engine: DbEngine) {
     case "postgres":
     case "timescaledb":
     case "neon":
+    case "supabase":
     case "redshift":
     case "cockroachdb":
     case "yugabytedb":
@@ -1374,6 +1376,7 @@ function sqlToolsDriver(engine: DbEngine) {
     case "postgres":
     case "timescaledb":
     case "neon":
+    case "supabase":
     case "redshift":
     case "cockroachdb":
     case "yugabytedb":

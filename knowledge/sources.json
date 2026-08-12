@@ -490,6 +490,16 @@
     "notes": "Reference for hypertables, time_bucket, compression, continuous aggregates, and PostgreSQL compatibility."
   },
   {
+    "id": "supabase-docs",
+    "name": "Supabase documentation",
+    "product": "Supabase",
+    "category": "database",
+    "sourceType": "spec",
+    "url": "https://supabase.com/docs",
+    "cadence": "weekly",
+    "notes": "Track Supabase connection strings, Supavisor pooling modes, SSL requirements, row-level security, and hosted PostgreSQL extensions such as pgvector."
+  },
+  {
     "id": "neon-docs",
     "name": "Neon documentation",
     "product": "Neon",

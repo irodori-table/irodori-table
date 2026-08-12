@@ -41,6 +41,7 @@ describe("cmDialect", () => {
     mariadb: { dialect: MariaSQL, formatter: "mariadb" },
     tidb: { dialect: MySQL, formatter: "tidb" },
     neon: { dialect: PostgreSQL, formatter: "postgresql" },
+    supabase: { dialect: PostgreSQL, formatter: "postgresql" },
     h2: { dialect: PostgreSQL, formatter: "postgresql" },
     clickhouse: { dialect: StandardSQL, formatter: "clickhouse" },
     neo4j: { dialect: StandardSQL, formatter: "sql" },

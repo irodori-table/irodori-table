@@ -148,6 +148,15 @@
       "status": "wired"
     },
     {
+      "id": "supabase",
+      "label": "Supabase",
+      "family": "relational",
+      "wire": "postgres",
+      "defaultPort": 5432,
+      "routesThrough": "db/postgres.rs",
+      "status": "wired"
+    },
+    {
       "id": "h2",
       "label": "H2",
       "family": "relational",
