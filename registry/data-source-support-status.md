@@ -114,6 +114,34 @@ variant + `Wire` + adapter.
 
 All roadmap sources currently promoted into the registry are listed above. Keep this section for future coverage-strategy ideas that are not selectable in the app yet.
 
+## 4b. Transport security (sqlx-backed engines)
+
+The Postgres- and MySQL-wire engines take TLS settings from the connection form
+and pass them to sqlx as URL parameters (`db/engine.rs` `SslSettings`):
+
+| Form field | Postgres parameter | MySQL parameter |
+|---|---|---|
+| SSL mode | `sslmode` | `ssl-mode` |
+| SSL root certificate | `sslrootcert` | `ssl-ca` |
+| SSL client certificate | `sslcert` | `ssl-cert` |
+| SSL client key | `sslkey` | `ssl-key` |
+
+The app speaks the PostgreSQL vocabulary (`disable`, `allow`, `prefer`,
+`require`, `verify-ca`, `verify-full`) and translates for MySQL, which has no
+`allow` and spells the strongest mode `verify_identity`.
+
+Leaving SSL mode unset keeps sqlx's own default — `prefer` / `preferred`, which
+attempts TLS, **falls back to plaintext without complaint**, and verifies no
+certificate. That is why **Neon** and **Redshift** default to `require`: they
+cannot be run locally, so there is no plaintext case to preserve. Every
+self-hostable engine keeps the driver default, because `irodori-samples` runs
+them insecure and raising the floor would break `task db-verify`. Unix-socket
+profiles never negotiate TLS.
+
+Only these two wires are covered. The dedicated connectors (SQL Server, Oracle,
+MongoDB, ClickHouse, …) and every extension-backed engine still have no TLS
+surface — see irodori-table#232.
+
 ## 5. Managed wire-compatible targets
 
 These should not become separate `DbEngine` variants unless they need native API

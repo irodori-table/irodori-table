@@ -361,11 +361,55 @@ describe("ConnectionManagerDialog", () => {
     });
 
     it("stays out of the way for engines that declare no options", () => {
+      // SQLite is a local file, so it has neither connector options nor the
+      // SSL fields every sqlx-backed engine gained in #229.
       const { container } = renderDialog({
-        draft: draft({ engine: "postgres" }),
+        draft: draft({ engine: "sqlite" }),
       });
 
       expect(container.querySelector(".connector-options")).toBeNull();
+    });
+
+    it("renders sslMode as a select and the certificates as paths (#229)", () => {
+      renderDialog({ draft: draft({ engine: "postgres", mode: "fields" }) });
+
+      const sslMode = screen.getByLabelText("SSL mode");
+      expect(sslMode.tagName).toBe("SELECT");
+      expect(
+        [...(sslMode as HTMLSelectElement).options].map(
+          (option) => option.value,
+        ),
+      ).toEqual([
+        "",
+        "disable",
+        "allow",
+        "prefer",
+        "require",
+        "verify-ca",
+        "verify-full",
+      ]);
+      // The empty first entry is what leaves the driver default in place, so a
+      // profile saved without touching this field connects as it always did.
+      expect((sslMode as HTMLSelectElement).value).toBe("");
+
+      expect(screen.getByLabelText("SSL root certificate")).toHaveAttribute(
+        "placeholder",
+        "/etc/ssl/certs/server-ca.pem",
+      );
+    });
+
+    it("reports the chosen SSL mode as a connector option (#229)", () => {
+      const { props } = renderDialog({
+        draft: draft({ engine: "postgres", mode: "fields" }),
+      });
+
+      fireEvent.change(screen.getByLabelText("SSL mode"), {
+        target: { value: "verify-full" },
+      });
+
+      expect(props.onUpdateDraft).toHaveBeenCalledWith({
+        options: { sslMode: "verify-full" },
+      });
     });
   });
 });

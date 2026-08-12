@@ -457,6 +457,79 @@
           "placeholder": "PUBLIC"
         }
       ]
+    },
+    {
+      "engines": [
+        "postgres",
+        "cockroachdb",
+        "yugabytedb",
+        "redshift",
+        "timescaledb",
+        "neon",
+        "h2",
+        "questdb"
+      ],
+      "fields": [
+        {
+          "key": "sslMode",
+          "labelKey": "connection.field.sslMode",
+          "choices": [
+            "disable",
+            "allow",
+            "prefer",
+            "require",
+            "verify-ca",
+            "verify-full"
+          ]
+        },
+        {
+          "key": "sslRootCert",
+          "labelKey": "connection.field.sslRootCert",
+          "placeholder": "/etc/ssl/certs/server-ca.pem"
+        },
+        {
+          "key": "sslCert",
+          "labelKey": "connection.field.sslCert",
+          "placeholder": "/etc/ssl/certs/client.pem"
+        },
+        {
+          "key": "sslKey",
+          "labelKey": "connection.field.sslKey",
+          "placeholder": "/etc/ssl/private/client.key"
+        }
+      ]
+    },
+    {
+      "engines": ["mysql", "mariadb", "tidb"],
+      "fields": [
+        {
+          "key": "sslMode",
+          "labelKey": "connection.field.sslMode",
+          "choices": [
+            "disable",
+            "allow",
+            "prefer",
+            "require",
+            "verify-ca",
+            "verify-full"
+          ]
+        },
+        {
+          "key": "sslRootCert",
+          "labelKey": "connection.field.sslRootCert",
+          "placeholder": "/etc/ssl/certs/server-ca.pem"
+        },
+        {
+          "key": "sslCert",
+          "labelKey": "connection.field.sslCert",
+          "placeholder": "/etc/ssl/certs/client.pem"
+        },
+        {
+          "key": "sslKey",
+          "labelKey": "connection.field.sslKey",
+          "placeholder": "/etc/ssl/private/client.key"
+        }
+      ]
     }
   ],
   "defaultPorts": {

@@ -501,9 +501,70 @@ describe("connector options", () => {
   });
 
   it("keeps options out of engines that declare none", () => {
-    expect(engineOptionFields("postgres")).toEqual([]);
+    // SQLite is a local file — no transport, so not even the SSL fields.
+    expect(engineOptionFields("sqlite")).toEqual([]);
     expect(
       profileFromDraft(draft({ options: { warehouse: "nope" } })).options,
     ).toBeUndefined();
+  });
+
+  it("offers SSL controls on every sqlx-backed engine (#229)", () => {
+    // Keys must match what db/engine.rs `SslSettings::from_profile` reads.
+    const expected = ["sslMode", "sslRootCert", "sslCert", "sslKey"];
+    const postgresWire = [
+      "postgres",
+      "cockroachdb",
+      "yugabytedb",
+      "redshift",
+      "timescaledb",
+      "neon",
+      "h2",
+      "questdb",
+    ] as const;
+    const mysqlWire = ["mysql", "mariadb", "tidb"] as const;
+
+    for (const engine of [...postgresWire, ...mysqlWire]) {
+      expect(
+        engineOptionFields(engine).map((field) => field.key),
+        `${engine} SSL options`,
+      ).toEqual(expected);
+    }
+  });
+
+  it("constrains sslMode to the modes the Rust side can translate (#229)", () => {
+    // db/engine.rs `SslMode::parse` accepts these six and maps each to the
+    // MySQL spelling; anything else is silently dropped, so the form must not
+    // let a user type one.
+    const sslMode = engineOptionFields("postgres").find(
+      (field) => field.key === "sslMode",
+    );
+    expect(sslMode?.choices).toEqual([
+      "disable",
+      "allow",
+      "prefer",
+      "require",
+      "verify-ca",
+      "verify-full",
+    ]);
+
+    // The certificate fields are free-form paths, not a closed set.
+    for (const key of ["sslRootCert", "sslCert", "sslKey"]) {
+      const field = engineOptionFields("postgres").find(
+        (candidate) => candidate.key === key,
+      );
+      expect(field?.choices, key).toBeUndefined();
+      expect(field?.placeholder, key).toBeTruthy();
+    }
+  });
+
+  it("stores certificate paths, never key material (#229)", () => {
+    // `sslKey` names a file on disk. Options persist to localStorage in the
+    // clear, so the value must stay a path — the sibling test
+    // "declares no secret-valued option keys" is what enforces that no option
+    // is named like a secret, and this one records why sslKey is allowed.
+    const keys = engineOptionFields("postgres").map((field) => field.key);
+    expect(keys).toContain("sslKey");
+    expect(keys).not.toContain("sslPassword");
+    expect(keys).not.toContain("sslKeyPassphrase");
   });
 });
