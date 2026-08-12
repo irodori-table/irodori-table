@@ -267,14 +267,15 @@ fn install_archive(
             fs::create_dir_all(parent).map_err(to_error)?;
         }
         fs::rename(&staging, &final_dir).map_err(to_error)?;
-        let (engine, library_path, abi_version, supported_calls) = match native {
+        let (engine, library_path, abi_version, supported_calls, connection_model) = match native {
             Some((library_rel, probe)) => (
                 Some(manifest.contributes.connectors[0].engine.clone()),
                 Some(final_dir.join(library_rel).to_string_lossy().to_string()),
                 Some(ABI_VERSION),
                 supported_calls(&probe.describe),
+                connection_model(&probe.config_json),
             ),
-            None => (None, None, None, Vec::new()),
+            None => (None, None, None, Vec::new(), None),
         };
 
         let installed = InstalledExtension {
@@ -290,6 +291,7 @@ fn install_archive(
             installed_at: unix_timestamp().to_string(),
             abi_version,
             supported_calls,
+            connection_model,
         };
         upsert_installed(app, installed.clone())?;
         Ok(installed)
@@ -600,6 +602,23 @@ fn extensions_root(app: &AppHandle) -> IrodoriResult<PathBuf> {
     Ok(dir.join(EXTENSIONS_DIR))
 }
 
+/// The connector's `connection` block, verbatim.
+///
+/// `connector.config.json` puts it under `connector.connection`; older
+/// scaffolds and the ABI `config` response also carry a top-level `connection`,
+/// and the per-repo manifest tests assert on that spelling. Accept both, and
+/// answer `None` rather than failing the install when neither is there — a
+/// connector without a connection model still connects through the profile
+/// fields the app already knows.
+fn connection_model(config_json: &str) -> Option<Value> {
+    let config: Value = serde_json::from_str(config_json).ok()?;
+    config
+        .pointer("/connector/connection")
+        .or_else(|| config.pointer("/connection"))
+        .cloned()
+        .filter(Value::is_object)
+}
+
 fn supported_calls(describe: &Value) -> Vec<String> {
     let mut calls = vec![
         "health".to_string(),
@@ -861,5 +880,82 @@ mod tests {
         assert_eq!(installed.runtime, "native");
         assert_eq!(installed.engine.as_deref(), Some("memgraph"));
         assert!(installed.host_features.is_empty());
+    }
+
+    #[test]
+    fn keeps_the_connector_connection_model() {
+        // Before this the block was parsed to check `extensionId` and dropped,
+        // so nothing downstream could see what the connector declared.
+        let config = serde_json::json!({
+            "extensionId": "irodori.snowflake",
+            "connector": {
+                "engine": "snowflake",
+                "connection": {
+                    "schemaVersion": 1,
+                    "authMethods": [
+                        {"id": "userPassword"},
+                        {"id": "snowflakeKeyPair"}
+                    ],
+                    "tls": {"required": true}
+                }
+            }
+        })
+        .to_string();
+
+        let model = connection_model(&config).expect("connection model should survive");
+        assert_eq!(
+            model.pointer("/authMethods/1/id").and_then(Value::as_str),
+            Some("snowflakeKeyPair")
+        );
+        assert_eq!(
+            model.pointer("/tls/required").and_then(Value::as_bool),
+            Some(true)
+        );
+    }
+
+    #[test]
+    fn accepts_the_top_level_connection_spelling() {
+        // The ABI `config` response and the per-repo manifest tests use
+        // `config.connection`; the scaffolded file nests it under `connector`.
+        let config = serde_json::json!({
+            "extensionId": "irodori.redis",
+            "connection": {"schemaVersion": 1, "authMethods": [{"id": "aclUserPassword"}]}
+        })
+        .to_string();
+
+        assert_eq!(
+            connection_model(&config)
+                .and_then(|model| model.pointer("/authMethods/0/id").cloned())
+                .and_then(|id| id.as_str().map(str::to_string))
+                .as_deref(),
+            Some("aclUserPassword")
+        );
+    }
+
+    #[test]
+    fn a_config_without_a_connection_model_is_not_an_install_failure() {
+        // A connector that declares nothing still connects through the profile
+        // fields the app already knows, so this must not be fatal.
+        assert!(connection_model(r#"{"extensionId":"irodori.thing"}"#).is_none());
+        assert!(connection_model(r#"{"connector":{"connection":"nope"}}"#).is_none());
+        assert!(connection_model("not json at all").is_none());
+    }
+
+    #[test]
+    fn an_unknown_field_in_the_connection_model_survives_the_round_trip() {
+        // Held as a Value on purpose: a connector built against a newer SDK
+        // must not fail to install because the host cannot type one of its
+        // fields, and the field must still reach the frontend.
+        let config = serde_json::json!({
+            "extensionId": "irodori.future",
+            "connector": {"connection": {"authMethods": [], "somethingNewer": {"a": 1}}}
+        })
+        .to_string();
+
+        let model = connection_model(&config).unwrap();
+        assert_eq!(
+            model.pointer("/somethingNewer/a").and_then(Value::as_i64),
+            Some(1)
+        );
     }
 }
