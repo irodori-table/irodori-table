@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-22T23:33:56Z",
+  "updatedAt": "2026-08-15T03:44:44Z",
   "source": "https://github.com/irodori-table/irodori-table/tree/main/registry/catalog",
   "extensions": [
     {
@@ -340,7 +340,7 @@
       "id": "irodori.athena",
       "name": "Athena Connector",
       "publisher": "irodori",
-      "version": "0.1.3",
+      "version": "0.1.5",
       "apiVersion": "0.1",
       "summary": "Adds Amazon Athena connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -368,36 +368,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-07-11T00:50:34Z",
+      "publishedAt": "2026-08-15T03:44:44Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-athena/releases/tag/v0.1.3",
-        "tag": "v0.1.3",
+        "url": "https://github.com/irodori-table/irodori-extension-athena/releases/tag/v0.1.5",
+        "tag": "v0.1.5",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-athena-aarch64-linux.tar.gz",
-            "sha256": "sha256:0ec6fa436719e7078018cdc155509e88242a96ffcd801a55caeae480757a7463"
+            "sha256": "sha256:1515bff3ba2c9d3d726e53cb9e2d6971174450fc48efb1f406c90d8c134b3fe2"
           },
           "aarch64-macos": {
             "name": "irodori-extension-athena-aarch64-macos.tar.gz",
-            "sha256": "sha256:30328616fac750679f9aa6e029a8058454c40d65bde9b23b3730b78f8c4d92c8"
+            "sha256": "sha256:63c87a8d7d98359762cc75f13366ce534b8e880d1f5ef83f1a5eefc33c8aa043"
           },
           "aarch64-windows": {
             "name": "irodori-extension-athena-aarch64-windows.tar.gz",
-            "sha256": "sha256:d99490d1363715b8d563e3c0ce8d7c4a59e3201cbfa11f0f486913fecf15cf33"
+            "sha256": "sha256:1773cdcefe68c9526e852d673224552149d3bf0e3299ea65c28e45fe0fdde8e6"
           },
           "x86_64-linux": {
             "name": "irodori-extension-athena.tar.gz",
-            "sha256": "sha256:01536cbf639867943c3ce2a4acf7b1bd17d14135d1442fac5efd2a3cd5584348"
+            "sha256": "sha256:6dd84e93bd61b63012bc9a0e3ee79e6001006ce87c79f7c3cf94a407fcbae079"
           },
           "x86_64-macos": {
             "name": "irodori-extension-athena-x86_64-macos.tar.gz",
-            "sha256": "sha256:71c67e0c9f2822c3251883517e80c1d974e36b8fb94e0c31d9196f6f6d9ac578"
+            "sha256": "sha256:d06d6cc9c787a3e1f20ae270b2c01ef0c81588e29b3afa2e4e8acd6e041c3e97"
           },
           "x86_64-windows": {
             "name": "irodori-extension-athena-x86_64-windows.tar.gz",
-            "sha256": "sha256:3cccf73594a1b83dced37ba37b03aa6755bc87ac6bbd0ba6cf0746b6a70275a2"
+            "sha256": "sha256:c60d7cb67f64dc71b42ebdaa5c1ae7fd17fd887d7097f7113c5ed99e88569079"
           }
         }
       }
