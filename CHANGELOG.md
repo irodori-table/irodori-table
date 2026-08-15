@@ -16,6 +16,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.9.0] - 2026-08-15
+
+Transport security. Every PostgreSQL and MySQL connection the app made was
+unencrypted; this release makes TLS possible, configurable, and verified.
+
+### Security
+
+- **sqlx was compiled without TLS support.** `default-features = false` with no
+  TLS feature meant there was nothing to negotiate with, so `sslmode=prefer` did
+  not opportunistically encrypt and occasionally fall back — it never encrypted
+  at all, and a hand-written `sslmode=require` failed to connect rather than
+  connecting securely. Now built with `tls-rustls-ring-native-roots`: rustls to
+  match the rest of the app, and the OS trust store, because a desktop client is
+  routinely pointed at a server whose certificate chains to a CA the
+  organisation installed.
+
+### Added
+
+- SSL controls on the connection form for every sqlx-backed engine — SSL mode,
+  root certificate, client certificate, and client key. The app speaks the
+  PostgreSQL vocabulary (`disable` … `verify-full`) and translates for MySQL,
+  which has no `allow` and spells its strongest mode `verify_identity`.
+- **Supabase** as a first-class engine. TLS required by default; the Supavisor
+  transaction pooler is recognised from its port and prepared statements
+  disabled automatically, which otherwise fails the *second* query on a
+  connection with `prepared statement "sqlx_s_1" already exists`. The
+  `postgres.<project-ref>` username shape is signposted in the form.
+- Connector extensions' declared `connection` model is retained on install
+  instead of being parsed for one assertion and discarded, so the connection
+  form can eventually be rendered from what a connector declares.
+
+### Changed
+
+- Leaving SSL mode unset keeps the driver default, so every existing profile
+  connects exactly as before. Only Neon, Redshift, and Supabase default to
+  `require` — they cannot be run locally, so there is no plaintext case to
+  preserve. Self-hostable engines are untouched.
+- Unix-socket profiles never negotiate TLS: a socket is not a network hop, and
+  servers that offer TLS only on the TCP listener reject it.
+- Sibling crates are consumed from the `irodori-table` organisation rather than
+  the pre-transfer owner, at `irodori-kit` v0.7.9.
+
+### Sibling and extension releases
+
+- `irodori-kit` v0.7.6 through v0.7.9 — a connector authentication consistency
+  check for the shared extension CI, and three fixes to reusable workflow
+  references that had made extension releases impossible since the organisation
+  move.
+- All 35 connector extensions released with authentication work: mutual TLS
+  across ten connectors, AWS assume-role, object-store credentials through
+  DuckDB secrets, MongoDB X.509/LDAP/OIDC, Google ADC and impersonation,
+  Microsoft Entra tokens, OAuth2 client-credentials grants, and a MotherDuck
+  connector that finally connects to MotherDuck rather than opening a local file
+  named `md:…`.
+
 ## [0.8.10] - 2026-08-08
 
 Release packaging fix with no application behavior changes.
