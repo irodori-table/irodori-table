@@ -2,7 +2,7 @@ import { localizedError } from "@/core";
 import bundledKnowledgePackJson from "./bundled-knowledge-pack.json";
 
 export const defaultKnowledgePackUrl =
-  "https://raw.githubusercontent.com/hjosugi/irodori-table/main/registry/knowledge-pack.json";
+  "https://raw.githubusercontent.com/irodori-table/irodori-table/main/registry/knowledge-pack.json";
 
 export type KnowledgeFact = {
   area: string;

@@ -1602,7 +1602,7 @@
       "confidence": "medium",
       "observedAt": "2026-08-01T07:09:00Z",
       "impact": "Schema explorer, ERD, edit keys, and completion metadata may need introspection updates.",
-      "url": "https://raw.githubusercontent.com/hjosugi/irodori-table/main/registry/catalog/catalog.json",
+      "url": "https://raw.githubusercontent.com/irodori-table/irodori-table/main/registry/catalog/catalog.json",
       "sourceId": "irodori-extension-marketplace-catalog"
     },
     {
@@ -1614,7 +1614,7 @@
       "confidence": "medium",
       "observedAt": "2026-08-01T07:09:00Z",
       "impact": "Schema explorer, ERD, edit keys, and completion metadata may need introspection updates.",
-      "url": "https://raw.githubusercontent.com/hjosugi/irodori-table/main/registry/catalog/catalog.json",
+      "url": "https://raw.githubusercontent.com/irodori-table/irodori-table/main/registry/catalog/catalog.json",
       "sourceId": "irodori-extension-marketplace-catalog"
     },
     {
@@ -1626,7 +1626,7 @@
       "confidence": "medium",
       "observedAt": "2026-08-01T07:09:00Z",
       "impact": "Charting, dashboard, and worksheet result visualization roadmap items may need updates.",
-      "url": "https://raw.githubusercontent.com/hjosugi/irodori-table/main/registry/catalog/catalog.json",
+      "url": "https://raw.githubusercontent.com/irodori-table/irodori-table/main/registry/catalog/catalog.json",
       "sourceId": "irodori-extension-marketplace-catalog"
     },
     {

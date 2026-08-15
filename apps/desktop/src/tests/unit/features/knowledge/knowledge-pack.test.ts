@@ -64,7 +64,7 @@ const samplePack: KnowledgePack = {
 describe("knowledge pack", () => {
   it("uses the published registry pack as the default remote source", () => {
     expect(defaultKnowledgePackUrl).toBe(
-      "https://raw.githubusercontent.com/hjosugi/irodori-table/main/registry/knowledge-pack.json",
+      "https://raw.githubusercontent.com/irodori-table/irodori-table/main/registry/knowledge-pack.json",
     );
   });
 
