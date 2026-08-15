@@ -268,7 +268,25 @@ hostFeatures: Array<string>, sha256: string, enabled: boolean, installedAt: stri
 /**
  * Calls the connector reports supporting (e.g. connect/query/metadata).
  */
-supportedCalls: Array<string>, };
+supportedCalls: Array<string>,
+/**
+ * The connector's `connection` model, verbatim from its
+ * `connector.config.json` — endpoint modes, profile fields, auth methods,
+ * secret purposes, TLS, transports.
+ *
+ * The app validated this block at install time and then dropped it, so a
+ * connector could describe how it wants to be configured and nothing could
+ * read the description: the connection form is a static table in the
+ * frontend, and 161 of the 275 auth methods declared across the fleet had
+ * no implementation with nothing to notice. Keeping it is the first step
+ * to rendering the form from what the connector actually declares.
+ *
+ * Held as `Value` rather than a typed model on purpose. The host must not
+ * refuse to install a connector built against a newer SDK because a field
+ * it does not know about failed to deserialize; the frontend and the
+ * consistency checks read what they understand and ignore the rest.
+ */
+connectionModel?: unknown, };
 
 export type ExtensionInstallKind = "githubRelease" | "git";
 
