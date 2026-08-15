@@ -50,8 +50,10 @@ unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 allow-git = [
-  "https://github.com/hjosugi/irodori-kit",
-  "https://github.com/hjosugi/irodori-knowledge",
-  "https://github.com/hjosugi/irodori-sql",
+  "https://github.com/irodori-table/irodori-kit",
+  "https://github.com/irodori-table/irodori-knowledge",
+  "https://github.com/irodori-table/irodori-sql",
+  # Not transferred: this one is still a personal repository, so the owner
+  # here is current rather than stale.
   "https://github.com/hjosugi/sql-dialect-fmt",
 ]
