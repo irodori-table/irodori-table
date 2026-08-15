@@ -38,7 +38,7 @@ const extensionReleaseUrl =
 describe("plugin store catalog", () => {
   it("uses the installable marketplace index as the default remote source", () => {
     expect(defaultPluginStoreCatalogUrl).toBe(
-      "https://raw.githubusercontent.com/hjosugi/irodori-table/main/registry/catalog/index.json",
+      "https://raw.githubusercontent.com/irodori-table/irodori-table/main/registry/catalog/index.json",
     );
   });
 
