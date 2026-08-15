@@ -46,6 +46,7 @@ Status legend:
 | Redshift | `redshift` | Postgres wire / sqlx | (via `postgres.rs`) | 5439 | Wired (AWS, no local container) | Built-in |
 | TimescaleDB | `timescaledb` | Postgres wire / sqlx | (via `postgres.rs`) | 5432 | Verified | Built-in |
 | Neon | `neon` | Postgres wire / sqlx | (via `postgres.rs`) | 5432 | Wired | Built-in |
+| Supabase | `supabase` | Postgres wire / sqlx | (via `postgres.rs`) | 5432 | Wired (TLS required; Supavisor-aware) | Built-in |
 | H2 | `h2` | Postgres wire / sqlx | (via `postgres.rs`) | 5435 | Wired (experimental) | Built-in |
 | TiDB | `tidb` | MySQL wire / sqlx | (via `mysql.rs`) | 4000 | Wired | Built-in |
 | MongoDB | `mongodb` | document / mongodb | `db/mongo.rs` | 27017 | Verified | `legacy-connectors` |
@@ -138,6 +139,24 @@ self-hostable engine keeps the driver default, because `irodori-samples` runs
 them insecure and raising the floor would break `task db-verify`. Unix-socket
 profiles never negotiate TLS.
 
+### Supabase endpoints
+
+A Supabase project exposes three endpoints and the port is what tells them
+apart:
+
+| Endpoint | Host | Port | User | Prepared statements |
+|---|---|---|---|---|
+| Direct | `db.<ref>.supabase.co` | 5432 | `postgres` | yes |
+| Supavisor session | `aws-0-<region>.pooler.supabase.com` | 5432 | `postgres.<ref>` | yes |
+| Supavisor transaction | `aws-0-<region>.pooler.supabase.com` | 6543 | `postgres.<ref>` | **no** |
+
+Transaction mode multiplexes one server connection across clients, so a named
+prepared statement is gone by the next round trip and sqlx's default statement
+cache turns the *second* query into `prepared statement "sqlx_s_1" already
+exists`. Port 6543 therefore appends `statement-cache-capacity=0`
+automatically; the `poolMode` connector option overrides the inference for
+self-hosted Supavisor deployments on other ports.
+
 Only these two wires are covered. The dedicated connectors (SQL Server, Oracle,
 MongoDB, ClickHouse, …) and every extension-backed engine still have no TLS
 surface — see irodori-table#232.
@@ -149,7 +168,6 @@ surface beyond connection templates. They route through existing adapters:
 
 | Target | Route through | Status | Product work |
 |---|---|---|---|
-| Supabase Postgres | `postgres` | Covered by Postgres wire; needs preset/docs | Direct vs. pooler connection strings, SSL, RLS notes, hosted extensions such as pgvector. |
 | Amazon Aurora PostgreSQL | `postgres` | Covered by Postgres wire; needs preset/docs | Writer/reader/custom endpoint hints, IAM auth, cluster topology. |
 | Amazon Aurora MySQL | `mysql` | Covered by MySQL wire; needs preset/docs | Writer/reader/custom endpoint hints, IAM auth, cluster topology. |
 | Google Cloud SQL for PostgreSQL | `postgres` | Covered by Postgres wire; needs preset/docs | Public/private IP, Auth Proxy, IAM DB auth, SSL cert handling. |

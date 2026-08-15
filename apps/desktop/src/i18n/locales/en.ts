@@ -1107,6 +1107,8 @@ export const en = {
   "connection.field.serviceNameSid": "Service name / SID",
   "connection.field.sqliteFileMemory": "SQLite file / :memory:",
   "connection.field.sslCert": "SSL client certificate",
+  "connection.field.supabasePoolMode": "Connection mode",
+  "connection.field.supabaseUser": "User (postgres.<project-ref> when pooled)",
   "connection.field.sslKey": "SSL client key",
   "connection.field.sslMode": "SSL mode",
   "connection.field.sslRootCert": "SSL root certificate",

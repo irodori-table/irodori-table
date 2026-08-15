@@ -554,6 +554,8 @@ export function supportsSocketTransport(engine: DbEngine) {
     engine === "postgres" ||
     engine === "timescaledb" ||
     engine === "neon" ||
+    // Supabase is deliberately absent: it is reachable only over TCP, so a
+    // socket transport would only let a user build a profile that cannot work.
     engine === "cockroachdb" ||
     engine === "yugabytedb" ||
     engine === "redshift" ||

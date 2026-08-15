@@ -1134,6 +1134,9 @@ export const ja = {
   "connection.field.serviceNameSid": "サービス名 / SID",
   "connection.field.sqliteFileMemory": "SQLite ファイル / :memory:",
   "connection.field.sslCert": "SSL クライアント証明書",
+  "connection.field.supabasePoolMode": "接続モード",
+  "connection.field.supabaseUser":
+    "ユーザー（プーラー経由は postgres.<project-ref>）",
   "connection.field.sslKey": "SSL クライアント鍵",
   "connection.field.sslMode": "SSL モード",
   "connection.field.sslRootCert": "SSL ルート証明書",

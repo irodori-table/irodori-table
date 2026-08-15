@@ -42,6 +42,7 @@ export function cmDialect(engine: DbEngine): SQLDialect {
     case "redshift":
     case "timescaledb":
     case "neon":
+    case "supabase":
     case "h2":
     case "questdb":
     case "duckdb":
@@ -85,6 +86,7 @@ export function formatterLanguage(engine: DbEngine): string {
     case "yugabytedb":
     case "timescaledb":
     case "neon":
+    case "supabase":
     case "h2":
     case "questdb":
       return "postgresql";
