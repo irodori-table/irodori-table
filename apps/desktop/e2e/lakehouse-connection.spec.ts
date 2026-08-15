@@ -104,9 +104,32 @@ test("engines without connector settings do not grow an empty section", async ({
   await page.locator(".connection-picker-header .icon-button").first().click();
 
   const engine = page.locator(".connection-form select").first();
-  await engine.selectOption("postgres");
+  // SQLite is a local file — no transport, so not even the SSL fields every
+  // sqlx-backed engine gained in #229.
+  await engine.selectOption("sqlite");
   await expect(page.locator(".connector-options")).toHaveCount(0);
 
   await engine.selectOption("iceberg");
   await expect(page.locator(".connector-options")).toHaveCount(1);
+});
+
+test("sqlx-backed engines offer SSL controls in connector settings", async ({
+  page,
+}) => {
+  await openConnectionManager(page);
+  await page.locator(".connection-picker-header .icon-button").first().click();
+
+  const engine = page.locator(".connection-form select").first();
+  await engine.selectOption("postgres");
+
+  const options = page.locator(".connector-options");
+  await expect(options).toHaveCount(1);
+  await expect(options.getByLabel("SSL mode")).toBeVisible();
+  await expect(options.getByLabel("SSL root certificate")).toBeVisible();
+
+  // Empty is the default, and it is what leaves sqlx at its own `prefer`, so a
+  // profile saved without touching the field connects as it always did.
+  await expect(options.getByLabel("SSL mode")).toHaveValue("");
+  await options.getByLabel("SSL mode").selectOption("verify-full");
+  await expect(options.getByLabel("SSL mode")).toHaveValue("verify-full");
 });

@@ -334,6 +334,25 @@ impl DbEngine {
         }
     }
 
+    /// The `sslMode` to apply when the profile does not set one.
+    ///
+    /// `None` leaves sqlx at its own default (`prefer` for Postgres,
+    /// `preferred` for MySQL), which keeps every existing local profile — and
+    /// the plaintext containers in `irodori-samples` — connecting exactly as
+    /// before.
+    ///
+    /// Only engines that *cannot* be run locally are opted up to `Require`.
+    /// CockroachDB, YugabyteDB, TiDB, and Timescale are all self-hostable and
+    /// the sample harness runs them in insecure mode, so raising their floor
+    /// here would break `task db-verify` for a guess about intent; a user who
+    /// wants TLS on those sets it in the form.
+    pub(crate) fn default_ssl_mode(self) -> Option<SslMode> {
+        match self {
+            DbEngine::Neon | DbEngine::Redshift => Some(SslMode::Require),
+            _ => None,
+        }
+    }
+
     pub(crate) fn default_port(self) -> u16 {
         match self {
             DbEngine::Postgres | DbEngine::Timescale | DbEngine::Neon => 5432,
@@ -542,6 +561,131 @@ pub(crate) fn build_url(p: &ConnectionProfile) -> DbResult<String> {
     }
 }
 
+/// How a profile wants the transport secured.
+///
+/// The app speaks one vocabulary — the PostgreSQL one, whose names users
+/// recognise — and each wire translates it to what its driver parses.
+/// `Prefer` is sqlx's own default: it attempts TLS and silently continues in
+/// plaintext when the server declines, and it verifies nothing. That is fine
+/// for a container on localhost and wrong for anything reachable off the box,
+/// which is why the hosted engines default to `Require` (see
+/// [`DbEngine::default_ssl_mode`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SslMode {
+    Disable,
+    Allow,
+    Prefer,
+    Require,
+    VerifyCa,
+    VerifyFull,
+}
+
+impl SslMode {
+    fn parse(value: &str) -> Option<Self> {
+        // Accept both vocabularies so a profile carried over from a MySQL DSN
+        // (`REQUIRED`, `VERIFY_IDENTITY`) resolves to the same intent.
+        match value.trim().to_ascii_lowercase().replace('_', "-").as_str() {
+            "disable" | "disabled" => Some(Self::Disable),
+            "allow" => Some(Self::Allow),
+            "prefer" | "preferred" => Some(Self::Prefer),
+            "require" | "required" => Some(Self::Require),
+            "verify-ca" => Some(Self::VerifyCa),
+            "verify-full" | "verify-identity" => Some(Self::VerifyFull),
+            _ => None,
+        }
+    }
+
+    /// `sslmode` as `sqlx-postgres` parses it.
+    fn as_postgres(self) -> &'static str {
+        match self {
+            Self::Disable => "disable",
+            Self::Allow => "allow",
+            Self::Prefer => "prefer",
+            Self::Require => "require",
+            Self::VerifyCa => "verify-ca",
+            Self::VerifyFull => "verify-full",
+        }
+    }
+
+    /// `ssl-mode` as `sqlx-mysql` parses it. MySQL has no `allow`, and its
+    /// strongest mode is spelled `verify_identity`.
+    fn as_mysql(self) -> &'static str {
+        match self {
+            Self::Disable => "disabled",
+            Self::Allow | Self::Prefer => "preferred",
+            Self::Require => "required",
+            Self::VerifyCa => "verify_ca",
+            Self::VerifyFull => "verify_identity",
+        }
+    }
+}
+
+/// The TLS settings a profile carries, as the connection form collects them.
+///
+/// These live in `options` rather than as profile columns because that is the
+/// map the form already round-trips and the connectors already receive. Once
+/// `irodori-kit` grows a typed `TlsConfig` they should move onto the profile
+/// itself — tracked in irodori-table/irodori-kit#11.
+struct SslSettings<'a> {
+    mode: Option<SslMode>,
+    root_cert: Option<&'a str>,
+    client_cert: Option<&'a str>,
+    client_key: Option<&'a str>,
+}
+
+impl<'a> SslSettings<'a> {
+    fn from_profile(p: &'a ConnectionProfile) -> Self {
+        let option = |keys: &[&str]| -> Option<&'a str> {
+            keys.iter().find_map(|key| {
+                p.options
+                    .get(*key)
+                    .map(String::as_str)
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+            })
+        };
+        Self {
+            mode: option(&["sslMode", "sslmode", "ssl-mode"])
+                .and_then(SslMode::parse)
+                .or_else(|| p.engine.default_ssl_mode()),
+            root_cert: option(&["sslRootCert", "sslrootcert", "ssl-ca", "sslCa"]),
+            client_cert: option(&["sslCert", "sslcert", "ssl-cert"]),
+            client_key: option(&["sslKey", "sslkey", "ssl-key"]),
+        }
+    }
+
+    fn append_to(&self, url: &mut String, wire: Wire) {
+        let (mode_key, mode_value, root_key, cert_key, key_key) = match wire {
+            Wire::Mysql => (
+                "ssl-mode",
+                self.mode.map(SslMode::as_mysql),
+                "ssl-ca",
+                "ssl-cert",
+                "ssl-key",
+            ),
+            _ => (
+                "sslmode",
+                self.mode.map(SslMode::as_postgres),
+                "sslrootcert",
+                "sslcert",
+                "sslkey",
+            ),
+        };
+        if let Some(mode) = mode_value {
+            append_query_param(url, mode_key, mode);
+        }
+        for (key, value) in [
+            (root_key, self.root_cert),
+            (cert_key, self.client_cert),
+            (key_key, self.client_key),
+        ] {
+            if let Some(value) = value {
+                append_query_param(url, key, value);
+            }
+        }
+    }
+}
+
 fn build_tcp_url(scheme: &str, p: &ConnectionProfile) -> String {
     let host = p.host.clone().unwrap_or_else(|| "localhost".into());
     let port = p.port.unwrap_or_else(|| p.engine.default_port());
@@ -554,13 +698,18 @@ fn build_tcp_url(scheme: &str, p: &ConnectionProfile) -> String {
         _ => String::new(),
     };
     let mut url = format!("{scheme}://{auth}{host}:{port}/{db}");
+    let wire = p.engine.wire();
     if let Some(socket_path) = &p.socket_path {
-        match p.engine.wire() {
+        match wire {
             Wire::Postgres => append_query_param(&mut url, "host", socket_path),
             Wire::Mysql => append_query_param(&mut url, "socket", socket_path),
             _ => {}
         }
+        // A unix socket is not a network hop; asking sqlx to negotiate TLS over
+        // it fails on servers that only offer TLS on the TCP listener.
+        return url;
     }
+    SslSettings::from_profile(p).append_to(&mut url, wire);
     url
 }
 
@@ -738,9 +887,16 @@ mod tests {
             .copied()
             .filter(|(_, wire, _)| *wire == Wire::Postgres)
         {
+            // Hosted-only engines carry a `sslmode` floor; the rest of the URL
+            // is what this test is about. `hosted_only_engines_require_tls_by_default`
+            // covers the floor itself.
+            let expected_ssl = match engine.default_ssl_mode() {
+                Some(mode) => format!("?sslmode={}", mode.as_postgres()),
+                None => String::new(),
+            };
             assert_eq!(
                 build_url(&profile(engine)).unwrap(),
-                format!("postgres://db.example.test:{port}/sample"),
+                format!("postgres://db.example.test:{port}/sample{expected_ssl}"),
                 "{engine:?} should route through the postgres sqlx URL"
             );
         }
@@ -753,9 +909,13 @@ mod tests {
             .copied()
             .filter(|(_, wire, _)| *wire == Wire::Mysql)
         {
+            let expected_ssl = match engine.default_ssl_mode() {
+                Some(mode) => format!("?ssl-mode={}", mode.as_mysql()),
+                None => String::new(),
+            };
             assert_eq!(
                 build_url(&profile(engine)).unwrap(),
-                format!("mysql://db.example.test:{port}/sample"),
+                format!("mysql://db.example.test:{port}/sample{expected_ssl}"),
                 "{engine:?} should route through the mysql sqlx URL"
             );
         }
@@ -838,6 +998,182 @@ mod tests {
         assert_eq!(
             build_url(&profile).unwrap(),
             "mysql://localhost:3306/sample?socket=%2Fvar%2Frun%2Fmysqld%2Fmysqld.sock"
+        );
+    }
+
+    fn with_options<const N: usize>(
+        engine: DbEngine,
+        options: [(&str, &str); N],
+    ) -> ConnectionProfile {
+        let mut profile = profile(engine);
+        profile.options = options
+            .into_iter()
+            .map(|(key, value)| (key.to_string(), value.to_string()))
+            .collect();
+        profile
+    }
+
+    #[test]
+    fn a_profile_without_ssl_options_is_unchanged() {
+        // sqlx keeps its own default (`prefer`/`preferred`), so every existing
+        // local profile connects exactly as it did before TLS controls existed.
+        assert_eq!(
+            build_url(&profile(DbEngine::Postgres)).unwrap(),
+            "postgres://db.example.test:5432/sample"
+        );
+        assert_eq!(
+            build_url(&profile(DbEngine::Mysql)).unwrap(),
+            "mysql://db.example.test:3306/sample"
+        );
+    }
+
+    #[test]
+    fn postgres_ssl_options_become_sqlx_query_parameters() {
+        let profile = with_options(
+            DbEngine::Postgres,
+            [
+                ("sslMode", "verify-full"),
+                ("sslRootCert", "/etc/ssl/root.crt"),
+                ("sslCert", "/etc/ssl/client.crt"),
+                ("sslKey", "/etc/ssl/client.key"),
+            ],
+        );
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://db.example.test:5432/sample\
+             ?sslmode=verify-full\
+             &sslrootcert=%2Fetc%2Fssl%2Froot.crt\
+             &sslcert=%2Fetc%2Fssl%2Fclient.crt\
+             &sslkey=%2Fetc%2Fssl%2Fclient.key"
+        );
+    }
+
+    #[test]
+    fn mysql_ssl_options_are_translated_to_the_mysql_vocabulary() {
+        // Same `sslMode` value as the Postgres case; MySQL spells the strongest
+        // mode `verify_identity` and its CA parameter `ssl-ca`.
+        let profile = with_options(
+            DbEngine::Mysql,
+            [
+                ("sslMode", "verify-full"),
+                ("sslRootCert", "/etc/ssl/ca.pem"),
+            ],
+        );
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "mysql://db.example.test:3306/sample\
+             ?ssl-mode=verify_identity\
+             &ssl-ca=%2Fetc%2Fssl%2Fca.pem"
+        );
+    }
+
+    #[test]
+    fn ssl_mode_accepts_either_vocabulary() {
+        for (input, postgres, mysql) in [
+            ("require", "require", "required"),
+            ("REQUIRED", "require", "required"),
+            ("verify_identity", "verify-full", "verify_identity"),
+            ("disabled", "disable", "disabled"),
+            ("prefer", "prefer", "preferred"),
+        ] {
+            let mode = SslMode::parse(input).unwrap_or_else(|| panic!("{input} should parse"));
+            assert_eq!(mode.as_postgres(), postgres, "postgres spelling of {input}");
+            assert_eq!(mode.as_mysql(), mysql, "mysql spelling of {input}");
+        }
+        assert_eq!(SslMode::parse("sometimes"), None);
+        assert_eq!(SslMode::parse("  "), None);
+    }
+
+    #[test]
+    fn mysql_has_no_allow_so_it_falls_back_to_preferred() {
+        let profile = with_options(DbEngine::Mysql, [("sslMode", "allow")]);
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "mysql://db.example.test:3306/sample?ssl-mode=preferred"
+        );
+    }
+
+    #[test]
+    fn hosted_only_engines_require_tls_by_default() {
+        for engine in [DbEngine::Neon, DbEngine::Redshift] {
+            let url = build_url(&profile(engine)).unwrap();
+            assert!(
+                url.contains("sslmode=require"),
+                "{engine:?} should default to require, got {url}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_profile_can_lower_the_default_for_a_hosted_engine() {
+        // The default is a floor for the common case, not a policy the user
+        // cannot override — a Neon branch proxied through a local tunnel is a
+        // legitimate plaintext target.
+        let profile = with_options(DbEngine::Neon, [("sslMode", "disable")]);
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://db.example.test:5432/sample?sslmode=disable"
+        );
+    }
+
+    #[test]
+    fn self_hostable_engines_keep_the_driver_default() {
+        // These run insecure in irodori-samples; raising their floor would
+        // break `task db-verify` for a guess about intent.
+        for engine in [
+            DbEngine::Postgres,
+            DbEngine::Timescale,
+            DbEngine::CockroachDb,
+            DbEngine::YugabyteDb,
+            DbEngine::Mysql,
+            DbEngine::MariaDb,
+            DbEngine::TiDb,
+        ] {
+            let url = build_url(&profile(engine)).unwrap();
+            assert!(
+                !url.contains("sslmode") && !url.contains("ssl-mode"),
+                "{engine:?} should not force a mode, got {url}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_unix_socket_profile_does_not_negotiate_tls() {
+        // A socket is not a network hop, and servers that only offer TLS on the
+        // TCP listener reject the negotiation outright.
+        let mut profile = with_options(DbEngine::Postgres, [("sslMode", "require")]);
+        profile.socket_path = Some("/var/run/postgresql".into());
+        profile.host = None;
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://localhost:5432/sample?host=%2Fvar%2Frun%2Fpostgresql"
+        );
+    }
+
+    #[test]
+    fn an_explicit_url_is_never_rewritten() {
+        let mut profile = with_options(DbEngine::Neon, [("sslMode", "verify-full")]);
+        profile.url = Some("postgres://user@host/db?sslmode=disable".into());
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://user@host/db?sslmode=disable"
+        );
+    }
+
+    #[test]
+    fn ssl_option_keys_accept_the_driver_spellings_too() {
+        // A profile imported from a DSN or an older build may carry the
+        // lowercase driver names rather than the form's camelCase keys.
+        let profile = with_options(
+            DbEngine::Postgres,
+            [("sslmode", "require"), ("sslrootcert", "/ca.pem")],
+        );
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://db.example.test:5432/sample?sslmode=require&sslrootcert=%2Fca.pem"
         );
     }
 }

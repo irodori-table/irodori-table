@@ -47,6 +47,17 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs", 
 # permissive `oracle-rs` crate. See https://irodori-table.github.io/irodori-docs/data-source-coverage-strategy.html (SRC-004).
 sqlx = { version = "0.9", default-features = false, features = [
     "runtime-tokio",
+    # Without a TLS feature sqlx is compiled with no TLS support at all: an
+    # `sslmode=require` connection fails with "SQLx was built without TLS
+    # support enabled", and `prefer` silently falls back to plaintext because
+    # there is nothing to negotiate with. Every Postgres and MySQL connection
+    # the app made was unencrypted.
+    #
+    # rustls to match the rest of the app, with the OS trust store rather than
+    # bundled roots — a desktop client is routinely pointed at a server whose
+    # certificate chains to a CA the organisation installed, and webpki-roots
+    # would reject exactly those.
+    "tls-rustls-ring-native-roots",
     "postgres",
     "mysql",
     "sqlite",

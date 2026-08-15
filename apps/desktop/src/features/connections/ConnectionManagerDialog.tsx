@@ -1017,13 +1017,31 @@ export function ConnectionManagerDialog({
                 {optionFields.map((field) => (
                   <label key={field.key}>
                     <span>{t(field.labelKey)}</span>
-                    <input
-                      value={draft.options?.[field.key] ?? ""}
-                      placeholder={field.placeholder}
-                      onChange={(event) =>
-                        updateOption(field.key, event.currentTarget.value)
-                      }
-                    />
+                    {field.choices ? (
+                      <select
+                        value={draft.options?.[field.key] ?? ""}
+                        onChange={(event) =>
+                          updateOption(field.key, event.currentTarget.value)
+                        }
+                      >
+                        <option value="">
+                          {t("connection.option.driverDefault")}
+                        </option>
+                        {field.choices.map((choice) => (
+                          <option key={choice} value={choice}>
+                            {choice}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        value={draft.options?.[field.key] ?? ""}
+                        placeholder={field.placeholder}
+                        onChange={(event) =>
+                          updateOption(field.key, event.currentTarget.value)
+                        }
+                      />
+                    )}
                   </label>
                 ))}
               </div>

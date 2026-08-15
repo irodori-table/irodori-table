@@ -88,6 +88,13 @@ export type EngineOptionField = {
   labelKey: TranslationKey;
   placeholder?: string;
   required?: boolean;
+  /**
+   * A closed set of accepted values, rendered as a select instead of a text
+   * input. The empty string is always offered first and means "leave it to the
+   * driver default" — for `sslMode` that is what keeps existing local profiles
+   * connecting exactly as they did before the field existed.
+   */
+  choices?: string[];
 };
 
 type EngineOptionFieldGroup = {

@@ -618,3 +618,136 @@ fn oracle_samples() {
         .unwrap()
         .block_on(exercise_oracle(profile));
 }
+
+/// A profile configured through the connection *form* rather than a URL — host,
+/// port, credentials, and connector options — which is the path
+/// `db::engine::build_tcp_url` composes and the only one a user can reach
+/// without hand-writing a DSN.
+fn field_profile(
+    id: &str,
+    engine: DbEngine,
+    user: Option<&str>,
+    password: Option<&str>,
+    options: &[(&str, &str)],
+) -> ConnectionProfile {
+    ConnectionProfile {
+        id: id.to_string(),
+        engine,
+        host: Some(std::env::var("IRODORI_TLS_HOST").unwrap_or_else(|_| "localhost".to_string())),
+        port: Some(
+            std::env::var("IRODORI_TLS_PORT")
+                .ok()
+                .and_then(|port| port.parse().ok())
+                .unwrap_or(55433),
+        ),
+        user: user.map(str::to_string),
+        password: password.map(str::to_string),
+        database: Some("samples".to_string()),
+        socket_path: None,
+        url: None,
+        transport: None,
+        read_only: false,
+        options: options
+            .iter()
+            .map(|(key, value)| (key.to_string(), value.to_string()))
+            .collect(),
+    }
+}
+
+/// Set to the directory holding `ca.crt`, `client.crt`, and `client.key` —
+/// `tls/certs` in irodori-samples after `sh tls/generate-certs.sh`.
+fn tls_cert_dir() -> Option<String> {
+    std::env::var("IRODORI_TLS_CERTS")
+        .ok()
+        .filter(|dir| !dir.is_empty())
+}
+
+async fn connects(profile: ConnectionProfile) -> Result<String, String> {
+    let state = DbState::default();
+    connect_impl(&state, &SecurityState::default(), None, profile)
+        .await
+        .map(|info| info.server_version)
+        .map_err(|error| error.to_string())
+}
+
+#[tokio::test]
+async fn postgres_tls_modes_reach_a_tls_only_server() {
+    let Some(certs) = tls_cert_dir() else {
+        eprintln!("skipping: set IRODORI_TLS_CERTS to the samples tls/certs directory");
+        return;
+    };
+    let ca = format!("{certs}/ca.crt");
+
+    // 1. The server refuses plaintext, so `sslmode=disable` must fail. Without
+    //    this the rest proves nothing: a server that also accepts plaintext
+    //    would let every mode "succeed" whether or not TLS was negotiated.
+    let plaintext = connects(field_profile(
+        "tls-disable",
+        DbEngine::Postgres,
+        Some("irodori"),
+        Some("irodori"),
+        &[("sslMode", "disable")],
+    ))
+    .await;
+    assert!(
+        plaintext.is_err(),
+        "a TLS-only server accepted a plaintext connection: {plaintext:?}"
+    );
+
+    // 2. `verify-full` against the issuing CA: the strongest mode, checking both
+    //    the chain and the hostname.
+    let verified = connects(field_profile(
+        "tls-verify-full",
+        DbEngine::Postgres,
+        Some("irodori"),
+        Some("irodori"),
+        &[("sslMode", "verify-full"), ("sslRootCert", &ca)],
+    ))
+    .await
+    .expect("verify-full with the issuing CA should connect");
+    assert!(!verified.is_empty(), "server version present");
+    eprintln!("connected over verify-full: {verified}");
+
+    // 3. `verify-full` *without* the CA must fail — the certificate is not
+    //    signed by anything in the system trust store. This is what proves the
+    //    root certificate is actually being used rather than ignored.
+    let unverified = connects(field_profile(
+        "tls-verify-full-no-ca",
+        DbEngine::Postgres,
+        Some("irodori"),
+        Some("irodori"),
+        &[("sslMode", "verify-full")],
+    ))
+    .await;
+    assert!(
+        unverified.is_err(),
+        "verify-full accepted a certificate with no trusted CA: {unverified:?}"
+    );
+}
+
+#[tokio::test]
+async fn postgres_client_certificate_authenticates_without_a_password() {
+    let Some(certs) = tls_cert_dir() else {
+        eprintln!("skipping: set IRODORI_TLS_CERTS to the samples tls/certs directory");
+        return;
+    };
+
+    // No password anywhere: the identity comes from the certificate's subject,
+    // which the sample container maps to the `irodori_cert` role.
+    let version = connects(field_profile(
+        "tls-client-cert",
+        DbEngine::Postgres,
+        Some("irodori_cert"),
+        None,
+        &[
+            ("sslMode", "verify-full"),
+            ("sslRootCert", &format!("{certs}/ca.crt")),
+            ("sslCert", &format!("{certs}/client.crt")),
+            ("sslKey", &format!("{certs}/client.key")),
+        ],
+    ))
+    .await
+    .expect("client certificate should authenticate");
+    assert!(!version.is_empty(), "server version present");
+    eprintln!("connected by client certificate: {version}");
+}
