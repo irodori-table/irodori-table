@@ -31,7 +31,11 @@ import {
   isRetryableError,
 } from "@/core";
 import type { Translator } from "@/i18n";
-import type { DatabaseMetadata } from "@/generated/irodori-api";
+import type {
+  DatabaseMetadata,
+  InstalledExtension,
+} from "@/generated/irodori-api";
+import { connectionModelForEngine } from "@/features/extensions/connection-model";
 import { tauriRuntimeError } from "../app-workbench-utils";
 
 // Mirrors the connection-store setter contract: accept either the next value or
@@ -62,6 +66,7 @@ export type ConnectionActionsDeps = {
   setConnectionManagerOpen: (value: ValueUpdater<boolean>) => void;
   showActionNotice: ShowActionNotice;
   t: Translator["t"];
+  installedExtensions: readonly InstalledExtension[];
 };
 
 export function useConnectionActions(deps: ConnectionActionsDeps) {
@@ -86,12 +91,29 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     setConnectionManagerOpen,
     showActionNotice,
     t,
+    installedExtensions,
   } = deps;
+
+  const modelFor = (profile: ConnectionDraft) =>
+    connectionModelForEngine(installedExtensions, profile.engine);
 
   function updateDraft(patch: Partial<ConnectionDraft>) {
     setDraft((current) => {
       const next = patch.engine
-        ? { ...current, ...memoryDefaults(patch.engine), ...patch }
+        ? {
+            ...current,
+            ...memoryDefaults(patch.engine),
+            // Connector credentials are engine-specific. Clear every transient
+            // credential carrier so a DSN, access-key identity, token, or
+            // private key cannot cross into the next connector by accident.
+            url: "",
+            user: "",
+            password: "",
+            options: undefined,
+            secretOptions: undefined,
+            customOptionsJson: undefined,
+            ...patch,
+          }
         : { ...current, ...patch };
       return next;
     });
@@ -116,7 +138,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
   }
 
   function saveDraft(showSaved = true) {
-    const validationError = validateDraft(draft);
+    const validationError = validateDraft(draft, modelFor(draft));
     if (validationError) {
       setConnectionError(validationError);
       showActionNotice(
@@ -309,7 +331,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
   }
 
   async function testActiveProfile() {
-    const validationError = validateDraft(draft);
+    const validationError = validateDraft(draft, modelFor(draft));
     if (validationError) {
       setConnectionError(validationError);
       showActionNotice(
@@ -334,7 +356,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     const testId = `__test_${draft.id}_${Date.now()}`;
     try {
       await queryService.connect({
-        ...profileFromDraft(draft),
+        ...profileFromDraft(draft, modelFor(draft)),
         id: testId,
       });
       await queryService.disconnect(testId);
@@ -375,7 +397,9 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     setConnectionError(null);
     try {
       const started = performance.now();
-      const info = await queryService.connect(profileFromDraft(profile));
+      const info = await queryService.connect(
+        profileFromDraft(profile, modelFor(profile)),
+      );
       await afterConnect?.(info.id);
       const elapsedMs = Math.max(1, Math.round(performance.now() - started));
       const nextConnection = describeConnection(

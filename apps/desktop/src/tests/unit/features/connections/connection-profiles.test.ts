@@ -177,6 +177,33 @@ describe("connection profiles", () => {
     });
   });
 
+  it("drops extension secret maps left by an older localStorage payload", () => {
+    window.localStorage.setItem(
+      profilesStorageKey,
+      JSON.stringify([
+        draft({
+          id: "legacy-extension",
+          name: "Legacy extension",
+          secretOptions: {
+            apiKey: "top-secret",
+            clientPrivateKey: "PRIVATE KEY",
+          },
+          customOptionsJson: '{"accessToken":"legacy-secret"}',
+        }),
+      ]),
+    );
+
+    const profile = loadProfiles().find(
+      (item) => item.id === "legacy-extension",
+    );
+
+    expect(profile).toBeDefined();
+    expect(profile).not.toHaveProperty("secretOptions");
+    expect(JSON.stringify(profile)).not.toContain("top-secret");
+    expect(JSON.stringify(profile)).not.toContain("PRIVATE KEY");
+    expect(JSON.stringify(profile)).not.toContain("legacy-secret");
+  });
+
   it("keeps duplicate imported IDs unique", () => {
     const profiles = withUniqueProfileIds([
       draft({ id: "local" }),

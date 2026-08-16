@@ -37,6 +37,24 @@ import { useConfirm } from "@/components/ConfirmDialog";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator, type TranslationKey, type Translator } from "@/i18n";
 import {
+  connectorFieldOptionKey,
+  isConnectorSecretField,
+  type ConnectorConnectionField,
+  type ConnectorConnectionModel,
+  type ConnectorProfileField,
+} from "@/features/extensions/connection-model";
+import {
+  connectorAuthMethodPatch,
+  connectorControlOptionKeys,
+  connectorFieldDraftPatch,
+  connectorFieldValue,
+  resolvedConnectorProfileValue,
+  selectedConnectorAuthMethod,
+  selectedConnectorEndpointMode,
+  selectedConnectorTlsMode,
+  supplementalConnectorProfileFields,
+} from "./connector-connection-values";
+import {
   connectionCustomColorOptions,
   connectionColorOptions,
   engineConnectionSettings,
@@ -280,6 +298,81 @@ function ConnectionColorSwatch({
   );
 }
 
+function ConnectorFieldInput({
+  field,
+  draft,
+  t,
+  onUpdateDraft,
+}: {
+  field: ConnectorConnectionField;
+  draft: ConnectionDraft;
+  t: Translator["t"];
+  onUpdateDraft: (patch: Partial<ConnectionDraft>) => void;
+}) {
+  const value = connectorFieldValue(draft, field);
+  const secret = isConnectorSecretField(field);
+  const wide = ["json", "map", "pem"].includes(field.type);
+  const label = (
+    <span className="connector-field-label">
+      <span>
+        {field.label}
+        {field.required ? <i aria-hidden="true"> *</i> : null}
+      </span>
+      {secret ? <small>{t("connection.extension.sessionOnly")}</small> : null}
+    </span>
+  );
+  const update = (nextValue: string) =>
+    onUpdateDraft(connectorFieldDraftPatch(draft, field, nextValue));
+
+  if (field.type === "boolean") {
+    return (
+      <label className="connector-declared-checkbox">
+        <input
+          type="checkbox"
+          checked={value === "true"}
+          onChange={(event) => update(String(event.currentTarget.checked))}
+        />
+        {label}
+      </label>
+    );
+  }
+
+  return (
+    <label className={wide ? "connector-declared-field-wide" : undefined}>
+      {label}
+      {wide ? (
+        <textarea
+          rows={field.type === "pem" ? 4 : 3}
+          value={value}
+          required={field.required}
+          maxLength={65_536}
+          spellCheck={false}
+          autoComplete={secret ? "new-password" : "off"}
+          onChange={(event) => update(event.currentTarget.value)}
+        />
+      ) : (
+        <input
+          type={secret ? "password" : "text"}
+          inputMode={field.type === "number" ? "numeric" : undefined}
+          value={value}
+          required={field.required}
+          maxLength={4096}
+          spellCheck={false}
+          autoComplete={secret ? "new-password" : "off"}
+          onChange={(event) => update(event.currentTarget.value)}
+        />
+      )}
+    </label>
+  );
+}
+
+function connectorChoiceLabel(value: string) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[-_.]+/g, " ")
+    .replace(/^./, (first) => first.toUpperCase());
+}
+
 export function ConnectionManagerDialog({
   profiles,
   connectedIds,
@@ -289,6 +382,7 @@ export function ConnectionManagerDialog({
   error,
   testing,
   connecting,
+  connectionModel = null,
   onClose,
   onSearchChange,
   onAddProfile,
@@ -309,6 +403,7 @@ export function ConnectionManagerDialog({
   error: unknown | null;
   testing: boolean;
   connecting: boolean;
+  connectionModel?: ConnectorConnectionModel | null;
   onClose: () => void;
   onSearchChange: (value: string) => void;
   onAddProfile: () => void;
@@ -327,6 +422,90 @@ export function ConnectionManagerDialog({
   const { t } = createTranslator(locale);
   const engineSettings = engineConnectionSettings(draft.engine, t);
   const optionFields = engineOptionFields(draft.engine);
+  const declaredEndpointFields = connectionModel?.endpoint.fields ?? [];
+  const usesDeclaredEndpoint = Boolean(
+    connectionModel &&
+    (declaredEndpointFields.length > 0 ||
+      connectionModel.endpoint.modes.length > 0),
+  );
+  const selectedAuthMethod = connectionModel
+    ? selectedConnectorAuthMethod(connectionModel, draft)
+    : null;
+  const declaredProfileField = (profileField: ConnectorProfileField) =>
+    selectedAuthMethod?.fields.find(
+      (field) => field.profileField === profileField,
+    ) ??
+    declaredEndpointFields.find(
+      (field) => field.profileField === profileField,
+    ) ??
+    connectionModel?.profileFields.find(
+      (field) => field.profileField === profileField,
+    );
+  const urlField = declaredProfileField("url");
+  const hostField = declaredProfileField("host");
+  const portField = declaredProfileField("port");
+  const databaseField = declaredProfileField("database");
+  const endpointMode = connectionModel
+    ? selectedConnectorEndpointMode(connectionModel, draft)
+    : null;
+  const tlsMode = connectionModel
+    ? selectedConnectorTlsMode(connectionModel, draft)
+    : null;
+  const endpointModes = connectionModel
+    ? connectionModel.endpoint.modes.filter((mode) =>
+        draft.mode === "url"
+          ? mode === "connectionString"
+          : mode !== "connectionString",
+      )
+    : [];
+  const endpointExtraFields = declaredEndpointFields.filter(
+    (field) => !field.profileField,
+  );
+  const endpointOptionKeys = new Set(
+    declaredEndpointFields
+      .map(connectorFieldOptionKey)
+      .filter((key): key is string => Boolean(key)),
+  );
+  const authFields = (selectedAuthMethod?.fields ?? []).filter((field) => {
+    if (
+      field.profileField &&
+      field.profileField !== "user" &&
+      field.profileField !== "password" &&
+      field.profileField !== "options"
+    ) {
+      return false;
+    }
+    const key = connectorFieldOptionKey(field);
+    return !key || !endpointOptionKeys.has(key);
+  });
+  const declaredTlsFields = connectionModel?.tls.supported
+    ? connectionModel.tls.fields
+    : [];
+  const supplementalProfileFields = connectionModel
+    ? supplementalConnectorProfileFields(connectionModel)
+    : [];
+  const declaredFieldKeys = new Set(
+    [
+      ...declaredEndpointFields,
+      ...(connectionModel?.profileFields ?? []),
+      ...(connectionModel?.authMethods.flatMap((method) => method.fields) ??
+        []),
+      ...declaredTlsFields,
+    ]
+      .map(connectorFieldOptionKey)
+      .filter((key): key is string => Boolean(key)),
+  );
+  const visibleOptionFields = optionFields.filter(
+    (field) => !declaredFieldKeys.has(field.key),
+  );
+  const authFieldKeys = new Set(
+    authFields
+      .map((field) => connectorFieldOptionKey(field) ?? field.id)
+      .filter(Boolean),
+  );
+  const tlsFields = declaredTlsFields.filter(
+    (field) => !authFieldKeys.has(connectorFieldOptionKey(field) ?? field.id),
+  );
   const { confirm, confirmElement } = useConfirm();
   // Anchored below the "…" button but portaled to <body>: the dialog clips
   // overflowing children, which previously cut this menu off.
@@ -386,7 +565,13 @@ export function ConnectionManagerDialog({
     });
   }, [profiles]);
   const normalizedDraftColor = normalizeConnectionColor(draft.color);
-  const socketSupported = supportsSocketTransport(draft.engine);
+  const usesConnectorEndpointModel = Boolean(
+    connectionModel &&
+    (connectionModel.endpoint.modes.length > 0 ||
+      connectionModel.endpoint.fields.length > 0),
+  );
+  const socketSupported =
+    !usesConnectorEndpointModel && supportsSocketTransport(draft.engine);
   const selectedEngineSupport = engineBuildSupport.get(draft.engine);
   const selectedEngineMessage = featureMissingMessage(
     draft.engine,
@@ -893,10 +1078,19 @@ export function ConnectionManagerDialog({
           </div>
           {draft.mode === "url" ? (
             <label className="full-row">
-              <span>{engineSettings.urlLabel}</span>
+              <span>{urlField?.label ?? engineSettings.urlLabel}</span>
               <input
-                value={draft.url}
+                value={
+                  connectionModel
+                    ? resolvedConnectorProfileValue(
+                        connectionModel,
+                        draft,
+                        "url",
+                      )
+                    : draft.url
+                }
                 placeholder={engineSettings.urlPlaceholder}
+                required
                 onChange={(event) =>
                   onUpdateDraft({ url: event.currentTarget.value })
                 }
@@ -944,24 +1138,54 @@ export function ConnectionManagerDialog({
                   </label>
                 ) : (
                   <>
-                    {engineSettings.showHost ? (
+                    {(
+                      usesDeclaredEndpoint
+                        ? Boolean(hostField)
+                        : engineSettings.showHost
+                    ) ? (
                       <label>
-                        <span>{engineSettings.hostLabel}</span>
+                        <span>
+                          {hostField?.label ?? engineSettings.hostLabel}
+                        </span>
                         <input
-                          value={draft.host}
+                          value={
+                            connectionModel
+                              ? resolvedConnectorProfileValue(
+                                  connectionModel,
+                                  draft,
+                                  "host",
+                                )
+                              : draft.host
+                          }
                           placeholder={engineSettings.hostPlaceholder}
+                          required={hostField?.required ?? false}
                           onChange={(event) =>
                             onUpdateDraft({ host: event.currentTarget.value })
                           }
                         />
                       </label>
                     ) : null}
-                    {engineSettings.showPort ? (
+                    {(
+                      usesDeclaredEndpoint
+                        ? Boolean(portField)
+                        : engineSettings.showPort
+                    ) ? (
                       <label>
-                        <span>{engineSettings.portLabel}</span>
+                        <span>
+                          {portField?.label ?? engineSettings.portLabel}
+                        </span>
                         <input
                           inputMode="numeric"
-                          value={draft.port}
+                          value={
+                            connectionModel
+                              ? resolvedConnectorProfileValue(
+                                  connectionModel,
+                                  draft,
+                                  "port",
+                                )
+                              : draft.port
+                          }
+                          required={portField?.required ?? false}
                           onChange={(event) =>
                             onUpdateDraft({ port: event.currentTarget.value })
                           }
@@ -970,7 +1194,7 @@ export function ConnectionManagerDialog({
                     ) : null}
                   </>
                 )}
-                {engineSettings.showUser ? (
+                {!connectionModel && engineSettings.showUser ? (
                   <label>
                     <span>{engineSettings.userLabel}</span>
                     <input
@@ -982,7 +1206,7 @@ export function ConnectionManagerDialog({
                     />
                   </label>
                 ) : null}
-                {engineSettings.showPassword ? (
+                {!connectionModel && engineSettings.showPassword ? (
                   <label>
                     <span>{engineSettings.passwordLabel}</span>
                     <input
@@ -995,26 +1219,189 @@ export function ConnectionManagerDialog({
                     />
                   </label>
                 ) : null}
-                <label className="full-row">
-                  <span>{engineSettings.databaseLabel}</span>
-                  <input
-                    value={draft.database}
-                    placeholder={engineSettings.databasePlaceholder}
-                    onChange={(event) =>
-                      onUpdateDraft({ database: event.currentTarget.value })
-                    }
-                  />
-                </label>
+                {!usesDeclaredEndpoint || databaseField ? (
+                  <label className="full-row">
+                    <span>
+                      {databaseField?.label ?? engineSettings.databaseLabel}
+                    </span>
+                    <input
+                      value={
+                        connectionModel
+                          ? resolvedConnectorProfileValue(
+                              connectionModel,
+                              draft,
+                              "database",
+                            )
+                          : draft.database
+                      }
+                      placeholder={engineSettings.databasePlaceholder}
+                      required={databaseField?.required ?? false}
+                      onChange={(event) =>
+                        onUpdateDraft({ database: event.currentTarget.value })
+                      }
+                    />
+                  </label>
+                ) : null}
               </div>
             </div>
           )}
-          {optionFields.length > 0 ? (
+          {connectionModel &&
+          (endpointModes.length > 0 || endpointExtraFields.length > 0) ? (
+            <fieldset className="connector-declared-section full-row">
+              <legend>{t("connection.extension.endpoint")}</legend>
+              <small className="connector-declared-source">
+                {t("connection.extension.providedByExtension")}
+              </small>
+              {endpointModes.length > 0 ? (
+                <label className="connector-declared-mode">
+                  <span>{t("connection.extension.endpointMode")}</span>
+                  {endpointModes.length > 1 ? (
+                    <select
+                      value={endpointMode ?? ""}
+                      onChange={(event) =>
+                        onUpdateDraft({
+                          options: {
+                            ...draft.options,
+                            [connectorControlOptionKeys.endpointMode]:
+                              event.currentTarget.value,
+                          },
+                        })
+                      }
+                    >
+                      {endpointModes.map((mode) => (
+                        <option key={mode} value={mode}>
+                          {connectorChoiceLabel(mode)}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <strong>{connectorChoiceLabel(endpointModes[0])}</strong>
+                  )}
+                </label>
+              ) : null}
+              {endpointExtraFields.length > 0 ? (
+                <div className="connection-form-grid">
+                  {endpointExtraFields.map((field) => (
+                    <ConnectorFieldInput
+                      key={field.id}
+                      field={field}
+                      draft={draft}
+                      t={t}
+                      onUpdateDraft={onUpdateDraft}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </fieldset>
+          ) : null}
+          {connectionModel && supplementalProfileFields.length > 0 ? (
+            <fieldset className="connector-declared-section full-row">
+              <legend>{t("connection.extension.profile")}</legend>
+              <small className="connector-declared-source">
+                {t("connection.extension.providedByExtension")}
+              </small>
+              <div className="connection-form-grid connector-profile-fields">
+                {supplementalProfileFields.map((field) => (
+                  <ConnectorFieldInput
+                    key={field.id}
+                    field={field}
+                    draft={draft}
+                    t={t}
+                    onUpdateDraft={onUpdateDraft}
+                  />
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+          {connectionModel && connectionModel.authMethods.length > 0 ? (
+            <fieldset className="connector-declared-section full-row">
+              <legend>{t("connection.extension.authentication")}</legend>
+              <label className="connector-declared-mode">
+                <span>{t("connection.extension.authMethod")}</span>
+                <select
+                  value={selectedAuthMethod?.id ?? ""}
+                  onChange={(event) => {
+                    const authMethod = event.currentTarget.value;
+                    onUpdateDraft(
+                      connectorAuthMethodPatch(
+                        connectionModel,
+                        draft,
+                        authMethod,
+                      ),
+                    );
+                  }}
+                >
+                  {connectionModel.authMethods.map((method) => (
+                    <option key={method.id} value={method.id}>
+                      {method.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {authFields.length > 0 ? (
+                <div className="connection-form-grid connector-auth-fields">
+                  {authFields.map((field) => (
+                    <ConnectorFieldInput
+                      key={field.id}
+                      field={field}
+                      draft={draft}
+                      t={t}
+                      onUpdateDraft={onUpdateDraft}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </fieldset>
+          ) : null}
+          {connectionModel?.tls.supported &&
+          (connectionModel.tls.modes.length > 0 || tlsFields.length > 0) ? (
+            <fieldset className="connector-declared-section full-row">
+              <legend>{t("connection.extension.tls")}</legend>
+              {connectionModel.tls.modes.length > 0 ? (
+                <label className="connector-declared-mode">
+                  <span>{t("connection.extension.tlsMode")}</span>
+                  <select
+                    value={tlsMode ?? ""}
+                    onChange={(event) =>
+                      onUpdateDraft({
+                        options: {
+                          ...draft.options,
+                          [connectorControlOptionKeys.tlsMode]:
+                            event.currentTarget.value,
+                        },
+                      })
+                    }
+                  >
+                    {connectionModel.tls.modes.map((mode) => (
+                      <option key={mode} value={mode}>
+                        {connectorChoiceLabel(mode)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              {tlsMode !== "disable" && tlsFields.length > 0 ? (
+                <div className="connection-form-grid connector-tls-fields">
+                  {tlsFields.map((field) => (
+                    <ConnectorFieldInput
+                      key={field.id}
+                      field={field}
+                      draft={draft}
+                      t={t}
+                      onUpdateDraft={onUpdateDraft}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </fieldset>
+          ) : null}
+          {visibleOptionFields.length > 0 ? (
             <div className="connection-form-stack connector-options full-row">
               <span className="connector-options-label">
                 {t("connection.connectorSettings")}
               </span>
               <div className="connection-form-grid">
-                {optionFields.map((field) => (
+                {visibleOptionFields.map((field) => (
                   <label key={field.key}>
                     <span>{t(field.labelKey)}</span>
                     {field.choices ? (

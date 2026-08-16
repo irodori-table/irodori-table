@@ -32,4 +32,18 @@ export type ConnectionDraft = {
    * clear. Credentials belong in `password`, which is session-only.
    */
   options?: Record<string, string>;
+  /**
+   * Extension-declared credentials that do not fit the single legacy
+   * `password` slot (API tokens, private keys, OAuth secrets…). These values
+   * exist only in the live form draft and are merged into the invoke payload
+   * for one connection attempt. Persistence and export helpers must always
+   * remove the whole map.
+   */
+  secretOptions?: Record<string, string>;
+  /**
+   * Raw JSON for the extension model's `profileField: "options"` editor.
+   * Custom driver options can contain credentials, so the whole value is
+   * conservatively session-only and parsed only while building one request.
+   */
+  customOptionsJson?: string;
 };

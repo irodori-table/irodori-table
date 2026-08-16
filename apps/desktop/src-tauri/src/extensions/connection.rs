@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -18,6 +19,7 @@ pub(crate) struct NativeExtensionConnection {
     connection_id: String,
     engine: DbEngine,
     server_version: String,
+    secret_values: Arc<Vec<String>>,
 }
 
 impl NativeExtensionConnection {
@@ -44,20 +46,25 @@ impl NativeExtensionConnection {
             ));
         }
 
+        let secret_values = connector_secret_values(extension, profile);
         let request = connect_request(profile)?;
-        let response = connector.call_ok(request)?;
+        let response = connector
+            .call_ok(request)
+            .map_err(|error| redact_connector_secrets(&error, &secret_values))?;
         let server_version = response
             .get("serverVersion")
             .and_then(Value::as_str)
             .filter(|version| !version.trim().is_empty())
             .unwrap_or_else(|| connector.engine())
             .to_string();
+        let server_version = redact_connector_secrets(&server_version, &secret_values);
 
         Ok(Self {
             connector: Arc::new(connector),
             connection_id: profile.id.clone(),
             engine: profile.engine,
             server_version,
+            secret_values: Arc::new(secret_values),
         })
     }
 
@@ -76,14 +83,18 @@ impl NativeExtensionConnection {
             "maxRows".to_string(),
             Value::Number(serde_json::Number::from(cap as u64)),
         );
-        let response = self.connector.call_ok(Value::Object(request))?;
+        let response = self
+            .connector
+            .call_ok(Value::Object(request))
+            .map_err(|error| redact_connector_secrets(&error, &self.secret_values))?;
         row_set_from_response(response)
     }
 
     pub(crate) fn metadata(&self) -> Result<DatabaseMetadata, String> {
         let response = self
             .connector
-            .call_ok(connector_request("metadata", &self.connection_id))?;
+            .call_ok(connector_request("metadata", &self.connection_id))
+            .map_err(|error| redact_connector_secrets(&error, &self.secret_values))?;
         metadata_from_response(response)
     }
 
@@ -108,6 +119,137 @@ fn connect_request(profile: &ConnectionProfile) -> Result<Value, String> {
     );
     request.insert("profile".to_string(), profile_value);
     Ok(Value::Object(request))
+}
+
+fn collect_secret_field_keys(
+    fields: Option<&Value>,
+    secret_keys: &mut BTreeSet<String>,
+    public_option_keys: &mut BTreeSet<String>,
+    redact_options_map: &mut bool,
+) {
+    let Some(fields) = fields.and_then(Value::as_array) else {
+        return;
+    };
+    for field in fields.iter().take(64) {
+        let Some(field) = field.as_object() else {
+            continue;
+        };
+        let profile_field = field.get("profileField").and_then(Value::as_str);
+        if profile_field == Some("options") {
+            *redact_options_map = true;
+            continue;
+        }
+        let secret = field.get("type").and_then(Value::as_str) == Some("secret")
+            || field
+                .get("secretPurpose")
+                .and_then(Value::as_str)
+                .is_some_and(|purpose| !purpose.trim().is_empty());
+        let request_key = field
+            .get("option")
+            .and_then(Value::as_str)
+            .or_else(|| {
+                profile_field
+                    .is_none()
+                    .then(|| field.get("id").and_then(Value::as_str))
+                    .flatten()
+            })
+            .map(str::trim)
+            .filter(|key| !key.is_empty() && key.len() <= 128);
+        if !secret {
+            if let Some(key) = request_key {
+                public_option_keys.insert(key.to_string());
+            }
+            continue;
+        }
+        // Collect both bindings. The frontend rejects unsafe/reserved explicit
+        // option keys and safely falls back to the field id; retaining both here
+        // keeps redaction correct across old and new frontend versions.
+        for key in [field.get("option"), field.get("id")]
+            .into_iter()
+            .flatten()
+            .filter_map(|value| value.as_str())
+            .map(str::trim)
+            .filter(|key| !key.is_empty() && key.len() <= 128)
+        {
+            secret_keys.insert(key.to_string());
+        }
+    }
+}
+
+fn connector_secret_values(
+    extension: &InstalledExtension,
+    profile: &ConnectionProfile,
+) -> Vec<String> {
+    let mut secret_keys = BTreeSet::new();
+    let mut public_option_keys = BTreeSet::new();
+    let mut redact_options_map = false;
+    if let Some(model) = extension.connection_model.as_ref() {
+        collect_secret_field_keys(
+            model.pointer("/endpoint/fields"),
+            &mut secret_keys,
+            &mut public_option_keys,
+            &mut redact_options_map,
+        );
+        collect_secret_field_keys(
+            model.get("profileFields"),
+            &mut secret_keys,
+            &mut public_option_keys,
+            &mut redact_options_map,
+        );
+        collect_secret_field_keys(
+            model.pointer("/tls/fields"),
+            &mut secret_keys,
+            &mut public_option_keys,
+            &mut redact_options_map,
+        );
+        let selected_auth_method = profile.options.get("authMethod").map(String::as_str);
+        if let (Some(selected), Some(methods)) = (
+            selected_auth_method,
+            model.get("authMethods").and_then(Value::as_array),
+        ) {
+            if let Some(method) = methods
+                .iter()
+                .take(64)
+                .find(|method| method.get("id").and_then(Value::as_str) == Some(selected))
+            {
+                collect_secret_field_keys(
+                    method.get("fields"),
+                    &mut secret_keys,
+                    &mut public_option_keys,
+                    &mut redact_options_map,
+                );
+            }
+        }
+    }
+
+    let mut values = Vec::new();
+    if let Some(password) = profile.password.as_deref() {
+        values.push(password.to_string());
+    }
+    // Keeping the full DSN in the redaction set also protects errors emitted
+    // after connect, where the db-layer URL/password redactor is no longer in
+    // the call path.
+    if let Some(url) = profile.url.as_deref() {
+        values.push(url.to_string());
+    }
+    for (key, value) in &profile.options {
+        let control = matches!(key.as_str(), "authMethod" | "endpointMode" | "tlsMode");
+        if secret_keys.contains(key)
+            || (redact_options_map && !control && !public_option_keys.contains(key))
+        {
+            values.push(value.clone());
+        }
+    }
+    values.retain(|value| !value.trim().is_empty());
+    values.sort_by(|left, right| right.len().cmp(&left.len()).then_with(|| left.cmp(right)));
+    values.dedup();
+    values
+}
+
+fn redact_connector_secrets(text: &str, values: &[String]) -> String {
+    values.iter().fold(text.to_string(), |redacted, secret| {
+        redacted.replace(secret, "****")
+    })
 }
 
 fn request_with_connection(method: &str, connection_id: &str) -> Map<String, Value> {
@@ -329,6 +471,8 @@ fn normalize_object_kind(kind: Option<&str>) -> DbObjectMetadataKind {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeMap;
+
     use serde_json::json;
 
     use super::*;
@@ -376,5 +520,123 @@ mod tests {
         assert_eq!(columns, vec!["name"]);
         assert_eq!(rows[0][0], json!("Irodori"));
         assert!(truncated);
+    }
+
+    fn installed_extension(connection_model: Value) -> InstalledExtension {
+        InstalledExtension {
+            id: "irodori.qdrant".to_string(),
+            name: "Qdrant".to_string(),
+            version: "0.1.0".to_string(),
+            runtime: "native".to_string(),
+            engine: Some("qdrant".to_string()),
+            library_path: Some("connector.so".to_string()),
+            host_features: Vec::new(),
+            sha256: "abc".to_string(),
+            enabled: true,
+            installed_at: "0".to_string(),
+            abi_version: Some(1),
+            supported_calls: vec!["connect".to_string()],
+            connection_model: Some(connection_model),
+        }
+    }
+
+    fn extension_profile(options: BTreeMap<String, String>) -> ConnectionProfile {
+        ConnectionProfile {
+            id: "vectors".to_string(),
+            engine: DbEngine::Qdrant,
+            host: Some("vectors.example.test".to_string()),
+            port: Some(6333),
+            user: None,
+            password: Some("legacy-password".to_string()),
+            database: None,
+            socket_path: None,
+            url: Some("qdrant://token@vectors.example.test".to_string()),
+            transport: None,
+            read_only: false,
+            options,
+        }
+    }
+
+    #[test]
+    fn redacts_model_declared_secrets_from_connector_errors() {
+        let extension = installed_extension(json!({
+            "endpoint": {
+                "fields": [{"id": "region", "type": "string", "option": "region"}]
+            },
+            "profileFields": [],
+            "authMethods": [{
+                "id": "apiKey",
+                "fields": [{
+                    "id": "apiKey",
+                    "type": "secret",
+                    "secretPurpose": "token"
+                }]
+            }],
+            "tls": {
+                "fields": [{
+                    "id": "clientPrivateKey",
+                    "type": "pem",
+                    "secretPurpose": "privateKey"
+                }]
+            }
+        }));
+        let profile = extension_profile(BTreeMap::from([
+            ("authMethod".to_string(), "apiKey".to_string()),
+            ("apiKey".to_string(), "api-key-secret".to_string()),
+            (
+                "clientPrivateKey".to_string(),
+                "private-key-secret".to_string(),
+            ),
+            ("region".to_string(), "us-east-1".to_string()),
+        ]));
+        let values = connector_secret_values(&extension, &profile);
+        let redacted = redact_connector_secrets(
+            "api-key-secret private-key-secret legacy-password qdrant://token@vectors.example.test us-east-1",
+            &values,
+        );
+
+        assert!(!redacted.contains("api-key-secret"), "{redacted}");
+        assert!(!redacted.contains("private-key-secret"), "{redacted}");
+        assert!(!redacted.contains("legacy-password"), "{redacted}");
+        assert!(!redacted.contains("qdrant://token@"), "{redacted}");
+        assert!(redacted.contains("us-east-1"), "{redacted}");
+    }
+
+    #[test]
+    fn treats_the_selected_custom_options_map_as_transient_secrets() {
+        let extension = installed_extension(json!({
+            "endpoint": {
+                "fields": [{"id": "region", "type": "string", "option": "region"}]
+            },
+            "profileFields": [{
+                "id": "options",
+                "type": "map",
+                "profileField": "options"
+            }],
+            "authMethods": [{
+                "id": "customDriverOptions",
+                "fields": [{
+                    "id": "options",
+                    "type": "map",
+                    "profileField": "options"
+                }]
+            }]
+        }));
+        let profile = extension_profile(BTreeMap::from([
+            ("authMethod".to_string(), "customDriverOptions".to_string()),
+            ("region".to_string(), "us-east-1".to_string()),
+            ("cluster".to_string(), "analytics".to_string()),
+            ("accessToken".to_string(), "custom-secret".to_string()),
+        ]));
+        let values = connector_secret_values(&extension, &profile);
+        let redacted = redact_connector_secrets(
+            "customDriverOptions us-east-1 analytics custom-secret",
+            &values,
+        );
+
+        assert!(redacted.contains("customDriverOptions"), "{redacted}");
+        assert!(redacted.contains("us-east-1"), "{redacted}");
+        assert!(!redacted.contains("analytics"), "{redacted}");
+        assert!(!redacted.contains("custom-secret"), "{redacted}");
     }
 }

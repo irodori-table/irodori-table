@@ -16,6 +16,11 @@ import {
 } from "@/features/workbench";
 import type { Translator } from "@/i18n";
 import type { DbEngine, WorkspaceSnapshot } from "@/generated/irodori-api";
+import {
+  connectionModelForEngine,
+  type ConnectorConnectionModel,
+} from "@/features/extensions/connection-model";
+import { useExtensionRuntimeStore } from "@/features/extensions/runtime-store";
 
 type WorkbenchConnectionsDeps = {
   showActionNotice: ShowActionNotice;
@@ -96,6 +101,20 @@ export function useWorkbenchConnections({
   const setObjectActionMenu = useConnectionStore(
     (state) => state.setObjectActionMenu,
   );
+  const installedExtensions = useExtensionRuntimeStore(
+    (state) => state.installedExtensions,
+  );
+  const extensionRuntimeLoaded = useExtensionRuntimeStore(
+    (state) => state.loaded,
+  );
+  const refreshInstalledExtensions = useExtensionRuntimeStore(
+    (state) => state.refreshInstalledExtensions,
+  );
+  useEffect(() => {
+    if (!extensionRuntimeLoaded) {
+      void refreshInstalledExtensions().catch(() => undefined);
+    }
+  }, [extensionRuntimeLoaded, refreshInstalledExtensions]);
   useEffect(() => {
     workbenchRuntimeService
       .snapshot()
@@ -128,6 +147,10 @@ export function useWorkbenchConnections({
   const profileById = useMemo(
     () => new Map(profiles.map((profile) => [profile.id, profile])),
     [profiles],
+  );
+  const connectorConnectionModel = useMemo<ConnectorConnectionModel | null>(
+    () => connectionModelForEngine(installedExtensions, draft.engine),
+    [draft.engine, installedExtensions],
   );
   const filteredProfiles = useMemo(() => {
     const needle = connectionSearch.trim().toLowerCase();
@@ -200,6 +223,7 @@ export function useWorkbenchConnections({
     setConnectionManagerOpen,
     showActionNotice,
     t,
+    installedExtensions,
   });
   const {
     updateDraft,
@@ -249,6 +273,7 @@ export function useWorkbenchConnections({
         error: connectionError,
         testing: testingConnection,
         connecting,
+        connectionModel: connectorConnectionModel,
         onClose: () => {
           setConnectionManagerOpen(false);
           prunePristineDrafts();

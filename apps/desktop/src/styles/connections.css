@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: minmax(236px, 252px) minmax(0, 1fr);
   width: min(1440px, calc(100vw - 24px));
+  height: min(860px, calc(100vh - 24px));
   min-height: min(720px, calc(100vh - 24px));
   max-height: min(860px, calc(100vh - 24px));
   overflow: hidden;
@@ -266,7 +267,10 @@
 
 .connection-form {
   display: grid;
-  grid-template-rows: auto minmax(0, auto) auto;
+  /* The model-driven auth/TLS sections can be taller than the viewport. Give
+   * the body the bounded middle track so it scrolls without pushing the footer
+   * through the dialog's clipped bottom edge. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 0;
   min-height: 0;
 }
@@ -299,6 +303,7 @@
 
 .connection-form input,
 .connection-form select,
+.connection-form textarea,
 .settings-panel select {
   min-width: 0;
   height: 30px;
@@ -308,6 +313,15 @@
   color: var(--text);
   background: var(--input-bg);
   font: inherit;
+}
+
+.connection-form textarea {
+  width: 100%;
+  min-height: 66px;
+  padding: 7px 8px;
+  resize: vertical;
+  line-height: 1.35;
+  text-transform: none;
 }
 
 .connection-form-grid {
@@ -533,6 +547,91 @@
   text-transform: uppercase;
 }
 
+.connector-declared-section {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--surface-muted) 62%, transparent);
+}
+
+.connector-declared-section legend {
+  padding: 0 5px;
+  color: var(--text);
+  font-size: var(--font-ui-md);
+  font-weight: 800;
+}
+
+.connector-declared-source {
+  margin-top: -5px;
+  color: var(--muted);
+  font-size: var(--font-ui-sm);
+}
+
+.connector-declared-mode {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(180px, 2fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.connector-declared-mode strong {
+  color: var(--text);
+  font-size: var(--font-ui-md);
+  text-transform: none;
+}
+
+.connector-field-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.connector-field-label > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connector-field-label i {
+  color: var(--red);
+  font-style: normal;
+}
+
+.connector-field-label small {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: var(--font-ui-xs);
+  font-weight: 600;
+  text-transform: none;
+}
+
+.connection-form-grid .connector-declared-field-wide {
+  grid-column: 1 / -1;
+}
+
+.connection-form-body .connector-declared-checkbox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  min-height: 30px;
+  text-transform: none;
+}
+
+.connector-declared-checkbox input {
+  width: 15px;
+  height: 15px;
+  padding: 0;
+}
+
 .connection-transport {
   display: flex;
   align-items: center;
@@ -592,6 +691,10 @@
 
   .form-toggle {
     width: min(180px, 100%);
+  }
+
+  .connector-declared-mode {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .connection-transport strong {

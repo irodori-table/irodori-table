@@ -10,6 +10,7 @@ import {
   type ConnectionDraft,
 } from "@/features/connections/connection-profiles";
 import { usePreferencesStore } from "@/features/preferences";
+import { parseConnectorConnectionModel } from "@/features/extensions/connection-model";
 import { componentRenderer } from "@/tests/helpers/render";
 
 vi.mock("@/generated/irodori-api", () => ({
@@ -39,6 +40,98 @@ function draft(patch: Partial<ConnectionDraft> = {}): ConnectionDraft {
 }
 
 const baseDraft = draft();
+
+const qdrantConnectionModel = parseConnectorConnectionModel({
+  schemaVersion: 1,
+  endpoint: {
+    modes: ["hostPort", "customEndpoint", "connectionString"],
+    defaultPort: 6333,
+    fields: [
+      {
+        id: "host",
+        label: "Qdrant host",
+        type: "string",
+        profileField: "host",
+        required: true,
+      },
+      {
+        id: "protocol",
+        label: "Protocol (REST or gRPC)",
+        type: "string",
+        option: "protocol",
+        default: "rest",
+        required: true,
+      },
+    ],
+  },
+  profileFields: [],
+  authMethods: [
+    { id: "none", label: "No authentication", kind: "none", fields: [] },
+    {
+      id: "connectionString",
+      label: "Connection string / DSN",
+      kind: "connectionString",
+      fields: [
+        {
+          id: "url",
+          label: "Connection URL or DSN",
+          type: "uri",
+          profileField: "url",
+          required: true,
+        },
+      ],
+    },
+    {
+      id: "apiKey",
+      label: "API key",
+      kind: "apiKey",
+      fields: [
+        {
+          id: "apiKey",
+          label: "API key",
+          type: "secret",
+          secretPurpose: "token",
+          required: true,
+        },
+      ],
+    },
+    {
+      id: "customDriverOptions",
+      label: "Custom driver options",
+      kind: "custom",
+      fields: [
+        {
+          id: "options",
+          label: "Driver options",
+          type: "map",
+          profileField: "options",
+        },
+      ],
+    },
+  ],
+  tls: {
+    supported: true,
+    requiredByDefault: false,
+    modes: ["disable", "prefer", "verifyFull"],
+    fields: [
+      {
+        id: "caCertificate",
+        label: "CA certificate",
+        type: "pem",
+      },
+      {
+        id: "clientPrivateKey",
+        label: "Client private key",
+        type: "pem",
+        secretPurpose: "privateKey",
+      },
+    ],
+  },
+});
+
+if (!qdrantConnectionModel) {
+  throw new Error("test connector connection model did not parse");
+}
 
 const render = componentRenderer(ConnectionManagerDialog, () => ({
   profiles: [baseDraft],
@@ -306,6 +399,165 @@ describe("ConnectionManagerDialog", () => {
   });
 
   describe("connector settings", () => {
+    it("renders endpoint, authentication, and TLS from the installed connector", () => {
+      renderDialog({
+        draft: draft({
+          engine: "qdrant",
+          host: "qdrant.example.test",
+          port: "6333",
+          user: "",
+          password: "",
+          options: { authMethod: "apiKey" },
+        }),
+        connectionModel: qdrantConnectionModel,
+      });
+
+      expect(screen.getByLabelText("Qdrant host")).toHaveValue(
+        "qdrant.example.test",
+      );
+      expect(screen.getByLabelText("Endpoint mode")).toHaveValue("hostPort");
+      expect(screen.getByLabelText(/^Protocol \(REST or gRPC\)/)).toHaveValue(
+        "rest",
+      );
+      expect(screen.getByLabelText("Authentication method")).toHaveValue(
+        "apiKey",
+      );
+      expect(screen.getByLabelText(/^API key/)).toHaveAttribute(
+        "type",
+        "password",
+      );
+      expect(
+        screen.getAllByText("Session only · not saved").length,
+      ).toBeGreaterThanOrEqual(2);
+      expect(screen.getByLabelText("TLS mode")).toHaveValue("prefer");
+      expect(screen.getByLabelText("CA certificate").tagName).toBe("TEXTAREA");
+      expect(screen.queryByLabelText("API key / token")).toBeNull();
+    });
+
+    it("renders supplemental profile fields and TLS fields without modes", () => {
+      const supplementalModel = parseConnectorConnectionModel({
+        schemaVersion: 1,
+        endpoint: { modes: ["cloudResource"], fields: [] },
+        profileFields: [
+          {
+            id: "tenant",
+            label: "Tenant",
+            type: "string",
+            option: "tenant",
+            required: true,
+          },
+        ],
+        authMethods: [
+          {
+            id: "none",
+            label: "No authentication",
+            kind: "none",
+            fields: [],
+          },
+        ],
+        tls: {
+          supported: true,
+          requiredByDefault: true,
+          modes: [],
+          fields: [
+            {
+              id: "serverName",
+              label: "TLS server name",
+              type: "string",
+              option: "serverName",
+            },
+          ],
+        },
+      });
+      if (!supplementalModel) {
+        throw new Error("supplemental connector model did not parse");
+      }
+
+      renderDialog({
+        draft: draft({ engine: "qdrant", user: "", password: "" }),
+        connectionModel: supplementalModel,
+      });
+
+      expect(screen.getByText("Profile", { selector: "legend" })).toBeVisible();
+      expect(screen.getByLabelText(/^Tenant/)).toBeVisible();
+      expect(screen.getByText("TLS", { selector: "legend" })).toBeVisible();
+      expect(screen.getByLabelText("TLS server name")).toBeVisible();
+      expect(screen.queryByLabelText("TLS mode")).toBeNull();
+    });
+
+    it("writes extension secrets to the transient draft map", () => {
+      const selectedDraft = draft({
+        engine: "qdrant",
+        host: "qdrant.example.test",
+        port: "6333",
+        user: "",
+        password: "",
+        options: { authMethod: "apiKey" },
+      });
+      const { props } = renderDialog({
+        draft: selectedDraft,
+        connectionModel: qdrantConnectionModel,
+      });
+
+      fireEvent.change(screen.getByLabelText(/^API key/), {
+        target: { value: "top-secret" },
+      });
+
+      expect(props.onUpdateDraft).toHaveBeenCalledWith({
+        secretOptions: { apiKey: "top-secret" },
+      });
+    });
+
+    it("clears old credentials when the declared authentication method changes", () => {
+      const selectedDraft = draft({
+        engine: "qdrant",
+        password: "legacy-secret",
+        options: { authMethod: "apiKey", protocol: "rest" },
+        secretOptions: { apiKey: "top-secret" },
+      });
+      const { props } = renderDialog({
+        draft: selectedDraft,
+        connectionModel: qdrantConnectionModel,
+      });
+
+      fireEvent.change(screen.getByLabelText("Authentication method"), {
+        target: { value: "none" },
+      });
+
+      expect(props.onUpdateDraft).toHaveBeenCalledWith({
+        options: { authMethod: "none", protocol: "rest" },
+        secretOptions: {},
+        password: "",
+      });
+    });
+
+    it("keeps custom driver options session-only and editable", () => {
+      const selectedDraft = draft({
+        engine: "qdrant",
+        user: "",
+        password: "",
+        options: { authMethod: "customDriverOptions" },
+        customOptionsJson: '{"cluster":"analytics"}',
+      });
+      const { props } = renderDialog({
+        draft: selectedDraft,
+        connectionModel: qdrantConnectionModel,
+      });
+
+      const options = screen.getByLabelText(/^Driver options/);
+      expect(options.tagName).toBe("TEXTAREA");
+      expect(options).toHaveValue('{"cluster":"analytics"}');
+      expect(options).toHaveAttribute("autocomplete", "new-password");
+
+      fireEvent.change(options, {
+        target: { value: '{"cluster":"warehouse"}' },
+      });
+
+      expect(props.onUpdateDraft).toHaveBeenCalledWith({
+        customOptionsJson: '{"cluster":"warehouse"}',
+      });
+    });
+
     it("renders the option fields an engine declares", () => {
       renderDialog({
         draft: draft({

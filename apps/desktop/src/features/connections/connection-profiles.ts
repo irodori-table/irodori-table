@@ -6,6 +6,18 @@ import type {
 import { translate } from "@/i18n";
 import connectionDefaults from "./connection-defaults.json";
 import { isRecord } from "@/core";
+import type {
+  ConnectorConnectionModel,
+  ConnectorProfileField,
+} from "@/features/extensions/connection-model";
+import {
+  authMethodUsesProfileField,
+  connectorRequestOptions,
+  resolvedConnectorProfileValue,
+  selectedConnectorAuthMethod,
+  supplementalConnectorProfileFields,
+  validateConnectorConnectionDraft,
+} from "./connector-connection-values";
 import {
   defaultPort,
   engineConnectionLayout,
@@ -294,10 +306,18 @@ export function loadProfiles() {
 }
 
 export function sanitizedProfile(profile: ConnectionDraft): ConnectionDraft {
+  // Extension credentials are deliberately draft-only. Destructure rather
+  // than assigning `undefined` so a future persistence format that preserves
+  // undefined values cannot accidentally retain the key.
+  const {
+    secretOptions: _secretOptions,
+    customOptionsJson: _customOptionsJson,
+    ...persistent
+  } = profile;
   return {
-    ...profile,
-    color: normalizeConnectionColor(profile.color),
-    url: redactPasswordFromConnectionUrl(profile.url),
+    ...persistent,
+    color: normalizeConnectionColor(persistent.color),
+    url: redactPasswordFromConnectionUrl(persistent.url),
     password: "",
   };
 }
@@ -586,16 +606,27 @@ export function withUniqueProfileIds(profiles: ConnectionDraft[]) {
  * tracked separately with the other non-component modules that bypass `t()`,
  * so the field names interpolated below stay English on purpose for now.
  */
-export function validateDraft(draft: ConnectionDraft): string | null {
+export function validateDraft(
+  draft: ConnectionDraft,
+  connectionModel: ConnectorConnectionModel | null = null,
+): string | null {
   const resolvedDraft = repairBuiltinSampleProfile(draft);
   const settings = engineConnectionLayout(resolvedDraft.engine);
+  const usesConnectorEndpoint = Boolean(
+    connectionModel &&
+    (connectionModel.endpoint.modes.length > 0 ||
+      connectionModel.endpoint.fields.length > 0),
+  );
   if (!resolvedDraft.id.trim()) {
     return "connection id is required";
   }
   if (!resolvedDraft.name.trim()) {
     return "name is required";
   }
-  if (resolvedDraft.mode === "url" && !resolvedDraft.url.trim()) {
+  const resolvedUrl = connectionModel
+    ? resolvedConnectorProfileValue(connectionModel, resolvedDraft, "url")
+    : resolvedDraft.url;
+  if (resolvedDraft.mode === "url" && !resolvedUrl.trim()) {
     return "URL/DSN is required";
   }
   if (
@@ -620,23 +651,40 @@ export function validateDraft(draft: ConnectionDraft): string | null {
     const useSocket =
       supportsSocketTransport(resolvedDraft.engine) &&
       resolvedDraft.connectionTransport === "socket";
-    if (useSocket && !resolvedDraft.socketPath.trim()) {
+    const declaredEndpointFields = connectionModel?.endpoint.fields ?? [];
+    const declaredHost = declaredEndpointFields.find(
+      (field) => field.profileField === "host",
+    );
+    const hostRequired = usesConnectorEndpoint
+      ? declaredHost?.required === true
+      : settings.showHost;
+    if (
+      !usesConnectorEndpoint &&
+      useSocket &&
+      !resolvedDraft.socketPath.trim()
+    ) {
       return "socket path is required";
     }
-    if (settings.showHost && !useSocket && !resolvedDraft.host.trim()) {
+    const host = connectionModel
+      ? resolvedConnectorProfileValue(connectionModel, resolvedDraft, "host")
+      : resolvedDraft.host;
+    if (hostRequired && !useSocket && !host.trim()) {
       return `${translate(settings.hostLabelKey).toLowerCase()} is required`;
     }
   }
-  if (
-    resolvedDraft.port.trim() &&
-    !Number.isInteger(Number(resolvedDraft.port))
-  ) {
+  const resolvedPort = connectionModel
+    ? resolvedConnectorProfileValue(connectionModel, resolvedDraft, "port")
+    : resolvedDraft.port;
+  if (resolvedPort.trim() && !Number.isInteger(Number(resolvedPort))) {
     return "port must be a number";
   }
   for (const field of engineOptionFields(resolvedDraft.engine)) {
     if (field.required && !resolvedDraft.options?.[field.key]?.trim()) {
       return `${translate(field.labelKey).toLowerCase()} is required`;
     }
+  }
+  if (connectionModel) {
+    return validateConnectorConnectionDraft(connectionModel, resolvedDraft);
   }
   return null;
 }
@@ -650,7 +698,10 @@ export function validateDraft(draft: ConnectionDraft): string | null {
  * Omitted entirely when empty, matching the Rust profile's
  * `skip_serializing_if = "BTreeMap::is_empty"`.
  */
-function draftOptions(draft: ConnectionDraft) {
+function draftOptions(
+  draft: ConnectionDraft,
+  connectionModel: ConnectorConnectionModel | null,
+) {
   const options: Record<string, string> = {};
   for (const field of engineOptionFields(draft.engine)) {
     const value = draft.options?.[field.key]?.trim();
@@ -658,39 +709,79 @@ function draftOptions(draft: ConnectionDraft) {
       options[field.key] = value;
     }
   }
+  if (connectionModel) {
+    Object.assign(options, connectorRequestOptions(connectionModel, draft));
+  }
   return Object.keys(options).length > 0 ? { options } : {};
 }
 
 export function profileFromDraft(
   draft: ConnectionDraft,
+  connectionModel: ConnectorConnectionModel | null = null,
 ): ConnectionProfile<DbEngine> {
   const resolvedDraft = repairBuiltinSampleProfile(draft);
   const readOnly = resolvedDraft.readOnly ? { readOnly: true } : {};
   // Options are profile-level connector config, not mode-specific: snowflake.rs
   // reads them whether the user typed a URL or filled the fields.
-  const options = draftOptions(resolvedDraft);
+  const options = draftOptions(resolvedDraft, connectionModel);
+  type ConnectorTextProfileField = Exclude<
+    ConnectorProfileField,
+    "readOnly" | "options"
+  >;
+  const connectorValue = (field: ConnectorTextProfileField): string =>
+    connectionModel
+      ? resolvedConnectorProfileValue(connectionModel, resolvedDraft, field)
+      : resolvedDraft[field];
   const socketPath =
+    (!connectionModel ||
+      (connectionModel.endpoint.modes.length === 0 &&
+        connectionModel.endpoint.fields.length === 0)) &&
     supportsSocketTransport(resolvedDraft.engine) &&
     resolvedDraft.connectionTransport === "socket"
       ? resolvedDraft.socketPath.trim() || undefined
       : undefined;
+  const authMethod = connectionModel
+    ? selectedConnectorAuthMethod(connectionModel, resolvedDraft)
+    : null;
+  const supplementalProfileFields = connectionModel
+    ? supplementalConnectorProfileFields(connectionModel)
+    : [];
+  const includeUser =
+    !connectionModel ||
+    authMethodUsesProfileField(authMethod, "user") ||
+    supplementalProfileFields.some((field) => field.profileField === "user");
+  const includePassword =
+    !connectionModel ||
+    authMethodUsesProfileField(authMethod, "password") ||
+    supplementalProfileFields.some(
+      (field) => field.profileField === "password",
+    );
   if (resolvedDraft.mode === "url") {
     return {
       id: resolvedDraft.id.trim(),
       engine: resolvedDraft.engine,
-      url: resolvedDraft.url.trim(),
+      url: connectorValue("url").trim(),
+      ...(connectionModel && includeUser
+        ? { user: connectorValue("user").trim() || undefined }
+        : {}),
+      ...(connectionModel && includePassword
+        ? { password: connectorValue("password") || undefined }
+        : {}),
       ...options,
       ...readOnly,
     };
   }
+  const port = connectorValue("port").trim();
   return {
     id: resolvedDraft.id.trim(),
     engine: resolvedDraft.engine,
-    host: resolvedDraft.host.trim() || undefined,
-    port: resolvedDraft.port.trim() ? Number(resolvedDraft.port) : undefined,
-    user: resolvedDraft.user.trim() || undefined,
-    password: resolvedDraft.password || undefined,
-    database: resolvedDraft.database.trim() || undefined,
+    host: connectorValue("host").trim() || undefined,
+    port: port ? Number(port) : undefined,
+    user: includeUser ? connectorValue("user").trim() || undefined : undefined,
+    password: includePassword
+      ? connectorValue("password") || undefined
+      : undefined,
+    database: connectorValue("database").trim() || undefined,
     socketPath,
     transport: socketPath ? { kind: "localFile", path: socketPath } : undefined,
     ...options,
