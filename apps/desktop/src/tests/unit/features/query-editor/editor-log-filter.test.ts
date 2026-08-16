@@ -5,6 +5,7 @@ import {
   computeLogFilterRanges,
   currentLogFilter,
   emptyLogFilter,
+  isValidLogFilterPattern,
   isLogFilterActive,
   logFilterSpecsEqual,
   logLineFilter,
@@ -154,6 +155,18 @@ describe("logFilterSpecsEqual", () => {
     expect(
       logFilterSpecsEqual(emptyLogFilter, spec({ minLevel: "warn" })),
     ).toBe(false);
+  });
+});
+
+describe("isValidLogFilterPattern", () => {
+  it("accepts empty and compilable patterns", () => {
+    expect(isValidLogFilterPattern("")).toBe(true);
+    expect(isValidLogFilterPattern("timeout|retry\\s+later")).toBe(true);
+  });
+
+  it("reports half-typed expressions that fall back to literal matching", () => {
+    expect(isValidLogFilterPattern("handler (")).toBe(false);
+    expect(isValidLogFilterPattern("[unterminated")).toBe(false);
   });
 });
 

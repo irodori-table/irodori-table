@@ -237,6 +237,17 @@ export function useEditorGroups({
     setActiveEditorGroup(group);
   }
 
+  /** Open generated SQL without replacing the source tab that produced it. */
+  function openSqlInNewTab(
+    sql: string,
+    group: EditorGroup = activeEditorGroup,
+  ) {
+    updateEditorGroupState(group, (state) =>
+      addSqlTabToEditorGroup(state, { query: sql }),
+    );
+    setActiveEditorGroup(group);
+  }
+
   function renameSqlTab(group: EditorGroup, tabId: string) {
     const state = editorGroupStates[group];
     const tab = state.tabs.find((item) => item.id === tabId);
@@ -327,6 +338,7 @@ export function useEditorGroups({
     editorSelections,
     editorTabMenu,
     newSqlTab,
+    openSqlInNewTab,
     primaryQuery: queryForEditorGroup(editorGroupStates.primary),
     query,
     renameSqlTab,

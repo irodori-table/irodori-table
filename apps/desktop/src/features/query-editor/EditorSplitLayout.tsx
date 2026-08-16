@@ -21,9 +21,12 @@ import type { SqlMetadataTarget } from "../../sql/metadata-inspection";
 import type { IrodoriTheme } from "@/theme";
 import type { EditorSplitMode } from "@/lib/editor-split-mode";
 import type { EditorGroup, EditorSelections } from "./query-editor-pane-types";
+import type { LogProfileImportRequest } from "./editor-log-profile";
 
 type EditorGroupState = {
   query: string;
+  /** Stable active-tab identity, separate from the user-editable label. */
+  tabKey: string;
   /** Active tab's file-style label; routes the buffer language (EDITOR-178). */
   tabLabel: string;
   apiRef: RefObject<SqlEditorHandle | null>;
@@ -56,6 +59,7 @@ export type EditorSplitLayoutProps = {
   onEditorContextMenu: EditorContextMenuHandler;
   onMetadataJump?: (target: SqlMetadataTarget) => void;
   onMetadataToolWindow: (request: SqlMetadataToolWindowRequest) => void;
+  onLogProfileImport?: (request: LogProfileImportRequest) => void;
   beginEditorSplitResize: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onEditorSplitResizeKey: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
@@ -81,6 +85,7 @@ export function EditorSplitLayout({
   onEditorContextMenu,
   onMetadataJump,
   onMetadataToolWindow,
+  onLogProfileImport,
   beginEditorSplitResize,
   onEditorSplitResizeKey,
 }: EditorSplitLayoutProps) {
@@ -91,6 +96,7 @@ export function EditorSplitLayout({
       group={group}
       active={activeEditorGroup === group}
       query={state.query}
+      tabKey={state.tabKey}
       tabLabel={state.tabLabel}
       apiRef={state.apiRef}
       formatter={formatter}
@@ -108,6 +114,7 @@ export function EditorSplitLayout({
       onContextMenu={onEditorContextMenu}
       onMetadataJump={onMetadataJump}
       onMetadataToolWindow={onMetadataToolWindow}
+      onLogProfileImport={onLogProfileImport}
     />
   );
 

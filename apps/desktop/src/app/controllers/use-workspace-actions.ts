@@ -32,7 +32,12 @@ import {
   type CompletionHint,
 } from "@/features/workbench";
 import { toCount } from "@/features/results";
-import type { SqlEditorHandle } from "@/features/query-editor";
+import {
+  parseLogWithProfile,
+  type LogProfileImportRequest,
+  type ResolvedLogProfileId,
+  type SqlEditorHandle,
+} from "@/features/query-editor";
 import type { Translator } from "@/i18n";
 import { type ValueUpdater, localizedErrorMessage } from "@/core";
 import type { SqlMetadataTarget } from "@/sql/metadata-inspection";
@@ -53,6 +58,7 @@ export type WorkspaceActionsDeps = {
   themeKind: string;
   schemaDraft: SchemaDesignerDraft;
   setQuery: (value: string) => void;
+  openSqlInNewTab: (sql: string) => void;
   setMigrationStudioOpen: (value: boolean) => void;
   setSchemaDesignerOpen: (value: boolean) => void;
   setObjectActionMenu: (value: ValueUpdater<string | null>) => void;
@@ -80,6 +86,7 @@ export function useWorkspaceActions({
   themeKind,
   schemaDraft,
   setQuery,
+  openSqlInNewTab,
   setMigrationStudioOpen,
   setSchemaDesignerOpen,
   setObjectActionMenu,
@@ -164,18 +171,64 @@ export function useWorkspaceActions({
     }
   }
 
+  function handleLogProfileImport(request: LogProfileImportRequest) {
+    setImportPreview(null);
+    try {
+      const { profileId, ...parsed } = parseLogWithProfile(
+        request.text,
+        request.profileId,
+      );
+      if (parsed.totalRows === 0) {
+        showActionNotice(
+          "error",
+          t("notice.workbench.logProfileFailed"),
+          t("notice.workbench.logProfileEmptyDetail"),
+        );
+        return;
+      }
+      const profileName = resolvedLogProfileName(t, profileId);
+      setImportPreview({
+        ...parsed,
+        fileName: request.fileName,
+        format: "log",
+        sourceLabel: profileName,
+        tableName: inferImportTableName(request.fileName),
+        mode: "create",
+        sqlDestination: "new-tab",
+      });
+      showActionNotice(
+        "success",
+        t("notice.workbench.logProfileReady"),
+        t("notice.workbench.logProfileReadyDetail", {
+          name: request.fileName,
+          profile: profileName,
+          count: toCount(parsed.totalRows),
+        }),
+      );
+    } catch (error) {
+      showActionNotice(
+        "error",
+        t("notice.workbench.logProfileFailed"),
+        localizedErrorMessage(t, error),
+      );
+    }
+  }
+
   function putImportSqlInEditor() {
     if (!importPreview) {
       return;
     }
-    setQuery(
-      generateImportSql(
-        importPreview.tableName,
-        importPreview.columns,
-        importPreview.rows,
-        importPreview.mode !== "append",
-      ),
+    const sql = generateImportSql(
+      importPreview.tableName,
+      importPreview.columns,
+      importPreview.rows,
+      importPreview.mode !== "append",
     );
+    if (importPreview.sqlDestination === "new-tab") {
+      openSqlInNewTab(sql);
+    } else {
+      setQuery(sql);
+    }
     setImportPreview(null);
     showActionNotice(
       "success",
@@ -369,6 +422,7 @@ export function useWorkspaceActions({
     formatObjectName: (object: DbObjectMetadata) =>
       qualifiedObjectName(editorEngine, object),
     handleImportFile,
+    handleLogProfileImport,
     putImportSqlInEditor,
     putMigrationTextInEditor,
     copyMigrationText,
@@ -385,4 +439,15 @@ export function useWorkspaceActions({
     copyAppDiagnostics,
     openAppDeveloperTools,
   };
+}
+
+function resolvedLogProfileName(
+  t: Translator["t"],
+  profileId: ResolvedLogProfileId,
+): string {
+  return t(
+    profileId === "jsonl"
+      ? "editor.logProfile.jsonl"
+      : "editor.logProfile.common",
+  );
 }

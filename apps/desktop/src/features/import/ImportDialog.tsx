@@ -11,12 +11,17 @@ import type { ImportTextFormat, ParsedImport } from "./importers";
  * whether it actually exists is only known at execution time.
  */
 export type ImportMode = "create" | "append";
+export type ImportSqlDestination = "active-tab" | "new-tab";
 
 export type ImportPreview = ParsedImport & {
   fileName: string;
-  format: ImportTextFormat;
+  format: ImportTextFormat | "log";
+  /** Optional, localized detail such as the resolved log profile name. */
+  sourceLabel?: string;
   tableName: string;
   mode: ImportMode;
+  /** Log imports preserve their source buffer by opening SQL elsewhere. */
+  sqlDestination?: ImportSqlDestination;
 };
 
 export function ImportDialog({
@@ -50,7 +55,7 @@ export function ImportDialog({
     >
       <div className="dialog-header">
         <strong>{t("import.dialog.title")}</strong>
-        <span>{`${preview.fileName} \u00b7 ${preview.format.toUpperCase()}`}</span>
+        <span>{`${preview.fileName} \u00b7 ${preview.sourceLabel ?? preview.format.toUpperCase()}`}</span>
         <button className="text-button" type="button" onClick={onClose}>
           {t("common.close")}
         </button>
@@ -149,7 +154,11 @@ export function ImportDialog({
           type="button"
           onClick={onPutSqlInEditor}
         >
-          {t("common.putSqlInEditor")}
+          {t(
+            preview.sqlDestination === "new-tab"
+              ? "common.openSqlInNewTab"
+              : "common.putSqlInEditor",
+          )}
         </button>
       </div>
     </DialogShell>

@@ -2,6 +2,7 @@ export {
   ImportDialog,
   type ImportMode,
   type ImportPreview,
+  type ImportSqlDestination,
 } from "./ImportDialog";
 export {
   detectImportFileKind,

@@ -33,12 +33,15 @@ import type {
   EditorSelection,
   EditorSelections,
 } from "./query-editor-pane-types";
+import type { LogProfileImportRequest } from "./editor-log-profile";
 
 export type { EditorGroup, EditorSelection, EditorSelections };
 
 export interface QueryEditorPaneProps {
   activeTabLabel: string;
   /** Per-group active tab labels; each routes its buffer's language (EDITOR-178). */
+  primaryTabKey: string;
+  secondaryTabKey: string;
   primaryTabLabel: string;
   secondaryTabLabel: string;
   running: boolean;
@@ -86,10 +89,13 @@ export interface QueryEditorPaneProps {
   onUnsupportedFileDrop?: () => void;
   sqlFileDropLabel?: string;
   onMetadataJump?: (target: SqlMetadataTarget) => void;
+  onLogProfileImport?: (request: LogProfileImportRequest) => void;
 }
 
 export function QueryEditorPane({
   activeTabLabel,
+  primaryTabKey,
+  secondaryTabKey,
   primaryTabLabel,
   secondaryTabLabel,
   running,
@@ -137,6 +143,7 @@ export function QueryEditorPane({
   onUnsupportedFileDrop,
   sqlFileDropLabel = "Drop .sql file to load",
   onMetadataJump,
+  onLogProfileImport,
 }: QueryEditorPaneProps) {
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = createTranslator(locale);
@@ -205,12 +212,14 @@ export function QueryEditorPane({
           activeEditorGroup={activeEditorGroup}
           primary={{
             query: primaryQuery,
+            tabKey: primaryTabKey,
             tabLabel: primaryTabLabel,
             apiRef: editorApiRef,
             onQueryChange: onPrimaryQueryChange,
           }}
           secondary={{
             query: secondaryQuery,
+            tabKey: secondaryTabKey,
             tabLabel: secondaryTabLabel,
             apiRef: secondaryEditorApiRef,
             onQueryChange: onSecondaryQueryChange,
@@ -229,6 +238,7 @@ export function QueryEditorPane({
           onEditorContextMenu={openEditorContextMenu}
           onMetadataJump={onMetadataJump}
           onMetadataToolWindow={setMetadataToolWindow}
+          onLogProfileImport={onLogProfileImport}
           beginEditorSplitResize={beginEditorSplitResize}
           onEditorSplitResizeKey={onEditorSplitResizeKey}
         />

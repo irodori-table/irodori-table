@@ -73,6 +73,7 @@ export function useEditorWorkspace({
     editorSelections,
     editorTabMenu,
     newSqlTab,
+    openSqlInNewTab,
     primaryQuery,
     query,
     renameSqlTab,
@@ -166,7 +167,7 @@ export function useEditorWorkspace({
     >;
     workspace: Pick<
       ReturnType<typeof useWorkspaceActions>,
-      "handleImportFile" | "jumpToSqlMetadata"
+      "handleImportFile" | "handleLogProfileImport" | "jumpToSqlMetadata"
     >;
     cancelQuery: ReturnType<typeof useQueryRunner>["cancelQuery"];
     beginPanelResize: PanelResize["beginPanelResize"];
@@ -174,6 +175,8 @@ export function useEditorWorkspace({
   }): QueryEditorController {
     return {
       activeTabLabel,
+      primaryTabKey: editorGroupStates.primary.activeTabId,
+      secondaryTabKey: editorGroupStates.secondary.activeTabId,
       primaryTabLabel: activeTabLabelForEditorGroup(editorGroupStates.primary),
       secondaryTabLabel: activeTabLabelForEditorGroup(
         editorGroupStates.secondary,
@@ -230,6 +233,7 @@ export function useEditorWorkspace({
         ),
       sqlFileDropLabel: t("editor.dropSqlFile"),
       onMetadataJump: extra.workspace.jumpToSqlMetadata,
+      onLogProfileImport: extra.workspace.handleLogProfileImport,
     } satisfies QueryEditorController;
   }
 
@@ -237,6 +241,7 @@ export function useEditorWorkspace({
     editorGroups,
     query,
     setQuery,
+    openSqlInNewTab,
     activeTabLabel,
     editorSelections,
     editorSplitMode,

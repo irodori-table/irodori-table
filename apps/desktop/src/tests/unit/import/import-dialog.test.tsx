@@ -106,3 +106,35 @@ describe("ImportDialog append mode (#164)", () => {
     ).toBeChecked();
   });
 });
+
+describe("ImportDialog structured log destination (#177 tier 4)", () => {
+  it("shows the resolved profile and opens generated SQL in a new tab", () => {
+    renderDialog({
+      preview: preview({
+        fileName: "app.log",
+        format: "log",
+        sourceLabel: "Common text",
+        sqlDestination: "new-tab",
+      }),
+    });
+
+    expect(screen.getByText("app.log · Common text")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Open SQL in new tab" }),
+    ).toBeVisible();
+  });
+
+  it("localizes the new-tab action", () => {
+    usePreferencesStore.setState({ locale: "ja" });
+    renderDialog({
+      preview: preview({
+        format: "log",
+        sqlDestination: "new-tab",
+      }),
+    });
+
+    expect(
+      screen.getByRole("button", { name: "SQL を新しいタブで開く" }),
+    ).toBeVisible();
+  });
+});

@@ -57,6 +57,24 @@ describe("LogMarksBar", () => {
     expect(props.onActiveColorChange).toHaveBeenCalledWith("blue");
   });
 
+  it("uses roving focus and arrow keys within the colour radio group", async () => {
+    const { user, props } = renderBar({ activeColor: "amber" });
+    const amber = screen.getByRole("radio", { name: "Amber" });
+    const green = screen.getByRole("radio", { name: "Green" });
+    const red = screen.getByRole("radio", { name: "Red" });
+
+    expect(amber).toHaveAttribute("tabindex", "0");
+    expect(green).toHaveAttribute("tabindex", "-1");
+    amber.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(props.onActiveColorChange).toHaveBeenLastCalledWith("green");
+    expect(green).toHaveFocus();
+
+    await user.keyboard("{End}");
+    expect(props.onActiveColorChange).toHaveBeenLastCalledWith("red");
+    expect(red).toHaveFocus();
+  });
+
   it("marks the current line and clears all marks", async () => {
     const { user, props } = renderBar({ marks: { 3: "amber" } });
 

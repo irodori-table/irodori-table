@@ -82,6 +82,26 @@ describe("LogFilterBar", () => {
     expect(onFilterChange).toHaveBeenCalledWith({ minLevel: "all", text: "x" });
   });
 
+  it("reports invalid regex input while keeping the literal fallback usable", () => {
+    renderUi(
+      <LogFilterBar
+        filter={{ minLevel: "all", text: "handler (" }}
+        hiddenLineCount={3}
+        onFilterChange={() => {}}
+      />,
+    );
+    const input = screen.getByRole("textbox", {
+      name: "Filter log entries (regex)",
+    });
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input.closest("label")).toBeNull();
+    expect(
+      screen.getByRole("status", {
+        name: "Invalid regular expression; matching literal text instead",
+      }),
+    ).toBeVisible();
+  });
+
   it("clears the text filter with Escape", async () => {
     const onFilterChange = vi.fn();
     const { user } = renderUi(

@@ -1,8 +1,9 @@
-import { Search, X } from "lucide-react";
+import { CircleAlert, Search, X } from "lucide-react";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator } from "@/i18n";
 import {
   emptyLogFilter,
+  isValidLogFilterPattern,
   isLogFilterActive,
   logMinLevels,
   type LogFilterSpec,
@@ -37,6 +38,7 @@ export function LogFilterBar({
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = createTranslator(locale);
   const active = isLogFilterActive(filter);
+  const validPattern = isValidLogFilterPattern(filter.text);
 
   const setMinLevel = (minLevel: LogMinLevel) => {
     onFilterChange({ ...filter, minLevel });
@@ -76,10 +78,15 @@ export function LogFilterBar({
           </button>
         ))}
       </div>
-      <label className={`log-filter-text${filter.text ? " active" : ""}`}>
+      <div
+        className={`log-filter-text${filter.text ? " active" : ""}${
+          validPattern ? "" : " invalid"
+        }`}
+      >
         <Search size={13} aria-hidden="true" />
         <input
           aria-label={t("editor.logFilter.pattern")}
+          aria-invalid={validPattern ? undefined : true}
           placeholder={t("editor.logFilter.patternPlaceholder")}
           value={filter.text}
           onChange={(event) => setText(event.currentTarget.value)}
@@ -91,6 +98,16 @@ export function LogFilterBar({
             }
           }}
         />
+        {!validPattern ? (
+          <span
+            className="log-filter-pattern-warning"
+            role="status"
+            aria-label={t("editor.logFilter.invalidPattern")}
+            title={t("editor.logFilter.invalidPattern")}
+          >
+            <CircleAlert size={12} aria-hidden="true" />
+          </span>
+        ) : null}
         {filter.text ? (
           <button
             type="button"
@@ -101,7 +118,7 @@ export function LogFilterBar({
             <X size={12} />
           </button>
         ) : null}
-      </label>
+      </div>
       {/* The status + clear controls share one right-aligned slot so the
           level buttons and input never shift when the filter toggles. */}
       <span className="log-filter-status" role="status">

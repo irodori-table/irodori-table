@@ -121,6 +121,19 @@ function compileLogTextMatcher(
   }
 }
 
+/** Whether the text filter can be compiled as the regex the UI advertises. */
+export function isValidLogFilterPattern(text: string): boolean {
+  if (!text) {
+    return true;
+  }
+  try {
+    new RegExp(text, "i");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export type LogFilterResult = {
   /** Merged runs of hidden lines (0-based, inclusive). */
   hiddenRanges: Array<{ fromLine: number; toLine: number }>;

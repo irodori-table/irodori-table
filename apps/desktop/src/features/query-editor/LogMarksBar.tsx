@@ -1,4 +1,5 @@
 import { BookmarkPlus, X } from "lucide-react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator, type TranslationKey } from "@/i18n";
 import {
@@ -46,6 +47,38 @@ export function LogMarksBar({
   const markedLines = sortedLogMarkLines(marks);
   const count = logMarkCount(marks);
 
+  const moveColorFocus = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    let nextIndex: number | null = null;
+    switch (event.key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        nextIndex = (index + 1) % logMarkColors.length;
+        break;
+      case "ArrowLeft":
+      case "ArrowUp":
+        nextIndex = (index - 1 + logMarkColors.length) % logMarkColors.length;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = logMarkColors.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    const nextColor = logMarkColors[nextIndex];
+    onActiveColorChange(nextColor);
+    const radios = event.currentTarget.parentElement?.querySelectorAll(
+      "button[role='radio']",
+    );
+    (radios?.[nextIndex] as HTMLButtonElement | undefined)?.focus();
+  };
+
   return (
     <div
       className="log-marks-bar"
@@ -57,7 +90,7 @@ export function LogMarksBar({
         role="radiogroup"
         aria-label={t("editor.logMarks.color")}
       >
-        {logMarkColors.map((color) => (
+        {logMarkColors.map((color, index) => (
           <button
             key={color}
             type="button"
@@ -65,10 +98,12 @@ export function LogMarksBar({
             aria-checked={color === activeColor}
             aria-label={t(colorLabelKeys[color])}
             title={t(colorLabelKeys[color])}
+            tabIndex={color === activeColor ? 0 : -1}
             className={`log-mark-color log-mark-color-${color}${
               color === activeColor ? " active" : ""
             }`}
             onClick={() => onActiveColorChange(color)}
+            onKeyDown={(event) => moveColorFocus(event, index)}
           />
         ))}
       </div>

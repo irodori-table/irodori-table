@@ -70,6 +70,7 @@ export function useWorkbenchActions({
     themeKind: themes.theme.kind,
     schemaDraft,
     setQuery: editor.setQuery,
+    openSqlInNewTab: editor.openSqlInNewTab,
     setMigrationStudioOpen: overlays.setMigrationStudioOpen,
     setSchemaDesignerOpen,
     setObjectActionMenu: connections.setObjectActionMenu,

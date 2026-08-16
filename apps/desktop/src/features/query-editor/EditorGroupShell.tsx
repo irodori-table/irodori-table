@@ -1,6 +1,7 @@
 import {
+  useCallback,
+  useEffect,
   useMemo,
-  useRef,
   useState,
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
@@ -13,9 +14,11 @@ import SqlEditor, {
 } from "./SqlEditor";
 import { LogFilterBar } from "./LogFilterBar";
 import { LogMarksBar } from "./LogMarksBar";
+import { LogProfileBar } from "./LogProfileBar";
 import {
   emptyLogMarks,
   loadLogMarks,
+  logMarksEqual,
   pruneLogMarks,
   saveLogMarks,
   toggleLogMark,
@@ -26,9 +29,14 @@ import {
   computeLogFilterRanges,
   emptyLogFilter,
   isLogFilterActive,
+  logFilterSpecsEqual,
   splitLogFilterLines,
   type LogFilterSpec,
 } from "./editor-log-filter";
+import {
+  type LogProfileId,
+  type LogProfileImportRequest,
+} from "./editor-log-profile";
 import { editorLanguageForTabLabel } from "@/lib/editor-language";
 import type { DatabaseMetadata, DbEngine } from "../../generated/irodori-api";
 import type { SqlSnippetDefinition } from "../../sql/completion";
@@ -42,6 +50,8 @@ export type EditorGroupShellProps = {
   group: EditorGroup;
   active: boolean;
   query: string;
+  /** Stable active-tab identity; labels alone can collide across tabs. */
+  tabKey: string;
   /** Active tab's file-style label; routes the buffer language (EDITOR-178). */
   tabLabel: string;
   apiRef: RefObject<SqlEditorHandle | null>;
@@ -63,12 +73,14 @@ export type EditorGroupShellProps = {
   ) => void;
   onMetadataJump?: (target: SqlMetadataTarget) => void;
   onMetadataToolWindow: (request: SqlMetadataToolWindowRequest) => void;
+  onLogProfileImport?: (request: LogProfileImportRequest) => void;
 };
 
 export function EditorGroupShell({
   group,
   active,
   query,
+  tabKey,
   tabLabel,
   apiRef,
   formatter,
@@ -86,38 +98,98 @@ export function EditorGroupShell({
   onContextMenu,
   onMetadataJump,
   onMetadataToolWindow,
+  onLogProfileImport,
 }: EditorGroupShellProps) {
   const language = editorLanguageForTabLabel(tabLabel);
 
-  // Log filter state (issue #177). It belongs to the shell, not the editor,
-  // so the bar and the CodeMirror view share one source of truth. A filter
-  // tuned for one file must not silently hide lines in another, so switching
-  // tabs resets it (render-time reset keeps the editor and bar in step).
-  const [logFilter, setLogFilter] = useState<LogFilterSpec>(emptyLogFilter);
-  const lastTabLabel = useRef(tabLabel);
-  if (lastTabLabel.current !== tabLabel) {
-    lastTabLabel.current = tabLabel;
-    if (isLogFilterActive(logFilter)) {
-      setLogFilter(emptyLogFilter);
-    }
-  }
-  // Marks are per file and survive the session (#177 tier 3), so unlike the
-  // filter they are loaded on tab switch rather than reset. The tab's
-  // file-style label is the identity, matching what routes the language.
-  const [logMarks, setLogMarks] = useState<LogMarks>(() =>
-    language === "log" ? loadLogMarks(tabLabel) : emptyLogMarks,
+  // Log filters are session-only but belong to a buffer, not an editor group.
+  // Keeping a small keyed map means switching tabs can never apply one file's
+  // filter to another, while returning to a tab restores its working context.
+  // Include the label so renaming a tab to/from `.log` starts with a clean view.
+  const logBufferKey = `${tabKey}\u0000${tabLabel}`;
+  const [logFiltersByBuffer, setLogFiltersByBuffer] = useState<
+    ReadonlyMap<string, LogFilterSpec>
+  >(() => new Map());
+  const logFilter =
+    language === "log"
+      ? (logFiltersByBuffer.get(logBufferKey) ?? emptyLogFilter)
+      : emptyLogFilter;
+  const setLogFilter = useCallback(
+    (next: LogFilterSpec) => {
+      setLogFiltersByBuffer((current) => {
+        const previous = current.get(logBufferKey) ?? emptyLogFilter;
+        if (logFilterSpecsEqual(previous, next)) {
+          return current;
+        }
+        const updated = new Map(current);
+        if (isLogFilterActive(next)) {
+          updated.set(logBufferKey, next);
+        } else {
+          updated.delete(logBufferKey);
+        }
+        return updated;
+      });
+    },
+    [logBufferKey],
   );
-  const [markColor, setMarkColor] = useState<LogMarkColor>("amber");
-  const lastMarksTab = useRef(tabLabel);
-  if (lastMarksTab.current !== tabLabel) {
-    lastMarksTab.current = tabLabel;
-    setLogMarks(language === "log" ? loadLogMarks(tabLabel) : emptyLogMarks);
-  }
 
-  const persistMarks = (next: LogMarks) => {
-    setLogMarks(next);
-    saveLogMarks(tabLabel, next);
-  };
+  // Profile choice is session-only and follows the same stable buffer
+  // identity as filtering. Auto is the default and therefore needs no map
+  // entry, keeping tab churn from accumulating redundant state.
+  const [logProfilesByBuffer, setLogProfilesByBuffer] = useState<
+    ReadonlyMap<string, LogProfileId>
+  >(() => new Map());
+  const logProfile = logProfilesByBuffer.get(logBufferKey) ?? "auto";
+  const setLogProfile = useCallback(
+    (next: LogProfileId) => {
+      setLogProfilesByBuffer((current) => {
+        if ((current.get(logBufferKey) ?? "auto") === next) {
+          return current;
+        }
+        const updated = new Map(current);
+        if (next === "auto") {
+          updated.delete(logBufferKey);
+        } else {
+          updated.set(logBufferKey, next);
+        }
+        return updated;
+      });
+    },
+    [logBufferKey],
+  );
+
+  // Marks are persistent per file-style label (#177 tier 3). Cache loaded
+  // values by that identity so tab switches are synchronous and never require
+  // a render-time state update.
+  const [logMarksByFile, setLogMarksByFile] = useState<
+    ReadonlyMap<string, LogMarks>
+  >(() => new Map());
+  const storedLogMarks = useMemo(
+    () => (language === "log" ? loadLogMarks(tabLabel) : emptyLogMarks),
+    [language, tabLabel],
+  );
+  const logMarks =
+    language === "log"
+      ? (logMarksByFile.get(tabLabel) ?? storedLogMarks)
+      : emptyLogMarks;
+  const [markColor, setMarkColor] = useState<LogMarkColor>("amber");
+  const persistMarks = useCallback(
+    (next: LogMarks) => {
+      setLogMarksByFile((current) => {
+        const previous = current.get(tabLabel) ?? storedLogMarks;
+        if (logMarksEqual(previous, next)) {
+          return current;
+        }
+        const updated = new Map(current);
+        // Keep an explicit empty entry. Deleting it would fall back to the
+        // memoized pre-clear storage snapshot during this render cycle.
+        updated.set(tabLabel, next);
+        return updated;
+      });
+      saveLogMarks(tabLabel, next);
+    },
+    [storedLogMarks, tabLabel],
+  );
 
   // A log re-read after truncation can be shorter than when it was marked; drop
   // marks past the end so the list cannot point at lines that no longer exist.
@@ -131,6 +203,14 @@ export function EditorGroupShell({
     [language, logMarks, lineCount],
   );
 
+  // Pruning must update storage, not only the decorations. Otherwise marks
+  // past EOF reappear if a rotated log later grows back to its old length.
+  useEffect(() => {
+    if (language === "log" && !logMarksEqual(logMarks, visibleMarks)) {
+      persistMarks(visibleMarks);
+    }
+  }, [language, logMarks, persistMarks, visibleMarks]);
+
   const markCurrentLine = () => {
     // Ask the view rather than recomputing from the string: it already knows
     // the line, including how the document's line breaks were counted.
@@ -138,7 +218,7 @@ export function EditorGroupShell({
     if (!line) {
       return;
     }
-    persistMarks(toggleLogMark(logMarks, line, markColor));
+    persistMarks(toggleLogMark(visibleMarks, line, markColor));
   };
 
   const logFilterStats = useMemo(() => {
@@ -178,6 +258,18 @@ export function EditorGroupShell({
             onMarkCurrentLine={markCurrentLine}
             onJumpToLine={(line) => apiRef.current?.revealLine(line)}
             onClearMarks={() => persistMarks(emptyLogMarks)}
+          />
+          <LogProfileBar
+            profileId={logProfile}
+            hasContent={query.trim().length > 0}
+            onProfileChange={setLogProfile}
+            onCreateTable={() =>
+              onLogProfileImport?.({
+                fileName: tabLabel,
+                text: query,
+                profileId: logProfile,
+              })
+            }
           />
         </>
       ) : null}
