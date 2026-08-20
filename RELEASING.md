@@ -110,6 +110,12 @@ or `.cargo/config.toml`, and takes roughly 10-15 minutes. Releasing before it
 finishes is not harmful, only slow: the lanes fall back to a prefix match
 against the previous dependency set and recompile what changed.
 
+The release helper's own `chore: release vX.Y.Z` commit changes only workspace
+versions, so the warm matrix intentionally skips that push. Its dependency
+graph was already warmed by the preceding code or dependency change, and the
+tag release restores that cache. A manual workflow dispatch still forces all
+three warm jobs when an operator needs to rebuild the cache explicitly.
+
 The default tag workflow is intentionally unsigned and marked as a pre-release.
 It publishes Linux AppImage, deb, and rpm packages, but it must not be used as
 the stable updater channel. The updater plugin is compiled into the desktop

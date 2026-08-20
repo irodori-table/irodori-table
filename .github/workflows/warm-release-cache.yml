@@ -39,6 +39,14 @@ permissions:
 jobs:
   warm:
     name: Warm ${{ matrix.label }} release cache
+    # release.mjs makes an exact version-only commit after the dependency cache
+    # has already been warmed. Rebuilding all three platforms for that commit
+    # cannot add a dependency artifact, so let the tag release restore the
+    # previous dependency cache instead. Manual dispatch remains an explicit
+    # way to force a warm run.
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch' ||
+          !startsWith(github.event.head_commit.message, 'chore: release v') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -76,11 +84,6 @@ jobs:
             mold \
             wget
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-
       # Must match the release lanes exactly: rust-cache hashes every installed
       # toolchain into the key, so a different toolchain here warms a cache the
       # release can never restore.
@@ -104,15 +107,17 @@ jobs:
           # nothing is better than poisoning the key.
           shared-key: release-${{ runner.os }}
 
-      - name: Install frontend dependencies
-        working-directory: apps/desktop
-        run: npm ci
-
-      # The Tauri crate embeds ../dist, so the frontend must exist before cargo
-      # can build the desktop crate.
-      - name: Build frontend
-        working-directory: apps/desktop
-        run: npm run build
+      # The Tauri crate requires frontendDist to exist when its compile-time
+      # context is generated. rust-cache deliberately removes workspace-crate
+      # artifacts before saving, so compiling the real UI here cannot help a
+      # release restore. A deterministic stub satisfies that compile-time
+      # contract while avoiding npm setup and a Vite build on every platform.
+      - name: Prepare minimal frontend for dependency compilation
+        shell: bash
+        run: |
+          mkdir -p apps/desktop/dist
+          printf '%s\n' '<!doctype html><title>Irodori cache warmup</title>' \
+            > apps/desktop/dist/index.html
 
       # Split by platform rather than branching inside one step. Forcing
       # `shell: bash` on Windows put MSYS perl on PATH, and its perl lacks

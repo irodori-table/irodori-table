@@ -78,14 +78,14 @@ async function syncExtension(extension) {
   const releases = await githubJson(
     `https://api.github.com/repos/${repository}/releases?per_page=30`,
   );
-  const release = releases
-    .filter(
-      (candidate) =>
-        !candidate.draft &&
-        candidate.tag_name &&
-        candidate.assets?.some((asset) => asset.name?.endsWith(".tar.gz")),
-    )
-    .sort((left, right) => compareVersions(right.tag_name, left.tag_name))[0];
+  // GitHub's REST release-list endpoint can transiently answer HTTP 200 with
+  // an empty array for transferred public repositories even though the same
+  // release is available through the single-release endpoint. Keep the list
+  // as the authority when it works (it preserves the existing semver choice),
+  // then use /latest only as a second read path. All manifest, version, asset,
+  // target, and digest validation below still applies to the fallback.
+  const release =
+    selectInstallableRelease(releases) ?? (await latestInstallableRelease(repository));
   if (!release) {
     throw new Error(`${repository}: no installable GitHub release found`);
   }
@@ -130,6 +130,34 @@ async function syncExtension(extension) {
       assets: sortObject(assets),
     },
   };
+}
+
+function selectInstallableRelease(releases) {
+  return releases
+    .filter(isInstallableRelease)
+    .sort((left, right) => compareVersions(right.tag_name, left.tag_name))[0];
+}
+
+function isInstallableRelease(candidate) {
+  return Boolean(
+    candidate &&
+    !candidate.draft &&
+    candidate.tag_name &&
+    candidate.assets?.some((asset) => asset.name?.endsWith(".tar.gz")),
+  );
+}
+
+async function latestInstallableRelease(repository) {
+  const response = await githubFetch(
+    `https://api.github.com/repos/${repository}/releases/latest`,
+    { headers: { accept: "application/vnd.github+json" } },
+    { allowNotFound: true },
+  );
+  if (response.status === 404) {
+    return undefined;
+  }
+  const release = await response.json();
+  return isInstallableRelease(release) ? release : undefined;
 }
 
 async function releaseManifest(repository, tag) {
@@ -194,7 +222,7 @@ async function githubJson(url) {
   return response.json();
 }
 
-async function githubFetch(url, options = {}) {
+async function githubFetch(url, options = {}, { allowNotFound = false } = {}) {
   const headers = new Headers(options.headers);
   headers.set("user-agent", "irodori-release-catalog-sync");
   headers.set("x-github-api-version", "2022-11-28");
@@ -202,6 +230,9 @@ async function githubFetch(url, options = {}) {
     headers.set("authorization", `Bearer ${process.env.GITHUB_TOKEN}`);
   }
   const response = await fetch(url, { ...options, headers });
+  if (allowNotFound && response.status === 404) {
+    return response;
+  }
   if (!response.ok) {
     throw new Error(`${url}: HTTP ${response.status}`);
   }
