@@ -102,7 +102,10 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
       const next = patch.engine
         ? {
             ...current,
-            ...memoryDefaults(patch.engine),
+            ...memoryDefaults(
+              patch.engine,
+              connectionModelForEngine(installedExtensions, patch.engine),
+            ),
             // Connector credentials are engine-specific. Clear every transient
             // credential carrier so a DSN, access-key identity, token, or
             // private key cannot cross into the next connector by accident.

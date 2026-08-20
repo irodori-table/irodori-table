@@ -1,4 +1,5 @@
 {
+  "scope": "builtinEngines",
   "defaultSettings": {
     "preferredMode": "fields",
     "urlLabelKey": "connection.field.urlDsn",
@@ -52,39 +53,6 @@
         "showUser": false,
         "showPassword": false,
         "transportLabelKey": "connection.transport.localFile"
-      }
-    },
-    {
-      "engines": ["duckdb"],
-      "settings": {
-        "preferredMode": "fields",
-        "urlPlaceholder": ":memory: or /absolute/path/to/database.duckdb",
-        "fieldsLabelKey": "connection.field.file",
-        "databaseLabelKey": "connection.field.duckdbFileMemory",
-        "databasePlaceholder": "/path/to/database.duckdb or :memory:",
-        "showHost": false,
-        "showPort": false,
-        "showUser": false,
-        "showPassword": false,
-        "transportLabelKey": "connection.transport.localFile"
-      }
-    },
-    {
-      "engines": ["motherduck"],
-      "settings": {
-        "preferredMode": "url",
-        "urlLabelKey": "connection.field.motherduckDsn",
-        "urlPlaceholder": "md: or motherduck://token@md/database",
-        "fieldsLabelKey": "connection.field.motherduck",
-        "hostLabelKey": "connection.field.account",
-        "hostPlaceholder": "md",
-        "portLabelKey": "connection.field.apiPort",
-        "userLabelKey": "connection.field.tokenUser",
-        "userPlaceholder": "token",
-        "passwordLabelKey": "connection.field.motherduckToken",
-        "databaseLabelKey": "connection.field.database",
-        "showPort": false,
-        "transportLabelKey": "connection.transport.duckdbExtension"
       }
     },
     {
@@ -160,25 +128,6 @@
       }
     },
     {
-      "engines": ["athena"],
-      "settings": {
-        "preferredMode": "url",
-        "urlLabelKey": "connection.field.athenaDsnAwsProfile",
-        "urlPlaceholder": "athena://profile@us-east-1/AwsDataCatalog/default?workgroup=primary&output=s3://bucket/query-results/",
-        "fieldsLabelKey": "connection.field.aws",
-        "hostLabelKey": "connection.field.region",
-        "hostPlaceholder": "us-east-1",
-        "portLabelKey": "connection.field.apiPort",
-        "userLabelKey": "connection.field.awsProfileAccessKey",
-        "userPlaceholder": "default",
-        "passwordLabelKey": "connection.field.secretSessionToken",
-        "databaseLabelKey": "connection.field.catalogDatabase",
-        "databasePlaceholder": "AwsDataCatalog/default",
-        "showPort": false,
-        "transportLabelKey": "connection.transport.awsAthenaApi"
-      }
-    },
-    {
       "engines": ["bigtable"],
       "settings": {
         "preferredMode": "url",
@@ -191,32 +140,6 @@
         "databaseLabelKey": "connection.field.tableAppProfile",
         "showPort": false,
         "transportLabelKey": "connection.transport.googleApi"
-      }
-    },
-    {
-      "engines": ["cloudSpanner"],
-      "settings": {
-        "preferredMode": "url",
-        "urlLabelKey": "connection.field.projectInstanceCredentials",
-        "urlPlaceholder": "spanner://project/instance/database or credentials JSON path",
-        "hostLabelKey": "connection.field.projectInstance",
-        "hostPlaceholder": "project/instance",
-        "userLabelKey": "connection.field.serviceAccount",
-        "passwordLabelKey": "connection.field.tokenKey",
-        "databaseLabelKey": "connection.field.database",
-        "showPort": false,
-        "transportLabelKey": "connection.transport.googleApi"
-      }
-    },
-    {
-      "engines": ["databricks"],
-      "settings": {
-        "urlPlaceholder": "databricks://token@workspace-host/sql/warehouse",
-        "hostLabelKey": "connection.field.workspaceHost",
-        "userLabelKey": "connection.field.tokenUser",
-        "passwordLabelKey": "connection.field.accessToken",
-        "databaseLabelKey": "connection.field.catalogSchema",
-        "transportLabelKey": "connection.transport.https"
       }
     },
     {
@@ -235,16 +158,7 @@
       }
     },
     {
-      "engines": ["iotdb"],
-      "settings": {
-        "urlPlaceholder": "iotdb://user:password@host:6667/root",
-        "databaseLabelKey": "connection.field.storageGroupDatabase",
-        "databasePlaceholder": "root",
-        "transportLabelKey": "connection.transport.iotdbNative"
-      }
-    },
-    {
-      "engines": ["neo4j", "memgraph"],
+      "engines": ["neo4j"],
       "settings": {
         "urlPlaceholder": "bolt://user:password@host:7687",
         "databaseLabelKey": "connection.field.graphDatabase",
@@ -263,121 +177,10 @@
       }
     },
     {
-      "engines": ["qdrant"],
-      "settings": {
-        "preferredMode": "url",
-        "urlPlaceholder": "qdrant://host",
-        "userLabelKey": "connection.field.projectUser",
-        "passwordLabelKey": "connection.field.apiKeyToken",
-        "databaseLabelKey": "connection.field.collectionNamespace",
-        "transportLabelKey": "connection.transport.vectorApi"
-      }
-    },
-    {
-      "engines": ["milvus"],
-      "settings": {
-        "preferredMode": "url",
-        "urlPlaceholder": "milvus://host",
-        "userLabelKey": "connection.field.projectUser",
-        "passwordLabelKey": "connection.field.apiKeyToken",
-        "databaseLabelKey": "connection.field.collectionNamespace",
-        "transportLabelKey": "connection.transport.vectorApi"
-      }
-    },
-    {
-      "engines": ["pinecone"],
-      "settings": {
-        "preferredMode": "url",
-        "urlPlaceholder": "pinecone://host",
-        "userLabelKey": "connection.field.projectUser",
-        "passwordLabelKey": "connection.field.apiKeyToken",
-        "databaseLabelKey": "connection.field.collectionNamespace",
-        "transportLabelKey": "connection.transport.vectorApi"
-      }
-    },
-    {
-      "engines": ["elasticsearch", "openSearch", "couchbase", "arangodb"],
-      "settings": {
-        "urlPlaceholder": "https://user:password@host:port",
-        "databaseLabelKey": "connection.field.indexBucketDatabase",
-        "transportLabelKey": "connection.transport.httpApi"
-      }
-    },
-    {
-      "engines": ["dynamodb", "s3Tables"],
-      "settings": {
-        "preferredMode": "url",
-        "urlPlaceholder": "aws://profile/region/resource",
-        "hostLabelKey": "connection.field.region",
-        "hostPlaceholder": "us-east-1",
-        "userLabelKey": "connection.field.accessKey",
-        "passwordLabelKey": "connection.field.secretToken",
-        "databaseLabelKey": "connection.field.tableBucket",
-        "showPort": false,
-        "transportLabelKey": "connection.transport.cloudApi"
-      }
-    },
-    {
-      "engines": ["trinoPresto", "hive"],
-      "settings": {
-        "urlPlaceholder": "trino://user@host:8080/catalog/schema",
-        "databaseLabelKey": "connection.field.catalogSchema"
-      }
-    },
-    {
       "engines": ["cassandra", "scylladb"],
       "settings": {
         "urlPlaceholder": "cassandra://user:password@host:9042/keyspace",
         "databaseLabelKey": "connection.field.keyspace"
-      }
-    },
-    {
-      "engines": ["firebird"],
-      "settings": {
-        "urlPlaceholder": "firebird://user:password@host:3050/path/to/database.fdb",
-        "databaseLabelKey": "connection.field.databasePath"
-      }
-    },
-    {
-      "engines": ["deltaLake", "hudi"],
-      "settings": {
-        "preferredMode": "fields",
-        "urlLabelKey": "connection.field.tablePath",
-        "urlPlaceholder": "s3://bucket/warehouse/namespace/table",
-        "fieldsLabelKey": "connection.field.catalog",
-        "hostLabelKey": "connection.field.catalogEndpointRegion",
-        "hostPlaceholder": "catalog.example.com or us-east-1",
-        "userLabelKey": "connection.field.accessKeyIdClientId",
-        "userPlaceholder": "AKIAIOSFODNN7EXAMPLE",
-        "passwordLabelKey": "connection.field.secretAccessKeyToken",
-        "databaseLabelKey": "connection.field.namespaceTable",
-        "databasePlaceholder": "namespace.table",
-        "showHost": false,
-        "showPort": false,
-        "showUser": true,
-        "showPassword": true,
-        "transportLabelKey": "connection.transport.lakehouseCatalog"
-      }
-    },
-    {
-      "engines": ["iceberg"],
-      "settings": {
-        "preferredMode": "fields",
-        "urlLabelKey": "connection.field.tablePath",
-        "urlPlaceholder": "s3://bucket/warehouse/namespace/table",
-        "fieldsLabelKey": "connection.field.catalog",
-        "hostLabelKey": "connection.field.catalogEndpointRegion",
-        "hostPlaceholder": "catalog.example.com or us-east-1",
-        "userLabelKey": "connection.field.accessKeyIdOauth2ClientId",
-        "userPlaceholder": "AKIAIOSFODNN7EXAMPLE",
-        "passwordLabelKey": "connection.field.secretAccessKeyOauth2ClientSecret",
-        "databaseLabelKey": "connection.field.namespaceTable",
-        "databasePlaceholder": "namespace.table",
-        "showHost": false,
-        "showPort": false,
-        "showUser": true,
-        "showPassword": true,
-        "transportLabelKey": "connection.transport.lakehouseCatalog"
       }
     },
     {
@@ -393,62 +196,6 @@
     }
   ],
   "optionFields": [
-    {
-      "engines": ["deltaLake", "hudi", "hive"],
-      "fields": [
-        {
-          "key": "catalogUri",
-          "labelKey": "connection.field.catalogUri",
-          "placeholder": "https://catalog.example.com/v1"
-        },
-        {
-          "key": "warehouse",
-          "labelKey": "connection.field.warehousePath",
-          "placeholder": "s3://bucket/warehouse"
-        }
-      ]
-    },
-    {
-      "engines": ["iceberg"],
-      "fields": [
-        {
-          "key": "catalogUri",
-          "labelKey": "connection.field.catalogUri",
-          "placeholder": "https://catalog.example.com/v1"
-        },
-        {
-          "key": "warehouse",
-          "labelKey": "connection.field.warehousePath",
-          "placeholder": "s3://bucket/warehouse"
-        },
-        {
-          "key": "oauth2ServerUri",
-          "labelKey": "connection.field.oauth2TokenEndpoint",
-          "placeholder": "https://catalog.example.com/v1/oauth/tokens"
-        },
-        {
-          "key": "oauth2ClientId",
-          "labelKey": "connection.field.oauth2ClientId",
-          "placeholder": "client-id"
-        },
-        {
-          "key": "scope",
-          "labelKey": "connection.field.oauth2Scope",
-          "placeholder": "catalog"
-        }
-      ]
-    },
-    {
-      "engines": ["athena", "s3Tables", "dynamodb"],
-      "fields": [
-        {
-          "key": "region",
-          "labelKey": "connection.field.awsRegion",
-          "placeholder": "us-east-1",
-          "required": true
-        }
-      ]
-    },
     {
       "engines": ["snowflake"],
       "fields": [
@@ -592,37 +339,17 @@
     "clickhouse": "8123",
     "snowflake": "443",
     "bigquery": "443",
-    "cloudSpanner": "443",
-    "athena": "443",
-    "motherduck": "443",
     "redis": "6379",
     "cassandra": "9042",
     "scylladb": "9042",
     "neo4j": "7687",
-    "memgraph": "7687",
     "influxdb": "8086",
-    "qdrant": "6333",
-    "milvus": "19530",
     "mysql": "3306",
     "mariadb": "3306",
     "tidb": "4000",
     "sqlserver": "1433",
     "mongodb": "27017",
-    "trinoPresto": "8080",
-    "firebird": "3050",
-    "databricks": "443",
-    "dynamodb": "443",
-    "iceberg": "443",
-    "s3Tables": "443",
-    "deltaLake": "443",
-    "hudi": "443",
-    "elasticsearch": "9200",
-    "openSearch": "9200",
-    "couchbase": "8091",
-    "arangodb": "8529",
     "questdb": "8812",
-    "iotdb": "6667",
-    "hive": "10000",
     "oracle": "1521"
   }
 }

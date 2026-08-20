@@ -274,12 +274,10 @@ supportedCalls: Array<string>,
  * `connector.config.json` — endpoint modes, profile fields, auth methods,
  * secret purposes, TLS, transports.
  *
- * The app validated this block at install time and then dropped it, so a
- * connector could describe how it wants to be configured and nothing could
- * read the description: the connection form is a static table in the
- * frontend, and 161 of the 275 auth methods declared across the fleet had
- * no implementation with nothing to notice. Keeping it is the first step
- * to rendering the form from what the connector actually declares.
+ * The frontend decodes the schema version it understands and renders
+ * extension-backed connection forms from this model. Unknown future schema
+ * versions remain installable and fall back without changing this stored
+ * representation.
  *
  * Held as `Value` rather than a typed model on purpose. The host must not
  * refuse to install a connector built against a newer SDK because a field

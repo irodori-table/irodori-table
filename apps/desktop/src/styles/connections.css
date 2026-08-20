@@ -558,6 +558,13 @@
   background: color-mix(in srgb, var(--surface-muted) 62%, transparent);
 }
 
+.connector-declared-section .connection-form-grid {
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(240px, 100%), 1fr)
+  );
+}
+
 .connector-declared-section legend {
   padding: 0 5px;
   color: var(--text);
@@ -686,6 +693,10 @@
   }
 
   .connection-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .connector-declared-section .connection-form-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 

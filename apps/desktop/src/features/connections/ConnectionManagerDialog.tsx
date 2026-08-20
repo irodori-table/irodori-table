@@ -38,6 +38,8 @@ import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator, type TranslationKey, type Translator } from "@/i18n";
 import {
   connectorFieldOptionKey,
+  connectorSupportsFieldsInput,
+  connectorSupportsUrlInput,
   isConnectorSecretField,
   type ConnectorConnectionField,
   type ConnectorConnectionModel,
@@ -423,6 +425,12 @@ export function ConnectionManagerDialog({
   const engineSettings = engineConnectionSettings(draft.engine, t);
   const optionFields = engineOptionFields(draft.engine);
   const declaredEndpointFields = connectionModel?.endpoint.fields ?? [];
+  const supportsUrlInput = connectionModel
+    ? connectorSupportsUrlInput(connectionModel)
+    : true;
+  const supportsFieldsInput = connectionModel
+    ? connectorSupportsFieldsInput(connectionModel)
+    : true;
   const usesDeclaredEndpoint = Boolean(
     connectionModel &&
     (declaredEndpointFields.length > 0 ||
@@ -431,6 +439,10 @@ export function ConnectionManagerDialog({
   const selectedAuthMethod = connectionModel
     ? selectedConnectorAuthMethod(connectionModel, draft)
     : null;
+  const compatibleAuthMethods =
+    connectionModel?.authMethods.filter(
+      (method) => draft.mode !== "fields" || method.kind !== "connectionString",
+    ) ?? [];
   const declaredProfileField = (profileField: ConnectorProfileField) =>
     selectedAuthMethod?.fields.find(
       (field) => field.profileField === profileField,
@@ -583,6 +595,22 @@ export function ConnectionManagerDialog({
     socketSupported && draft.connectionTransport === "socket"
       ? "socket"
       : "tcp";
+
+  useEffect(() => {
+    if (!connectionModel || supportsUrlInput === supportsFieldsInput) {
+      return;
+    }
+    const supportedMode = supportsFieldsInput ? "fields" : "url";
+    if (draft.mode !== supportedMode) {
+      onUpdateDraft({ mode: supportedMode });
+    }
+  }, [
+    connectionModel,
+    draft.mode,
+    onUpdateDraft,
+    supportsFieldsInput,
+    supportsUrlInput,
+  ]);
 
   useEffect(() => {
     let active = true;
@@ -1022,7 +1050,11 @@ export function ConnectionManagerDialog({
             />
           </div>
           <div className="connection-form-grid">
-            <label>
+            <label
+              className={
+                supportsUrlInput && supportsFieldsInput ? undefined : "full-row"
+              }
+            >
               <span>{t("connection.engine")}</span>
               <select
                 value={draft.engine}
@@ -1055,26 +1087,28 @@ export function ConnectionManagerDialog({
                 <span>{selectedEngineMessage}</span>
               </p>
             ) : null}
-            <div
-              className="mode-toggle form-toggle"
-              role="group"
-              aria-label={t("connection.inputMode")}
-            >
-              <button
-                className={draft.mode === "url" ? "active" : ""}
-                type="button"
-                onClick={() => onUpdateDraft({ mode: "url" })}
+            {supportsUrlInput && supportsFieldsInput ? (
+              <div
+                className="mode-toggle form-toggle"
+                role="group"
+                aria-label={t("connection.inputMode")}
               >
-                URL
-              </button>
-              <button
-                className={draft.mode === "fields" ? "active" : ""}
-                type="button"
-                onClick={() => onUpdateDraft({ mode: "fields" })}
-              >
-                {engineSettings.fieldsLabel}
-              </button>
-            </div>
+                <button
+                  className={draft.mode === "url" ? "active" : ""}
+                  type="button"
+                  onClick={() => onUpdateDraft({ mode: "url" })}
+                >
+                  URL
+                </button>
+                <button
+                  className={draft.mode === "fields" ? "active" : ""}
+                  type="button"
+                  onClick={() => onUpdateDraft({ mode: "fields" })}
+                >
+                  {engineSettings.fieldsLabel}
+                </button>
+              </div>
+            ) : null}
           </div>
           {draft.mode === "url" ? (
             <label className="full-row">
@@ -1313,7 +1347,7 @@ export function ConnectionManagerDialog({
               </div>
             </fieldset>
           ) : null}
-          {connectionModel && connectionModel.authMethods.length > 0 ? (
+          {connectionModel && compatibleAuthMethods.length > 0 ? (
             <fieldset className="connector-declared-section full-row">
               <legend>{t("connection.extension.authentication")}</legend>
               <label className="connector-declared-mode">
@@ -1331,7 +1365,7 @@ export function ConnectionManagerDialog({
                     );
                   }}
                 >
-                  {connectionModel.authMethods.map((method) => (
+                  {compatibleAuthMethods.map((method) => (
                     <option key={method.id} value={method.id}>
                       {method.label}
                     </option>
@@ -1453,7 +1487,13 @@ export function ConnectionManagerDialog({
             <strong>
               {draft.mode === "fields" && transportMode === "socket"
                 ? t(socketPathLabelKey(draft.engine))
-                : engineSettings.transportLabel}
+                : connectionModel
+                  ? connectorChoiceLabel(
+                      connectionModel.transports[0] ??
+                        connectionModel.defaults.wire ??
+                        "direct",
+                    )
+                  : engineSettings.transportLabel}
             </strong>
           </div>
           {error ? (

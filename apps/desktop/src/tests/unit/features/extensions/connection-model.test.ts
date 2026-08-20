@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
+import rustEngineSource from "../../../../../src-tauri/src/db/engine.rs?raw";
 import {
   connectionModelForEngine,
+  connectorExtensionIdForEngine,
+  connectorExtensionIds,
   connectorFieldOptionKey,
+  connectorSupportsFieldsInput,
+  connectorSupportsUrlInput,
   isConnectorSecretField,
+  isExtensionBackedEngine,
   parseConnectorConnectionModel,
   type ConnectorConnectionField,
 } from "@/features/extensions/connection-model";
@@ -10,6 +16,12 @@ import type { InstalledExtension } from "@/generated/irodori-api";
 
 const model = {
   schemaVersion: 1,
+  defaults: {
+    engine: "qdrant",
+    wire: "qdrant",
+    port: 6333,
+    readOnly: false,
+  },
   endpoint: {
     modes: ["hostPort", "connectionString"],
     defaultPort: 6333,
@@ -60,6 +72,7 @@ const model = {
       },
     ],
   },
+  transports: ["direct", "sshTunnel"],
 };
 
 function installed(
@@ -90,6 +103,13 @@ describe("connector connection model", () => {
       modes: ["hostPort", "connectionString"],
       defaultPort: 6333,
     });
+    expect(parsed?.defaults).toEqual({
+      engine: "qdrant",
+      wire: "qdrant",
+      port: 6333,
+      readOnly: false,
+    });
+    expect(parsed?.transports).toEqual(["direct", "sshTunnel"]);
     expect(parsed?.endpoint.fields[1]).toMatchObject({
       id: "protocol",
       option: "protocol",
@@ -204,6 +224,80 @@ describe("connector connection model", () => {
         "snowflake",
       ),
     ).toBeNull();
+  });
+
+  it("keeps the frontend dispatch map explicit and built-in engines out", () => {
+    expect(connectorExtensionIdForEngine("qdrant")).toBe("irodori.qdrant");
+    expect(connectorExtensionIdForEngine("snowflake")).toBeNull();
+    expect(isExtensionBackedEngine("duckdb")).toBe(true);
+    expect(isExtensionBackedEngine("postgres")).toBe(false);
+    expect(Object.keys(connectorExtensionIds).sort()).toEqual([
+      "arangodb",
+      "athena",
+      "cloudSpanner",
+      "couchbase",
+      "databricks",
+      "deltaLake",
+      "duckdb",
+      "dynamodb",
+      "elasticsearch",
+      "firebird",
+      "hive",
+      "hudi",
+      "iceberg",
+      "iotdb",
+      "memgraph",
+      "milvus",
+      "motherduck",
+      "openSearch",
+      "pinecone",
+      "qdrant",
+      "s3Tables",
+      "trinoPresto",
+    ]);
+  });
+
+  it("derives supported input modes from the endpoint declaration", () => {
+    const both = parseConnectorConnectionModel(model);
+    const fieldsOnly = parseConnectorConnectionModel({
+      schemaVersion: 1,
+      endpoint: {
+        modes: ["cloudResource", "customEndpoint"],
+        fields: [{ id: "environment", label: "Environment", type: "string" }],
+      },
+      profileFields: [],
+      authMethods: [],
+      tls: { supported: false, modes: [], fields: [] },
+      transports: ["direct"],
+    });
+    const urlOnly = parseConnectorConnectionModel({
+      schemaVersion: 1,
+      endpoint: { modes: ["connectionString"], fields: [] },
+      profileFields: [],
+      authMethods: [],
+      tls: { supported: false, modes: [], fields: [] },
+      transports: ["direct"],
+    });
+    expect(both && connectorSupportsUrlInput(both)).toBe(true);
+    expect(both && connectorSupportsFieldsInput(both)).toBe(true);
+    expect(fieldsOnly && connectorSupportsUrlInput(fieldsOnly)).toBe(false);
+    expect(fieldsOnly && connectorSupportsFieldsInput(fieldsOnly)).toBe(true);
+    expect(urlOnly && connectorSupportsUrlInput(urlOnly)).toBe(true);
+    expect(urlOnly && connectorSupportsFieldsInput(urlOnly)).toBe(false);
+  });
+
+  it("matches the Rust connector dispatch map", () => {
+    const dispatch = rustEngineSource.match(
+      /fn connector_extension_id\(self\)[\s\S]*?\{([\s\S]*?)\n    \}/,
+    )?.[1];
+    expect(dispatch, "DbEngine::connector_extension_id body").toBeTruthy();
+    const rustExtensionIds = [...dispatch!.matchAll(/Some\("([^"]+)"\)/g)]
+      .map((match) => match[1])
+      .sort();
+
+    expect(Object.values(connectorExtensionIds).sort()).toEqual(
+      rustExtensionIds,
+    );
   });
 
   it("classifies secret and option-bound fields", () => {

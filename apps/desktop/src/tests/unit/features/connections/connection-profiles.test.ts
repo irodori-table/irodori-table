@@ -3,10 +3,12 @@ import { createTranslator } from "@/i18n";
 import {
   connectionCustomColorOptions,
   defaultConnectionColor,
+  defaultPort,
   engineConnectionSettings,
   engineOptionFields,
   engineOptions,
   loadProfiles,
+  memoryDefaults,
   normalizeConnectionColor,
   portableProfile,
   profilesStorageKey,
@@ -19,6 +21,10 @@ import {
   withUniqueProfileIds,
   type ConnectionDraft,
 } from "@/features/connections/connection-profiles";
+import {
+  connectorExtensionIds,
+  parseConnectorConnectionModel,
+} from "@/features/extensions/connection-model";
 
 const englishTranslator = createTranslator("en");
 const japaneseTranslator = createTranslator("ja");
@@ -334,79 +340,37 @@ describe("connection profiles", () => {
 });
 
 describe("connector options", () => {
-  function lakehouseDraft(patch: Partial<ConnectionDraft> = {}) {
-    return draft({
-      id: "lake",
-      engine: "iceberg",
-      mode: "fields",
-      host: "",
-      port: "",
-      user: "AKIAIOSFODNN7EXAMPLE",
-      database: "sales.orders",
-      ...patch,
-    });
-  }
-
-  it("carries declared connector options through to the API profile", () => {
+  it("never forwards retired static options for extension-backed engines", () => {
     const profile = profileFromDraft(
-      lakehouseDraft({
+      draft({
+        engine: "iceberg",
         options: {
           catalogUri: "https://catalog.example.com/v1",
           warehouse: "s3://bucket/warehouse",
+          region: "us-east-1",
+        },
+      }),
+    );
+
+    expect(profile.options).toBeUndefined();
+  });
+
+  it("keeps the built-in Snowflake option allowlist", () => {
+    const profile = profileFromDraft(
+      draft({
+        engine: "snowflake",
+        options: {
+          warehouse: "COMPUTE_WH",
+          role: "ACCOUNTADMIN",
+          catalogUri: "must-not-cross-engines",
         },
       }),
     );
 
     expect(profile.options).toEqual({
-      catalogUri: "https://catalog.example.com/v1",
-      warehouse: "s3://bucket/warehouse",
+      warehouse: "COMPUTE_WH",
+      role: "ACCOUNTADMIN",
     });
-    // Credentials stay on the profile columns, never in options.
-    expect(profile.user).toBe("AKIAIOSFODNN7EXAMPLE");
-    expect(profile.password).toBe("secret");
-  });
-
-  it("carries connector options in URL mode too", () => {
-    const profile = profileFromDraft(
-      lakehouseDraft({
-        mode: "url",
-        url: "s3://bucket/warehouse/sales/orders",
-        options: { catalogUri: "https://catalog.example.com/v1" },
-      }),
-    );
-
-    expect(profile.options).toEqual({
-      catalogUri: "https://catalog.example.com/v1",
-    });
-  });
-
-  it("omits options entirely when nothing is set", () => {
-    expect(profileFromDraft(lakehouseDraft()).options).toBeUndefined();
-    expect(
-      profileFromDraft(lakehouseDraft({ options: { catalogUri: "  " } }))
-        .options,
-    ).toBeUndefined();
-  });
-
-  it("drops options that the selected engine does not declare", () => {
-    // Left behind after switching engines in the form: `role` is Snowflake's,
-    // and must not reach the Iceberg connector.
-    const profile = profileFromDraft(
-      lakehouseDraft({
-        options: { warehouse: "s3://bucket/warehouse", role: "ACCOUNTADMIN" },
-      }),
-    );
-
-    expect(profile.options).toEqual({ warehouse: "s3://bucket/warehouse" });
-  });
-
-  it("requires options marked required", () => {
-    const athena = draft({ engine: "athena", mode: "url", url: "athena://db" });
-
-    expect(validateDraft(athena)).toBe("aws region is required");
-    expect(
-      validateDraft({ ...athena, options: { region: "us-east-1" } }),
-    ).toBeNull();
   });
 
   it("keeps connector options when importing a settings file", () => {
@@ -424,42 +388,57 @@ describe("connector options", () => {
     });
   });
 
-  it("exposes the Iceberg OAuth2 client-credentials options (#184)", () => {
-    // Keys must match what irodori-extension-iceberg's rest_catalog.rs reads
-    // from the connect request: oauth2ServerUri, oauth2ClientId, scope.
-    const keys = engineOptionFields("iceberg").map((field) => field.key);
-    expect(keys).toEqual([
-      "catalogUri",
-      "warehouse",
-      "oauth2ServerUri",
-      "oauth2ClientId",
-      "scope",
-    ]);
-
-    // The other lakehouse engines keep the shared catalog fields only —
-    // their connectors do not read the OAuth2 options.
-    for (const engine of ["deltaLake", "hudi", "hive"] as const) {
-      expect(engineOptionFields(engine).map((field) => field.key)).toEqual([
-        "catalogUri",
-        "warehouse",
-      ]);
+  it("keeps every extension-backed engine out of the built-in config", () => {
+    for (const engine of Object.keys(connectorExtensionIds) as Array<
+      keyof typeof connectorExtensionIds
+    >) {
+      expect(engineOptionFields(engine), `${engine} option fields`).toEqual([]);
+      expect(defaultPort(engine), `${engine} default port`).toBe("");
     }
   });
 
-  it("routes the OAuth2 client secret through the password field (#184)", () => {
-    // The connector falls back to the profile's session-only user/password
-    // for clientId/clientSecret; the iceberg labels must say so. The secret
-    // itself must never become an option (options persist to localStorage).
-    const iceberg = engineConnectionSettings("iceberg", englishTranslator.t);
-    expect(iceberg.userLabel).toBe("Access key ID / OAuth2 client ID");
-    expect(iceberg.passwordLabel).toBe(
-      "Secret access key / OAuth2 client secret",
-    );
-
-    // deltaLake/hudi keep the generic lakehouse credential labels.
-    const delta = engineConnectionSettings("deltaLake", englishTranslator.t);
-    expect(delta.userLabel).toBe("Access key ID / client ID");
-    expect(delta.passwordLabel).toBe("Secret access key / token");
+  it("initializes extension drafts from connection-model defaults", () => {
+    const model = parseConnectorConnectionModel({
+      schemaVersion: 1,
+      defaults: {
+        engine: "motherduck",
+        wire: "duckdb",
+        port: 443,
+        readOnly: true,
+      },
+      endpoint: {
+        modes: ["motherduckService", "connectionString"],
+        defaultPort: 443,
+        fields: [
+          {
+            id: "host",
+            label: "MotherDuck endpoint",
+            type: "string",
+            profileField: "host",
+            default: "api.motherduck.com",
+          },
+          {
+            id: "database",
+            label: "Database",
+            type: "string",
+            profileField: "database",
+            default: "analytics",
+          },
+        ],
+      },
+      profileFields: [],
+      authMethods: [],
+      tls: { supported: false, modes: [], fields: [] },
+      transports: ["direct"],
+    });
+    expect(model).not.toBeNull();
+    expect(memoryDefaults("motherduck", model)).toMatchObject({
+      mode: "fields",
+      host: "api.motherduck.com",
+      port: "443",
+      database: "analytics",
+      readOnly: true,
+    });
   });
 
   it("declares no secret-valued option keys", () => {
@@ -479,7 +458,7 @@ describe("connector options", () => {
   });
 
   it("resolves every engine's form labels in both locales", () => {
-    // engine-connection-config.json holds translation keys that TypeScript
+    // builtin-engine-connection-config.json holds translation keys that TypeScript
     // cannot check (JSON imports widen to `string`), and `translate` throws on
     // an unknown key. Resolving every engine proves each key really exists.
     for (const locale of ["en", "ja"] as const) {

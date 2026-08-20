@@ -129,8 +129,77 @@ const qdrantConnectionModel = parseConnectorConnectionModel({
   },
 });
 
-if (!qdrantConnectionModel) {
-  throw new Error("test connector connection model did not parse");
+const icebergConnectionModel = parseConnectorConnectionModel({
+  schemaVersion: 1,
+  defaults: {
+    engine: "iceberg",
+    wire: "lakehouse",
+    port: 443,
+    readOnly: false,
+  },
+  endpoint: {
+    modes: ["catalog", "connectionString"],
+    defaultPort: 443,
+    fields: [
+      {
+        id: "catalogUri",
+        label: "Catalog URI",
+        type: "uri",
+        option: "catalogUri",
+      },
+      {
+        id: "warehouse",
+        label: "Warehouse path",
+        type: "string",
+        option: "warehouse",
+      },
+    ],
+  },
+  profileFields: [],
+  authMethods: [
+    { id: "none", label: "No authentication", kind: "none", fields: [] },
+    {
+      id: "oauth2",
+      label: "OAuth 2.0",
+      kind: "oauth2",
+      fields: [
+        {
+          id: "clientId",
+          label: "OAuth2 client ID",
+          type: "string",
+          option: "oauth2ClientId",
+        },
+        {
+          id: "clientSecret",
+          label: "OAuth2 client secret",
+          type: "secret",
+          secretPurpose: "token",
+        },
+      ],
+    },
+  ],
+  tls: { supported: false, modes: [], fields: [] },
+  transports: ["direct"],
+});
+
+const fieldsOnlyConnectionModel = parseConnectorConnectionModel({
+  schemaVersion: 1,
+  endpoint: {
+    modes: ["cloudResource", "customEndpoint"],
+    fields: [{ id: "environment", label: "Environment", type: "string" }],
+  },
+  profileFields: [],
+  authMethods: [{ id: "apiKey", label: "API key", kind: "apiKey", fields: [] }],
+  tls: { supported: false, modes: [], fields: [] },
+  transports: ["direct"],
+});
+
+if (
+  !qdrantConnectionModel ||
+  !icebergConnectionModel ||
+  !fieldsOnlyConnectionModel
+) {
+  throw new Error("test connector connection models did not parse");
 }
 
 const render = componentRenderer(ConnectionManagerDialog, () => ({
@@ -422,6 +491,12 @@ describe("ConnectionManagerDialog", () => {
       expect(screen.getByLabelText("Authentication method")).toHaveValue(
         "apiKey",
       );
+      expect(
+        within(screen.getByLabelText("Authentication method")).queryByRole(
+          "option",
+          { name: "Connection string / DSN" },
+        ),
+      ).toBeNull();
       expect(screen.getByLabelText(/^API key/)).toHaveAttribute(
         "type",
         "password",
@@ -432,6 +507,36 @@ describe("ConnectionManagerDialog", () => {
       expect(screen.getByLabelText("TLS mode")).toHaveValue("prefer");
       expect(screen.getByLabelText("CA certificate").tagName).toBe("TEXTAREA");
       expect(screen.queryByLabelText("API key / token")).toBeNull();
+    });
+
+    it("keeps connection-string auth in URL mode", () => {
+      renderDialog({
+        draft: draft({
+          engine: "qdrant",
+          mode: "url",
+          options: { authMethod: "connectionString" },
+        }),
+        connectionModel: qdrantConnectionModel,
+      });
+
+      expect(
+        within(screen.getByLabelText("Authentication method")).getByRole(
+          "option",
+          { name: "Connection string / DSN" },
+        ),
+      ).toBeVisible();
+    });
+
+    it("forces connectors with no connection-string mode onto fields", () => {
+      const { props } = renderDialog({
+        draft: draft({ engine: "pinecone", mode: "url" }),
+        connectionModel: fieldsOnlyConnectionModel,
+      });
+
+      expect(props.onUpdateDraft).toHaveBeenCalledWith({ mode: "fields" });
+      expect(
+        screen.queryByRole("group", { name: "Connection input mode" }),
+      ).toBeNull();
     });
 
     it("renders supplemental profile fields and TLS fields without modes", () => {
@@ -564,6 +669,7 @@ describe("ConnectionManagerDialog", () => {
           engine: "iceberg",
           options: { warehouse: "s3://bucket/warehouse" },
         }),
+        connectionModel: icebergConnectionModel,
       });
 
       // getByLabelText also proves the <label> is wired to the input, which a
@@ -580,6 +686,7 @@ describe("ConnectionManagerDialog", () => {
           engine: "iceberg",
           options: { warehouse: "s3://bucket/warehouse" },
         }),
+        connectionModel: icebergConnectionModel,
       });
 
       // fireEvent.change rather than user.type: the input is controlled by the
@@ -598,18 +705,20 @@ describe("ConnectionManagerDialog", () => {
     });
 
     it("offers credential fields for lakehouse connections", () => {
-      renderDialog({ draft: draft({ engine: "iceberg", mode: "fields" }) });
+      renderDialog({
+        draft: draft({
+          engine: "iceberg",
+          mode: "fields",
+          options: { authMethod: "oauth2" },
+        }),
+        connectionModel: icebergConnectionModel,
+      });
 
-      // Iceberg's credential labels advertise the OAuth2 client-credentials
-      // fallback (#184): the session-only password field doubles as the
-      // OAuth2 client secret, so it must never appear under connector
-      // settings.
-      expect(
-        screen.getByLabelText("Access key ID / OAuth2 client ID"),
-      ).toBeVisible();
-      expect(
-        screen.getByLabelText("Secret access key / OAuth2 client secret"),
-      ).toHaveAttribute("type", "password");
+      expect(screen.getByLabelText("OAuth2 client ID")).toBeVisible();
+      expect(screen.getByLabelText(/^OAuth2 client secret/)).toHaveAttribute(
+        "type",
+        "password",
+      );
     });
 
     it("stays out of the way for engines that declare no options", () => {

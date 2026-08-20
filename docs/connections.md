@@ -33,23 +33,23 @@ in the running build — see [Engine availability](#engine-availability).
 
 ## The form
 
-Fields are driven by `engine-connection-config.json`, so the labels change with
-the engine. Common to all:
+Built-in engines use `builtin-engine-connection-config.json`. Installable native
+connectors use the `connector.connection` model shipped by that extension, so
+endpoint modes, fields, authentication methods, TLS controls, defaults, and
+labels can evolve without adding connector-specific settings to the desktop
+app. Common to all:
 
 - **Connection name** — free text, used for grouping and for the tab badge.
 - **Color tag** — a swatch grid plus a custom hex picker (**More colors**). The
   colour tints the connection's UI so production is visually distinct.
 - **Read-only mode** — see below.
 
-Each engine chooses a preferred input mode:
+Each built-in layout or extension model chooses an input mode:
 
-- **URL / DSN** — one connection string. The label varies: **MotherDuck DSN**,
-  **Athena DSN / AWS profile**, **Project / credentials JSON / DSN** for
-  BigQuery, **Table path** for Iceberg-family engines.
+- **URL / DSN** — one connection string.
 - **Fields** — discrete **Host**, **Port**, **User**, **Password**, **Database**
-  inputs. Engines hide the ones that do not apply: SQLite and DuckDB show only a
-  file path; Snowflake, Athena, BigQuery, and the lakehouse engines hide the
-  port.
+  inputs for built-ins, or the endpoint fields declared by an installed
+  connector. Engines hide fields that do not apply.
 
 Examples of the relabelling, all from the shipped config:
 
@@ -57,16 +57,14 @@ Examples of the relabelling, all from the shipped config:
 | --- | --- | --- |
 | PostgreSQL | Host | Database |
 | SQLite | File | SQLite file / :memory: |
-| DuckDB | Host | DuckDB file / :memory: |
 | SQL Server | Server | Database |
 | Oracle | Host | Service name / SID |
 | Snowflake | Account / host | Database / schema |
-| Athena | Region | Catalog / database |
-| Iceberg, Delta Lake, Hudi | *(hidden)* | Namespace / table |
 
-A **Transport** row at the bottom of the form states how the connection is made
-— **Direct TCP**, **Local file**, **Lakehouse catalog**, **Snowflake HTTPS
-API**, and so on. It is a readout, not a control.
+A **Transport** row at the bottom of the form states how the connection is made.
+Built-ins use their configured label; extensions use the first declared
+transport (or their wire identifier when no transport is declared). It is a
+readout, not a control.
 
 ### Unix sockets
 
@@ -76,19 +74,19 @@ socket-path field.
 
 ### Connector settings
 
-Some engines carry settings that belong to the connector rather than to a
-standard profile column. They appear in a **Connector settings** block below the
-main grid:
+Settings outside the standard profile columns appear in a **Connector settings**
+block below the main grid. For extensions, the installed model is the sole
+source of those fields; the app does not maintain a second per-connector list.
+Built-in Snowflake keeps its native settings in the built-in config:
 
-| Engines | Fields |
+| Engine | Fields |
 | --- | --- |
-| Iceberg, Delta Lake, Hudi, Hive | **Catalog URI**, **Warehouse path** |
-| Athena, S3 Tables, DynamoDB | **AWS region** (required) |
 | Snowflake | **Warehouse**, **Role**, **Schema** |
 
 Engines with no declared settings do not grow an empty section. These values are
-forwarded to the connector verbatim as the profile's `options` map. See
-[Lakehouse connections](lakehouse.md).
+forwarded under the exact option names declared by the built-in config or
+extension model. Secret extension fields remain session-only. See [Lakehouse
+connections](lakehouse.md).
 
 ### Read-only mode
 

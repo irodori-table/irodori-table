@@ -11,7 +11,9 @@ const maxModes = 32;
 // installed connector with the same engine but a different id is not the code
 // path connect_engine will call. Built-in engines stay on the static form
 // because the current connect_engine does not dispatch their catalog package.
-const connectorExtensionIds: Partial<Record<DbEngine, string>> = {
+export const connectorExtensionIds: Readonly<
+  Partial<Record<DbEngine, string>>
+> = {
   duckdb: "irodori.duckdb",
   motherduck: "irodori.motherduck",
   memgraph: "irodori.memgraph",
@@ -92,13 +94,52 @@ export type ConnectorTlsModel = {
   fields: ConnectorConnectionField[];
 };
 
+export type ConnectorConnectionDefaults = {
+  engine?: string;
+  wire?: string;
+  port?: number;
+  readOnly: boolean;
+};
+
 export type ConnectorConnectionModel = {
   schemaVersion: 1;
+  defaults: ConnectorConnectionDefaults;
   endpoint: ConnectorEndpointModel;
   profileFields: ConnectorConnectionField[];
   authMethods: ConnectorAuthMethod[];
   tls: ConnectorTlsModel;
+  transports: string[];
 };
+
+/** Whether the connector declares a connection-string input surface. */
+export function connectorSupportsUrlInput(
+  model: ConnectorConnectionModel,
+): boolean {
+  const endpointDeclared =
+    model.endpoint.modes.length > 0 || model.endpoint.fields.length > 0;
+  if (!endpointDeclared) {
+    return true;
+  }
+  return (
+    model.endpoint.modes.includes("connectionString") ||
+    model.endpoint.fields.some((field) => field.profileField === "url")
+  );
+}
+
+/** Whether the connector declares structured endpoint fields or modes. */
+export function connectorSupportsFieldsInput(
+  model: ConnectorConnectionModel,
+): boolean {
+  const endpointDeclared =
+    model.endpoint.modes.length > 0 || model.endpoint.fields.length > 0;
+  if (!endpointDeclared) {
+    return true;
+  }
+  return (
+    model.endpoint.modes.some((mode) => mode !== "connectionString") ||
+    model.endpoint.fields.some((field) => field.profileField !== "url")
+  );
+}
 
 function safeString(value: unknown, maxLength = 256): string | null {
   if (typeof value !== "string") {
@@ -231,6 +272,27 @@ function endpoint(value: unknown): ConnectorEndpointModel {
   };
 }
 
+function connectionDefaults(value: unknown): ConnectorConnectionDefaults {
+  if (!isRecord(value)) {
+    return { readOnly: false };
+  }
+  const engine = identifier(value.engine);
+  const wire = identifier(value.wire);
+  const port =
+    typeof value.port === "number" &&
+    Number.isInteger(value.port) &&
+    value.port >= 0 &&
+    value.port <= 65_535
+      ? value.port
+      : undefined;
+  return {
+    ...(engine ? { engine } : {}),
+    ...(wire ? { wire } : {}),
+    ...(port === undefined ? {} : { port }),
+    readOnly: value.readOnly === true,
+  };
+}
+
 function authMethods(value: unknown): ConnectorAuthMethod[] {
   if (!Array.isArray(value)) {
     return [];
@@ -283,10 +345,12 @@ export function parseConnectorConnectionModel(
   }
   const model: ConnectorConnectionModel = {
     schemaVersion: 1,
+    defaults: connectionDefaults(value.defaults),
     endpoint: endpoint(value.endpoint),
     profileFields: fields(value.profileFields),
     authMethods: authMethods(value.authMethods),
     tls: tls(value.tls),
+    transports: modes(value.transports),
   };
   const usable =
     model.endpoint.modes.length > 0 ||
@@ -303,7 +367,7 @@ export function connectionModelForEngine(
   extensions: readonly InstalledExtension[],
   engine: DbEngine,
 ): ConnectorConnectionModel | null {
-  const expectedExtensionId = connectorExtensionIds[engine];
+  const expectedExtensionId = connectorExtensionIdForEngine(engine);
   if (!expectedExtensionId) {
     return null;
   }
@@ -322,6 +386,14 @@ export function connectionModelForEngine(
     }
   }
   return null;
+}
+
+export function connectorExtensionIdForEngine(engine: DbEngine): string | null {
+  return connectorExtensionIds[engine] ?? null;
+}
+
+export function isExtensionBackedEngine(engine: DbEngine): boolean {
+  return connectorExtensionIdForEngine(engine) !== null;
 }
 
 export function isConnectorSecretField(

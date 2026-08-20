@@ -116,5 +116,6 @@ Tables, Databricks, and MotherDuck are found by searching the marketplace.
   execution-backend selection, query templates — and nothing in the app reads
   them. The Lakehouse panel ships its own hardcoded snippets rather than the
   templates a connector declares.
-- **No extension settings, no per-extension configuration**, and no way to pin
-  or roll back to a specific version from the UI.
+- **No global extension settings** and no way to pin or roll back to a specific
+  version from the UI. Connector-specific connection fields are available in
+  Connection Manager through each installed extension's connection model.

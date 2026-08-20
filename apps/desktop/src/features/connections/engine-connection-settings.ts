@@ -1,11 +1,17 @@
 import type { DbEngine } from "@/generated/irodori-api";
 import type { TranslationKey, Translator } from "@/i18n";
-import engineConnectionConfig from "./engine-connection-config.json";
+import { isExtensionBackedEngine } from "@/features/extensions/connection-model";
+import builtinEngineConnectionConfig from "./builtin-engine-connection-config.json";
+
+if (builtinEngineConnectionConfig.scope !== "builtinEngines") {
+  throw new Error("connection config must be scoped to built-in engines");
+}
 
 export type EngineConnectionInputMode = "url" | "fields";
 
 /**
- * The form layout exactly as declared in engine-connection-config.json.
+ * The built-in form layout declared in builtin-engine-connection-config.json.
+ * Extension-backed engines obtain their layout from connectionModel instead.
  *
  * Labels are translation keys; placeholders are literal examples (DSNs, host
  * names, region codes) that read the same in every locale and so stay in the
@@ -103,9 +109,9 @@ type EngineOptionFieldGroup = {
 };
 
 const configuredOptionFields = new Map<DbEngine, EngineOptionField[]>(
-  (engineConnectionConfig.optionFields as EngineOptionFieldGroup[]).flatMap(
-    (group) => group.engines.map((engine) => [engine, group.fields]),
-  ),
+  (
+    builtinEngineConnectionConfig.optionFields as EngineOptionFieldGroup[]
+  ).flatMap((group) => group.engines.map((engine) => [engine, group.fields])),
 );
 
 const noOptionFields: EngineOptionField[] = [];
@@ -115,17 +121,30 @@ export function engineOptionFields(engine: DbEngine): EngineOptionField[] {
 }
 
 const tcpDatabaseLayout =
-  engineConnectionConfig.defaultSettings as EngineConnectionLayout;
+  builtinEngineConnectionConfig.defaultSettings as EngineConnectionLayout;
 
 const configuredEngineSettings = new Map<DbEngine, EngineConnectionLayoutPatch>(
   (
-    engineConnectionConfig.engineSettings as EngineConnectionLayoutGroup[]
+    builtinEngineConnectionConfig.engineSettings as EngineConnectionLayoutGroup[]
   ).flatMap((group) => group.engines.map((engine) => [engine, group.settings])),
 );
 
-const configuredDefaultPorts = engineConnectionConfig.defaultPorts as Partial<
-  Record<DbEngine, string>
->;
+const configuredDefaultPorts =
+  builtinEngineConnectionConfig.defaultPorts as Partial<
+    Record<DbEngine, string>
+  >;
+
+for (const engine of [
+  ...configuredEngineSettings.keys(),
+  ...configuredOptionFields.keys(),
+  ...(Object.keys(configuredDefaultPorts) as DbEngine[]),
+]) {
+  if (isExtensionBackedEngine(engine)) {
+    throw new Error(
+      `${engine} is extension-backed and cannot use the built-in connection config`,
+    );
+  }
+}
 
 /** Untranslated layout, for callers that only need the shape of the form. */
 export function engineConnectionLayout(

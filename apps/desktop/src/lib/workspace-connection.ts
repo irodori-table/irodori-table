@@ -21,8 +21,8 @@ export type ConnectionDraft = {
   readOnly: boolean;
   /**
    * Free-form connector settings forwarded verbatim as `ConnectionProfile.options`
-   * (catalog URI, warehouse, region…). Which keys an engine takes is declared in
-   * engine-connection-config.json; see engineOptionFields.
+   * Built-in keys are declared in builtin-engine-connection-config.json;
+   * extension keys come from the installed connectionModel.
    *
    * Optional on purpose: profiles saved before this existed have no `options`,
    * and adding it to newDraft() would break isPristineDraftProfile, which

@@ -6,9 +6,10 @@ import type {
 import { translate } from "@/i18n";
 import connectionDefaults from "./connection-defaults.json";
 import { isRecord } from "@/core";
-import type {
-  ConnectorConnectionModel,
-  ConnectorProfileField,
+import {
+  connectorSupportsFieldsInput,
+  type ConnectorConnectionModel,
+  type ConnectorProfileField,
 } from "@/features/extensions/connection-model";
 import {
   authMethodUsesProfileField,
@@ -136,7 +137,33 @@ export function describeConnection(
   };
 }
 
-export function memoryDefaults(engine: DbEngine): Partial<ConnectionDraft> {
+export function memoryDefaults(
+  engine: DbEngine,
+  connectionModel: ConnectorConnectionModel | null = null,
+): Partial<ConnectionDraft> {
+  if (connectionModel) {
+    const fieldDefault = (profileField: ConnectorProfileField) =>
+      [
+        ...connectionModel.endpoint.fields,
+        ...connectionModel.profileFields,
+      ].find((field) => field.profileField === profileField)?.defaultValue ??
+      "";
+    const port =
+      connectionModel.endpoint.defaultPort ?? connectionModel.defaults.port;
+    return {
+      mode: connectorSupportsFieldsInput(connectionModel) ? "fields" : "url",
+      url: "",
+      connectionTransport: "tcp",
+      host: fieldDefault("host"),
+      port: port && port > 0 ? String(port) : "",
+      user: "",
+      password: "",
+      database:
+        fieldDefault("database") || (engine === "duckdb" ? ":memory:" : ""),
+      socketPath: "",
+      readOnly: connectionModel.defaults.readOnly,
+    };
+  }
   const settings = engineConnectionLayout(engine);
   if (engine === "sqlite") {
     return {

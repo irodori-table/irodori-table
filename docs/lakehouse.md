@@ -48,57 +48,46 @@ verification work.
 **File ▸ Open Connection Manager**, then the **+** button above the profile
 list. Give it a **Connection name** and pick the engine.
 
-The form re-shapes itself per engine. For **Iceberg**, **Delta Lake**, and
-**Hudi** you get:
+After the extension is installed, the form re-shapes itself from that
+extension's connection model. For **Iceberg**, the current model exposes:
 
 | Field | Notes |
 | --- | --- |
-| **Access key ID / client ID** | Placeholder `AKIAIOSFODNN7EXAMPLE` |
-| **Secret access key / token** | Masked input |
-| **Namespace / table** | Placeholder `namespace.table` |
-| **Catalog URI** | Under **Connector settings**, e.g. `https://catalog.example.com/v1` |
-| **Warehouse path** | Under **Connector settings**, e.g. `s3://bucket/warehouse` |
+| **Catalog type** | REST by default |
+| **Catalog URI** | For example `https://catalog.example.com/v1` |
+| **Warehouse path** | For example `s3://bucket/warehouse` |
+| **Table identifier** | Namespace and table name |
+| **Storage backend**, **Cloud region**, **Credential vending** | Backend-specific endpoint settings |
 
-**Iceberg** additionally carries OAuth2 client-credentials settings for REST
-catalogs: **OAuth2 token endpoint** (`oauth2ServerUri`, defaults to the
-catalog's `/v1/oauth/tokens`), **OAuth2 client ID** (`oauth2ClientId`), and
-**OAuth2 scope** (`scope`, default `catalog`). Its credential pair is labeled
-**Access key ID / OAuth2 client ID** and **Secret access key / OAuth2 client
-secret**: once any OAuth2 setting is present the connector falls back to these
-profile fields for the client id and secret. The client secret is deliberately
-not a connector setting — options are persisted in the clear, while the
-password column stays session-only.
+Choose an **Authentication method** to reveal only that method's fields. For
+OAuth2 this includes access/refresh tokens, client ID, session-only client
+secret, token endpoint, and scope. AWS, Google, Azure, catalog-token, and
+custom-driver choices likewise come directly from the installed connector
+version. TLS mode and certificate inputs come from the same model.
 
-Host and port are hidden for these engines — the catalog endpoint goes in
-**Catalog URI**, not in a host field. The **Transport** readout says **Lakehouse
-catalog**.
+There is no second hardcoded Iceberg field list in the app. A connector update
+can add, remove, or relabel fields without a desktop release. Values are sent
+under the model's exact, case-sensitive bindings.
 
-Switching to URL mode instead gives a single **Table path** field
-(`s3://bucket/warehouse/namespace/table`).
+Switching to URL mode instead uses the connector's connection-string field; its
+label and accepted DSN/path forms come from the installed connector version.
 
-The other lakehouse engines differ:
+The other lakehouse engines publish their own models and therefore differ:
 
-- **Athena** — prefers URL mode (**Athena DSN / AWS profile**). In fields mode:
-  **Region**, **AWS profile / access key**, **Secret / session token**, **Catalog
-  / database** (`AwsDataCatalog/default`). Connector setting: **AWS region**,
-  which is required.
-- **S3 Tables** — **Region**, **Access key**, **Secret / token**, **Table /
-  bucket**. Connector setting: **AWS region**, required.
-- **Hive** — ordinary host/port form, default port `10000`, **Catalog / schema**.
-  Connector settings: **Catalog URI**, **Warehouse path**.
-- **Databricks** — **Workspace host**, **Token user**, **Access token**,
-  **Catalog / schema**.
-- **MotherDuck** — prefers URL mode: **MotherDuck DSN**, `md:` or
-  `motherduck://token@md/database`.
+- **Athena** and **S3 Tables** declare cloud-resource/custom-endpoint modes plus
+  their AWS authentication choices.
+- **Hive** declares catalog, object-storage, JDBC, and connection-string modes.
+- **Databricks** declares its endpoint and Databricks-specific token/OAuth
+  methods.
+- **MotherDuck** declares MotherDuck service, local-file, in-memory, and
+  connection-string modes.
 
 ### What connector settings actually are
 
-**Connector settings** is not decoration. Those values are stored on the profile
-as an `options` map and forwarded to the connector process verbatim, so the keys
-have to match what that connector reads. The credentials, by contrast, ride the
-ordinary profile columns — earlier builds hid those outright for lakehouse
-engines, which is why a lakehouse profile now shows both a credentials pair and a
-connector block.
+**Connector settings** is not decoration. Public values are stored on the
+profile as an `options` map and forwarded verbatim, so keys must match what the
+connector reads. Secret fields use a transient draft map and are merged only
+for a connection attempt; persistence and export strip that map entirely.
 
 ## Step 3 — test and connect
 
@@ -148,8 +137,10 @@ and credentials that you must edit before running.
 - **The Lakehouse panel is not translated.** Its strings — **Lakehouse**,
   **connected**, **no catalog loaded**, **Load**, **Insert** — are hardcoded
   English and stay English under the Japanese locale.
-- **No credential chain / SSO / assume-role support** in the form. Only static
-  key-and-secret pairs, or whatever the connector accepts inside a DSN.
+- **Declared does not always mean implemented yet.** Shared extension CI
+  ratchets known auth-method and field-binding gaps so they cannot grow, but
+  existing baseline entries remain connector backlog until implemented or
+  removed from the manifest.
 - **Table maintenance is documentation, not a feature.** The **Maintenance**
   snippet is a comment block; there are no compaction, snapshot-expiry, or
   retention actions in the UI.
