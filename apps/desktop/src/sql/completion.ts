@@ -19,11 +19,11 @@ import type {
 import {
   commonSqlCompletionKeywords,
   engineSqlCompletionKeywords,
+  sqlCommonKeywordEngines,
 } from "./keywords";
 import {
   DEFAULT_SNIPPET_RANK,
   defaultSqlSnippets,
-  isSqlSnippetEngine,
   snippetsForEngine,
   type SqlSnippetDefinition,
 } from "./snippets";
@@ -1422,12 +1422,12 @@ const NON_LIMIT_SQL_ENGINES = new Set<DbEngine>([
 
 function keywordList(engine: DbEngine): string[] {
   const engineKeywords = ENGINE_KEYWORDS[engine] ?? [];
-  // Gate the SQL common keywords by SQL-applicability: non-SQL stores
-  // (MongoDB, Redis, DynamoDB, Cassandra/Scylla, Bigtable, Couchbase, ArangoDB,
-  // Elasticsearch/OpenSearch query DSL, vector/time-series APIs, Cypher graphs)
-  // must not get SELECT/JOIN/RETURNING completion. They only surface their own
-  // dialect terms (e.g. Elasticsearch `_search`/`aggs`), if any.
-  if (!isSqlSnippetEngine(engine)) {
+  // Gate the SQL common keywords by SQL-applicability: document, key-value,
+  // graph and vector stores (MongoDB, Redis, Cypher graphs, Qdrant/Milvus/
+  // Pinecone, Bigtable, ArangoDB, the Elasticsearch/OpenSearch query DSL) must
+  // not get SELECT/JOIN/RETURNING completion. They surface their own dialect
+  // terms instead (e.g. Elasticsearch `_search`/`aggs`, Cypher `match`).
+  if (!sqlCommonKeywordEngines.has(engine)) {
     return [...new Set(engineKeywords)];
   }
   const common = NON_LIMIT_SQL_ENGINES.has(engine)

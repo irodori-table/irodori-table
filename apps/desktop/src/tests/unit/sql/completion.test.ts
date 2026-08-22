@@ -13,7 +13,11 @@ import {
   sqlSnippetsFromText,
   type SqlSnippetDefinition,
 } from "@/sql/completion";
-import { SQL_COMPLETION_KEYWORDS_SCHEMA_VERSION } from "@/sql/keywords";
+import {
+  engineSqlCompletionKeywords,
+  SQL_COMPLETION_KEYWORDS_SCHEMA_VERSION,
+} from "@/sql/keywords";
+import { engineOptions } from "@/features/connections";
 import type {
   ColumnMetadata,
   DatabaseMetadata,
@@ -404,7 +408,7 @@ describe("completeSqlLightweight", () => {
 
   it("loads versioned SQL content configs", () => {
     expect(SQL_SNIPPETS_SCHEMA_VERSION).toBe(1);
-    expect(SQL_COMPLETION_KEYWORDS_SCHEMA_VERSION).toBe(1);
+    expect(SQL_COMPLETION_KEYWORDS_SCHEMA_VERSION).toBe(2);
     expect(defaultSqlSnippets.length).toBeGreaterThan(0);
   });
 
@@ -733,6 +737,42 @@ snippets:
   it("falls back to cheap keyword completion without metadata matches", () => {
     expect(labels("sel")).toContain("select");
     expect(labels("select * from customers c where ema")).toContain("c.email");
+  });
+
+  it("completes without AI on every engine the app ships", () => {
+    // Keyword completion is the floor: no metadata, no connection, no model.
+    // Whatever engine a profile is on, typing a prefix has to offer something,
+    // or the editor looks broken until an AI feature is configured.
+    for (const option of engineOptions) {
+      const labels = new Set(
+        engineSqlCompletionKeywords[option.value]?.map((keyword) =>
+          keyword.slice(0, 3),
+        ) ?? [],
+      );
+      expect(
+        labels.size,
+        `${option.value} has no dialect keywords`,
+      ).toBeGreaterThan(0);
+      const [prefix] = [...labels];
+      expect(
+        completeWithEngine(prefix, metadata, option.value).length,
+        option.value,
+      ).toBeGreaterThan(0);
+    }
+  });
+
+  it("completes PartiQL on DynamoDB, keywords and item functions alike", () => {
+    // DynamoDB speaks PartiQL, so it reads as SQL at the keyword level even
+    // though the SQL statement snippets do not apply to it.
+    const selectLabels = completeWithEngine("sel", metadata, "dynamodb").map(
+      (option) => option.label,
+    );
+    expect(selectLabels).toContain("select");
+    expect(
+      completeWithEngine("begins", metadata, "dynamodb").map(
+        (option) => option.label,
+      ),
+    ).toContain("begins_with");
   });
 
   it("does not leak common SQL keywords into non-SQL engines", () => {
