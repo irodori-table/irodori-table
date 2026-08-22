@@ -16,10 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
-## [0.9.0] - 2026-08-15
+## [0.9.0] - 2026-08-22
 
-Transport security. Every PostgreSQL and MySQL connection the app made was
-unencrypted; this release makes TLS possible, configurable, and verified.
+Transport security, and a smaller product. Every PostgreSQL and MySQL
+connection the app made was unencrypted; this release makes TLS possible,
+configurable, and verified. It also moves the lakehouse line out of the app
+entirely, and fixes several places where the workbench refused an action the
+user plainly meant.
 
 ### Security
 
@@ -46,6 +49,43 @@ unencrypted; this release makes TLS possible, configurable, and verified.
 - Connector extensions' declared `connection` model is retained on install
   instead of being parsed for one assertion and discarded, so the connection
   form can eventually be rendered from what a connector declares.
+- **The last SQL tab can be closed.** It used to be refused with a notice
+  explaining that it stays open "so Ctrl+W never closes the browser tab" — a
+  browser's reason, in a desktop app. The group shows a placeholder instead,
+  and the tab's text is kept, so **Reopen closed tab** brings the SQL back.
+- **Right-clicking a connection in the rail** offers Edit and Close.
+- **Keyword completion on every engine, with no AI configured.** Typing `sel`
+  on a DynamoDB connection previously offered nothing at all — true on 21 of
+  the 47 engines, because the shared SQL keywords were gated on the list that
+  decides which engines get SQL *snippets*, and those engines had no dialect
+  terms of their own to fall back to. DynamoDB now completes PartiQL, Cassandra
+  and ScyllaDB CQL, Neo4j and Memgraph Cypher, ArangoDB AQL, Couchbase SQL++,
+  InfluxQL, IoTDB-SQL, and the command vocabularies for MongoDB, Redis and the
+  vector stores. Non-SQL stores still get their own terms only.
+
+### Removed
+
+- **The Lakehouse panel and the lakehouse connector catalog left the app**, to
+  [irodori-lakehouse](https://github.com/irodori-table/irodori-lakehouse).
+  #196 extracted Knowledge and Lakehouse from the standard product and #197
+  packaged them as feature extensions gating panels that stayed compiled in, so
+  "not shipped" meant "shipped, but switched off": 427 lines of panel, 25
+  translation keys per locale and 240 lines of CSS in every build. Knowledge
+  keeps that model; Lakehouse does not.
+
+  *Impact:* the **Lakehouse** sidebar view is gone, and `irodori.datalake` no
+  longer activates anything — an installed copy is ignored rather than
+  re-enabling a view that does not exist. The six lakehouse connectors
+  (`irodori.iceberg`, `irodori.delta-lake`, `irodori.hudi`, `irodori.hive`,
+  `irodori.athena`, `irodori.s3-tables`) are no longer listed in this build's
+  marketplace catalog.
+
+  *Migration:* existing connections keep working. The engines are still
+  recognised and still dispatch to the same connector extension ids, so an
+  already-installed lakehouse connector connects exactly as before and
+  **Connect** still names the extension it needs when one is missing — it now
+  comes from the lakehouse registry rather than this one. DuckDB, MotherDuck,
+  Databricks and Trino/Presto are unaffected and stay in this catalog.
 
 ### Changed
 
@@ -55,6 +95,19 @@ unencrypted; this release makes TLS possible, configurable, and verified.
   preserve. Self-hostable engines are untouched.
 - Unix-socket profiles never negotiate TLS: a socket is not a network hop, and
   servers that offer TLS only on the TCP listener reject it.
+- **A left click in the connections rail always switches connection.** It used
+  to open the Connection Manager whenever the profile happened to be closed, so
+  "switch to staging" became "a settings dialog opened". A closed profile is
+  opened instead; editing and closing moved to the right-click menu.
+- **Every engine has an icon of its own.** DynamoDB rendered a generic `{ }`
+  glyph, six engines shared one database icon and four shared a stack of
+  layers — in the rail, where the icon is all there is, two different
+  connections looked identical. Bigtable and Supabase gained real brand marks;
+  the rest gained distinct glyphs. AWS and Oracle marks remain absent from the
+  public-domain icon set, so those engines still get a neutral glyph rather
+  than a look-alike.
+- **Supabase is treated as the PostgreSQL it is** by the SQL snippets and
+  keyword completion, which had both omitted it.
 - Sibling crates are consumed from the `irodori-table` organisation rather than
   the pre-transfer owner, at `irodori-kit` v0.7.9.
 
@@ -64,6 +117,15 @@ unencrypted; this release makes TLS possible, configurable, and verified.
   check for the shared extension CI, and three fixes to reusable workflow
   references that had made extension releases impossible since the organisation
   move.
+- `irodori-extension-dynamodb` v0.1.8 — two bugs that compounded into
+  "DynamoDB Local never connects, and says something unreadable about it". The
+  connector never read the custom endpoint: the manifest writes that field to
+  `host`, which nothing in the driver looked at, so it silently talked to the
+  public regional endpoint. Its error redaction then called `str::replace` with
+  an empty needle whenever no endpoint was set, which inserts the placeholder
+  between every character of the message. A bare loopback endpoint also keeps
+  plain HTTP now, instead of being rewritten to `https://` and failing a TLS
+  handshake against a server that speaks none.
 - All 35 connector extensions released with authentication work: mutual TLS
   across ten connectors, AWS assume-role, object-store credentials through
   DuckDB secrets, MongoDB X.509/LDAP/OIDC, Google ADC and impersonation,
