@@ -9,6 +9,7 @@ import {
   SiDuckdb,
   SiElasticsearch,
   SiGooglebigquery,
+  SiGooglebigtable,
   SiGooglecloudspanner,
   SiH2database,
   SiInfluxdb,
@@ -23,6 +24,7 @@ import {
   SiScylladb,
   SiSnowflake,
   SiSqlite,
+  SiSupabase,
   SiTidb,
   SiTimescale,
   SiTrino,
@@ -30,13 +32,22 @@ import {
 } from "@icons-pack/react-simple-icons";
 import {
   Activity,
+  Bird,
   Boxes,
+  Container,
+  Cpu,
   Database,
-  FileJson,
+  Droplets,
+  Globe,
   KeySquare,
-  Layers,
+  MountainSnow,
+  Server,
+  Telescope,
+  TreePine,
+  Triangle,
   Warehouse,
   Workflow,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -75,31 +86,43 @@ const BRAND: Record<string, IconType> = {
   tidb: SiTidb,
   timescaledb: SiTimescale,
   cloudSpanner: SiGooglecloudspanner,
+  bigtable: SiGooglebigtable,
+  supabase: SiSupabase,
   h2: SiH2database,
 };
 
-/** Category glyphs for engines without a brand logo, grouped by data model. */
+/**
+ * Glyphs for engines whose logo is not in the CC0 brand set. Every engine gets
+ * its own mark: a shared glyph reads as "no icon assigned" in the connections
+ * rail, where the icon is the only thing telling two profiles apart.
+ */
 const FALLBACK: Record<string, LucideIcon> = {
   oracle: Database,
-  sqlserver: Database,
-  yugabytedb: Database,
-  neon: Database,
-  supabase: Database,
-  firebird: Database,
+  sqlserver: Server,
+  yugabytedb: Globe,
+  neon: Zap,
+  firebird: Bird,
   redshift: Warehouse,
-  athena: Warehouse,
+  athena: Telescope,
   memgraph: Workflow,
   qdrant: Boxes,
-  pinecone: Boxes,
-  dynamodb: FileJson,
+  pinecone: TreePine,
+  dynamodb: KeySquare,
   questdb: Activity,
-  iotdb: Activity,
-  bigtable: KeySquare,
-  iceberg: Layers,
-  s3Tables: Layers,
-  deltaLake: Layers,
-  hudi: Layers,
+  iotdb: Cpu,
+  iceberg: MountainSnow,
+  s3Tables: Container,
+  deltaLake: Triangle,
+  hudi: Droplets,
 };
+
+/**
+ * Whether `engine` has a mark of its own rather than the generic default.
+ * `engine-icon.test.tsx` holds every shipped engine to this.
+ */
+export function hasEngineIcon(engine: string): boolean {
+  return engine in BRAND || engine in FALLBACK;
+}
 
 type EngineIconProps = {
   engine: string;

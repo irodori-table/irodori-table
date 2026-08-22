@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { EngineIcon } from "@/components/EngineIcon";
+import { EngineIcon, hasEngineIcon } from "@/components/EngineIcon";
+import { engineOptions } from "@/features/connections";
 import { renderUi } from "@/tests/helpers/render";
 
 /**
@@ -34,6 +35,33 @@ describe("EngineIcon", () => {
       const svg = renderedSvg(engine);
       expect(svg, engine).not.toBeNull();
       expect(svgClass(svg), engine).toContain("lucide");
+    }
+  });
+
+  it("gives every shipped engine a mark of its own", () => {
+    // The rail shows nothing but the icon, so an engine left on the generic
+    // default reads to the user as "this connection has no icon".
+    for (const option of engineOptions) {
+      expect(hasEngineIcon(option.value), option.value).toBe(true);
+    }
+  });
+
+  it("never reuses one glyph across two engines", () => {
+    // MotherDuck is DuckDB-as-a-service and deliberately shares its mark.
+    const sharedByDesign = new Set(["motherduck"]);
+    const glyphByEngine = new Map<string, string>();
+    for (const option of engineOptions) {
+      if (sharedByDesign.has(option.value)) {
+        continue;
+      }
+      const glyph = renderedSvg(option.value)?.innerHTML ?? "";
+      expect(glyph, option.value).not.toBe("");
+      const owner = glyphByEngine.get(glyph);
+      expect(
+        owner ?? option.value,
+        `${option.value} reuses ${owner}'s glyph`,
+      ).toBe(option.value);
+      glyphByEngine.set(glyph, option.value);
     }
   });
 
