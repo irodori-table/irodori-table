@@ -1,6 +1,6 @@
 import type { DbEngine } from "@/generated/irodori-api";
 import type { TranslationKey, Translator } from "@/i18n";
-import { isExtensionBackedEngine } from "@/features/extensions/connection-model";
+import { isExtensionRequiredEngine } from "@/features/extensions/connection-model";
 import builtinEngineConnectionConfig from "./builtin-engine-connection-config.json";
 
 if (builtinEngineConnectionConfig.scope !== "builtinEngines") {
@@ -139,7 +139,7 @@ for (const engine of [
   ...configuredOptionFields.keys(),
   ...(Object.keys(configuredDefaultPorts) as DbEngine[]),
 ]) {
-  if (isExtensionBackedEngine(engine)) {
+  if (isExtensionRequiredEngine(engine)) {
     throw new Error(
       `${engine} is extension-backed and cannot use the built-in connection config`,
     );

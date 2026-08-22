@@ -8,18 +8,31 @@ const maxMethods = 64;
 const maxModes = 32;
 
 // Must mirror DbEngine::connector_extension_id in src-tauri/db/engine.rs. An
-// installed connector with the same engine but a different id is not the code
-// path connect_engine will call. Built-in engines stay on the static form
-// because the current connect_engine does not dispatch their catalog package.
+// enabled connector in this map overrides the engine compiled into the desktop;
+// without one, built-in engines keep their static form and native fallback.
+// A connector with the same engine but a different id is not the code path
+// connect_engine will call.
 export const connectorExtensionIds: Readonly<
   Partial<Record<DbEngine, string>>
 > = {
   duckdb: "irodori.duckdb",
   motherduck: "irodori.motherduck",
+  mongodb: "irodori.mongodb",
+  oracle: "irodori.oracle",
+  sqlserver: "irodori.sqlserver",
+  clickhouse: "irodori.clickhouse",
+  neo4j: "irodori.neo4j",
   memgraph: "irodori.memgraph",
+  influxdb: "irodori.influxdb",
   qdrant: "irodori.qdrant",
   milvus: "irodori.milvus",
   pinecone: "irodori.pinecone",
+  snowflake: "irodori.snowflake",
+  bigquery: "irodori.bigquery",
+  redis: "irodori.redis",
+  cassandra: "irodori.cassandra",
+  scylladb: "irodori.scylladb",
+  bigtable: "irodori.bigtable",
   trinoPresto: "irodori.trino-presto",
   firebird: "irodori.firebird",
   databricks: "irodori.databricks",
@@ -29,6 +42,7 @@ export const connectorExtensionIds: Readonly<
   dynamodb: "irodori.dynamodb",
   cloudSpanner: "irodori.cloud-spanner",
   arangodb: "irodori.arangodb",
+  questdb: "irodori.questdb",
   iotdb: "irodori.iotdb",
   hive: "irodori.hive",
   athena: "irodori.athena",
@@ -37,6 +51,32 @@ export const connectorExtensionIds: Readonly<
   deltaLake: "irodori.delta-lake",
   hudi: "irodori.hudi",
 };
+
+/** Engines whose only runtime is their connector extension. */
+export const extensionRequiredEngines: ReadonlySet<DbEngine> = new Set([
+  "duckdb",
+  "motherduck",
+  "memgraph",
+  "qdrant",
+  "milvus",
+  "pinecone",
+  "trinoPresto",
+  "firebird",
+  "databricks",
+  "elasticsearch",
+  "openSearch",
+  "couchbase",
+  "dynamodb",
+  "cloudSpanner",
+  "arangodb",
+  "iotdb",
+  "hive",
+  "athena",
+  "iceberg",
+  "s3Tables",
+  "deltaLake",
+  "hudi",
+]);
 
 export const connectorControlOptionKeys = {
   authMethod: "authMethod",
@@ -367,6 +407,19 @@ export function connectionModelForEngine(
   extensions: readonly InstalledExtension[],
   engine: DbEngine,
 ): ConnectorConnectionModel | null {
+  const extension = enabledConnectorExtensionForEngine(extensions, engine);
+  const model = extension
+    ? parseConnectorConnectionModel(extension.connectionModel)
+    : null;
+  return model?.defaults.engine && model.defaults.engine !== engine
+    ? null
+    : model;
+}
+
+export function enabledConnectorExtensionForEngine(
+  extensions: readonly InstalledExtension[],
+  engine: DbEngine,
+): InstalledExtension | null {
   const expectedExtensionId = connectorExtensionIdForEngine(engine);
   if (!expectedExtensionId) {
     return null;
@@ -380,12 +433,21 @@ export function connectionModelForEngine(
     ) {
       continue;
     }
-    const model = parseConnectorConnectionModel(extension.connectionModel);
-    if (model) {
-      return model;
-    }
+    return extension;
   }
   return null;
+}
+
+export function enabledConnectorEngineSet(
+  extensions: readonly InstalledExtension[],
+): ReadonlySet<DbEngine> {
+  const engines = new Set<DbEngine>();
+  for (const engine of Object.keys(connectorExtensionIds) as DbEngine[]) {
+    if (enabledConnectorExtensionForEngine(extensions, engine)) {
+      engines.add(engine);
+    }
+  }
+  return engines;
 }
 
 export function connectorExtensionIdForEngine(engine: DbEngine): string | null {
@@ -394,6 +456,10 @@ export function connectorExtensionIdForEngine(engine: DbEngine): string | null {
 
 export function isExtensionBackedEngine(engine: DbEngine): boolean {
   return connectorExtensionIdForEngine(engine) !== null;
+}
+
+export function isExtensionRequiredEngine(engine: DbEngine): boolean {
+  return extensionRequiredEngines.has(engine);
 }
 
 export function isConnectorSecretField(

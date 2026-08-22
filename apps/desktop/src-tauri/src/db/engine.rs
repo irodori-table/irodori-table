@@ -404,10 +404,22 @@ impl DbEngine {
         match self {
             DbEngine::DuckDb => Some("irodori.duckdb"),
             DbEngine::MotherDuck => Some("irodori.motherduck"),
+            DbEngine::Mongo => Some("irodori.mongodb"),
+            DbEngine::Oracle => Some("irodori.oracle"),
+            DbEngine::SqlServer => Some("irodori.sqlserver"),
+            DbEngine::ClickHouse => Some("irodori.clickhouse"),
+            DbEngine::Neo4j => Some("irodori.neo4j"),
             DbEngine::Memgraph => Some("irodori.memgraph"),
+            DbEngine::InfluxDb => Some("irodori.influxdb"),
             DbEngine::Qdrant => Some("irodori.qdrant"),
             DbEngine::Milvus => Some("irodori.milvus"),
             DbEngine::Pinecone => Some("irodori.pinecone"),
+            DbEngine::Snowflake => Some("irodori.snowflake"),
+            DbEngine::BigQuery => Some("irodori.bigquery"),
+            DbEngine::Redis => Some("irodori.redis"),
+            DbEngine::Cassandra => Some("irodori.cassandra"),
+            DbEngine::ScyllaDb => Some("irodori.scylladb"),
+            DbEngine::Bigtable => Some("irodori.bigtable"),
             DbEngine::TrinoPresto => Some("irodori.trino-presto"),
             DbEngine::Firebird => Some("irodori.firebird"),
             DbEngine::Databricks => Some("irodori.databricks"),
@@ -417,6 +429,7 @@ impl DbEngine {
             DbEngine::DynamoDb => Some("irodori.dynamodb"),
             DbEngine::CloudSpanner => Some("irodori.cloud-spanner"),
             DbEngine::ArangoDb => Some("irodori.arangodb"),
+            DbEngine::QuestDb => Some("irodori.questdb"),
             DbEngine::IoTDb => Some("irodori.iotdb"),
             DbEngine::Hive => Some("irodori.hive"),
             DbEngine::Athena => Some("irodori.athena"),
@@ -841,6 +854,60 @@ mod tests {
                 "{engine:?} missing from build support"
             );
         }
+    }
+
+    #[test]
+    fn connector_dispatch_matches_bundled_catalog() {
+        let catalog: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../src/features/extensions/bundled-catalog.json"
+        ))
+        .expect("bundled extension catalog should be valid JSON");
+        let extensions = catalog["extensions"]
+            .as_array()
+            .expect("bundled catalog extensions should be an array");
+        let mut catalog_connector_count = 0;
+
+        for extension in extensions {
+            let is_native_connector = extension["runtime"].as_str() == Some("native")
+                && extension["categories"]
+                    .as_array()
+                    .is_some_and(|categories| {
+                        categories
+                            .iter()
+                            .any(|category| category.as_str() == Some("connector"))
+                    });
+            if !is_native_connector {
+                continue;
+            }
+
+            let extension_id = extension["id"]
+                .as_str()
+                .expect("catalog connector should declare an id");
+            let engines = extension["engines"]
+                .as_array()
+                .expect("catalog connector should declare engines");
+            for engine_name in engines {
+                let engine_name = engine_name
+                    .as_str()
+                    .expect("catalog connector engine should be a string");
+                let engine: DbEngine =
+                    serde_json::from_value(serde_json::Value::String(engine_name.to_owned()))
+                        .expect("catalog connector engine should be a DbEngine");
+                assert_eq!(
+                    engine.connector_extension_id(),
+                    Some(extension_id),
+                    "{engine_name} connector dispatch"
+                );
+                catalog_connector_count += 1;
+            }
+        }
+
+        let dispatch_count = DbEngine::ALL
+            .iter()
+            .filter(|engine| engine.connector_extension_id().is_some())
+            .count();
+        assert_eq!(catalog_connector_count, 35);
+        assert_eq!(dispatch_count, catalog_connector_count);
     }
 
     #[test]

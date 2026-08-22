@@ -107,6 +107,11 @@ blanks the password field, strips `password=` / `pwd=` / `pass=` /
 `passphrase=` parameters from connection strings, and clears the userinfo
 password from URLs. You re-enter the password each time the app starts.
 
+The same rule applies to extension-declared tokens, private keys, passphrases,
+and custom driver options. They live only in the open form and are added to one
+connect request; save, import, and export never persist them. Non-secret options
+such as a region or warehouse can be saved with the profile.
+
 This is different from the AI provider API key, which *is* written to the OS
 keychain — see [AI chat](ai-chat.md).
 
@@ -134,9 +139,9 @@ failure mode differs:
 
 2. **Compiled in only when the build enables the optional feature set.** Oracle,
    SQL Server, MongoDB, Neo4j, Redis, Cassandra, ScyllaDB, BigQuery, Bigtable.
-   A build without them reports that the data source is not available in this
-   desktop build and links to the availability table; **Test** and **Connect**
-   are disabled for that engine.
+   A build without them reports that the data source is not available and links
+   to the availability table. Installing the matching native connector supplies
+   the missing runtime and enables **Test** and **Connect**.
 
 3. **Provided by a connector extension.** Everything lakehouse, vector, search,
    or document-oriented: DuckDB, MotherDuck, Iceberg, Delta Lake, Hudi, Hive,
@@ -150,6 +155,11 @@ failure mode differs:
 
    Install it from **Settings ▸ Extensions** first — see
    [Extensions](extensions.md).
+
+When an enabled marketplace connector is installed for an engine that also has
+a compiled implementation, the connector takes precedence. Its connection model
+and its native runtime therefore stay paired; disabling or uninstalling it
+returns that engine to the compiled implementation and built-in form.
 
 The authoritative inventory, including which wire each engine speaks and how far
 it has been verified, is
@@ -166,9 +176,10 @@ local Postgres and MySQL profiles pointing at the sample containers from the
 
 ## Gaps
 
-- **No SSH tunnelling and no SSL/TLS configuration UI.** Certificates and
-  tunnels have to be arranged outside the app, or expressed inside the
-  connection string where the driver supports it.
+- **No SSH tunnelling.** Tunnels have to be arranged outside the app. Structured
+  TLS controls cover the PostgreSQL/MySQL wires and the fields declared by an
+  installed connector; dedicated compiled connectors used without an extension
+  still need connector-specific TLS work.
 - **No connection folders.** Grouping is inferred from the profile name and
   cannot be set explicitly.
 - **No per-profile query timeout or session variables.**

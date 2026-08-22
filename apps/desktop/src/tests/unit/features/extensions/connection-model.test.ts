@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import rustEngineSource from "../../../../../src-tauri/src/db/engine.rs?raw";
+import bundledCatalog from "@/features/extensions/bundled-catalog.json";
 import {
   connectionModelForEngine,
   connectorExtensionIdForEngine,
@@ -7,6 +8,8 @@ import {
   connectorFieldOptionKey,
   connectorSupportsFieldsInput,
   connectorSupportsUrlInput,
+  enabledConnectorEngineSet,
+  extensionRequiredEngines,
   isConnectorSecretField,
   isExtensionBackedEngine,
   parseConnectorConnectionModel,
@@ -224,37 +227,58 @@ describe("connector connection model", () => {
         "snowflake",
       ),
     ).toBeNull();
+    expect(
+      connectionModelForEngine(
+        [
+          installed({
+            id: "irodori.snowflake",
+            engine: "snowflake",
+            connectionModel: {
+              ...model,
+              defaults: { ...model.defaults, engine: "snowflake" },
+            },
+          }),
+        ],
+        "snowflake",
+      )?.defaults.engine,
+    ).toBe("snowflake");
   });
 
-  it("keeps the frontend dispatch map explicit and built-in engines out", () => {
+  it("maps every native marketplace connector and tracks extension-only engines", () => {
     expect(connectorExtensionIdForEngine("qdrant")).toBe("irodori.qdrant");
-    expect(connectorExtensionIdForEngine("snowflake")).toBeNull();
+    expect(connectorExtensionIdForEngine("snowflake")).toBe(
+      "irodori.snowflake",
+    );
     expect(isExtensionBackedEngine("duckdb")).toBe(true);
+    expect(isExtensionBackedEngine("snowflake")).toBe(true);
     expect(isExtensionBackedEngine("postgres")).toBe(false);
-    expect(Object.keys(connectorExtensionIds).sort()).toEqual([
-      "arangodb",
-      "athena",
-      "cloudSpanner",
-      "couchbase",
-      "databricks",
-      "deltaLake",
-      "duckdb",
-      "dynamodb",
-      "elasticsearch",
-      "firebird",
-      "hive",
-      "hudi",
-      "iceberg",
-      "iotdb",
-      "memgraph",
-      "milvus",
-      "motherduck",
-      "openSearch",
-      "pinecone",
-      "qdrant",
-      "s3Tables",
-      "trinoPresto",
-    ]);
+    expect(extensionRequiredEngines.has("duckdb")).toBe(true);
+    expect(extensionRequiredEngines.has("snowflake")).toBe(false);
+    const catalogConnectorIds = Object.fromEntries(
+      bundledCatalog.extensions
+        .filter(
+          (extension) =>
+            extension.runtime === "native" &&
+            extension.categories.includes("connector"),
+        )
+        .flatMap((extension) =>
+          extension.engines.map((engine) => [engine, extension.id]),
+        ),
+    );
+    expect(Object.keys(catalogConnectorIds)).toHaveLength(35);
+    expect(connectorExtensionIds).toEqual(catalogConnectorIds);
+  });
+
+  it("reports enabled connector engines even when their model is unavailable", () => {
+    expect(
+      enabledConnectorEngineSet([
+        installed({
+          id: "irodori.mongodb",
+          engine: "mongodb",
+          connectionModel: undefined,
+        }),
+      ]),
+    ).toEqual(new Set(["mongodb"]));
   });
 
   it("derives supported input modes from the endpoint declaration", () => {

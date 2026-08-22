@@ -304,6 +304,30 @@ describe("ConnectionManagerDialog", () => {
     expect(screen.getByRole("button", { name: "Connect" })).toBeDisabled();
   });
 
+  it("allows an installed connector to replace a missing built-in feature", async () => {
+    const buildSupport: EngineBuildSupport[] = [
+      {
+        engine: "mongodb",
+        includedInCurrentBuild: false,
+        requiredFeature: "mongo",
+      },
+    ];
+    mockDbEngineBuildSupport.mockResolvedValue(buildSupport);
+
+    renderDialog({
+      draft: draft({ engine: "mongodb", port: "27017" }),
+      installedConnectorEngines: new Set(["mongodb"]),
+    });
+
+    const mongoOption = await screen.findByRole("option", { name: "MongoDB" });
+    expect(mongoOption).not.toBeDisabled();
+    expect(
+      screen.queryByText(/MongoDB is not available in this desktop build/),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Test" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Connect" })).toBeEnabled();
+  });
+
   it("requires confirmation before deleting a connection", async () => {
     const { props, user } = renderDialog();
 

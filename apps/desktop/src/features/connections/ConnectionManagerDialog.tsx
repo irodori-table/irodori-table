@@ -99,6 +99,7 @@ const environmentLabelKeys: Record<
 };
 const connectorStatusDocUrl =
   "https://irodori-table.github.io/irodori-docs/data-source-support-status.html";
+const noInstalledConnectorEngines: ReadonlySet<DbEngine> = new Set();
 
 function connectionSearchText(profile: ConnectionDraft) {
   return [profile.id, profile.name, profile.host, profile.database, profile.url]
@@ -385,6 +386,7 @@ export function ConnectionManagerDialog({
   testing,
   connecting,
   connectionModel = null,
+  installedConnectorEngines = noInstalledConnectorEngines,
   onClose,
   onSearchChange,
   onAddProfile,
@@ -406,6 +408,7 @@ export function ConnectionManagerDialog({
   testing: boolean;
   connecting: boolean;
   connectionModel?: ConnectorConnectionModel | null;
+  installedConnectorEngines?: ReadonlySet<DbEngine>;
   onClose: () => void;
   onSearchChange: (value: string) => void;
   onAddProfile: () => void;
@@ -585,11 +588,9 @@ export function ConnectionManagerDialog({
   const socketSupported =
     !usesConnectorEndpointModel && supportsSocketTransport(draft.engine);
   const selectedEngineSupport = engineBuildSupport.get(draft.engine);
-  const selectedEngineMessage = featureMissingMessage(
-    draft.engine,
-    selectedEngineSupport,
-    t,
-  );
+  const selectedEngineMessage = installedConnectorEngines.has(draft.engine)
+    ? null
+    : featureMissingMessage(draft.engine, selectedEngineSupport, t);
   const selectedEngineMissing = Boolean(selectedEngineMessage);
   const transportMode =
     socketSupported && draft.connectionTransport === "socket"
@@ -1065,9 +1066,9 @@ export function ConnectionManagerDialog({
                 }
               >
                 {engineOptions.map((engine) => {
-                  const missing = isFeatureMissing(
-                    engineBuildSupport.get(engine.value),
-                  );
+                  const missing =
+                    !installedConnectorEngines.has(engine.value) &&
+                    isFeatureMissing(engineBuildSupport.get(engine.value));
                   return (
                     <option
                       key={engine.value}

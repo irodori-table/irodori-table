@@ -22,7 +22,7 @@ import {
   type ConnectionDraft,
 } from "@/features/connections/connection-profiles";
 import {
-  connectorExtensionIds,
+  extensionRequiredEngines,
   parseConnectorConnectionModel,
 } from "@/features/extensions/connection-model";
 
@@ -389,9 +389,7 @@ describe("connector options", () => {
   });
 
   it("keeps every extension-backed engine out of the built-in config", () => {
-    for (const engine of Object.keys(connectorExtensionIds) as Array<
-      keyof typeof connectorExtensionIds
-    >) {
+    for (const engine of extensionRequiredEngines) {
       expect(engineOptionFields(engine), `${engine} option fields`).toEqual([]);
       expect(defaultPort(engine), `${engine} default port`).toBe("");
     }

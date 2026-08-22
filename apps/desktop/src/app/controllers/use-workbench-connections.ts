@@ -18,6 +18,7 @@ import type { Translator } from "@/i18n";
 import type { DbEngine, WorkspaceSnapshot } from "@/generated/irodori-api";
 import {
   connectionModelForEngine,
+  enabledConnectorEngineSet,
   type ConnectorConnectionModel,
 } from "@/features/extensions/connection-model";
 import { useExtensionRuntimeStore } from "@/features/extensions/runtime-store";
@@ -152,6 +153,10 @@ export function useWorkbenchConnections({
     () => connectionModelForEngine(installedExtensions, draft.engine),
     [draft.engine, installedExtensions],
   );
+  const installedConnectorEngines = useMemo(
+    () => enabledConnectorEngineSet(installedExtensions),
+    [installedExtensions],
+  );
   const filteredProfiles = useMemo(() => {
     const needle = connectionSearch.trim().toLowerCase();
     if (!needle) {
@@ -274,6 +279,7 @@ export function useWorkbenchConnections({
         testing: testingConnection,
         connecting,
         connectionModel: connectorConnectionModel,
+        installedConnectorEngines,
         onClose: () => {
           setConnectionManagerOpen(false);
           prunePristineDrafts();

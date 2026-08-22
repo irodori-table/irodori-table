@@ -561,6 +561,14 @@ pub(crate) async fn connect_engine(
     profile: &ConnectionProfile,
     app: Option<&tauri::AppHandle>,
 ) -> DbResult<Arc<dyn Connection>> {
+    // An explicitly installed and enabled connector owns both its declared
+    // connection model and the request that consumes it. Prefer that runtime
+    // for every catalog-backed engine; engines compiled into the desktop keep
+    // their existing implementation as the fallback when no extension is
+    // installed.
+    if let Some(conn) = connect_installed_extension(profile, app)? {
+        return Ok(conn);
+    }
     let conn: Arc<dyn Connection> = match profile.engine.wire() {
         Wire::Postgres => Arc::new(PgConn {
             pool: postgres::connect(&engine::build_url(profile)?).await?,
@@ -599,13 +607,9 @@ pub(crate) async fn connect_engine(
             }
         }
         Wire::DuckDb => {
-            if let Some(conn) = connect_installed_extension(profile, app)? {
-                conn
-            } else {
-                return Err(DbError::unsupported(connector_extension_required_message(
-                    profile.engine,
-                )));
-            }
+            return Err(DbError::unsupported(connector_extension_required_message(
+                profile.engine,
+            )));
         }
         Wire::Oracle => {
             #[cfg(feature = "oracle")]
@@ -682,13 +686,9 @@ pub(crate) async fn connect_engine(
         | Wire::Graph
         | Wire::TimeSeries
         | Wire::Lakehouse => {
-            if let Some(conn) = connect_installed_extension(profile, app)? {
-                conn
-            } else {
-                return Err(DbError::unsupported(connector_extension_required_message(
-                    profile.engine,
-                )));
-            }
+            return Err(DbError::unsupported(connector_extension_required_message(
+                profile.engine,
+            )));
         }
     };
     Ok(conn)
