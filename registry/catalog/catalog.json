@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-15T05:41:34Z",
+  "updatedAt": "2026-08-22T13:45:29Z",
   "source": "prebuilt-extension-catalog",
   "extensions": [
     {
@@ -129,7 +129,7 @@
       "id": "irodori.dynamodb",
       "name": "DynamoDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds DynamoDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -139,7 +139,7 @@
       "engines": ["dynamodb"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:34:56Z"
+      "publishedAt": "2026-08-22T13:45:29Z"
     },
     {
       "id": "irodori.snowflake",
