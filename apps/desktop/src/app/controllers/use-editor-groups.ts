@@ -7,6 +7,7 @@ import {
   closeSqlTabInEditorGroup,
   createEditorGroupState,
   duplicateSqlTabInEditorGroup,
+  noOpenTabId,
   openTabsForEditorGroup,
   queryForEditorGroup,
   renameSqlTabInEditorGroup,
@@ -163,13 +164,23 @@ export function useEditorGroups({
   }
 
   function setEditorGroupQuery(group: EditorGroup, nextQuery: string) {
-    updateEditorGroupState(group, (state) => ({
-      ...state,
-      queryByTabId: {
-        ...state.queryByTabId,
-        [state.activeTabId]: nextQuery,
-      },
-    }));
+    updateEditorGroupState(group, (state) => {
+      // Every "load this SQL into the editor" path goes through here — history
+      // restore, query magics, ERD export. Now that the last tab can be
+      // closed, the group may have nothing to write into; opening a tab is the
+      // only outcome that puts the SQL somewhere the user can see it, rather
+      // than parking it under an id that renders nowhere.
+      if (state.activeTabId === noOpenTabId) {
+        return addSqlTabToEditorGroup(state, { query: nextQuery });
+      }
+      return {
+        ...state,
+        queryByTabId: {
+          ...state.queryByTabId,
+          [state.activeTabId]: nextQuery,
+        },
+      };
+    });
   }
 
   function setQuery(nextQuery: string) {
