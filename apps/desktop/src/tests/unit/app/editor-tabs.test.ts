@@ -6,6 +6,7 @@ import {
   closeSqlTabInEditorGroup,
   createEditorGroupState,
   duplicateSqlTabInEditorGroup,
+  noOpenTabId,
   openTabsForEditorGroup,
   queryForEditorGroup,
   renameSqlTabInEditorGroup,
@@ -72,18 +73,31 @@ describe("editor tab state", () => {
     expect(state.tabs.map((tab) => tab.label)).toContain("orders-copy-2.csv");
   });
 
-  it("keeps the last tab open and reopens closed tabs inside the same group", () => {
+  it("closes the last tab and reopens closed tabs inside the same group", () => {
     let state = createEditorGroupState("");
     state = closeOtherSqlTabsInEditorGroup(state, "explain");
 
-    const kept = closeSqlTabInEditorGroup(state, "explain");
-    expect(kept.keptLast).toBe(true);
-    expect(kept.state.openTabIds).toEqual(["explain"]);
+    const emptied = closeSqlTabInEditorGroup(state, "explain");
+    expect(emptied.closedTab?.id).toBe("explain");
+    expect(emptied.state.openTabIds).toEqual([]);
+    expect(emptied.state.activeTabId).toBe(noOpenTabId);
 
-    const restored = reopenSqlTabInEditorGroup(kept.state);
+    const restored = reopenSqlTabInEditorGroup(emptied.state);
     expect(restored.restoredTab?.id).toBe("scratch");
     expect(restored.state.activeTabId).toBe("scratch");
-    expect(restored.state.openTabIds).toEqual(["explain", "scratch"]);
+    expect(restored.state.openTabIds).toEqual(["scratch"]);
+  });
+
+  it("revives a group that was persisted with every tab closed", () => {
+    let state = createEditorGroupState("select 1;");
+    state = closeOtherSqlTabsInEditorGroup(state, "scratch");
+    const emptied = closeSqlTabInEditorGroup(state, "scratch").state;
+
+    const revived = reviveEditorGroupState(JSON.parse(JSON.stringify(emptied)));
+    expect(revived?.openTabIds).toEqual([]);
+    expect(revived?.activeTabId).toBe(noOpenTabId);
+    // The buffer text survives so reopening the tab restores unsaved SQL.
+    expect(revived?.queryByTabId.scratch).toBe("select 1;");
   });
 
   it("revives a persisted editor group state round-trip", () => {

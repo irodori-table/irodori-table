@@ -38,6 +38,8 @@ import {
   type LogProfileImportRequest,
 } from "./editor-log-profile";
 import { editorLanguageForTabLabel } from "@/lib/editor-language";
+import { usePreferencesStore } from "@/features/preferences";
+import { createTranslator } from "@/i18n";
 import type { DatabaseMetadata, DbEngine } from "../../generated/irodori-api";
 import type { SqlSnippetDefinition } from "../../sql/completion";
 import type { SqlFormatterId } from "../../sql/formatter";
@@ -64,6 +66,7 @@ export type EditorGroupShellProps = {
   vimMode: boolean;
   sqlLinter: SqlLinterId;
   renderEditorTabStrip: (group: EditorGroup) => ReactNode;
+  onNewTab: (group: EditorGroup) => void;
   onQueryChange: (next: string) => void;
   setActiveEditorGroup: (group: EditorGroup) => void;
   setEditorSelection: (group: EditorGroup, selection: EditorSelections) => void;
@@ -92,6 +95,7 @@ export function EditorGroupShell({
   vimMode,
   sqlLinter,
   renderEditorTabStrip,
+  onNewTab,
   onQueryChange,
   setActiveEditorGroup,
   setEditorSelection,
@@ -100,6 +104,10 @@ export function EditorGroupShell({
   onMetadataToolWindow,
   onLogProfileImport,
 }: EditorGroupShellProps) {
+  const locale = usePreferencesStore((state) => state.locale);
+  const { t } = createTranslator(locale);
+  // An empty tabKey is the group's "every tab closed" state (see noOpenTabId).
+  const hasOpenTab = tabKey.length > 0;
   const language = editorLanguageForTabLabel(tabLabel);
 
   // Log filters are session-only but belong to a buffer, not an editor group.
@@ -244,7 +252,7 @@ export function EditorGroupShell({
         <div className="editor-background-image" aria-hidden="true" />
       ) : null}
       {renderEditorTabStrip(group)}
-      {language === "log" ? (
+      {hasOpenTab && language === "log" ? (
         <>
           <LogFilterBar
             filter={logFilter}
@@ -273,29 +281,43 @@ export function EditorGroupShell({
           />
         </>
       ) : null}
-      <div className="editor-buffer">
-        <SqlEditor
-          ref={apiRef}
-          value={query}
-          tabLabel={tabLabel}
-          logFilter={language === "log" ? logFilter : undefined}
-          logMarks={language === "log" ? visibleMarks : undefined}
-          onChange={onQueryChange}
-          onSelectionChange={(selection) => {
-            setActiveEditorGroup(group);
-            setEditorSelection(group, selection);
-          }}
-          engine={editorEngine}
-          metadata={activeMetadata}
-          snippets={sqlSnippets}
-          theme={theme}
-          vimMode={vimMode}
-          formatter={formatter}
-          linter={sqlLinter}
-          onMetadataJump={onMetadataJump}
-          onMetadataToolWindow={onMetadataToolWindow}
-        />
-      </div>
+      {hasOpenTab ? (
+        <div className="editor-buffer">
+          <SqlEditor
+            ref={apiRef}
+            value={query}
+            tabLabel={tabLabel}
+            logFilter={language === "log" ? logFilter : undefined}
+            logMarks={language === "log" ? visibleMarks : undefined}
+            onChange={onQueryChange}
+            onSelectionChange={(selection) => {
+              setActiveEditorGroup(group);
+              setEditorSelection(group, selection);
+            }}
+            engine={editorEngine}
+            metadata={activeMetadata}
+            snippets={sqlSnippets}
+            theme={theme}
+            vimMode={vimMode}
+            formatter={formatter}
+            linter={sqlLinter}
+            onMetadataJump={onMetadataJump}
+            onMetadataToolWindow={onMetadataToolWindow}
+          />
+        </div>
+      ) : (
+        <div className="editor-buffer editor-buffer-empty">
+          <p className="editor-empty-title">{t("editorTabs.noOpenTabs")}</p>
+          <p className="editor-empty-hint">{t("editorTabs.noOpenTabsHint")}</p>
+          <button
+            className="text-button"
+            type="button"
+            onClick={() => onNewTab(group)}
+          >
+            {t("editorTabs.newSqlTab")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

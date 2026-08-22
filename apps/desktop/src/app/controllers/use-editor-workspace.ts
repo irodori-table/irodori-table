@@ -188,6 +188,7 @@ export function useEditorWorkspace({
       onPrimaryQueryChange: (next) => setEditorGroupQuery("primary", next),
       onSecondaryQueryChange: (next) => setEditorGroupQuery("secondary", next),
       renderEditorTabStrip,
+      onNewTab: newSqlTab,
       editorEngine: extra.editorEngine,
       activeMetadata: extra.activeMetadata,
       sqlSnippets,

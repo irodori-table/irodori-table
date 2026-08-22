@@ -164,6 +164,9 @@ export const ja = {
   "editorTabs.closeTab": "タブを閉じる",
   "editorTabs.closeOtherTabs": "他のタブを閉じる",
   "editorTabs.reopenClosedTab": "閉じたタブを開き直す",
+  "editorTabs.noOpenTabs": "開いているタブがありません",
+  "editorTabs.noOpenTabsHint":
+    "新しい SQL タブを開くか、タブメニューから閉じたタブを復元してください。",
   "editor.logFilter.label": "ログフィルタ",
   "editor.logFilter.minLevel": "最小ログレベル",
   "editor.logFilter.allLevels": "すべて",
@@ -846,9 +849,6 @@ export const ja = {
     "再読み込みの前に変更の保存または破棄を行ってください。",
   "notice.editor.tabRenamed": "タブ名を変更しました",
   "notice.editor.tabDuplicated": "タブを複製しました",
-  "notice.editor.tabKeptOpen": "タブを開いたままにしました",
-  "notice.editor.tabKeptOpenDetail":
-    "Ctrl+W でブラウザタブが閉じないよう、最後の SQL タブは開いたままにします。",
   "notice.editor.tabClosed": "タブを閉じました",
   "notice.editor.otherTabsClosed": "他のタブを閉じました",
   "notice.editor.tabsAlreadyOpen": "タブはすべて開いています",

@@ -284,12 +284,7 @@ export function useEditorGroups({
   function closeSqlTab(group: EditorGroup, tabId: string) {
     const state = editorGroupStates[group];
     const result = closeSqlTabInEditorGroup(state, tabId);
-    if (result.keptLast || !result.closedTab) {
-      showActionNotice(
-        "info",
-        t("notice.editor.tabKeptOpen"),
-        t("notice.editor.tabKeptOpenDetail"),
-      );
+    if (!result.closedTab) {
       return;
     }
     updateEditorGroupState(group, () => result.state);

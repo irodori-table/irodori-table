@@ -162,6 +162,9 @@ export const en = {
   "editorTabs.closeTab": "Close tab",
   "editorTabs.closeOtherTabs": "Close other tabs",
   "editorTabs.reopenClosedTab": "Reopen closed tab",
+  "editorTabs.noOpenTabs": "No open tabs",
+  "editorTabs.noOpenTabsHint":
+    "Open a new SQL tab, or reopen a closed one from the tab menu.",
   "editor.logFilter.label": "Log filters",
   "editor.logFilter.minLevel": "Minimum log level",
   "editor.logFilter.allLevels": "All",
@@ -831,9 +834,6 @@ export const en = {
     "Use Save Changes or Discard before refreshing.",
   "notice.editor.tabRenamed": "Tab renamed",
   "notice.editor.tabDuplicated": "Tab duplicated",
-  "notice.editor.tabKeptOpen": "Tab kept open",
-  "notice.editor.tabKeptOpenDetail":
-    "The last SQL tab stays open so Ctrl+W never closes the browser tab.",
   "notice.editor.tabClosed": "Tab closed",
   "notice.editor.otherTabsClosed": "Other tabs closed",
   "notice.editor.tabsAlreadyOpen": "Tabs already open",

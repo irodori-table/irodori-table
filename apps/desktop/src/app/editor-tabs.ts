@@ -17,7 +17,6 @@ export type EditorGroupState = {
 export type EditorTabCloseResult = {
   state: EditorGroupState;
   closedTab: EditorTabDefinition | null;
-  keptLast: boolean;
 };
 
 export type EditorTabRestoreResult = {
@@ -26,6 +25,9 @@ export type EditorTabRestoreResult = {
 };
 
 export const defaultEditorSelections: EditorSelections = [{ from: 0, to: 0 }];
+
+/** `activeTabId` when the group has no open tab left (every tab was closed). */
+export const noOpenTabId = "";
 
 export function createEditorGroupState(initialQuery: string): EditorGroupState {
   const initialTabs = defaultEditorTabs.map((tab) => ({ ...tab }));
@@ -81,10 +83,12 @@ export function reviveEditorGroupState(
   const openFromStore = candidate.openTabIds.filter(
     (id): id is string => typeof id === "string" && tabIds.has(id),
   );
-  const openTabIds = openFromStore.length > 0 ? openFromStore : [tabs[0].id];
+  // An empty open set is a legitimate state: closing the last tab leaves the
+  // group with no buffer, and a reload must not silently reopen one.
+  const openTabIds = openFromStore;
   const activeTabId = openTabIds.includes(candidate.activeTabId)
     ? candidate.activeTabId
-    : openTabIds[0];
+    : (openTabIds[0] ?? noOpenTabId);
   const storedQueries = candidate.queryByTabId as Record<string, unknown>;
   const storedSelections = (candidate.selectionsByTabId ?? {}) as Record<
     string,
@@ -127,6 +131,10 @@ export function selectionsForEditorGroup(state: EditorGroupState) {
 
 export function openTabsForEditorGroup(state: EditorGroupState) {
   return state.tabs.filter((tab) => state.openTabIds.includes(tab.id));
+}
+
+export function hasOpenTabsInEditorGroup(state: EditorGroupState) {
+  return openTabsForEditorGroup(state).length > 0;
 }
 
 export function activeTabLabelForEditorGroup(state: EditorGroupState) {
@@ -210,24 +218,25 @@ export function closeSqlTabInEditorGroup(
 ): EditorTabCloseResult {
   const groupOpenTabs = openTabsForEditorGroup(state);
   const activeIndex = groupOpenTabs.findIndex((tab) => tab.id === tabId);
-  if (groupOpenTabs.length <= 1 || activeIndex < 0) {
-    return { state, closedTab: null, keptLast: groupOpenTabs.length <= 1 };
+  if (activeIndex < 0) {
+    return { state, closedTab: null };
   }
 
   const closedTab = groupOpenTabs[activeIndex];
+  // Closing the last tab is allowed and leaves the group empty; the shell
+  // renders a placeholder and the tab stays reopenable from the tab menu.
   const nextTab =
-    groupOpenTabs[activeIndex + 1] ??
-    groupOpenTabs[activeIndex - 1] ??
-    groupOpenTabs[0];
+    groupOpenTabs[activeIndex + 1] ?? groupOpenTabs[activeIndex - 1];
   return {
     state: {
       ...state,
       openTabIds: state.openTabIds.filter((id) => id !== closedTab.id),
       activeTabId:
-        state.activeTabId === closedTab.id ? nextTab.id : state.activeTabId,
+        state.activeTabId === closedTab.id
+          ? (nextTab?.id ?? noOpenTabId)
+          : state.activeTabId,
     },
     closedTab,
-    keptLast: false,
   };
 }
 

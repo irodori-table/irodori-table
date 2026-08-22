@@ -51,6 +51,7 @@ export interface QueryEditorPaneProps {
   onPrimaryQueryChange: (next: string) => void;
   onSecondaryQueryChange: (next: string) => void;
   renderEditorTabStrip: (group: EditorGroup) => ReactNode;
+  onNewTab: (group: EditorGroup) => void;
   editorEngine: DbEngine;
   activeMetadata?: DatabaseMetadata;
   sqlSnippets: readonly SqlSnippetDefinition[];
@@ -105,6 +106,7 @@ export function QueryEditorPane({
   onPrimaryQueryChange,
   onSecondaryQueryChange,
   renderEditorTabStrip,
+  onNewTab,
   editorEngine,
   activeMetadata,
   sqlSnippets,
@@ -233,6 +235,7 @@ export function QueryEditorPane({
           vimMode={vimMode}
           sqlLinter={sqlLinter}
           renderEditorTabStrip={renderEditorTabStrip}
+          onNewTab={onNewTab}
           setActiveEditorGroup={setActiveEditorGroup}
           setEditorSelection={setEditorSelection}
           onEditorContextMenu={openEditorContextMenu}

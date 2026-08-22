@@ -54,6 +54,7 @@ export type EditorSplitLayoutProps = {
   vimMode: boolean;
   sqlLinter: SqlLinterId;
   renderEditorTabStrip: (group: EditorGroup) => ReactNode;
+  onNewTab: (group: EditorGroup) => void;
   setActiveEditorGroup: (group: EditorGroup) => void;
   setEditorSelection: (group: EditorGroup, selection: EditorSelections) => void;
   onEditorContextMenu: EditorContextMenuHandler;
@@ -80,6 +81,7 @@ export function EditorSplitLayout({
   vimMode,
   sqlLinter,
   renderEditorTabStrip,
+  onNewTab,
   setActiveEditorGroup,
   setEditorSelection,
   onEditorContextMenu,
@@ -108,6 +110,7 @@ export function EditorSplitLayout({
       vimMode={vimMode}
       sqlLinter={sqlLinter}
       renderEditorTabStrip={renderEditorTabStrip}
+      onNewTab={onNewTab}
       onQueryChange={state.onQueryChange}
       setActiveEditorGroup={setActiveEditorGroup}
       setEditorSelection={setEditorSelection}
