@@ -503,7 +503,11 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
   }
 
   async function disconnectActiveProfile() {
-    const id = activeConnectionId;
+    await disconnectProfile(activeConnectionId);
+  }
+
+  /** Close one connection by id; the rail closes profiles other than the active one. */
+  async function disconnectProfile(id: string) {
     if (!connectedIds.has(id)) {
       return;
     }
@@ -521,7 +525,11 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
       const { [id]: _removed, ...next } = current;
       return next;
     });
-    showActionNotice("success", t("notice.connection.disconnected"), id);
+    showActionNotice(
+      "success",
+      t("notice.connection.disconnected"),
+      profiles.find((profile) => profile.id === id)?.name ?? id,
+    );
   }
 
   async function refreshObjects(
@@ -606,8 +614,10 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     deleteProfiles,
     testActiveProfile,
     connectActiveProfile,
+    connectProfile,
     openSqliteSample,
     disconnectActiveProfile,
+    disconnectProfile,
     refreshObjects,
   };
 }

@@ -981,6 +981,8 @@ export const ja = {
   "rail.connections": "接続",
   "rail.connected": "接続中",
   "rail.addConnection": "接続を追加",
+  "rail.editConnection": "接続を編集…",
+  "rail.closeConnection": "接続を閉じる",
   "sidebar.empty.databaseEmpty": "このデータベースは空です。",
   "sidebar.empty.createTable": "テーブルを作成",
   "sidebar.empty.importFromFile": "ファイルからインポート",

@@ -2326,6 +2326,14 @@
   z-index: 50;
 }
 
+.connections-rail-menu {
+  position: fixed;
+  top: auto;
+  right: auto;
+  min-width: 190px;
+  z-index: 50;
+}
+
 .editor-split {
   display: grid;
   min-width: 0;

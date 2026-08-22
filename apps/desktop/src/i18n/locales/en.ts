@@ -957,6 +957,8 @@ export const en = {
   "rail.connections": "Connections",
   "rail.connected": "Connected",
   "rail.addConnection": "Add a connection",
+  "rail.editConnection": "Edit connection…",
+  "rail.closeConnection": "Close connection",
   "sidebar.empty.databaseEmpty": "This database is empty.",
   "sidebar.empty.createTable": "Create a table",
   "sidebar.empty.importFromFile": "Import from file",
