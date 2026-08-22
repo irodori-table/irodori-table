@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { extList, type InstalledExtension } from "@/generated/irodori-api";
 
-export const hostFeatureIds = ["knowledge", "datalake"] as const;
+export const hostFeatureIds = ["knowledge"] as const;
 
 export type HostFeatureId = (typeof hostFeatureIds)[number];
 

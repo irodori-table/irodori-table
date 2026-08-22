@@ -6,17 +6,16 @@ import type { HostFeatureId } from "./runtime-store";
  * installed and enabled (#196, packaging model from #197).
  *
  * The pairing was written out by hand at six points in `useSidebarViews` —
- * `knowledge: !enabled.includes("knowledge")`, `lakehouse:
- * !enabled.includes("datalake")`, and four `viewId === "knowledge" || viewId
- * === "lakehouse"` guards. Every one of them is load-bearing: each is a route
- * by which a view whose extension is absent can reappear (the switcher, the
- * show/hide checklist, activation, un-hiding, the auto-close effect). Six
- * copies of the same fact is five chances to add the seventh route and forget.
+ * `knowledge: !enabled.includes("knowledge")` and five `viewId === "knowledge"`
+ * guards. Every one of them is load-bearing: each is a route by which a view
+ * whose extension is absent can reappear (the switcher, the show/hide
+ * checklist, activation, un-hiding, the auto-close effect). Six copies of the
+ * same fact is five chances to add the seventh route and forget.
  *
- * Note the names differ on purpose: the view is `lakehouse`, the host feature
- * is `datalake`. That mismatch is precisely the sort of thing a table should
- * state once rather than have every call site restate — and it is why a naive
- * `enabled.includes(viewId)` would silently gate the wrong thing.
+ * The view id and the host feature id are separate on purpose: they have
+ * matched so far, but a naive `enabled.includes(viewId)` would silently gate
+ * the wrong thing the moment they do not (the Lakehouse view was gated on a
+ * feature named `datalake` before it moved to the irodori-lakehouse repo).
  *
  * Sibling of `host-feature-commands.ts`, which does the same for commands.
  */
@@ -24,7 +23,6 @@ const hostFeatureViews: Readonly<
   Partial<Record<WorkbenchViewId, HostFeatureId>>
 > = {
   knowledge: "knowledge",
-  lakehouse: "datalake",
 };
 
 /** The host feature a view depends on, or null when the view is always available. */

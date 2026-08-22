@@ -86,9 +86,18 @@ function main() {
       .filter((engine) => engine.status === "recognized_no_connector")
       .map((engine) => engine.id),
   );
+  // An engine whose connector ships from another repository's registry
+  // (`extensionRegistry`) is deliberately absent from this catalog: the
+  // lakehouse connectors moved to irodori-table/irodori-lakehouse. The engine
+  // stays recognized here so `connect` can still name the extension it needs.
   const recognizedNoConnectorMarketplaceIds = new Set(
     engineRows
-      .filter((engine) => engine.status === "recognized_no_connector" && engine.extensionId)
+      .filter(
+        (engine) =>
+          engine.status === "recognized_no_connector" &&
+          engine.extensionId &&
+          !engine.extensionRegistry,
+      )
       .map((engine) => engine.id),
   );
   const unimplementedWireIds = parseUnimplementedWires(dbProfileSource).map(camelId);
@@ -141,11 +150,18 @@ function main() {
     ),
     ...engineRows
       .filter((engine) => engine.status === "recognized_no_connector")
-      .filter((engine) => engine.extensionId)
+      .filter((engine) => engine.extensionId && !engine.extensionRegistry)
       .filter((engine) => engine.extensionId !== marketplaceExtensionIdByEngine.get(engine.id))
       .map(
         (engine) =>
           `recognized/no-connector engine '${engine.id}' extensionId must match marketplace extension '${marketplaceExtensionIdByEngine.get(engine.id)}'`,
+      ),
+    ...engineRows
+      .filter((engine) => engine.extensionRegistry)
+      .filter((engine) => marketplaceExtensionIdByEngine.has(engine.id))
+      .map(
+        (engine) =>
+          `engine '${engine.id}' names an external registry but is still in registry/catalog/index.json`,
       ),
     ...engineRows
       .filter((engine) => !hasSourceCoverage(engine, sourceProducts))

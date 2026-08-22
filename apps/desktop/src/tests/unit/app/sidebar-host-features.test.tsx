@@ -13,12 +13,13 @@ import {
 import type { InstalledExtension } from "@/generated/irodori-api";
 
 /**
- * #196 extracts Knowledge and Lakehouse out of the standard product. The
- * packaging model that shipped (#197) keeps the panels compiled into the app
- * and gates them on a declarative feature extension being installed and
- * enabled, so the *gate* is the whole feature: with no extension installed the
- * views must be unreachable by every route the sidebar offers, and installing
- * the extension must bring them back.
+ * #196 extracts Knowledge out of the standard product (Lakehouse went further
+ * and now lives in the irodori-lakehouse repo). The packaging model that
+ * shipped (#197) keeps the panel compiled into the app and gates it on a
+ * declarative feature extension being installed and enabled, so the *gate* is
+ * the whole feature: with no extension installed the view must be unreachable
+ * by every route the sidebar offers, and installing the extension must bring
+ * it back.
  *
  * `deriveEnabledHostFeatures` is covered in
  * features/extensions/runtime-store.test.ts. What had no test at all is the
@@ -40,13 +41,6 @@ const knowledgeExtension: InstalledExtension = {
   supportedCalls: [],
 };
 
-const datalakeExtension: InstalledExtension = {
-  ...knowledgeExtension,
-  id: "irodori.datalake",
-  name: "Irodori Datalake",
-  hostFeatures: ["datalake"],
-};
-
 // Seeding through the setter also flips `loaded`, which is what stops the hook
 // from reaching for the real `extList` Tauri command on mount.
 function installExtensions(...extensions: InstalledExtension[]) {
@@ -65,17 +59,15 @@ beforeEach(() => {
 });
 
 describe("workbench views gated on a feature extension", () => {
-  it("hides Knowledge and Lakehouse when no feature extension is installed", () => {
+  it("hides Knowledge when no feature extension is installed", () => {
     const { result } = renderHook(() => useSidebarViews());
 
     expect(result.current.enabledHostFeatures).toEqual([]);
     expect(result.current.viewHidden.knowledge).toBe(true);
-    expect(result.current.viewHidden.lakehouse).toBe(true);
     expect(result.current.rightSidebarViews).not.toContain("knowledge");
-    expect(result.current.rightSidebarViews).not.toContain("lakehouse");
   });
 
-  it("keeps them out of the switcher's show/hide checklist too", () => {
+  it("keeps it out of the switcher's show/hide checklist too", () => {
     // `*SidebarAllViews` lists hidden views on purpose, so the tab context menu
     // can offer them back. A view whose extension is absent must not appear
     // there either, or the checklist advertises a feature the build has no way
@@ -83,22 +75,17 @@ describe("workbench views gated on a feature extension", () => {
     const { result } = renderHook(() => useSidebarViews());
 
     expect(result.current.rightSidebarAllViews).not.toContain("knowledge");
-    expect(result.current.rightSidebarAllViews).not.toContain("lakehouse");
   });
 
-  it("restores each view when its extension is installed and enabled", () => {
+  it("restores the view when its extension is installed and enabled", () => {
     const { result } = renderHook(() => useSidebarViews());
 
     act(() => {
-      installExtensions(knowledgeExtension, datalakeExtension);
+      installExtensions(knowledgeExtension);
     });
 
-    expect(result.current.enabledHostFeatures).toEqual([
-      "knowledge",
-      "datalake",
-    ]);
+    expect(result.current.enabledHostFeatures).toEqual(["knowledge"]);
     expect(result.current.rightSidebarViews).toContain("knowledge");
-    expect(result.current.rightSidebarViews).toContain("lakehouse");
 
     act(() => {
       result.current.setActiveSidebarView("knowledge");
@@ -111,11 +98,11 @@ describe("workbench views gated on a feature extension", () => {
     const { result } = renderHook(() => useSidebarViews());
 
     act(() => {
-      result.current.setActiveSidebarView("lakehouse");
+      result.current.setActiveSidebarView("knowledge");
     });
 
-    expect(result.current.viewVisibility.lakehouse).toBe(false);
-    expect(result.current.activeRightSidebarView).not.toBe("lakehouse");
+    expect(result.current.viewVisibility.knowledge).toBe(false);
+    expect(result.current.activeRightSidebarView).not.toBe("knowledge");
   });
 
   it("refuses to un-hide a view whose extension is missing", () => {

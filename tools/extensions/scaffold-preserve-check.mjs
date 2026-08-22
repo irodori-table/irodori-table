@@ -3,12 +3,15 @@
  * Regression check for #182: `--force` must not revert implemented drivers.
  *
  * `scaffold-connector-repos.mjs` writes a shared DuckDB driver template into
- * every lakehouse connector repo. Three of those repos have since diverged from
- * it on purpose — Iceberg gained REST catalog browsing, Hudi became
- * timeline-aware, Delta gained transaction-log checks — and their `src/lib.rs`
- * declares the extra modules those fixes added. A `--force` run used to
- * overwrite both files, silently reverting the fixes, including the
- * `read_parquet` glob that returns wrong rows for Hudi (#117).
+ * every DuckDB-backed connector repo. Several of those repos have since
+ * diverged from it on purpose, and their `src/lib.rs` declares the extra
+ * modules those fixes added. A `--force` run used to overwrite both files,
+ * silently reverting the fixes, including the `read_parquet` glob that returns
+ * wrong rows for Hudi (#117).
+ *
+ * The fixture was Hudi until the lakehouse connectors moved to the
+ * irodori-lakehouse registry; MotherDuck stands in for them here because the
+ * behaviour under test is the generator's, not any one connector's.
  *
  * This drives the real script against a throwaway extensions root and asserts
  * the behaviour both ways, because the decision lives inline in a 3,500-line
@@ -25,8 +28,8 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(scriptDir, "../..");
 const scaffold = resolve(scriptDir, "scaffold-connector-repos.mjs");
 
-const DRIVER_SENTINEL = "// FIXED DRIVER: timeline-aware, do not revert";
-const REPO = "irodori-extension-hudi";
+const DRIVER_SENTINEL = "// FIXED DRIVER: hand-tuned, do not revert";
+const REPO = "irodori-extension-motherduck";
 
 const failures = [];
 
@@ -41,8 +44,8 @@ function seedImplementedRepo(extensionsRoot) {
   const src = resolve(extensionsRoot, REPO, "src");
   mkdirSync(src, { recursive: true });
   writeFileSync(resolve(src, "driver.rs"), `${DRIVER_SENTINEL}\nfn resolve_slices() {}\n`);
-  writeFileSync(resolve(src, "lib.rs"), "mod driver;\nmod hudi;\n");
-  writeFileSync(resolve(src, "hudi.rs"), "// timeline parsing\n");
+  writeFileSync(resolve(src, "lib.rs"), "mod driver;\nmod service;\n");
+  writeFileSync(resolve(src, "service.rs"), "// service token handling\n");
 }
 
 function runScaffold(extensionsRoot, args) {
@@ -79,11 +82,11 @@ try {
     "--force overwrote src/driver.rs in an implemented repo",
   );
   check(
-    read(preserveRoot, "lib.rs").includes("mod hudi;"),
+    read(preserveRoot, "lib.rs").includes("mod service;"),
     "--force overwrote src/lib.rs and orphaned the repo's extra module",
   );
   check(
-    read(preserveRoot, "hudi.rs").includes("timeline parsing"),
+    read(preserveRoot, "service.rs").includes("service token handling"),
     "--force removed the repo's extra module",
   );
   check(

@@ -15,7 +15,7 @@ import {
   parseConnectorConnectionModel,
   type ConnectorConnectionField,
 } from "@/features/extensions/connection-model";
-import type { InstalledExtension } from "@/generated/irodori-api";
+import type { DbEngine, InstalledExtension } from "@/generated/irodori-api";
 
 const model = {
   schemaVersion: 1,
@@ -265,8 +265,24 @@ describe("connector connection model", () => {
           extension.engines.map((engine) => [engine, extension.id]),
         ),
     );
-    expect(Object.keys(catalogConnectorIds)).toHaveLength(35);
-    expect(connectorExtensionIds).toEqual(catalogConnectorIds);
+    expect(Object.keys(catalogConnectorIds)).toHaveLength(29);
+    // The bundled catalog is a subset of the map, not a mirror of it: the
+    // lakehouse connectors ship from the irodori-lakehouse registry, so this
+    // build knows which extension backs Iceberg without offering to install it.
+    for (const [engine, id] of Object.entries(catalogConnectorIds)) {
+      expect(connectorExtensionIds[engine as DbEngine], engine).toBe(id);
+    }
+    const notInCatalog = Object.keys(connectorExtensionIds).filter(
+      (engine) => !(engine in catalogConnectorIds),
+    );
+    expect(notInCatalog.sort()).toEqual([
+      "athena",
+      "deltaLake",
+      "hive",
+      "hudi",
+      "iceberg",
+      "s3Tables",
+    ]);
   });
 
   it("reports enabled connector engines even when their model is unavailable", () => {

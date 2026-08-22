@@ -90,14 +90,14 @@ open the corresponding pages in a browser.
 
 ## Installing a lakehouse connector
 
-This is the common case and it has its own walkthrough, including what the
-connection form looks like afterwards: [Lakehouse
-connections](lakehouse.md).
+The lakehouse connectors are no longer in this build's marketplace catalog: they
+moved to [irodori-lakehouse](https://github.com/irodori-table/irodori-lakehouse)
+along with the Lakehouse panel. See [Lakehouse connections](lakehouse.md) for
+where they come from now.
 
-Short version: search the marketplace for the engine name, **Install**, confirm,
-then create the connection. Note that of the lakehouse connectors only DuckDB
-appears under **Recommended** — Iceberg, Delta Lake, Hudi, Hive, Athena, S3
-Tables, Databricks, and MotherDuck are found by searching the marketplace.
+DuckDB, MotherDuck, Databricks, and Trino/Presto stayed here. Search the
+marketplace for the engine name, **Install**, confirm, then create the
+connection; of those four only DuckDB appears under **Recommended**.
 
 ## Gaps
 

@@ -34,6 +34,7 @@
 
    エンジンがコネクター拡張を必要とする場合（レイクハウス、ベクトル、検索系は
    すべて必要です）、先に拡張をインストールします。手順は
+   [Extensions](extensions.md)、irodori-lakehouse に分離したエンジンについては
    [Lakehouse connections](lakehouse.md) にあります。
 
 4. **テストして接続。** **Test** はセッションを開かずにプロファイルを検証し、
@@ -52,7 +53,7 @@
 | ページ | 内容 |
 | --- | --- |
 | [Connections](connections.md) | プロファイル、エンジン、トランスポート、秘密情報、インポート／エクスポート |
-| [Lakehouse connections](lakehouse.md) | Iceberg、Delta Lake、Hudi、Hive、Athena、S3 Tables — 拡張が先 |
+| [Lakehouse connections](lakehouse.md) | Iceberg、Delta Lake、Hudi、Hive、Athena、S3 Tables — irodori-lakehouse に分離 |
 | [Query editor](query-editor.md) | SQL実行、補完、スニペット、クエリマジック、パラメータ、Vimモード |
 | [Results](results.md) | グリッド、フィルタ、ソート、エクスポートとコピー形式、行詳細、構造、チャート、編集 |
 | [Query history](query-history.md) | 記録内容、保持件数、再実行、結果の復元 |

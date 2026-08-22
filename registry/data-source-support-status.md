@@ -183,12 +183,14 @@ surface beyond connection templates. They route through existing adapters:
 - **Memgraph is extension-first.** It speaks Bolt/Cypher like Neo4j; the extension
   can reuse the Neo4j path internally before core promotes it to a wired adapter.
 - **ScyllaDB** now rides the existing `cassandra.rs` CQL path; the remaining work is verification against a real ScyllaDB instance and source-specific UX polish.
-- **Iceberg/lakehouse** is now extension-first: Apache Iceberg, S3 Tables, Delta
-  Lake, Hudi, Hive, Athena, MotherDuck, DuckDB, and Databricks all have
-  marketplace connectors or recognized entries. Their shared `lakehouse`
-  source-type contract is projected into the catalog for catalog/namespace/table
-  browsing, table-format metadata, execution-backend selection, catalog
-  credentials, and starter query templates.
+- **Iceberg/lakehouse** is extension-first and now ships from a separate
+  repository. Apache Iceberg, S3 Tables, Delta Lake, Hudi, Hive, and Athena —
+  together with their shared `lakehouse` source-type contract and the
+  `irodori.datalake` feature extension — live in
+  [irodori-lakehouse](https://github.com/irodori-table/irodori-lakehouse); this
+  build recognises the engines but lists none of those connectors in its
+  catalog. MotherDuck, DuckDB, and Databricks stayed here as general-purpose
+  analytical connectors.
 
 When section 1–4 membership changes, it should be regenerated from the registry,
 not hand-edited — see

@@ -25,7 +25,6 @@ import {
   Folder,
   GitBranch,
   History,
-  Layers3,
   ListPlus,
   MoreHorizontal,
   Network,
@@ -42,10 +41,8 @@ import { EngineIcon } from "@/components/EngineIcon";
 import { hasDiagram } from "@/features/erd";
 import type {
   DatabaseMetadata,
-  DbEngine,
   DbObjectMetadata,
 } from "@/generated/irodori-api";
-import { isLakehouseEngine } from "./LakehousePanel";
 import type {
   ConnectionDraft,
   WorkspaceConnection,
@@ -87,11 +84,6 @@ const viewTabMeta: Record<SidebarViewId, ViewTabMeta> = {
     label: "sidebar.view.history",
   },
   plan: { icon: Flame, title: "sidebar.view.plan", label: "sidebar.view.plan" },
-  lakehouse: {
-    icon: Layers3,
-    title: "sidebar.view.lakehouse",
-    label: "sidebar.view.lake",
-  },
   bi: { icon: BarChart3, title: "sidebar.view.bi", label: "sidebar.view.bi" },
   git: {
     icon: GitBranch,
@@ -117,9 +109,9 @@ const viewTabMeta: Record<SidebarViewId, ViewTabMeta> = {
 };
 
 /**
- * Engines whose lakehouse source-type contract (knowledge/engines.json) names
- * the level between connection and table something other than "schema", keyed
- * by `DbEngine` id.
+ * Engines whose source-type contract (knowledge/engines.json) names the level
+ * between connection and table something other than "schema", keyed by
+ * `DbEngine` id.
  *
  * The object browser renders one tree for every engine, so only the vocabulary
  * and the container icon follow the contract; engines absent here stay on
@@ -135,6 +127,16 @@ const containerLabelKeyByEngine: Record<string, TranslationKey> = {
   hive: "sidebar.databasesCount",
   athena: "sidebar.databasesCount",
 };
+
+/**
+ * The same engines, plus Databricks: their top tree level is a namespace or
+ * database rather than a schema, so the object browser marks it with a
+ * container glyph instead of a folder.
+ */
+const namespaceBrowserEngines: ReadonlySet<string> = new Set([
+  ...Object.keys(containerLabelKeyByEngine),
+  "databricks",
+]);
 
 // Menus in the sidebar are portaled to <body> and positioned with fixed
 // viewport coordinates: the sidebar lives inside scroll containers and
@@ -252,7 +254,6 @@ type SidebarProps = {
   completionPanel: ReactNode;
   historyPanel: ReactNode;
   planPanel: ReactNode;
-  lakehousePanel: ReactNode;
   biPanel: ReactNode;
   gitPanel: ReactNode;
   aiChatPanel: ReactNode;
@@ -312,7 +313,6 @@ export function Sidebar({
   completionPanel,
   historyPanel,
   planPanel,
-  lakehousePanel,
   biPanel,
   gitPanel,
   aiChatPanel,
@@ -395,9 +395,6 @@ export function Sidebar({
     (state) => state.sidebarViewLabels,
   );
   const { t } = createTranslator(locale);
-  const lakehouseConnection = isLakehouseEngine(
-    activeConnection.engine as DbEngine,
-  );
   const containerLabelKey =
     containerLabelKeyByEngine[activeConnection.engine] ??
     "sidebar.schemasCount";
@@ -684,8 +681,6 @@ export function Sidebar({
         return historyPanel;
       case "plan":
         return planPanel;
-      case "lakehouse":
-        return lakehousePanel;
       case "bi":
         return biPanel;
       case "git":
@@ -1103,7 +1098,9 @@ export function Sidebar({
                     activeMetadata.schemas.map((schema) => (
                       <details className="schema-tree" key={schema.name} open>
                         <summary>
-                          {lakehouseConnection ? (
+                          {namespaceBrowserEngines.has(
+                            activeConnection.engine,
+                          ) ? (
                             <Boxes size={14} />
                           ) : (
                             <Folder size={14} />

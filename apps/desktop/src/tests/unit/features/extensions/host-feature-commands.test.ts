@@ -55,10 +55,8 @@ describe("commands gated on a host feature", () => {
     expect(filtered).toHaveLength(appCommandCatalog.length);
   });
 
-  it("does not let an unrelated feature unlock a gated command", () => {
-    const filtered = commandsAvailableForHostFeatures(appCommandCatalog, [
-      "datalake",
-    ]);
+  it("does not let an absent feature unlock a gated command", () => {
+    const filtered = commandsAvailableForHostFeatures(appCommandCatalog, []);
 
     expect(filtered.map((command) => command.id)).not.toContain(
       "view.knowledge.toggle",

@@ -512,6 +512,7 @@
       "defaultPort": 10000,
       "status": "recognized_no_connector",
       "extensionId": "irodori.hive",
+      "extensionRegistry": "irodori-table/irodori-lakehouse",
       "sourceTypeContract": {
         "kind": "lakehouse",
         "objectTypes": ["catalogs", "databases", "tables", "tableMetadata"],
@@ -541,6 +542,7 @@
       "defaultPort": 443,
       "status": "recognized_no_connector",
       "extensionId": "irodori.athena",
+      "extensionRegistry": "irodori-table/irodori-lakehouse",
       "sourceTypeContract": {
         "kind": "lakehouse",
         "objectTypes": ["catalogs", "databases", "tables", "tableMetadata"],
@@ -570,6 +572,7 @@
       "defaultPort": 443,
       "status": "recognized_no_connector",
       "extensionId": "irodori.iceberg",
+      "extensionRegistry": "irodori-table/irodori-lakehouse",
       "sourceTypeContract": {
         "kind": "lakehouse",
         "objectTypes": ["catalogs", "namespaces", "tables", "snapshots"],
@@ -599,6 +602,7 @@
       "defaultPort": 443,
       "status": "recognized_no_connector",
       "extensionId": "irodori.s3-tables",
+      "extensionRegistry": "irodori-table/irodori-lakehouse",
       "sourceTypeContract": {
         "kind": "lakehouse",
         "objectTypes": ["tableBuckets", "namespaces", "tables", "snapshots"],
@@ -628,6 +632,7 @@
       "defaultPort": 443,
       "status": "recognized_no_connector",
       "extensionId": "irodori.delta-lake",
+      "extensionRegistry": "irodori-table/irodori-lakehouse",
       "sourceTypeContract": {
         "kind": "lakehouse",
         "objectTypes": ["catalogs", "namespaces", "tables", "snapshots"],
@@ -656,6 +661,7 @@
       "defaultPort": 443,
       "status": "recognized_no_connector",
       "extensionId": "irodori.hudi",
+      "extensionRegistry": "irodori-table/irodori-lakehouse",
       "sourceTypeContract": {
         "kind": "lakehouse",
         "objectTypes": ["catalogs", "namespaces", "tables", "timelines"],

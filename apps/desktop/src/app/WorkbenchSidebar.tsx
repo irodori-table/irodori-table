@@ -8,7 +8,6 @@ import { useSchemaDesignerStore } from "@/features/schema-designer";
 import { SearchReplacePanel } from "@/features/search/SearchReplacePanel";
 import {
   InspectorContent,
-  LakehousePanel,
   PlanPanel,
   Sidebar,
   objectKindLabel,
@@ -16,7 +15,7 @@ import {
 } from "@/features/workbench";
 
 // One side of the workbench: the view rail plus every dockable panel
-// (completion, history, plan, lakehouse, BI, git, AI chat, search) wired to
+// (completion, history, plan, BI, git, AI chat, search) wired to
 // the workbench controllers from context.
 export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
   const {
@@ -118,19 +117,6 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
           onCopyFormat={(format) => void editorCommands.copyPlanFormat(format)}
           onClose={() => sidebars.closeSidebarView("plan")}
         />
-      }
-      lakehousePanel={
-        sidebars.enabledHostFeatures.includes("datalake") ? (
-          <LakehousePanel
-            editorEngine={editorEngine}
-            activeConnectionName={activeConnection.name}
-            activeConnectionOpen={activeConnectionOpen}
-            activeMetadata={activeMetadata}
-            onInsertSql={(sql) => activeEditorApi()?.insertText(sql)}
-            onLoadSql={setQuery}
-            onClose={() => sidebars.closeSidebarView("lakehouse")}
-          />
-        ) : null
       }
       biPanel={
         <BiPanel

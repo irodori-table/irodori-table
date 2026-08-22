@@ -32,13 +32,22 @@ describe("declarative extension host features", () => {
       deriveEnabledHostFeatures([
         extension(),
         extension({ id: "irodori.knowledge-copy" }),
+      ]),
+    ).toEqual(["knowledge"]);
+  });
+
+  it("ignores a feature this build no longer ships", () => {
+    // irodori.datalake moved to the irodori-lakehouse repo; a copy left over
+    // from an older install must not re-enable a view that is gone.
+    expect(
+      deriveEnabledHostFeatures([
         extension({
           id: "irodori.datalake",
           name: "Irodori Datalake",
           hostFeatures: ["datalake"],
         }),
       ]),
-    ).toEqual(["knowledge", "datalake"]);
+    ).toEqual([]);
   });
 
   it("does not activate host features declared by native connectors", () => {

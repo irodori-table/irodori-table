@@ -34,8 +34,9 @@ English.
    [Connections](connections.md).
 
    If the engine needs a connector extension (all lakehouse, vector, and search
-   engines do), install that first — see [Lakehouse connections](lakehouse.md)
-   for the full walkthrough.
+   engines do), install that first — see [Extensions](extensions.md), or
+   [Lakehouse connections](lakehouse.md) for the engines that moved to the
+   irodori-lakehouse repository.
 
 4. **Test, then connect.** **Test** checks the profile without opening a
    session. **Connect** opens it and loads the object browser.
@@ -54,7 +55,7 @@ for a first look.
 | Page | Covers |
 | --- | --- |
 | [Connections](connections.md) | Profiles, engines, transports, secrets, import/export |
-| [Lakehouse connections](lakehouse.md) | Iceberg, Delta Lake, Hudi, Hive, Athena, S3 Tables — extension first |
+| [Lakehouse connections](lakehouse.md) | Iceberg, Delta Lake, Hudi, Hive, Athena, S3 Tables — moved to irodori-lakehouse |
 | [Query editor](query-editor.md) | Running SQL, completion, snippets, query magics, parameters, Vim mode |
 | [Results](results.md) | Grid, filtering, sorting, export and copy formats, row detail, structure, charts, editing |
 | [Query history](query-history.md) | What is recorded, retention, re-running, restoring results |

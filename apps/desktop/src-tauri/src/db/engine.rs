@@ -906,8 +906,29 @@ mod tests {
             .iter()
             .filter(|engine| engine.connector_extension_id().is_some())
             .count();
-        assert_eq!(catalog_connector_count, 35);
-        assert_eq!(dispatch_count, catalog_connector_count);
+        assert_eq!(catalog_connector_count, 29);
+        // The catalog is a subset of the dispatch table, not a mirror of it:
+        // the six lakehouse connectors ship from the irodori-lakehouse
+        // registry, so this build still knows which extension backs Iceberg
+        // without offering to install it.
+        let lakehouse_connectors = [
+            DbEngine::Iceberg,
+            DbEngine::S3Tables,
+            DbEngine::DeltaLake,
+            DbEngine::Hudi,
+            DbEngine::Hive,
+            DbEngine::Athena,
+        ];
+        for engine in lakehouse_connectors {
+            assert!(
+                engine.connector_extension_id().is_some(),
+                "{engine:?} must still dispatch to its connector extension"
+            );
+        }
+        assert_eq!(
+            dispatch_count,
+            catalog_connector_count + lakehouse_connectors.len()
+        );
     }
 
     #[test]

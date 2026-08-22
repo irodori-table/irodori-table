@@ -7,7 +7,6 @@ export {
   WorkbenchDockLayout,
   type WorkbenchDockLayoutProps,
 } from "./components/WorkbenchDockLayout";
-export { LakehousePanel } from "./components/LakehousePanel";
 export { PlanPanel } from "./components/PlanPanel";
 export { Inspector, InspectorContent } from "./components/Inspector";
 export { completionHintsFromMetadata } from "./completion-hints";

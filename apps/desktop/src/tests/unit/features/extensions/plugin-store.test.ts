@@ -65,7 +65,7 @@ describe("plugin store catalog", () => {
   });
 
   it("bundles platform-independent declarative feature releases", () => {
-    for (const id of ["irodori.knowledge", "irodori.datalake"]) {
+    for (const id of ["irodori.knowledge"]) {
       const extension = bundledPluginStoreCatalog.extensions.find(
         (candidate) => candidate.id === id,
       );
@@ -91,12 +91,11 @@ describe("plugin store catalog", () => {
     }
   });
 
-  it("bundles source-type contracts for vector and lakehouse extensions", () => {
+  it("bundles source-type contracts for vector extensions", () => {
+    // The lakehouse contracts (Iceberg and friends) moved to the
+    // irodori-lakehouse registry along with their connectors.
     const qdrant = bundledPluginStoreCatalog.extensions.find(
       (extension) => extension.id === "irodori.qdrant",
-    );
-    const iceberg = bundledPluginStoreCatalog.extensions.find(
-      (extension) => extension.id === "irodori.iceberg",
     );
 
     expect(qdrant?.contributes?.sourceTypes[0]).toMatchObject({
@@ -113,17 +112,6 @@ describe("plugin store catalog", () => {
         "vector-similarity",
         "vector-filtered",
       ]),
-    });
-    expect(iceberg?.contributes?.sourceTypes[0]).toMatchObject({
-      engine: "iceberg",
-      kind: "lakehouse",
-      workflows: expect.arrayContaining([
-        "catalogBrowsing",
-        "tableFormatMetadata",
-        "executionBackendSelection",
-      ]),
-      executionBackends: expect.arrayContaining(["duckdb", "athena"]),
-      tableFormats: ["iceberg"],
     });
   });
 

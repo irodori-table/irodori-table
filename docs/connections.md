@@ -144,10 +144,13 @@ failure mode differs:
    the missing runtime and enables **Test** and **Connect**.
 
 3. **Provided by a connector extension.** Everything lakehouse, vector, search,
-   or document-oriented: DuckDB, MotherDuck, Iceberg, Delta Lake, Hudi, Hive,
-   Athena, S3 Tables, Databricks, Trino/Presto, Firebird, Elasticsearch,
+   or document-oriented: DuckDB, MotherDuck, Databricks, Trino/Presto, Firebird,
+   Elasticsearch,
    OpenSearch, Couchbase, DynamoDB, ArangoDB, IoTDB, Memgraph, Qdrant, Milvus,
-   Pinecone, Cloud Spanner. Connecting without the extension installed fails
+   Pinecone, Cloud Spanner — plus Iceberg, Delta Lake, Hudi, Hive, Athena and S3
+   Tables, whose connectors now ship from
+   [irodori-lakehouse](https://github.com/irodori-table/irodori-lakehouse).
+   Connecting without the extension installed fails
    with:
 
    > This data source needs the `irodori.<name>` connector extension. Install it

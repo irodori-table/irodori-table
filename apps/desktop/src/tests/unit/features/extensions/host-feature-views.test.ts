@@ -13,13 +13,11 @@ import { workbenchViewIds } from "@/features/workbench/types";
  * assertions are what makes one table safe to rely on instead.
  */
 describe("views gated on a host feature", () => {
-  it("gates exactly Knowledge and Lakehouse today", () => {
+  it("gates exactly Knowledge today", () => {
     // Deliberately exact: gaining or losing a gated view has to be a decision,
     // because every entry here is a view that disappears from a standard build.
-    expect([...hostFeatureViewIds()].sort()).toEqual([
-      "knowledge",
-      "lakehouse",
-    ]);
+    // Lakehouse was the second entry until the panel moved to irodori-lakehouse.
+    expect([...hostFeatureViewIds()].sort()).toEqual(["knowledge"]);
   });
 
   it("names views and features that exist", () => {
@@ -29,11 +27,11 @@ describe("views gated on a host feature", () => {
     }
   });
 
-  it("maps the Lakehouse view to the datalake feature, not to its own name", () => {
-    // The trap this table exists to hold: the view and the feature are spelled
-    // differently. `enabledHostFeatures.includes(viewId)` looks right and gates
-    // the wrong thing — silently, because "lakehouse" is simply never enabled.
-    expect(hostFeatureForView("lakehouse")).toBe("datalake");
+  it("maps a view to its feature through the table, not by name", () => {
+    // The trap this table exists to hold: view id and feature id are separate
+    // namespaces. `enabledHostFeatures.includes(viewId)` looks right and gates
+    // the wrong thing the moment the two names differ — silently, because the
+    // view id is then simply never enabled.
     expect(hostFeatureForView("knowledge")).toBe("knowledge");
   });
 
@@ -43,19 +41,14 @@ describe("views gated on a host feature", () => {
   });
 
   it("reports a gated view unavailable until its feature is enabled", () => {
-    expect(isViewUnavailable("lakehouse", [])).toBe(true);
-    expect(isViewUnavailable("lakehouse", ["knowledge"])).toBe(true);
-    expect(isViewUnavailable("lakehouse", ["datalake"])).toBe(false);
+    expect(isViewUnavailable("knowledge", [])).toBe(true);
+    expect(isViewUnavailable("knowledge", ["knowledge"])).toBe(false);
   });
 
   it("builds a hidden map covering every gated view and nothing else", () => {
-    expect(unavailableHostFeatureViews([])).toEqual({
-      knowledge: true,
-      lakehouse: true,
-    });
-    expect(unavailableHostFeatureViews(["knowledge", "datalake"])).toEqual({
+    expect(unavailableHostFeatureViews([])).toEqual({ knowledge: true });
+    expect(unavailableHostFeatureViews(["knowledge"])).toEqual({
       knowledge: false,
-      lakehouse: false,
     });
   });
 });

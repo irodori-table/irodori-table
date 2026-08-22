@@ -26,7 +26,6 @@ const renderSidebar = componentRenderer(Sidebar, () => {
     completionPanel: null,
     historyPanel: null,
     planPanel: null,
-    lakehousePanel: null,
     biPanel: null,
     gitPanel: null,
     aiChatPanel: null,
