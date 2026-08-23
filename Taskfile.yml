@@ -295,6 +295,9 @@ tasks:
   release-major:
     desc: 'Bump the major version, tag and push'
     cmds: ['{{.RELEASE}} major']
+  release-latest-check:
+    desc: 'Fail when the stable Latest release has fallen behind the pre-releases'
+    cmds: ['node tools/release/check-stable-latest.mjs']
 
   # --- knowledge base and generated docs ------------------------------------
   knowledge-refresh:

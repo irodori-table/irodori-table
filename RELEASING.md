@@ -140,7 +140,21 @@ uploaded signature assets.
 
 The `stable` channel is the only one that publishes as a full release rather
 than a pre-release, so it is what GitHub surfaces as **Latest** on the
-repository home page. It builds the complete Linux + universal macOS + Windows
+repository home page.
+
+**Dispatching it is not optional bookkeeping.** Everything that installs "the
+latest release" — the Releases page, `gh release download` with no tag, and
+third-party installers such as `soar` — resolves `/releases/latest`, which a
+pre-release can never be. Between v0.8.5 and v0.8.14 no stable dispatch
+happened, so for three weeks every new user was handed v0.8.5: the build from
+#214 that aborts with `EGL_BAD_PARAMETER` before a window appears on any
+Mesa/Wayland host. The fix had shipped in v0.8.6 and reached nobody.
+
+`task release-latest-check` (also a CI job on `main`) fails when two or more
+published releases sit ahead of the stable Latest. One is the expected state
+between cutting a tag and dispatching its stable channel; two means a release
+was cut on top of an un-promoted one, which is where the drift starts
+compounding unnoticed. It builds the complete Linux + universal macOS + Windows
 set and, when the corresponding secrets are configured, generates the ignored
 `src-tauri/tauri.updater.conf.json` config through
 `npm run release:prepare-updater`, signs Tauri updater artifacts, publishes

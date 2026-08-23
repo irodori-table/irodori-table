@@ -392,3 +392,23 @@ jobs:
       - name: Run desktop e2e tests
         working-directory: apps/desktop
         run: npm run test:e2e
+
+  stable-channel:
+    name: Stable release channel
+    # Only on main. A pull request must not go red for a release-process
+    # condition its author cannot fix from the branch — but main, where the
+    # drift accumulates unnoticed, must.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Check the stable Latest release has not fallen behind
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node tools/release/check-stable-latest.mjs
