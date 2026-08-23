@@ -81,6 +81,12 @@ workbench refused an action the user plainly meant.
 - **Ctrl+W on a group with no tabs left closes the connection**, which is the
   only thing left in the workbench for "close" to act on once tabs belong to
   one — and the first keyboard route to closing a connection at all.
+- **Update all** in the Installed extensions header, shown only when something
+  is actually updatable, with one confirmation listing every version transition
+  it will make. Updating used to mean finding each outdated row and clicking
+  through its own dialog — a chore proportional to how long you had been away.
+  A failure is reported by name and does not strand the updates queued behind
+  it.
 
 ### Removed
 
