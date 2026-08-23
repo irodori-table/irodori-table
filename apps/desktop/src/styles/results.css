@@ -708,9 +708,18 @@
   cursor: pointer;
 }
 
+/* The selected segment was a solid `--blue` fill — the most saturated token in
+   the palette, used nowhere else as a large flat area. Against a light theme's
+   near-white rows it read as a heavy block rather than a selection, and the
+   label sat on the one colour in the sheet with no tuned text pairing. A tinted
+   fill with accent-coloured text and a matching border marks the segment just
+   as clearly at a fraction of the weight. */
 .segmented-control button.active {
-  color: var(--accent-text);
-  background: var(--blue);
+  /* Inset shadow rather than a border: the buttons are `border: 0`, so a real
+     border would grow the active segment by 2px and jog the whole control. */
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 42%, var(--border));
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 20%, var(--surface-raised));
 }
 
 .result-filter-rules {
