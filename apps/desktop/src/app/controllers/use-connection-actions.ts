@@ -506,17 +506,25 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     await disconnectProfile(activeConnectionId);
   }
 
-  /** Close one connection by id; the rail closes profiles other than the active one. */
+  /** Close one connection by id, from the rail menu or an empty-group Ctrl+W. */
   async function disconnectProfile(id: string) {
     if (!connectedIds.has(id)) {
       return;
     }
     await queryService.disconnect(id).catch(() => undefined);
-    setConnectedIds((current) => {
-      const next = new Set(current);
-      next.delete(id);
-      return next;
-    });
+    const remaining = new Set(
+      [...connectedIds].filter((value) => value !== id),
+    );
+    setConnectedIds(remaining);
+    // The rail lists open connections only, so a closed one leaves the rail.
+    // Leaving it active would point the workbench at an icon that is no longer
+    // there; hand the session to another open connection, or to none. Profile
+    // order decides the successor so it matches what the rail shows.
+    if (activeConnectionId === id) {
+      setActiveConnectionId(
+        profiles.find((profile) => remaining.has(profile.id))?.id ?? "",
+      );
+    }
     setMetadataByConnection((current) => {
       const { [id]: _removed, ...next } = current;
       return next;

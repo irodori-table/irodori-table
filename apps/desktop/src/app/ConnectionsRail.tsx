@@ -12,10 +12,17 @@ type RailMenuState = { x: number; y: number; profileId: string } | null;
 
 /**
  * TablePlus-style vertical rail at the far-left edge of the workspace: one
- * icon per saved connection with its color tag always visible. A left click is
- * always "switch to this connection" — it opens the profile if it is closed —
- * and never a detour through the Connection Manager. Editing and closing live
- * on the right-click menu instead, so the primary click stays one action.
+ * icon per **open** connection, with its color tag always visible. A left
+ * click switches to that connection, and never a detour through the Connection
+ * Manager. Editing and closing live on the right-click menu instead, so the
+ * primary click stays one action.
+ *
+ * It used to list every saved profile, which made "Close connection" look
+ * broken — the icon stayed exactly where it was, because the rail was never
+ * showing connections in the first place, only the profiles that could become
+ * one. The rail now shows the session: closing a connection removes it, and
+ * the button at the foot opens the Connection Manager, which is the library of
+ * saved profiles and the place to add a new one.
  */
 export function ConnectionsRail() {
   const { connections } = useWorkbenchContext();
@@ -29,6 +36,9 @@ export function ConnectionsRail() {
     setConnectionManagerOpen,
     connectionActions,
   } = connections;
+  const openProfiles = profiles.filter((profile) =>
+    connectedIds.has(profile.id),
+  );
   const [menu, setMenu] = useState<RailMenuState>(null);
   const menuProfile = menu
     ? profiles.find((profile) => profile.id === menu.profileId)
@@ -62,34 +72,30 @@ export function ConnectionsRail() {
   return (
     <nav className="connections-rail" aria-label={t("rail.connections")}>
       <div className="connections-rail-list" role="list">
-        {profiles.map((profile) => {
-          const connected = connectedIds.has(profile.id);
+        {openProfiles.map((profile) => {
           const active = profile.id === activeConnectionId;
-          const title = connected
-            ? `${profile.name} · ${t("rail.connected")}`
-            : profile.name;
           return (
             <button
               key={profile.id}
               type="button"
               role="listitem"
+              // Every profile on the rail is connected, so `connected` is no
+              // longer a distinction between items — it stays as the class the
+              // stylesheet keys the live-dot off.
               className={[
                 "connections-rail-item",
+                "connected",
                 active ? "active" : null,
-                connected ? "connected" : null,
               ]
                 .filter(Boolean)
                 .join(" ")}
               style={{ "--rail-color": profile.color } as CSSProperties}
-              title={title}
+              title={`${profile.name} · ${t("rail.connected")}`}
               aria-label={t("rail.switchTo", { name: profile.name })}
               aria-pressed={active}
               onClick={() => {
                 setActiveConnectionId(profile.id);
                 connectionActions.selectProfile(profile);
-                if (!connected) {
-                  void connectionActions.connectProfile(profile);
-                }
               }}
               onContextMenu={(event) => {
                 event.preventDefault();
@@ -107,15 +113,15 @@ export function ConnectionsRail() {
           );
         })}
       </div>
+      {/* Opens the Connection Manager rather than starting a new profile: with
+          only open connections on the rail, this is also the only route back
+          to a saved-but-closed one. The manager has its own + for new. */}
       <button
         type="button"
         className="connections-rail-item connections-rail-add"
-        title={t("rail.addConnection")}
-        aria-label={t("rail.addConnection")}
-        onClick={() => {
-          connectionActions.addProfile();
-          setConnectionManagerOpen(true);
-        }}
+        title={t("rail.openConnection")}
+        aria-label={t("rail.openConnection")}
+        onClick={() => setConnectionManagerOpen(true)}
       >
         <Plus size={16} />
       </button>
@@ -146,7 +152,6 @@ export function ConnectionsRail() {
               <button
                 type="button"
                 role="menuitem"
-                disabled={!connectedIds.has(menuProfile.id)}
                 onClick={() => {
                   setMenu(null);
                   void connectionActions.disconnectProfile(menuProfile.id);

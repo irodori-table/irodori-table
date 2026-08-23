@@ -980,7 +980,7 @@ export const ja = {
   "sidebar.empty.addConnection": "接続を追加",
   "rail.connections": "接続",
   "rail.connected": "接続中",
-  "rail.addConnection": "接続を追加",
+  "rail.openConnection": "接続を開く",
   "rail.editConnection": "接続を編集…",
   "rail.closeConnection": "接続を閉じる",
   "sidebar.empty.databaseEmpty": "このデータベースは空です。",

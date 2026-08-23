@@ -14,6 +14,12 @@ import { renderUi } from "@/tests/helpers/render";
  * Manager whenever the profile happened to be closed, which turned "switch to
  * staging" into "a settings dialog opened". Editing and closing moved to the
  * right-click menu, where a secondary action belongs.
+ *
+ * It now lists open connections only. Listing every saved profile made "Close
+ * connection" look like it had done nothing — the icon stayed put, because the
+ * rail was showing profiles rather than connections. These tests pin the
+ * distinction: closed profiles are absent, and the foot button is the way back
+ * to them.
  */
 // Built with the real draft factory so the store's persistence subscriber sees
 // every field it expects.
@@ -35,6 +41,7 @@ function railHarness(connected: string[]) {
   const connectProfile = vi.fn(async () => {});
   const disconnectProfile = vi.fn(async () => {});
   const selectProfile = vi.fn();
+  const addProfile = vi.fn();
   const workbench = {
     connections: {
       activeConnectionId: "prod",
@@ -43,7 +50,7 @@ function railHarness(connected: string[]) {
       setConnectionManagerOpen,
       connectionActions: {
         selectProfile,
-        addProfile: vi.fn(),
+        addProfile,
         connectProfile,
         disconnectProfile,
       },
@@ -60,6 +67,7 @@ function railHarness(connected: string[]) {
     setConnectionManagerOpen,
     connectProfile,
     disconnectProfile,
+    addProfile,
   };
 }
 
@@ -78,15 +86,19 @@ describe("ConnectionsRail", () => {
     expect(rail.setConnectionManagerOpen).not.toHaveBeenCalled();
   });
 
-  it("opens a closed profile on click instead of the manager", async () => {
-    const rail = railHarness(["prod"]);
+  it("lists open connections only, so closing one removes it", () => {
+    railHarness(["prod"]);
 
-    await rail.user.click(screen.getByRole("listitem", { name: /staging/ }));
+    expect(screen.getByRole("listitem", { name: /prod/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("listitem", { name: /staging/ }),
+    ).not.toBeInTheDocument();
+  });
 
-    expect(rail.connectProfile).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "staging" }),
-    );
-    expect(rail.setConnectionManagerOpen).not.toHaveBeenCalled();
+  it("leaves an empty rail when nothing is open", () => {
+    railHarness([]);
+
+    expect(screen.queryAllByRole("listitem")).toHaveLength(0);
   });
 
   it("offers edit and close on right click", async () => {
@@ -108,14 +120,16 @@ describe("ConnectionsRail", () => {
     expect(rail.disconnectProfile).toHaveBeenCalledWith("staging");
   });
 
-  it("disables close for a profile that is not open", async () => {
+  // The only route back to a saved-but-closed profile once the rail stops
+  // listing them, so it must reach the manager rather than start a new draft.
+  it("opens the Connection Manager from the foot button without adding a profile", async () => {
     const rail = railHarness(["prod"]);
 
-    await rail.user.pointer({
-      target: screen.getByRole("listitem", { name: /staging/ }),
-      keys: "[MouseRight]",
-    });
+    await rail.user.click(
+      screen.getByRole("button", { name: /open a connection/i }),
+    );
 
-    expect(screen.getByRole("menuitem", { name: /close/i })).toBeDisabled();
+    expect(rail.setConnectionManagerOpen).toHaveBeenCalledWith(true);
+    expect(rail.addProfile).not.toHaveBeenCalled();
   });
 });
