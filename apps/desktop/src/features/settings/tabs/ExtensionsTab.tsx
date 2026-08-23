@@ -15,6 +15,7 @@ import {
   bundledPluginStoreCatalog,
   defaultPluginStoreCatalogUrl,
   fetchPluginStoreCatalog,
+  isExtensionUpdatable,
   resolvePluginStoreInstallAsset,
   UnsupportedInstallKindError,
   type PluginStoreCatalog,
@@ -182,24 +183,43 @@ function InstalledSection({
   nativeTarget,
   operationId,
   t,
+  updatableCount,
   onInstall,
   onToggle,
   onUninstall,
+  onUpdateAll,
 }: {
   installed: readonly InstalledExtension[];
   catalogById: ReadonlyMap<string, PluginStoreExtension>;
   nativeTarget: string | null;
   operationId: string | null;
   t: TranslateFn;
+  updatableCount: number;
   onInstall: (extension: PluginStoreExtension) => void;
   onToggle: (extension: InstalledExtension) => void;
   onUninstall: (extension: InstalledExtension) => void;
+  onUpdateAll: () => void;
 }) {
+  // Any in-flight operation disables the batch: it walks the whole installed
+  // list, so letting it start beside a single install would have the two
+  // racing for the same extension directory.
+  const batchBusy = operationId !== null;
   return (
     <section className="extension-section">
       <div className="extension-section-header">
         <span>{t("settings.extensions.installed")}</span>
         <small>{installed.length}</small>
+        {updatableCount > 0 ? (
+          <button
+            type="button"
+            className="text-button primary extension-update-all"
+            disabled={batchBusy}
+            onClick={onUpdateAll}
+          >
+            <Download size={14} />
+            {t("settings.extensions.updateAll", { count: updatableCount })}
+          </button>
+        ) : null}
       </div>
       {installed.length === 0 ? (
         <div className="extension-empty">
@@ -209,11 +229,10 @@ function InstalledSection({
         <div className="extension-list">
           {installed.map((extension) => {
             const catalog = catalogById.get(extension.id);
-            const canUpdate = Boolean(
-              catalog &&
-              nativeTarget &&
-              resolvePluginStoreInstallAsset(catalog, nativeTarget) &&
-              compareExtensionVersions(catalog.version, extension.version) > 0,
+            const canUpdate = isExtensionUpdatable(
+              catalog,
+              extension.version,
+              nativeTarget,
             );
             const busy = operationId === extension.id;
             return (
@@ -352,6 +371,21 @@ export function ExtensionsTab({ t, active }: ExtensionsTabProps) {
         .includes(term),
     );
   }, [pluginSearch, pluginStore.extensions]);
+  // Pairs rather than ids: the batch needs the catalog entry to install and the
+  // installed record to report which one failed, and re-deriving either from an
+  // id at click time would read a catalog that may have refreshed since.
+  const updatableExtensions = useMemo(
+    () =>
+      installedExtensions.flatMap((extension) => {
+        const catalog = catalogById.get(extension.id);
+        return isExtensionUpdatable(catalog, extension.version, nativeTarget) &&
+          catalog
+          ? [{ installed: extension, catalog }]
+          : [];
+      }),
+    [catalogById, installedExtensions, nativeTarget],
+  );
+
   const recommendedPluginStoreExtensions = useMemo(
     () =>
       pluginStore.extensions.filter((extension) =>
@@ -392,6 +426,37 @@ export function ExtensionsTab({ t, active }: ExtensionsTabProps) {
       void refresh();
     }
   }, [active, refresh]);
+
+  // The install itself, with no prompting and no list refresh. `installOrUpdate`
+  // wraps it in a per-extension confirmation; the batch update confirms once for
+  // the whole set and refreshes after the last one, so neither the dialog nor the
+  // `extList()` round trip can be per-item there.
+  // Throws on failure: the batch needs to tell which entries failed apart from
+  // those that succeeded, which a swallowed error cannot express.
+  const performInstall = useCallback(
+    async (extension: PluginStoreExtension) => {
+      const install = extension.install;
+      const asset = nativeTarget
+        ? resolvePluginStoreInstallAsset(extension, nativeTarget)
+        : undefined;
+      if (!install || !asset || !nativeTarget) {
+        throw new Error(t("settings.extensions.targetUnavailable"));
+      }
+      assertSupportedInstallKind(install);
+      await extInstall({
+        id: extension.id,
+        version: extension.version,
+        kind: install.kind,
+        repository: extension.repository,
+        assetName: asset.name,
+        tag: install.tag,
+        sha256: asset.sha256,
+        permissions: extension.permissions,
+        manifestPath: install.manifestPath,
+      });
+    },
+    [nativeTarget, t],
+  );
 
   const installOrUpdate = useCallback(
     async (extension: PluginStoreExtension) => {
@@ -440,17 +505,7 @@ export function ExtensionsTab({ t, active }: ExtensionsTabProps) {
       setOperationId(extension.id);
       setRuntimeError(null);
       try {
-        await extInstall({
-          id: extension.id,
-          version: extension.version,
-          kind: install.kind,
-          repository: extension.repository,
-          assetName: asset.name,
-          tag: install.tag,
-          sha256: asset.sha256,
-          permissions: extension.permissions,
-          manifestPath: install.manifestPath,
-        });
+        await performInstall(extension);
         setInstalledExtensions(await extList());
       } catch (error) {
         setRuntimeError(errorMessage(error));
@@ -458,8 +513,68 @@ export function ExtensionsTab({ t, active }: ExtensionsTabProps) {
         setOperationId(null);
       }
     },
-    [confirm, installedById, nativeTarget, t],
+    [
+      confirm,
+      installedById,
+      nativeTarget,
+      performInstall,
+      setInstalledExtensions,
+      t,
+    ],
   );
+
+  const updateAll = useCallback(async () => {
+    if (updatableExtensions.length === 0) {
+      return;
+    }
+    const confirmed = await confirm({
+      title: t("settings.extensions.confirmUpdateAllTitle", {
+        count: updatableExtensions.length,
+      }),
+      message: t("settings.extensions.confirmUpdateAllMessage", {
+        extensions: updatableExtensions
+          .map(
+            ({ installed, catalog }) =>
+              `${installed.name} ${installed.version} → ${catalog.version}`,
+          )
+          .join("\n"),
+      }),
+      confirmLabel: t("settings.extensions.updateAllAction"),
+    });
+    if (!confirmed) {
+      return;
+    }
+    setRuntimeError(null);
+    // Sequential on purpose. The backend serialises installs behind a single
+    // lock anyway, and running them one at a time keeps `operationId` pointing
+    // at the extension actually being written.
+    const failures: string[] = [];
+    for (const { installed, catalog } of updatableExtensions) {
+      setOperationId(catalog.id);
+      try {
+        await performInstall(catalog);
+      } catch (error) {
+        // One bad entry must not strand the rest: a failed signature check on
+        // a single extension would otherwise hold back every later update.
+        failures.push(`${installed.name}: ${errorMessage(error)}`);
+      }
+    }
+    setOperationId(null);
+    // Refresh regardless of failures — the ones that did land must show their
+    // new versions, and a stale list would offer to update them again.
+    try {
+      setInstalledExtensions(await extList());
+    } catch (error) {
+      failures.push(errorMessage(error));
+    }
+    if (failures.length > 0) {
+      setRuntimeError(
+        t("settings.extensions.updateAllFailed", {
+          failures: failures.join("; "),
+        }),
+      );
+    }
+  }, [confirm, performInstall, setInstalledExtensions, t, updatableExtensions]);
 
   const toggleExtension = useCallback(async (extension: InstalledExtension) => {
     setOperationId(extension.id);
@@ -566,9 +681,11 @@ export function ExtensionsTab({ t, active }: ExtensionsTabProps) {
         nativeTarget={nativeTarget}
         operationId={operationId}
         t={t}
+        updatableCount={updatableExtensions.length}
         onInstall={(extension) => void installOrUpdate(extension)}
         onToggle={(extension) => void toggleExtension(extension)}
         onUninstall={(extension) => void uninstallExtension(extension)}
+        onUpdateAll={() => void updateAll()}
       />
       <MarketplaceSection
         title={t("settings.extensions.marketplace")}

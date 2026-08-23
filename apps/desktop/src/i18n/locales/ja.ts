@@ -721,6 +721,8 @@ export const ja = {
   "settings.extensions.noRecommended": "推奨拡張はありません",
   "settings.extensions.install": "インストール",
   "settings.extensions.update": "更新",
+  "settings.extensions.updateAll": "すべて更新 ({count})",
+  "settings.extensions.updateAllAction": "すべて更新",
   "settings.extensions.uninstall": "アンインストール",
   "settings.extensions.enable": "有効化",
   "settings.extensions.disable": "無効化",
@@ -742,6 +744,12 @@ export const ja = {
   "settings.extensions.confirmUpdateTitle": "{name} を更新しますか？",
   "settings.extensions.confirmInstallMessage":
     "version {version} を固定済みGitHub releaseから取得し、検証後に読み込みます。要求される権限: {permissions}",
+  "settings.extensions.confirmUpdateAllTitle":
+    "{count} 個のextensionを更新しますか？",
+  "settings.extensions.confirmUpdateAllMessage":
+    "それぞれ固定済みGitHub releaseから取得し、検証後に読み込みます:\n{extensions}",
+  "settings.extensions.updateAllFailed":
+    "更新できなかったextensionがあります: {failures}",
   "settings.extensions.confirmUninstallTitle":
     "{name} をアンインストールしますか？",
   "settings.extensions.confirmUninstallMessage":

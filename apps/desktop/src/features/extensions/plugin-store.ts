@@ -120,6 +120,26 @@ export function assertSupportedInstallKind(
   }
 }
 
+/**
+ * An installed extension is updatable when the catalog offers a higher version
+ * that this platform actually has an asset for. Both the per-extension Update
+ * button and the "Update all" action read this, so the batch can never skip a
+ * version an individual row still offers, or claim one it cannot install.
+ */
+export function isExtensionUpdatable(
+  catalog: PluginStoreExtension | undefined,
+  installedVersion: string,
+  target: string | null,
+): boolean {
+  if (!catalog || !target) {
+    return false;
+  }
+  if (!resolvePluginStoreInstallAsset(catalog, target)) {
+    return false;
+  }
+  return compareExtensionVersions(catalog.version, installedVersion) > 0;
+}
+
 export function compareExtensionVersions(left: string, right: string): number {
   const leftVersion = parseVersion(left);
   const rightVersion = parseVersion(right);

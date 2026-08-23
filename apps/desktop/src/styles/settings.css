@@ -603,6 +603,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   min-height: 28px;
   padding: 0 8px;
   color: var(--text);
@@ -610,6 +611,15 @@
   border: 1px solid var(--border);
   border-radius: 4px 4px 0 0;
   font-weight: 600;
+}
+
+/* The auto margin absorbs the free space that `space-between` would otherwise
+   put between the title and its count badge, keeping the badge next to the
+   title it counts and sending only this button to the far edge. Headers
+   without the button keep the plain two-item spread. */
+.extension-section-header .extension-update-all {
+  margin-left: auto;
+  font-weight: 500;
 }
 
 .extension-section-tools {

@@ -709,6 +709,8 @@ export const en = {
   "settings.extensions.noRecommended": "No recommended extensions",
   "settings.extensions.install": "Install",
   "settings.extensions.update": "Update",
+  "settings.extensions.updateAll": "Update all ({count})",
+  "settings.extensions.updateAllAction": "Update all",
   "settings.extensions.uninstall": "Uninstall",
   "settings.extensions.enable": "Enable",
   "settings.extensions.disable": "Disable",
@@ -729,6 +731,11 @@ export const en = {
   "settings.extensions.confirmUpdateTitle": "Update {name}?",
   "settings.extensions.confirmInstallMessage":
     "Version {version} will be downloaded from its pinned GitHub release and verified before loading. Requested permissions: {permissions}",
+  "settings.extensions.confirmUpdateAllTitle": "Update {count} extensions?",
+  "settings.extensions.confirmUpdateAllMessage":
+    "Each will be downloaded from its pinned GitHub release and verified before loading:\n{extensions}",
+  "settings.extensions.updateAllFailed":
+    "Some extensions could not be updated: {failures}",
   "settings.extensions.confirmUninstallTitle": "Uninstall {name}?",
   "settings.extensions.confirmUninstallMessage":
     "The installed extension will be disabled and removed from this device.",
