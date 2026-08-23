@@ -24,19 +24,28 @@ export type ShowActionNotice = (
 ) => void;
 
 const MAX_VISIBLE_NOTICES = 4;
-// Errors and warnings stay until dismissed so neither a failure nor a
-// correctness caveat can silently scroll away while the user is looking
-// elsewhere; success/info auto-dismiss.
+// Every notice auto-dismisses; failures simply get long enough to read.
 //
-// `warning` exists separately from `error` because the operation succeeded —
-// a Hive connection really did open (#117) — but its results cannot be trusted.
-// Styling it as a failure would be wrong, and letting it auto-dismiss would
-// reproduce the very problem it warns about.
+// Errors and warnings used to stay until dismissed, so that neither a failure
+// nor a correctness caveat could scroll away unseen. In practice a failing
+// connection does not fail once: each retry queues another identical toast,
+// and four "Connect failed" cards then sit over the workbench until every one
+// of them is clicked shut. A notice that must be cleared by hand stops being a
+// notification and becomes an obstacle.
+//
+// Ten seconds is the compromise: long enough to read a failure and reach the
+// Retry button it carries, short enough that a burst clears itself. Nothing is
+// lost by the timeout — a failed connection is still failed in the rail, and a
+// warning's caveat still applies to the results it was raised against.
+//
+// `warning` stays a separate kind from `error` because the operation succeeded
+// — a Hive connection really did open (#117) — but its results cannot be
+// trusted, so it is styled as a caveat rather than a failure.
 const DISMISS_DELAY_MS: Record<ActionNotice["kind"], number | null> = {
   success: 3200,
   info: 3200,
-  warning: null,
-  error: null,
+  warning: 10_000,
+  error: 10_000,
 };
 
 /**

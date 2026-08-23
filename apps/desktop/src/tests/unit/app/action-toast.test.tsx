@@ -6,9 +6,13 @@ import { renderUi } from "@/tests/helpers/render";
 
 /**
  * The notice queue had no test. #117 added a `warning` kind to it, and the
- * whole point of that kind is its dismissal behaviour: a connector that can
- * return silently wrong rows must not have its caveat auto-scroll away after
- * three seconds.
+ * whole point of that kind is its dismissal behaviour.
+ *
+ * Warnings and errors used to stay up until clicked. That turned a burst of
+ * retries into a stack of identical cards parked over the workbench, so they
+ * now time out too — just far later than a confirmation does. Both halves are
+ * pinned here: they must outlive a success notice several times over, and they
+ * must still go away on their own.
  */
 
 beforeEach(() => {
@@ -36,7 +40,7 @@ describe("useActionNotices dismissal", () => {
     expect(result.current.notices).toHaveLength(0);
   });
 
-  it("keeps warnings and errors until dismissed", () => {
+  it("holds warnings and errors far longer than a confirmation", () => {
     const { result } = renderHook(() => useActionNotices());
 
     act(() => {
@@ -47,10 +51,28 @@ describe("useActionNotices dismissal", () => {
       result.current.showActionNotice("error", "Connect failed");
     });
 
+    // Still up long after a success notice would have gone.
     act(() => {
-      vi.advanceTimersByTime(60_000);
+      vi.advanceTimersByTime(9_000);
     });
     expect(result.current.notices).toHaveLength(2);
+
+    act(() => {
+      vi.advanceTimersByTime(1_500);
+    });
+    expect(result.current.notices).toHaveLength(0);
+  });
+
+  it("still dismisses a warning on demand before it times out", () => {
+    const { result } = renderHook(() => useActionNotices());
+
+    act(() => {
+      result.current.showActionNotice(
+        "warning",
+        "Hive results may be incorrect",
+      );
+      result.current.showActionNotice("error", "Connect failed");
+    });
 
     act(() => {
       result.current.dismissNotice(result.current.notices[0].id);
