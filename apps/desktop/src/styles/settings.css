@@ -711,10 +711,49 @@
   gap: 8px;
 }
 
+/* State first, as a badge with its own dot: the row now says what the
+   extension *is* without the reader having to infer it from the verb on the
+   button next to it. */
+.extension-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+}
+
+.extension-state::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+  content: "";
+}
+
+.extension-state.on {
+  color: var(--green);
+}
+
+.extension-state.off {
+  color: var(--muted);
+}
+
 .extension-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Paired with `.text-button.danger`: `caution` is the reversible off-switch,
+   `affirm` the one that puts something back into service. Neither is a
+   destructive action, so neither borrows the red. */
+.text-button.caution {
+  color: var(--amber);
+  background: var(--warning-bg);
+}
+
+.text-button.affirm {
+  color: var(--green);
+  background: color-mix(in srgb, var(--green) 12%, var(--surface-raised));
 }
 
 .extension-empty {

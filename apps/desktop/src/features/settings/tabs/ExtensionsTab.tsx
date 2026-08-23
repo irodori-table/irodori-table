@@ -232,7 +232,9 @@ function InstalledSection({
                       : extension.hostFeatures.join(", ")}
                   </p>
                   <div className="extension-meta">
-                    <span>
+                    <span
+                      className={`extension-state ${extension.enabled ? "on" : "off"}`}
+                    >
                       {extension.enabled
                         ? t("settings.extensions.enabled")
                         : t("settings.extensions.disabled")}
@@ -256,9 +258,15 @@ function InstalledSection({
                       {t("settings.extensions.update")}
                     </button>
                   ) : null}
+                  {/* The toggle used to be a neutral button whose only clue
+                      to the current state was the verb on it, sitting beside a
+                      grey "Enabled"/"Disabled" word in the same weight as the
+                      digest next to it. Colour the action instead: turning a
+                      working extension off is the cautionary one, turning a
+                      dormant one on is not. */}
                   <button
                     type="button"
-                    className="text-button"
+                    className={`text-button ${extension.enabled ? "caution" : "affirm"}`}
                     disabled={busy}
                     onClick={() => onToggle(extension)}
                   >
