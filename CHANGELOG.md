@@ -16,13 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
-## [0.9.0] - 2026-08-22
+## [0.9.0] - 2026-08-23
 
-Transport security, and a smaller product. Every PostgreSQL and MySQL
-connection the app made was unencrypted; this release makes TLS possible,
-configurable, and verified. It also moves the lakehouse line out of the app
-entirely, and fixes several places where the workbench refused an action the
-user plainly meant.
+Transport security, a workbench that knows which connection you are on, and a
+smaller product. Every PostgreSQL and MySQL connection the app made was
+unencrypted; this release makes TLS possible, configurable, and verified. Tabs
+now belong to a connection instead of floating above all of them. It also moves
+the lakehouse line out of the app entirely, and fixes several places where the
+workbench refused an action the user plainly meant.
+
+> **If you installed from the Releases page, you have been on v0.8.5.** Every
+> release since was published to the pre-release channel, and `Latest` — what
+> the Releases page, `gh release download` with no tag, and installers such as
+> `soar` all resolve — stayed on v0.8.5: the build from #214 that aborts with
+> `EGL_BAD_PARAMETER` before a window appears on any Mesa/Wayland host. The fix
+> shipped in v0.8.6 and reached nobody. This is the first stable release since,
+> and `task release-latest-check` now fails when the stable channel falls that
+> far behind again.
 
 ### Security
 
@@ -62,6 +72,15 @@ user plainly meant.
   and ScyllaDB CQL, Neo4j and Memgraph Cypher, ArangoDB AQL, Couchbase SQL++,
   InfluxQL, IoTDB-SQL, and the command vocabularies for MongoDB, Redis and the
   vector stores. Non-SQL stores still get their own terms only.
+- **Tabs belong to a connection.** They used to be global — one group pair
+  shared by every profile — so switching connection left the same SQL on screen
+  aimed at a different database, with nothing to say anything had moved. Each
+  connection now keeps its own tabs, active tab and unsaved text, and switching
+  swaps the workbench. Stored layouts migrate: whatever was open before the
+  upgrade is adopted by the first connection you use.
+- **Ctrl+W on a group with no tabs left closes the connection**, which is the
+  only thing left in the workbench for "close" to act on once tabs belong to
+  one — and the first keyboard route to closing a connection at all.
 
 ### Removed
 
@@ -108,6 +127,21 @@ user plainly meant.
   than a look-alike.
 - **Supabase is treated as the PostgreSQL it is** by the SQL snippets and
   keyword completion, which had both omitted it.
+- **The connections rail lists open connections, not saved profiles.** Closing
+  a connection looked like it had done nothing, because the icon that stayed
+  behind was never the connection — it was the profile that could become one.
+  Closing now removes it, and the button at the foot of the rail opens the
+  Connection Manager, which is where saved profiles live and where new ones are
+  added.
+- **Errors and warnings dismiss themselves after ten seconds.** They used to
+  stay until clicked, so a retrying connection stacked identical "Connect
+  failed" cards over the workbench until each was cleared by hand.
+- **An extension's enabled state is legible at a glance** — a badge with a
+  status dot, and a coloured action beside it, rather than a grey word and a
+  neutral button whose verb was the only clue.
+- The selected item in a segmented control (Color mode, result filters, log
+  filters) is a tinted fill instead of a solid saturated blue, which read as a
+  heavy block rather than a selection in light themes.
 - Sibling crates are consumed from the `irodori-table` organisation rather than
   the pre-transfer owner, at `irodori-kit` v0.7.9.
 
