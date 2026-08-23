@@ -1,6 +1,6 @@
 import type { ShowActionNotice } from "@/app/ActionToast";
 import { DOCS_URL } from "@/app/app-config";
-import { formatUiZoom } from "@/app/app-workbench-utils";
+import { closeTabOutcome, formatUiZoom } from "@/app/app-workbench-utils";
 import type { useEditorCommands } from "@/app/controllers/use-editor-commands";
 import type { useEditorGroups } from "@/app/controllers/use-editor-groups";
 import type { useErdDiagram } from "@/app/controllers/use-erd-diagram";
@@ -56,7 +56,7 @@ type WorkbenchCommandsDeps = {
   >;
   editorGroups: Pick<
     ReturnType<typeof useEditorGroups>,
-    "newSqlTab" | "closeActiveSqlTab" | "query"
+    "newSqlTab" | "closeActiveSqlTab" | "query" | "hasOpenTabs"
   >;
   workspace: Pick<
     ReturnType<typeof useWorkspaceActions>,
@@ -74,7 +74,10 @@ type WorkbenchCommandsDeps = {
   >;
   settings: Pick<SettingsController, "openSettingsSection">;
   themes: Pick<ThemeManager, "activateBuiltInTheme">;
-  connections: Pick<WorkbenchConnections, "setConnectionManagerOpen">;
+  connections: Pick<
+    WorkbenchConnections,
+    "setConnectionManagerOpen" | "activeConnectionId" | "connectionActions"
+  >;
   erd: Pick<ReturnType<typeof useErdDiagram>, "setDiagramOpen">;
   queryRunner: Pick<ReturnType<typeof useQueryRunner>, "cancelQuery">;
   activeEditorApi: () => SqlEditorHandle | null;
@@ -153,7 +156,19 @@ export function useWorkbenchCommands({
     zoomOut: () => updateUiZoom(uiZoom - UI_ZOOM_STEP),
     zoomReset: () => updateUiZoom(UI_ZOOM_DEFAULT),
     newSqlTab: editorGroups.newSqlTab,
-    closeActiveTab: editorGroups.closeActiveSqlTab,
+    closeActiveTab: () => {
+      const outcome = closeTabOutcome(
+        editorGroups.hasOpenTabs,
+        connections.activeConnectionId,
+      );
+      if (outcome.kind === "tab") {
+        editorGroups.closeActiveSqlTab();
+      } else if (outcome.kind === "connection") {
+        void connections.connectionActions.disconnectProfile(
+          outcome.connectionId,
+        );
+      }
+    },
     saveQuery: workspace.saveCurrentQuery,
     saveQueryAs: workspace.saveCurrentQueryAsFile,
     exitApp: workspace.exitApplication,

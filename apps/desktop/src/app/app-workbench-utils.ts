@@ -23,6 +23,35 @@ export const NO_ACTIVE_CONNECTION: WorkspaceConnection = {
   objects: [],
 };
 
+/**
+ * What `tab.close` (Ctrl+W) should do next.
+ *
+ * Tabs belong to a connection, so once a connection's last tab is gone there
+ * is nothing left in the workbench for "close" to act on but the connection
+ * itself — which is what TablePlus does, and what the rail's right-click
+ * ▸ Close Connection had been the only way to reach.
+ *
+ * Split out of the command wiring so the rule can be read and tested on its
+ * own: it is easy to get the empty-and-no-connection case wrong and disconnect
+ * nothing while looking like it worked.
+ */
+export type CloseTabOutcome =
+  | { kind: "tab" }
+  | { kind: "connection"; connectionId: string }
+  | { kind: "none" };
+
+export function closeTabOutcome(
+  hasOpenTabs: boolean,
+  activeConnectionId: string,
+): CloseTabOutcome {
+  if (hasOpenTabs) {
+    return { kind: "tab" };
+  }
+  return activeConnectionId
+    ? { kind: "connection", connectionId: activeConnectionId }
+    : { kind: "none" };
+}
+
 export function scaledUiPixels(value: number, zoom: number) {
   return Math.max(1, Math.round(value * zoom));
 }
