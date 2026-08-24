@@ -158,10 +158,10 @@ describe("editor tab state", () => {
     expect(state.tabs).toHaveLength(3);
 
     state = addSqlTabToEditorGroup(state);
-    expect(state.tabs.at(-1)?.label).toBe("query-1.sql");
+    expect(state.tabs[state.tabs.length - 1]?.label).toBe("query-1.sql");
 
     state = addSqlTabToEditorGroup(state);
-    expect(state.tabs.at(-1)?.label).toBe("query-2.sql");
+    expect(state.tabs[state.tabs.length - 1]?.label).toBe("query-2.sql");
   });
 
   it("does not let closed tabs inflate the next number", () => {
@@ -174,7 +174,7 @@ describe("editor tab state", () => {
 
     // query-2 is still taken by the closed tab; the next free number is 3.
     state = addSqlTabToEditorGroup(state);
-    expect(state.tabs.at(-1)?.label).toBe("query-3.sql");
+    expect(state.tabs[state.tabs.length - 1]?.label).toBe("query-3.sql");
   });
 
   it("opens a first-time connection on a single query-1.sql", () => {
