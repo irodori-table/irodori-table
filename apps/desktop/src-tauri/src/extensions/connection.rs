@@ -548,6 +548,8 @@ mod tests {
             port: Some(6333),
             user: None,
             password: Some("legacy-password".to_string()),
+            auth: Default::default(),
+            tls: Default::default(),
             database: None,
             socket_path: None,
             url: Some("qdrant://token@vectors.example.test".to_string()),

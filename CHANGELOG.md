@@ -16,6 +16,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.10.0] - 2026-08-24
+
+Foundation uplift: the app now consumes irodori-kit v0.9.0, whose connection
+profiles carry typed authentication and TLS models (profile schema v2). Nothing
+changes for a saved connection — the app reads the new fields but does not yet
+write them, and every existing profile keeps working untouched — so this is
+capability arriving at the boundary rather than behavior changing underneath
+it.
+
+### Added
+
+- **Connection profiles accept typed `auth` and `tls` blocks.** `auth` covers
+  eleven kinds beyond none — password, token, API key, key-pair JWT, client
+  certificate, Kerberos, OAuth2 (four flows), external browser, and AWS, GCP
+  and Azure credential sources with their own typed variants (SSO, web
+  identity, assume-role, ADC, impersonation, workload identity, managed
+  identity, service principal, …). `tls` carries a mode — `disable`, `prefer`,
+  `require`, `verifyCa`, `verifyFull`, `clientCertificate` — plus root and
+  client certificate handles and a server name. Both fields are optional and
+  default to today's behavior: `tls.mode: default` defers to the transport's
+  existing TLS flag, so a profile that says nothing connects exactly as before.
+  Credentials in these blocks are secure-store handles, never plaintext.
+- The desktop TypeScript boundary exports the matching types (`AuthConfig`,
+  `TlsConfig`, `TlsMode`, `JwtAlgorithm`, `OAuth2Flow`, `AwsAuthSource`,
+  `GcpAuthSource`, `AzureAuthSource`).
+
+### Changed
+
+- Consumed irodori-kit v0.9.0 (from v0.8.0) across connection, security, proxy,
+  secure-store, completion, and generate. Proxy transport planning now honors
+  profile TLS, and connection secret slots map onto purpose-bound secure-store
+  handles.
+- The foundation profile type treats a legacy plaintext `password` as
+  deserialize-only: it is still read, but serializing one back out is now an
+  error rather than a silent re-write of the credential. The desktop app passes
+  profiles into Rust and never serializes them back, so saved connections are
+  unaffected.
+- SSH private-key auth is written as `privateKey` rather than `private_key` on
+  the Rust/TypeScript boundary. `private_key` is still accepted when reading, so
+  existing stored transports load unchanged.
+- The connector ABI also recognizes `apiKey` and `accessToken` as wrapped scalar
+  values, alongside `value`, `secret`, `token`, and `password`.
+
 ## [0.9.1] - 2026-08-24
 
 Follow-up fixes for 0.9.0, plus dependency maintenance. Connectors installed

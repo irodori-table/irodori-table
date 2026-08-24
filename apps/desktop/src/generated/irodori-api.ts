@@ -48,6 +48,22 @@ export type RedactedExport = { content: string, redactions: number, eventCount: 
 
 export type SecretRef = { handle: string, service?: string, };
 
+export type JwtAlgorithm = "RS256" | "RS384" | "RS512" | "ES256" | "ES384" | "EdDSA";
+
+export type OAuth2Flow = "authorizationCode" | "clientCredentials" | "deviceCode" | "refreshToken";
+
+export type AwsAuthSource = { "kind": "chain" } | { "kind": "static", accessKeyId: string, secretAccessKey: SecretRef, sessionToken?: SecretRef, } | { "kind": "profile", profileName: string, } | { "kind": "sso", profileName?: string, } | { "kind": "webIdentity", roleArn: string, token: SecretRef, sessionName?: string, } | { "kind": "assumeRole", roleArn: string, sourceProfile?: string, externalId?: SecretRef, sessionName?: string, };
+
+export type GcpAuthSource = { "kind": "adc" } | { "kind": "serviceAccountJson", credentials: SecretRef, } | { "kind": "impersonation", targetPrincipal: string, delegates?: Array<string>, } | { "kind": "workloadIdentity", audience: string, subjectToken: SecretRef, serviceAccountImpersonationUrl?: string, };
+
+export type AzureAuthSource = { "kind": "cli" } | { "kind": "managedIdentity", clientId?: string, } | { "kind": "servicePrincipal", tenantId: string, clientId: string, clientSecret: SecretRef, } | { "kind": "servicePrincipalCertificate", tenantId: string, clientId: string, certificate: SecretRef, privateKey: SecretRef, passphrase?: SecretRef, };
+
+export type AuthConfig = { "kind": "none" } | { "kind": "password", password: SecretRef, } | { "kind": "token", token: SecretRef, } | { "kind": "apiKey", apiKey: SecretRef, } | { "kind": "keyPairJwt", privateKey: SecretRef, passphrase?: SecretRef, algorithm: JwtAlgorithm, } | { "kind": "clientCertificate", cert: SecretRef, key: SecretRef, passphrase?: SecretRef, } | { "kind": "kerberos", principal: string, keytab: SecretRef, serviceName: string, } | { "kind": "oauth2", flow: OAuth2Flow, clientId: string, clientSecret?: SecretRef, refreshToken?: SecretRef, tokenEndpoint: string, scopes?: Array<string>, } | { "kind": "externalBrowser", authorizeEndpoint: string, redirectPort?: number, } | { "kind": "aws", source: AwsAuthSource, } | { "kind": "gcp", source: GcpAuthSource, } | { "kind": "azure", source: AzureAuthSource, };
+
+export type TlsMode = "default" | "disable" | "prefer" | "require" | "verifyCa" | "verifyFull" | "clientCertificate";
+
+export type TlsConfig = { mode: TlsMode, rootCert?: SecretRef, clientCert?: SecretRef, clientKey?: SecretRef, serverName?: string, };
+
 export type TransportConfig = { "kind": "direct" } & DirectTransport | { "kind": "localFile" } & LocalFileTransport | { "kind": "sshTunnel" } & SshTunnelTransport | { "kind": "socks5Proxy" } & ProxyTransport | { "kind": "httpConnectProxy" } & ProxyTransport | { "kind": "chain" } & ProxyChainTransport;
 
 export type DirectTransport = { host: string, port?: number, tls: boolean, };
@@ -56,7 +72,7 @@ export type LocalFileTransport = { path: string, };
 
 export type SshTunnelTransport = { name?: string, sshHost: string, sshPort: number, username: string, auth: SshAuthConfig, targetHost: string, targetPort: number, strictHostKey: boolean, hostKey?: string, };
 
-export type SshAuthConfig = { "kind": "agent" } | { "kind": "password", password: SecretRef, } | { "kind": "privateKey", private_key: SecretRef, passphrase?: SecretRef, };
+export type SshAuthConfig = { "kind": "agent" } | { "kind": "password", password: SecretRef, } | { "kind": "privateKey", privateKey: SecretRef, passphrase?: SecretRef, };
 
 export type ProxyTransport = { name?: string, host: string, port: number, auth?: ProxyAuthConfig, targetHost?: string, targetPort?: number, tls: boolean, };
 
@@ -132,7 +148,14 @@ export type DbEngine = "postgres" | "mysql" | "sqlite" | "oracle" | "sqlserver" 
 
 export type EngineBuildSupport = { engine: DbEngine, includedInCurrentBuild: boolean, requiredFeature?: string, };
 
-export type ConnectionProfile<Engine> = { id: string, engine: Engine, host?: string, port?: number, user?: string, password?: string, database?: string, socketPath?: string, url?: string, transport?: TransportConfig, readOnly?: boolean, options?: { [key in string]: string }, };
+export type ConnectionProfile<Engine> = { id: string, engine: Engine, host?: string, port?: number, user?: string,
+/**
+ * Legacy plaintext credential accepted while saved desktop profiles migrate to `auth`.
+ *
+ * This field is intentionally deserialize-only so profile serialization cannot persist the
+ * plaintext value again.
+ */
+password?: string, auth?: AuthConfig, tls?: TlsConfig, database?: string, socketPath?: string, url?: string, transport?: TransportConfig, readOnly?: boolean, options?: { [key in string]: string }, };
 
 export type ConnectionInfo = { id: string, engine: DbEngine, serverVersion: string, };
 

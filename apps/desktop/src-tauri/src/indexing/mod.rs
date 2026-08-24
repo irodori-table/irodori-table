@@ -283,6 +283,8 @@ mod tests {
             port: None,
             user: None,
             password: None,
+            auth: Default::default(),
+            tls: Default::default(),
             database: Some(":memory:".into()),
             socket_path: None,
             url: None,
