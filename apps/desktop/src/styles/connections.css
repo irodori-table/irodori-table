@@ -218,10 +218,19 @@
   cursor: pointer;
 }
 
+/* Hover is where the pointer is. It gets the lighter wash, and nothing else. */
 .connection-profile:hover,
-.connection-profile:focus-visible,
+.connection-profile:focus-visible {
+  background: var(--hover);
+}
+
+/* The open connection is a state, not a pointer position, so it carries a
+   stronger fill *and* an edge. Sharing `--selected` with hover made the two
+   indistinguishable — one is 3 L* from the other in the light themes, and
+   identical when they were the same declaration. */
 .connection-profile.active {
-  background: var(--selected);
+  background: var(--selected-strong);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 /* Rows in the shift/ctrl multi-selection used for bulk delete. */

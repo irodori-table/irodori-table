@@ -1387,7 +1387,8 @@
 
 .connection-item.active,
 .connection-item.active:hover {
-  background: var(--selected);
+  background: var(--selected-strong);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .connection-item:focus-visible,
