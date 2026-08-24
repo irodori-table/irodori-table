@@ -16,6 +16,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [Unreleased]
+
+### Fixed
+
+- **Connector connection models are backfilled for extensions already
+  installed.** The model — auth methods, TLS controls, endpoint and profile
+  fields — was captured from the connector's ABI probe at install time only, so
+  every connector installed before that existed carried none. The connection
+  form then fell back to the built-in host/port/user/password shape and the
+  declared authentication methods were unreachable, with nothing on screen to
+  say why: the form looked exactly as though the connector had declared
+  nothing. Reinstalling was the only cure, and no reason to suspect one was
+  ever shown. The installed libraries are now probed once on the next launch.
+  *(Measured on a 37-connector install: 0 models before, 35 after — the two
+  without are declarative extensions, which have no library to ask.)*
+- **A new tab is numbered `query-1.sql` again.** The counter was
+  `tabs.length + 1`, and `tabs` keeps closed tabs so **Reopen closed tab** can
+  restore them — the three onboarding buffers included. The first new tab in an
+  untouched group was therefore called `query-4.sql`, and every tab closed
+  beforehand pushed the number further out. It now takes the lowest free
+  `query-N` in the group.
+- **A connection opened for the first time starts on one empty tab** instead of
+  the three onboarding buffers (scratch, audit window, explain plan). Those
+  belong to first run; repeating them for every connection was a side effect of
+  giving each one its own tabs.
+
 ## [0.9.0] - 2026-08-23
 
 Transport security, a workbench that knows which connection you are on, and a
