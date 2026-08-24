@@ -324,44 +324,44 @@ struct ExtensionObjectMetadata {
     columns: Vec<ExtensionColumnMetadata>,
     #[serde(default)]
     indexes: Vec<ExtensionIndexMetadata>,
-    #[serde(default)]
-    primary_key: Vec<ExtensionColumnRef>,
+    #[serde(default, deserialize_with = "deserialize_column_names")]
+    primary_key: Vec<String>,
     #[serde(default)]
     foreign_keys: Vec<ExtensionForeignKey>,
 }
 
-/// One column in a key or constraint, as a connector chose to write it.
+/// Read a key or constraint's columns however the connector chose to write
+/// them.
 ///
 /// The contract asks for a name. Connectors that model keys richly send the
 /// name inside an object instead — the DynamoDB connector writes
-/// `{"name": "PK", "keyType": "HASH"}` for every key-schema entry — and serde
-/// rejected the whole metadata document over it, so one unrecognized shape
-/// emptied the entire database tree behind "Could not load metadata". Take the
-/// name from either form and drop anything that carries none, so a connector
-/// can be wrong about one field without costing the user every table.
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum ExtensionColumnRef {
-    Name(String),
-    Named { name: String },
-    Unknown(Value),
+/// `{"name": "PK", "keyType": "HASH"}` for every key-schema entry, because
+/// that is the shape DynamoDB itself returns — and serde rejected the whole
+/// metadata document over it. One unrecognized shape in one optional field
+/// emptied the entire database tree behind "Could not load metadata", while
+/// the connection stayed connected and answered queries.
+///
+/// Take the name from either form, and drop an entry that carries none rather
+/// than fail: a connector can be wrong about one field without it costing the
+/// user every table.
+fn deserialize_column_names<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let entries = Vec::<Value>::deserialize(deserializer)?;
+    Ok(entries.into_iter().filter_map(column_name).collect())
 }
 
-impl ExtensionColumnRef {
-    fn into_name(self) -> Option<String> {
-        match self {
-            Self::Name(name) => Some(name),
-            Self::Named { name } => Some(name),
-            Self::Unknown(_) => None,
-        }
-    }
-}
-
-fn column_names(refs: Vec<ExtensionColumnRef>) -> Vec<String> {
-    refs.into_iter()
-        .filter_map(ExtensionColumnRef::into_name)
-        .filter(|name| !name.trim().is_empty())
-        .collect()
+fn column_name(entry: Value) -> Option<String> {
+    let name = match entry {
+        Value::String(name) => name,
+        Value::Object(mut object) => match object.remove("name") {
+            Some(Value::String(name)) => name,
+            _ => return None,
+        },
+        _ => return None,
+    };
+    (!name.trim().is_empty()).then_some(name)
 }
 
 #[derive(Default, Deserialize)]
@@ -384,8 +384,12 @@ struct ExtensionColumnMetadata {
 #[serde(rename_all = "camelCase")]
 struct ExtensionIndexMetadata {
     name: String,
-    #[serde(default, alias = "keySchema")]
-    columns: Vec<ExtensionColumnRef>,
+    #[serde(
+        default,
+        alias = "keySchema",
+        deserialize_with = "deserialize_column_names"
+    )]
+    columns: Vec<String>,
     #[serde(default)]
     unique: bool,
 }
@@ -393,14 +397,14 @@ struct ExtensionIndexMetadata {
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ExtensionForeignKey {
-    #[serde(default)]
-    columns: Vec<ExtensionColumnRef>,
+    #[serde(default, deserialize_with = "deserialize_column_names")]
+    columns: Vec<String>,
     #[serde(default)]
     references_schema: Option<String>,
     #[serde(default)]
     references_table: Option<String>,
-    #[serde(default)]
-    references_columns: Vec<ExtensionColumnRef>,
+    #[serde(default, deserialize_with = "deserialize_column_names")]
+    references_columns: Vec<String>,
 }
 
 impl ExtensionDatabaseMetadata {
@@ -449,7 +453,7 @@ impl ExtensionObjectMetadata {
                 .into_iter()
                 .map(ExtensionIndexMetadata::normalize)
                 .collect(),
-            primary_key: column_names(self.primary_key),
+            primary_key: self.primary_key,
             foreign_keys: self
                 .foreign_keys
                 .into_iter()
@@ -476,7 +480,7 @@ impl ExtensionIndexMetadata {
     fn normalize(self) -> IndexMetadata {
         IndexMetadata {
             name: self.name,
-            columns: column_names(self.columns),
+            columns: self.columns,
             unique: self.unique,
         }
     }
@@ -485,10 +489,10 @@ impl ExtensionIndexMetadata {
 impl ExtensionForeignKey {
     fn normalize(self) -> Option<ForeignKey> {
         Some(ForeignKey {
-            columns: column_names(self.columns),
+            columns: self.columns,
             references_schema: self.references_schema,
             references_table: self.references_table?,
-            references_columns: column_names(self.references_columns),
+            references_columns: self.references_columns,
         })
     }
 }
