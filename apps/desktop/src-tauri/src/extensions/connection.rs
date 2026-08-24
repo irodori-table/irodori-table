@@ -324,10 +324,44 @@ struct ExtensionObjectMetadata {
     columns: Vec<ExtensionColumnMetadata>,
     #[serde(default)]
     indexes: Vec<ExtensionIndexMetadata>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_column_names")]
     primary_key: Vec<String>,
     #[serde(default)]
     foreign_keys: Vec<ExtensionForeignKey>,
+}
+
+/// Read a key or constraint's columns however the connector chose to write
+/// them.
+///
+/// The contract asks for a name. Connectors that model keys richly send the
+/// name inside an object instead — the DynamoDB connector writes
+/// `{"name": "PK", "keyType": "HASH"}` for every key-schema entry, because
+/// that is the shape DynamoDB itself returns — and serde rejected the whole
+/// metadata document over it. One unrecognized shape in one optional field
+/// emptied the entire database tree behind "Could not load metadata", while
+/// the connection stayed connected and answered queries.
+///
+/// Take the name from either form, and drop an entry that carries none rather
+/// than fail: a connector can be wrong about one field without it costing the
+/// user every table.
+fn deserialize_column_names<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let entries = Vec::<Value>::deserialize(deserializer)?;
+    Ok(entries.into_iter().filter_map(column_name).collect())
+}
+
+fn column_name(entry: Value) -> Option<String> {
+    let name = match entry {
+        Value::String(name) => name,
+        Value::Object(mut object) => match object.remove("name") {
+            Some(Value::String(name)) => name,
+            _ => return None,
+        },
+        _ => return None,
+    };
+    (!name.trim().is_empty()).then_some(name)
 }
 
 #[derive(Default, Deserialize)]
@@ -350,7 +384,11 @@ struct ExtensionColumnMetadata {
 #[serde(rename_all = "camelCase")]
 struct ExtensionIndexMetadata {
     name: String,
-    #[serde(default)]
+    #[serde(
+        default,
+        alias = "keySchema",
+        deserialize_with = "deserialize_column_names"
+    )]
     columns: Vec<String>,
     #[serde(default)]
     unique: bool,
@@ -359,13 +397,13 @@ struct ExtensionIndexMetadata {
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ExtensionForeignKey {
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_column_names")]
     columns: Vec<String>,
     #[serde(default)]
     references_schema: Option<String>,
     #[serde(default)]
     references_table: Option<String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_column_names")]
     references_columns: Vec<String>,
 }
 
@@ -474,6 +512,90 @@ mod tests {
     use std::collections::BTreeMap;
 
     use serde_json::json;
+
+    /// Verbatim `metadata` response from the installed DynamoDB connector
+    /// (irodori.dynamodb 0.1.4) against a local DynamoDB holding one table.
+    /// Its key schema is a list of objects, not a list of names.
+    #[test]
+    fn metadata_reads_key_schema_written_as_objects() {
+        let metadata = metadata_from_value(json!({
+            "schemas": [{
+                "name": "us-east-1",
+                "objects": [{
+                    "schema": "default",
+                    "name": "bookchecker-app",
+                    "kind": "table",
+                    "columns": [
+                        { "name": "PK", "dataType": "S", "nullable": true },
+                        { "name": "SK", "dataType": "S", "nullable": true }
+                    ],
+                    "primaryKey": [
+                        { "name": "PK", "keyType": "HASH" },
+                        { "name": "SK", "keyType": "RANGE" }
+                    ],
+                    "indexes": [{
+                        "name": "gsi1",
+                        "kind": "globalSecondaryIndex",
+                        "keySchema": [{ "name": "GSI1PK", "keyType": "HASH" }]
+                    }],
+                    "foreignKeys": [],
+                    "itemCount": 3,
+                    "sizeBytes": 435,
+                    "status": "ACTIVE"
+                }]
+            }]
+        }))
+        .expect("connector metadata is readable");
+
+        let table = &metadata.schemas[0].objects[0];
+        assert_eq!(table.name, "bookchecker-app");
+        assert_eq!(table.primary_key, vec!["PK", "SK"]);
+        assert_eq!(table.indexes[0].columns, vec!["GSI1PK"]);
+    }
+
+    #[test]
+    fn metadata_still_reads_a_key_written_as_plain_names() {
+        let metadata = metadata_from_value(json!({
+            "schemas": [{
+                "name": "public",
+                "objects": [{
+                    "name": "orders",
+                    "primaryKey": ["id"],
+                    "indexes": [{ "name": "orders_customer", "columns": ["customer_id"] }],
+                    "foreignKeys": [{
+                        "columns": ["customer_id"],
+                        "referencesTable": "customers",
+                        "referencesColumns": ["id"]
+                    }]
+                }]
+            }]
+        }))
+        .expect("connector metadata is readable");
+
+        let table = &metadata.schemas[0].objects[0];
+        assert_eq!(table.primary_key, vec!["id"]);
+        assert_eq!(table.indexes[0].columns, vec!["customer_id"]);
+        assert_eq!(table.foreign_keys[0].columns, vec!["customer_id"]);
+        assert_eq!(table.foreign_keys[0].references_columns, vec!["id"]);
+    }
+
+    /// A key entry that carries no name at all is dropped, not fatal: the rest
+    /// of the table still reaches the tree.
+    #[test]
+    fn metadata_drops_a_key_entry_that_names_nothing() {
+        let metadata = metadata_from_value(json!({
+            "schemas": [{
+                "name": "public",
+                "objects": [{
+                    "name": "events",
+                    "primaryKey": [{ "keyType": "HASH" }, "id", ""]
+                }]
+            }]
+        }))
+        .expect("connector metadata is readable");
+
+        assert_eq!(metadata.schemas[0].objects[0].primary_key, vec!["id"]);
+    }
 
     use super::*;
 

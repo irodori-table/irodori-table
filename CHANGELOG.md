@@ -42,6 +42,20 @@ it.
   `TlsConfig`, `TlsMode`, `JwtAlgorithm`, `OAuth2Flow`, `AwsAuthSource`,
   `GcpAuthSource`, `AzureAuthSource`).
 
+### Fixed
+
+- **A connector that writes a table's key as objects no longer empties the
+  database tree.** Connector metadata asks for a key column as a name; the
+  DynamoDB connector writes `{"name": "PK", "keyType": "HASH"}` for every
+  key-schema entry, since that is what DynamoDB itself returns. The whole
+  metadata document was rejected over the mismatch, so every table vanished
+  behind "Could not load metadata" — with nothing on screen naming the field,
+  and the connection itself connected and healthy. Both spellings are read now,
+  index key schemas included, and an entry that names nothing is dropped
+  instead of costing the user every table. *(Reproduced against DynamoDB Local:
+  one table, connected fine, zero objects before; the table and its `PK`/`SK`
+  key after.)*
+
 ### Changed
 
 - Consumed irodori-kit v0.9.0 (from v0.8.0) across connection, security, proxy,
