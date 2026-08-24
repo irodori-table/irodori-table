@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [Unreleased]
+
+### Fixed
+
+- **Opening a table from the tree runs a statement the engine accepts.** The
+  preview was always `select * from <schema>.<name> limit 200`, but the schema
+  a non-SQL connector reports labels the tree rather than naming a namespace —
+  DynamoDB's region, Redis's `db0`, a bare `default` — and several of these
+  engines do not speak SQL at all. Double-clicking a DynamoDB table produced
+  `select * from "us-east-1"."bookchecker-app" limit 200;`, wrong twice over:
+  the region cannot be addressed, and PartiQL has no LIMIT clause (the row cap
+  travels with the request). It now previews DynamoDB through PartiQL, ArangoDB
+  through AQL, a Qdrant collection by naming it, and a Redis key with the
+  command its type answers — `GET`, `LRANGE`, `HGETALL`, `SMEMBERS`, `ZRANGE`,
+  `XRANGE`. Each form was run against a live server.
+
 ## [0.10.1] - 2026-08-24
 
 A same-day fix for a 0.10.0 regression that stopped every password-bearing

@@ -38,6 +38,61 @@ describe("workbench object SQL helpers", () => {
     );
   });
 
+  /**
+   * Each expectation here was run against a live server before it was written
+   * down. The DynamoDB one is the statement double-clicking a table used to
+   * produce, and it failed twice over: the schema a connector reports for a
+   * non-SQL store labels the tree — the region, `db0`, `default` — and cannot
+   * be named in a statement, and PartiQL has no LIMIT clause at all.
+   */
+  it("previews a DynamoDB table without the region or a limit clause", () => {
+    expect(
+      tablePreviewSql(
+        "dynamodb",
+        object({ schema: "us-east-1", name: "bookchecker-app" }),
+      ),
+    ).toBe('select * from "bookchecker-app";');
+  });
+
+  it("previews an ArangoDB collection in AQL", () => {
+    expect(
+      tablePreviewSql(
+        "arangodb",
+        object({ schema: "_system", name: "verify" }),
+      ),
+    ).toBe("FOR doc IN verify LIMIT 200 RETURN doc");
+  });
+
+  it("previews a Qdrant collection by naming it", () => {
+    expect(
+      tablePreviewSql("qdrant", object({ schema: "default", name: "verify" })),
+    ).toBe("verify");
+  });
+
+  it("previews a Redis key with the command its type answers", () => {
+    const key = (dataType: string) =>
+      object({
+        schema: "db0",
+        name: "verify:key",
+        columns: [{ name: "value", dataType, nullable: true, ordinal: 1 }],
+      });
+
+    expect(tablePreviewSql("redis", key("string"))).toBe("GET verify:key");
+    expect(tablePreviewSql("redis", key("list"))).toBe(
+      "LRANGE verify:key 0 199",
+    );
+    expect(tablePreviewSql("redis", key("hash"))).toBe("HGETALL verify:key");
+    expect(tablePreviewSql("redis", key("set"))).toBe("SMEMBERS verify:key");
+    expect(tablePreviewSql("redis", key("zset"))).toBe(
+      "ZRANGE verify:key 0 199 WITHSCORES",
+    );
+    // A key whose type the connector did not report still gets a command
+    // rather than a statement no Redis server would accept.
+    expect(tablePreviewSql("redis", object({ name: "verify:key" }))).toBe(
+      "GET verify:key",
+    );
+  });
+
   it("formats object kind labels", () => {
     expect(objectKindLabel(object({ kind: "view" }))).toBe("view");
     expect(objectKindLabel(object({ kind: "procedure" }))).toBe("procedure");
