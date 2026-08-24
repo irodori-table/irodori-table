@@ -299,13 +299,12 @@ textarea:disabled {
   background: transparent;
 }
 
+/* Hover is the only painted state. The pressed state is the glyph itself —
+   the panel side fills when its sidebar is open — so a frame around it says
+   the same thing a second time, and says it in a heavier voice than a
+   titlebar affordance deserves. Keyboard focus keeps the global outline. */
 .titlebar-control-zone .icon-button:hover,
-.titlebar-control-zone .icon-button:focus-visible,
-.titlebar-control-zone .icon-button.active,
-.titlebar-layout-controls .icon-button:hover,
-.titlebar-layout-controls .icon-button:focus-visible,
-.titlebar-layout-controls .icon-button.active {
-  border-color: var(--border);
+.titlebar-layout-controls .icon-button:hover {
   background: var(--hover);
 }
 
@@ -313,32 +312,20 @@ textarea:disabled {
   color: var(--muted);
   transition:
     background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease,
-    box-shadow 120ms ease;
+    color 120ms ease;
 }
 
+/* The reset is explicit because `.icon-button.active` below paints a blue box
+   for toggles elsewhere in the app, and it is the later rule. */
 .titlebar-control-zone .layout-toggle-button.active {
   color: color-mix(in srgb, var(--accent) 74%, var(--text));
-  border-color: color-mix(in srgb, var(--accent) 46%, var(--border));
-  background: color-mix(in srgb, var(--accent) 19%, var(--surface-raised));
+  border-color: transparent;
+  background: transparent;
 }
 
 .titlebar-control-zone .layout-toggle-button.active:hover,
 .titlebar-control-zone .layout-toggle-button.active:focus-visible {
   color: color-mix(in srgb, var(--accent-hover) 72%, var(--text));
-  border-color: color-mix(in srgb, var(--accent) 62%, var(--border-strong));
-  background: color-mix(in srgb, var(--accent) 26%, var(--surface-raised));
-}
-
-.titlebar-control-zone .layout-toggle-button.active.sidebar-left {
-  border-left-color: var(--accent);
-  box-shadow: inset 2px 0 0 var(--accent);
-}
-
-.titlebar-control-zone .layout-toggle-button.active.sidebar-right {
-  border-right-color: var(--accent);
-  box-shadow: inset -2px 0 0 var(--accent);
 }
 
 .menubar {

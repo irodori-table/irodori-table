@@ -58,6 +58,11 @@ it.
 
 ### Changed
 
+- **The titlebar's sidebar toggles are icons again, not framed buttons.** The
+  open state painted a filled, bordered box with an accent edge around a glyph
+  that already says the same thing — its panel side fills when that sidebar is
+  open. The frame is gone; the open toggle is told apart by the color of the
+  icon, and hover is the only painted state, as in VS Code.
 - Consumed irodori-kit v0.9.0 (from v0.8.0) across connection, security, proxy,
   secure-store, completion, and generate. Proxy transport planning now honors
   profile TLS, and connection secret slots map onto purpose-bound secure-store
