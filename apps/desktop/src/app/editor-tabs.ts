@@ -29,6 +29,25 @@ export const defaultEditorSelections: EditorSelections = [{ from: 0, to: 0 }];
 /** `activeTabId` when the group has no open tab left (every tab was closed). */
 export const noOpenTabId = "";
 
+/**
+ * A group for a connection opened for the first time: one empty `query-1.sql`.
+ *
+ * `createEditorGroupState` seeds the three onboarding tabs (scratch, audit
+ * window, explain plan), which is right once, on first run. Now that every
+ * connection gets its own group, using it there would greet each new connection
+ * with the same three sample buffers — and push its first real tab to
+ * `query-4.sql`.
+ */
+export function createBlankEditorGroupState(): EditorGroupState {
+  return addSqlTabToEditorGroup({
+    tabs: [],
+    activeTabId: noOpenTabId,
+    openTabIds: [],
+    queryByTabId: {},
+    selectionsByTabId: {},
+  });
+}
+
 export function createEditorGroupState(initialQuery: string): EditorGroupState {
   const initialTabs = defaultEditorTabs.map((tab) => ({ ...tab }));
   return {
@@ -280,14 +299,23 @@ function createSqlTabId() {
 }
 
 function nextSqlTabLabel(state: EditorGroupState) {
-  let index = state.tabs.length + 1;
-  let label = `query-${index}.sql`;
-  const labels = new Set(state.tabs.map((tab) => tab.label));
-  while (labels.has(label)) {
-    index += 1;
-    label = `query-${index}.sql`;
+  // Number from the `query-N` labels the group actually holds, not from how
+  // many tabs it has. `tabs` keeps closed tabs so Reopen closed tab can restore
+  // them, and the onboarding tabs sit in there too — so counting entries made
+  // the first new tab in an untouched group `query-4.sql`, and every tab closed
+  // beforehand pushed it further out.
+  const used = new Set<number>();
+  for (const tab of state.tabs) {
+    const match = /^query-(\d+)\.sql$/.exec(tab.label);
+    if (match) {
+      used.add(Number(match[1]));
+    }
   }
-  return label;
+  let index = 1;
+  while (used.has(index)) {
+    index += 1;
+  }
+  return `query-${index}.sql`;
 }
 
 function nextDuplicateLabel(state: EditorGroupState, label: string) {

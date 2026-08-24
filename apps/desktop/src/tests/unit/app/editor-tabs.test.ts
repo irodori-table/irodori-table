@@ -4,6 +4,7 @@ import {
   addSqlTabToEditorGroup,
   closeOtherSqlTabsInEditorGroup,
   closeSqlTabInEditorGroup,
+  createBlankEditorGroupState,
   createEditorGroupState,
   duplicateSqlTabInEditorGroup,
   noOpenTabId,
@@ -144,5 +145,43 @@ describe("editor tab state", () => {
         queryByTabId: {},
       }),
     ).toBeNull();
+  });
+
+  /**
+   * The label counter used to be `tabs.length + 1`. `tabs` keeps closed tabs
+   * so Reopen closed tab can restore them, and it holds the three onboarding
+   * buffers as well — so the first new tab in an untouched group was called
+   * `query-4.sql`, and each tab closed first pushed the number further out.
+   */
+  it("numbers a new tab from the query labels present, not the tab count", () => {
+    let state = createEditorGroupState("select 1;");
+    expect(state.tabs).toHaveLength(3);
+
+    state = addSqlTabToEditorGroup(state);
+    expect(state.tabs.at(-1)?.label).toBe("query-1.sql");
+
+    state = addSqlTabToEditorGroup(state);
+    expect(state.tabs.at(-1)?.label).toBe("query-2.sql");
+  });
+
+  it("does not let closed tabs inflate the next number", () => {
+    let state = createBlankEditorGroupState();
+    state = addSqlTabToEditorGroup(state);
+    const [, second] = state.tabs;
+    // Closing keeps the tab for Reopen closed tab, so it is still in `tabs`.
+    state = closeSqlTabInEditorGroup(state, second.id).state;
+    expect(state.tabs).toHaveLength(2);
+
+    // query-2 is still taken by the closed tab; the next free number is 3.
+    state = addSqlTabToEditorGroup(state);
+    expect(state.tabs.at(-1)?.label).toBe("query-3.sql");
+  });
+
+  it("opens a first-time connection on a single query-1.sql", () => {
+    const state = createBlankEditorGroupState();
+
+    expect(state.tabs.map((tab) => tab.label)).toEqual(["query-1.sql"]);
+    expect(openTabsForEditorGroup(state)).toHaveLength(1);
+    expect(state.activeTabId).toBe(state.tabs[0].id);
   });
 });

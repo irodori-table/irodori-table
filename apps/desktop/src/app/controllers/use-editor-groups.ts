@@ -5,6 +5,7 @@ import {
   addSqlTabToEditorGroup,
   closeOtherSqlTabsInEditorGroup,
   closeSqlTabInEditorGroup,
+  createBlankEditorGroupState,
   createEditorGroupState,
   duplicateSqlTabInEditorGroup,
   noOpenTabId,
@@ -73,7 +74,8 @@ function reviveEditorGroupStates(value: unknown): EditorGroupStates | null {
   return {
     primary,
     secondary:
-      reviveEditorGroupState(candidate.secondary) ?? createEditorGroupState(""),
+      reviveEditorGroupState(candidate.secondary) ??
+      createBlankEditorGroupState(),
   };
 }
 
@@ -202,9 +204,12 @@ export function useEditorGroups({
     }
     const seed = pendingSeedRef.current;
     pendingSeedRef.current = null;
+    // Blank, not the onboarding set: those three sample tabs belong to first
+    // run, and repeating them for every connection would also start each one's
+    // numbering at `query-4.sql`.
     const created = seed ?? {
-      primary: createEditorGroupState(""),
-      secondary: createEditorGroupState(""),
+      primary: createBlankEditorGroupState(),
+      secondary: createBlankEditorGroupState(),
     };
     blankWorkspacesRef.current.set(id, created);
     return created;
