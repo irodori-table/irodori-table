@@ -17,6 +17,11 @@ use super::abi::{probe_library, ABI_VERSION};
 use super::{ExtensionInstallKind, ExtensionInstallRequest, InstalledExtension};
 
 const REGISTRY_FILE: &str = "installed.json";
+/// Registry schema version.
+///
+/// 2 records that the connection-model backfill in [`backfill_registry`] has
+/// run. Bumping it re-runs the migration once on the next `list`.
+const REGISTRY_SCHEMA_VERSION: u16 = 2;
 const EXTENSIONS_DIR: &str = "extensions";
 const MANIFEST_FILE: &str = "irodori.extension.json";
 const MAX_ARCHIVE_BYTES: usize = 512 * 1024 * 1024;
@@ -67,7 +72,70 @@ pub(crate) fn list(
     app: &AppHandle,
     _state: &ExtensionsState,
 ) -> IrodoriResult<Vec<InstalledExtension>> {
-    Ok(read_registry(app)?.extensions)
+    let mut registry = read_registry(app)?;
+    if backfill_registry(&mut registry, probe_connection_model) {
+        // A registry that cannot be written is not a reason to fail the list:
+        // the models are already in hand for this session, and the next launch
+        // simply probes again. Failing here would take the whole extensions UI
+        // and every connector-backed connection form down with it.
+        if let Err(error) = write_registry(app, &registry) {
+            eprintln!("extension registry: connection model backfill not persisted: {error}");
+        }
+    }
+    Ok(registry.extensions)
+}
+
+/// Fill in connection models that predate the field.
+///
+/// `install` captures the connector's `connection` block from its ABI probe —
+/// but only at install time. Every connector installed before that existed
+/// therefore carries no model at all, and `connectionModelForEngine` answers
+/// null, so the connection form silently falls back to the built-in
+/// host/port/user/password shape. The auth methods, TLS controls and profile
+/// fields the connector declares are unreachable, and nothing says so: the form
+/// looks exactly as though the connector had declared nothing. Reinstalling was
+/// the only cure, and no reason to suspect one was ever shown.
+///
+/// Probe the installed libraries once and keep what they report.
+///
+/// Gated on the schema version rather than on `connection_model.is_none()`,
+/// because a connector that genuinely declares no model is indistinguishable
+/// from one never probed — and re-probing those would cost a dylib load apiece
+/// on every `list`. Returns whether the registry changed and should be written.
+fn backfill_registry(
+    registry: &mut InstalledRegistry,
+    mut probe: impl FnMut(&str) -> Option<Value>,
+) -> bool {
+    if registry.schema_version >= REGISTRY_SCHEMA_VERSION {
+        return false;
+    }
+    for extension in &mut registry.extensions {
+        if extension.connection_model.is_some() {
+            continue;
+        }
+        // Declarative extensions have no library to ask.
+        let Some(path) = extension.library_path.as_deref() else {
+            continue;
+        };
+        extension.connection_model = probe(path);
+    }
+    registry.schema_version = REGISTRY_SCHEMA_VERSION;
+    true
+}
+
+/// The real prober: load the connector and read its declared model.
+///
+/// A library that cannot be probed cannot connect either, so a failure is not
+/// worth failing the migration over — it is reported and the model left empty,
+/// which is exactly where that connector already was.
+fn probe_connection_model(library_path: &str) -> Option<Value> {
+    match probe_library(Path::new(library_path)) {
+        Ok(probe) => connection_model(&probe.config_json),
+        Err(error) => {
+            eprintln!("extension connection model backfill skipped for {library_path}: {error}");
+            None
+        }
+    }
 }
 
 pub(crate) async fn install(
@@ -570,8 +638,9 @@ fn collect_native_libraries(dir: &Path, out: &mut Vec<PathBuf>) -> io::Result<()
 fn read_registry(app: &AppHandle) -> IrodoriResult<InstalledRegistry> {
     let path = registry_path(app)?;
     if !path.exists() {
+        // Nothing installed yet, so nothing to migrate: stamp it current.
         return Ok(InstalledRegistry {
-            schema_version: registry_schema_version(),
+            schema_version: REGISTRY_SCHEMA_VERSION,
             extensions: Vec::new(),
         });
     }
@@ -706,6 +775,10 @@ fn unix_timestamp() -> u64 {
         .unwrap_or_default()
 }
 
+/// Serde default for a registry file written before the field existed, which
+/// therefore predates every migration. Distinct from
+/// [`REGISTRY_SCHEMA_VERSION`]: defaulting to the current version would mark
+/// the oldest registries as already migrated.
 fn registry_schema_version() -> u16 {
     1
 }
@@ -731,6 +804,122 @@ mod tests {
                 connectors: vec![],
             },
         }
+    }
+
+    fn installed(id: &str, library_path: Option<&str>) -> InstalledExtension {
+        InstalledExtension {
+            id: id.into(),
+            name: id.into(),
+            version: "0.1.4".into(),
+            runtime: "native".into(),
+            engine: Some("dynamodb".into()),
+            library_path: library_path.map(str::to_string),
+            host_features: vec![],
+            sha256: "a".repeat(64),
+            enabled: true,
+            installed_at: "1786091256".into(),
+            abi_version: Some(ABI_VERSION),
+            supported_calls: vec!["connect".into()],
+            connection_model: None,
+        }
+    }
+
+    fn legacy_registry(extensions: Vec<InstalledExtension>) -> InstalledRegistry {
+        InstalledRegistry {
+            schema_version: registry_schema_version(),
+            extensions,
+        }
+    }
+
+    fn declared_model(engine: &str) -> Option<Value> {
+        Some(serde_json::json!({
+            "schemaVersion": 1,
+            "authMethods": [{"id": format!("{engine}Sigv4")}]
+        }))
+    }
+
+    /// Every connector installed before `connection_model` existed carries
+    /// none, so the connection form falls back to host/port/user/password and
+    /// the declared auth methods are unreachable — with nothing on screen to
+    /// say why. The migration probes those libraries once.
+    #[test]
+    fn backfill_fills_models_that_predate_the_field() {
+        let mut registry = legacy_registry(vec![installed(
+            "irodori.dynamodb",
+            Some("/ext/dynamodb/lib.so"),
+        )]);
+
+        let changed = backfill_registry(&mut registry, |_| declared_model("dynamodb"));
+
+        assert!(changed);
+        assert_eq!(
+            registry.extensions[0]
+                .connection_model
+                .as_ref()
+                .and_then(|model| model.pointer("/authMethods/0/id"))
+                .and_then(Value::as_str),
+            Some("dynamodbSigv4")
+        );
+        assert_eq!(registry.schema_version, REGISTRY_SCHEMA_VERSION);
+    }
+
+    /// The gate is the schema version, not `is_none()`. A connector that
+    /// declares no model is indistinguishable from one never probed, so
+    /// checking emptiness would reload its library on every `list`.
+    #[test]
+    fn backfill_runs_once_even_when_a_model_stays_empty() {
+        let mut registry =
+            legacy_registry(vec![installed("irodori.plain", Some("/ext/plain/lib.so"))]);
+        assert!(backfill_registry(&mut registry, |_| None));
+        assert!(registry.extensions[0].connection_model.is_none());
+
+        let mut probes = 0;
+        let changed = backfill_registry(&mut registry, |_| {
+            probes += 1;
+            declared_model("plain")
+        });
+
+        assert!(!changed);
+        assert_eq!(probes, 0, "a migrated registry must not reload libraries");
+    }
+
+    #[test]
+    fn backfill_leaves_a_model_the_install_already_captured() {
+        let mut extension = installed("irodori.snowflake", Some("/ext/snowflake/lib.so"));
+        extension.connection_model = declared_model("snowflake");
+        let mut registry = legacy_registry(vec![extension]);
+
+        backfill_registry(&mut registry, |_| declared_model("overwritten"));
+
+        assert_eq!(
+            registry.extensions[0]
+                .connection_model
+                .as_ref()
+                .and_then(|model| model.pointer("/authMethods/0/id"))
+                .and_then(Value::as_str),
+            Some("snowflakeSigv4")
+        );
+    }
+
+    /// Declarative extensions contribute host features, not connectors: there
+    /// is no library to ask, and asking would be an error rather than a miss.
+    #[test]
+    fn backfill_skips_an_extension_with_no_library() {
+        let mut declarative = installed("irodori.knowledge", None);
+        declarative.runtime = "declarative".into();
+        declarative.engine = None;
+        let mut registry = legacy_registry(vec![declarative]);
+
+        let mut probes = 0;
+        backfill_registry(&mut registry, |_| {
+            probes += 1;
+            declared_model("knowledge")
+        });
+
+        assert_eq!(probes, 0);
+        assert!(registry.extensions[0].connection_model.is_none());
+        // Still stamped: there was nothing here to retry on the next launch.
+        assert_eq!(registry.schema_version, REGISTRY_SCHEMA_VERSION);
     }
 
     #[test]
