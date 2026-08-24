@@ -826,6 +826,8 @@ mod tests {
             port: None,
             user: None,
             password: None,
+            auth: Default::default(),
+            tls: Default::default(),
             database: Some("sample".into()),
             socket_path: None,
             url: None,

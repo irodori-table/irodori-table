@@ -13,6 +13,8 @@ fn memgraph_profile() -> ConnectionProfile {
         port: Some(17687),
         user: None,
         password: None,
+        auth: Default::default(),
+        tls: Default::default(),
         database: Some("memgraph".into()),
         socket_path: None,
         url: None,
