@@ -68,7 +68,6 @@ describe("switcher rendering", () => {
       formatObjectName: (object: { name: string }) => object.name,
       onAddProfile: vi.fn(),
       onOpenConnectionManager: vi.fn(),
-      onOpenSqliteSample: vi.fn(),
       onSelectConnection: vi.fn(),
       onOpenBlankSchemaDesigner: vi.fn(),
       onNewTableFromFile: vi.fn(),

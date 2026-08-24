@@ -984,7 +984,7 @@ export const ja = {
   "notice.workbench.diagnosticsCopied": "診断情報をコピーしました",
   "notice.workbench.planCopied": "実行計画をコピーしました",
   "sidebar.empty.notConnected": "まだ接続していません。",
-  "sidebar.empty.openSample": "SQLite サンプルを開く",
+  "sidebar.empty.openConnection": "接続を開く",
   "sidebar.empty.addConnection": "接続を追加",
   "rail.connections": "接続",
   "rail.connected": "接続中",
@@ -1039,6 +1039,7 @@ export const ja = {
   "connection.noPasswords": "パスワードは含まれません",
   "connection.searchPlaceholder": "接続を検索",
   "connection.noMatches": "一致する接続がありません",
+  "connection.openSqliteSample": "SQLite サンプルを開く",
   "connection.emptyState":
     "保存済みの接続はまだありません。「+」で追加できます。",
   "connection.newConnectionName": "新しい接続",

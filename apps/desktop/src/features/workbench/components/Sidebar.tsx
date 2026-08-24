@@ -275,7 +275,6 @@ type SidebarProps = {
   formatObjectName: (object: DbObjectMetadata) => string;
   onAddProfile: () => void;
   onOpenConnectionManager: () => void;
-  onOpenSqliteSample: () => void;
   onSelectConnection: (
     connection: WorkspaceConnection,
     profile: ConnectionDraft | undefined,
@@ -334,7 +333,6 @@ export function Sidebar({
   formatObjectName,
   onAddProfile,
   onOpenConnectionManager,
-  onOpenSqliteSample,
   onSelectConnection,
   onOpenBlankSchemaDesigner,
   onNewTableFromFile,
@@ -1299,16 +1297,26 @@ export function Sidebar({
                 ) : !activeConnectionOpen ? (
                   <div className="empty-browser-cta">
                     <p>{t("sidebar.empty.notConnected")}</p>
+                    {/* Opening one of your own connections is the move this
+                        panel is missing when it is empty. The SQLite sample is
+                        a first-run curiosity — it lives in the connection
+                        dialog, beside the connections it is a sample of. */}
+                    {connections.length > 0 ? (
+                      <button
+                        type="button"
+                        className="text-button primary"
+                        onClick={onOpenConnectionManager}
+                      >
+                        {t("sidebar.empty.openConnection")}
+                      </button>
+                    ) : null}
                     <button
                       type="button"
-                      className="text-button primary"
-                      onClick={onOpenSqliteSample}
-                    >
-                      {t("sidebar.empty.openSample")}
-                    </button>
-                    <button
-                      type="button"
-                      className="text-button"
+                      className={
+                        connections.length > 0
+                          ? "text-button"
+                          : "text-button primary"
+                      }
                       onClick={onAddProfile}
                     >
                       {t("sidebar.empty.addConnection")}

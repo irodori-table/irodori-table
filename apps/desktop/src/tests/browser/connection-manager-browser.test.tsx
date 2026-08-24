@@ -138,6 +138,7 @@ function mountDialog() {
         onSave={vi.fn()}
         onTest={vi.fn()}
         onConnect={vi.fn()}
+        onOpenSqliteSample={vi.fn()}
       />,
     );
   });

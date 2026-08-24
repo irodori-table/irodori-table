@@ -242,6 +242,7 @@ export function useWorkbenchConnections({
     testActiveProfile,
     connectActiveProfile,
     refreshObjects,
+    openSqliteSample,
   } = connectionActions;
 
   useEffect(() => {
@@ -294,6 +295,7 @@ export function useWorkbenchConnections({
         onSave: () => saveDraft(),
         onTest: () => void testActiveProfile(),
         onConnect: connectActiveProfile,
+        onOpenSqliteSample: () => void openSqliteSample(),
       } satisfies ConnectionController)
     : null;
 

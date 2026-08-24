@@ -15,7 +15,7 @@
 .connection-picker {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 36px minmax(0, 1fr) auto;
+  grid-template-rows: 36px minmax(0, 1fr) auto auto;
   min-width: 0;
   min-height: 0;
   border-right: 1px solid var(--border);
@@ -263,6 +263,20 @@
 .connection-picker-empty {
   min-height: 28px;
   padding: 0 12px 8px;
+}
+
+/* Sits under the list, quiet: a database to look at when you have none of
+   your own, not a peer of the connections above it. */
+.connection-sample {
+  justify-self: start;
+  margin: 0 8px 10px;
+  padding: 4px 6px;
+  color: var(--muted);
+  font-size: var(--font-ui-sm);
+}
+
+.connection-sample:hover {
+  color: var(--text);
 }
 
 .connection-form {
@@ -672,7 +686,7 @@
   }
 
   .connection-picker {
-    grid-template-rows: 42px minmax(0, 1fr) auto;
+    grid-template-rows: 42px minmax(0, 1fr) auto auto;
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
