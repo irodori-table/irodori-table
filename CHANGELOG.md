@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [Unreleased]
+
+### Fixed
+
+- **Extension connections with a password connect again.** 0.10.0 took the
+  foundation crates' new rule that a legacy plaintext `password` may not be
+  serialized — a rule about *storing* a profile — and applied it, unintended,
+  to the connector wire, where every connector reads its credential from
+  exactly that field. The result was that every password-bearing extension
+  connection failed at connect with `failed to encode connector profile:
+  legacy plaintext password must be migrated to auth before serialization`:
+  ArangoDB, ClickHouse, MongoDB, Elasticsearch, Oracle, SQL Server and the
+  rest. Built-in PostgreSQL, MySQL and SQLite connections were unaffected,
+  which is why the integration suite stayed green. The password now travels
+  with the connect request as it always did.
+
 ## [0.10.0] - 2026-08-24
 
 Foundation uplift: the app now consumes irodori-kit v0.9.0, whose connection
