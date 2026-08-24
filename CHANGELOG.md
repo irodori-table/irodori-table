@@ -18,10 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.9.1] - 2026-08-24
 
-Follow-up fixes for 0.9.0. Connectors installed before the ABI probe existed
-get their declared connection model back without a reinstall, and the new
-per-connection tabs stop carrying first-run buffers and their tab numbering
-into every connection.
+Follow-up fixes for 0.9.0, plus dependency maintenance. Connectors installed
+before the ABI probe existed get their declared connection model back without a
+reinstall, and the new per-connection tabs stop carrying first-run buffers and
+their tab numbering into every connection.
 
 ### Fixed
 
@@ -46,6 +46,14 @@ into every connection.
   the three onboarding buffers (scratch, audit window, explain plan). Those
   belong to first run; repeating them for every connection was a side effect of
   giving each one its own tabs.
+
+### Changed
+
+- Updated the desktop npm tooling and editor group, including CodeMirror
+  commands 6.11.0 and view 6.43.9, Dockview 8.2.0, Mermaid 11.17.0,
+  lucide-react 1.33.0, Vite 8.2.2, oxfmt 0.64.0, and oxlint 1.79.0 (#246).
+- Updated the Rust group: redis 1.6.0, and a single windows-sys 0.61.2 across
+  the dependency tree in place of the four versions it had drifted into (#247).
 
 ## [0.9.0] - 2026-08-23
 
