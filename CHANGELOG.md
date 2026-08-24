@@ -16,7 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
-## [Unreleased]
+## [0.10.1] - 2026-08-24
+
+A same-day fix for a 0.10.0 regression that stopped every password-bearing
+extension connection from connecting.
 
 ### Fixed
 
