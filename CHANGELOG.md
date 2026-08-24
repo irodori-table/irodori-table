@@ -16,7 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
-## [Unreleased]
+## [0.9.1] - 2026-08-24
+
+Follow-up fixes for 0.9.0. Connectors installed before the ABI probe existed
+get their declared connection model back without a reinstall, and the new
+per-connection tabs stop carrying first-run buffers and their tab numbering
+into every connection.
 
 ### Fixed
 
