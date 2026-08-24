@@ -226,9 +226,12 @@ All backends are inert unless the matching dispatch option and secrets are
 present. Lightweight releases remain unsigned, and preview releases use
 SignPath only when explicitly selected.
 
-The repository home page contains the Foundation-required
-[code signing policy](README.md#code-signing-policy). Keep its team roles and
-privacy statement current when project ownership or network behavior changes.
+SignPath Foundation requires the repository home page to carry a code signing
+policy naming the committer, reviewer and signing approver, alongside a privacy
+statement. No such policy is published today, because no release has been
+signed through SignPath: the Windows lane ships unsigned and the release notes
+say so. Add the policy back to `README.md` as part of enabling the backend —
+before the first signed release, not after.
 
 Configure the updater secrets before dispatching a stable release:
 
