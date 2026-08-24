@@ -106,8 +106,27 @@ impl NativeExtensionConnection {
 }
 
 fn connect_request(profile: &ConnectionProfile) -> Result<Value, String> {
-    let profile_value = serde_json::to_value(profile)
+    // The profile type refuses to serialize a legacy plaintext `password`:
+    // credentials moved to typed `auth` handles in the foundation crates, and
+    // writing the plaintext one back out is an error there rather than a
+    // silent re-write. That guard is about *storing* a profile — but this is
+    // the connector wire, where every connector reads `password` off the
+    // request. Encoding the profile as-is turned every password-bearing
+    // extension connection into "failed to encode connector profile" at
+    // connect time.
+    //
+    // Take it out for the encode and put it back after, in both places it used
+    // to appear: the request's own fields and the nested `profile` container.
+    let password = profile.password.clone();
+    let mut without_password = profile.clone();
+    without_password.password = None;
+    let mut profile_value = serde_json::to_value(&without_password)
         .map_err(|error| format!("failed to encode connector profile: {error}"))?;
+    if let Some(password) = password {
+        if let Some(object) = profile_value.as_object_mut() {
+            object.insert("password".to_string(), Value::String(password));
+        }
+    }
     let mut request = match profile_value.as_object() {
         Some(profile) => profile.clone(),
         None => Map::new(),
@@ -512,6 +531,25 @@ mod tests {
     use std::collections::BTreeMap;
 
     use serde_json::json;
+
+    /// Every connector reads its credential off `password` in the connect
+    /// request. The profile type refuses to serialize that field, so encoding
+    /// the profile as-is failed the connect outright for every password-bearing
+    /// extension connection — ArangoDB, ClickHouse, MongoDB, Elasticsearch and
+    /// the rest — with "failed to encode connector profile".
+    #[test]
+    fn connect_request_carries_the_password_the_connector_reads() {
+        let request = connect_request(&extension_profile(BTreeMap::new()))
+            .expect("a profile with a password still encodes");
+
+        assert_eq!(request["method"], json!("connect"));
+        assert_eq!(request["connectionId"], json!("vectors"));
+        assert_eq!(request["password"], json!("legacy-password"));
+        assert_eq!(request["profile"]["password"], json!("legacy-password"));
+        // The rest of the profile still travels with it.
+        assert_eq!(request["profile"]["engine"], json!("qdrant"));
+        assert_eq!(request["profile"]["port"], json!(6333));
+    }
 
     /// Verbatim `metadata` response from the installed DynamoDB connector
     /// (irodori.dynamodb 0.1.4) against a local DynamoDB holding one table.
