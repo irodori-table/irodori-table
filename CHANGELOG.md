@@ -16,7 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
-## [Unreleased]
+## [0.10.2] - 2026-08-25
+
+A patch release for engine-aware object previews and clearer, more usable
+sidebar interactions.
 
 ### Fixed
 
