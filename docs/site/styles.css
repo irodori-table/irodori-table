@@ -28,6 +28,7 @@
   /* One measure, used by every text block, so the eye never has to re-anchor. */
   --measure: 68ch;
   --page-max: 60rem;
+  --page-gutter: 1.25rem;
   --gap: 1.5rem;
 }
 
@@ -73,7 +74,19 @@ body {
   width: 100%;
   max-width: var(--page-max);
   margin-inline: auto;
-  padding-inline: 1.25rem;
+  padding-inline: var(--page-gutter);
+}
+
+/* Some grids *are* the container — `class="container status-grid"` — and their
+ * `padding: 0` (a list-indent reset) was also erasing its inline gutter, so
+ * those bands sat flush against the window while every other section stayed
+ * inset. Give the inset back without giving the list indent back. */
+.container.status-grid,
+.container.feature-grid,
+.container.docs-grid,
+.container.perf-grid,
+.container.metric-grid {
+  padding-inline: var(--page-gutter);
 }
 
 /* ---------------------------------------------------------------- links --
