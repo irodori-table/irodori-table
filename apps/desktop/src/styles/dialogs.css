@@ -396,7 +396,8 @@
 
 .history-row.active {
   border-color: color-mix(in srgb, var(--blue) 45%, var(--border));
-  background: var(--selected);
+  background: var(--selected-strong);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .history-row-main,

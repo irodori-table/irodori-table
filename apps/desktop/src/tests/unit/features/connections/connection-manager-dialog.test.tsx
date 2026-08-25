@@ -224,6 +224,7 @@ const render = componentRenderer(ConnectionManagerDialog, () => ({
   onSave: vi.fn(),
   onTest: vi.fn(),
   onConnect: vi.fn((event) => event.preventDefault()),
+  onOpenSqliteSample: vi.fn(),
 }));
 
 /** Keep `draft` and `profiles` consistent when a test overrides the draft. */

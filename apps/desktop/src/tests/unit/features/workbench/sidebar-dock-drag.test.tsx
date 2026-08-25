@@ -89,7 +89,6 @@ function sidebarProps(overrides: Partial<SidebarProps> = {}): SidebarProps {
     formatObjectName: (object) => object.name,
     onAddProfile: vi.fn(),
     onOpenConnectionManager: vi.fn(),
-    onOpenSqliteSample: vi.fn(),
     onSelectConnection: vi.fn(),
     onOpenBlankSchemaDesigner: vi.fn(),
     onNewTableFromFile: vi.fn(),

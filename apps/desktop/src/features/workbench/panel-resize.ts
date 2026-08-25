@@ -16,7 +16,12 @@ export type PanelResizeKind =
   | "results"
   | "editorSplit";
 
-export const SIDEBAR_WIDTH_MIN = 180;
+/**
+ * Narrow enough for the search field to be usable rather than merely present.
+ * It was 180 because the field could not shrink past its own min-content and
+ * was clipped instead; now that it can, the floor is the view switcher's row.
+ */
+export const SIDEBAR_WIDTH_MIN = 140;
 export const SIDEBAR_WIDTH_MAX = 420;
 export const INSPECTOR_WIDTH_MIN = 220;
 export const INSPECTOR_WIDTH_MAX = 420;

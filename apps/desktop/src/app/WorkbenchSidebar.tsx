@@ -193,7 +193,6 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
         setConnectionManagerOpen(true);
       }}
       onOpenConnectionManager={() => setConnectionManagerOpen(true)}
-      onOpenSqliteSample={() => void connectionActions.openSqliteSample()}
       onSelectConnection={connectionActions.selectSidebarConnection}
       onOpenBlankSchemaDesigner={openBlankSchemaDesigner}
       onNewTableFromFile={() => importFileRef.current?.click()}

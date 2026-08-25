@@ -68,6 +68,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  /* A grid item defaults to `min-width: auto`, so this box could not shrink
+     below its own min-content — an input's intrinsic ~20 characters plus three
+     toggles. In a narrow sidebar it kept that width and was clipped by the
+     panel edge instead, hiding the field rather than narrowing it. */
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--editor-bg, var(--surface));

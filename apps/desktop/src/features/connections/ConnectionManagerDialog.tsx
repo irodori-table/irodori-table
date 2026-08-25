@@ -398,6 +398,7 @@ export function ConnectionManagerDialog({
   onSave,
   onTest,
   onConnect,
+  onOpenSqliteSample,
 }: {
   profiles: ConnectionDraft[];
   connectedIds: Set<string>;
@@ -420,6 +421,7 @@ export function ConnectionManagerDialog({
   onSave: () => void;
   onTest: () => void;
   onConnect: FormEventHandler<HTMLFormElement>;
+  onOpenSqliteSample: () => void;
 }) {
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const transferMenuAnchorRef = useRef<HTMLDivElement | null>(null);
@@ -1014,6 +1016,16 @@ export function ConnectionManagerDialog({
               : t("connection.emptyState")
             : null}
         </div>
+        {/* A database to look at when you have none of your own. It belongs
+            here, next to the list it is a sample of, rather than in the
+            workbench where it outranked opening a real connection. */}
+        <button
+          type="button"
+          className="text-button connection-sample"
+          onClick={onOpenSqliteSample}
+        >
+          {t("connection.openSqliteSample")}
+        </button>
       </aside>
       <form className="connection-form" onSubmit={handleConnect}>
         <div className="dialog-header">

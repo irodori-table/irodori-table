@@ -20,6 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The search panel narrows with the sidebar instead of being clipped by it.**
+  Its input sits in a grid item, whose `min-width` defaults to its own
+  min-content — an input's intrinsic ~20 characters plus three toggles — so in
+  a narrow sidebar the field kept that width and the panel edge cut it off. It
+  shrinks now, and the sidebar's minimum width drops from 180px to 140px to
+  match.
+- **A selected row no longer looks like a hovered one.** In the connection
+  dialog's list, `:hover`, `:focus-visible` and the open connection were one
+  declaration painting one colour; in the sidebar list and the query history
+  they were two tints three L* apart. Hover keeps the light wash; selection
+  takes a stronger fill and an accent edge, the shape the result grid already
+  used.
+- **The empty database panel offers your own connections first.** It led with
+  **Open SQLite sample** as the primary action, above **Add a connection**, and
+  never offered the one move it was missing: opening a connection you already
+  have. The sample moved into the connection dialog, under the list it is a
+  sample of.
 - **Opening a table from the tree runs a statement the engine accepts.** The
   preview was always `select * from <schema>.<name> limit 200`, but the schema
   a non-SQL connector reports labels the tree rather than naming a namespace —
