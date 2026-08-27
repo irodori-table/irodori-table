@@ -52,6 +52,23 @@ beforeEach(() => {
   usePreferencesStore.setState({ locale: "en" });
 });
 
+const menuProps = {
+  menuBarSections: [
+    {
+      label: "File",
+      items: [{ commandId: "palette.open" }],
+    },
+  ],
+  commandCatalog: [
+    {
+      id: "palette.open",
+      title: "Command palette",
+      category: "General",
+      scope: "global" as const,
+    },
+  ],
+};
+
 describe("WorkbenchShell", () => {
   it("keeps left and right sidebar widths independent", () => {
     const { container } = renderShell({
@@ -137,5 +154,32 @@ describe("WorkbenchShell", () => {
     await user.click(activate);
 
     expect(props.onToggleLeftSidebar).toHaveBeenCalledTimes(1);
+  });
+
+  it("runs a command from the extracted menubar", async () => {
+    const { props, user } = renderShell(menuProps);
+
+    await user.click(screen.getByRole("menuitem", { name: "File" }));
+    expect(screen.getByRole("menu", { name: "File" })).toBeVisible();
+
+    await user.click(screen.getByRole("menuitem", { name: /Command palette/ }));
+
+    expect(props.onRunCommand).toHaveBeenCalledWith("palette.open");
+    expect(props.onCloseWorkspaceMenu).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("menu", { name: "File" })).toBeNull();
+  });
+
+  it("closes the menubar before opening the workbench context menu", async () => {
+    const { user, container } = renderShell(menuProps);
+
+    await user.click(screen.getByRole("menuitem", { name: "File" }));
+    expect(screen.getByRole("menu", { name: "File" })).toBeVisible();
+
+    const workspace = container.querySelector<HTMLElement>(".workspace");
+    expect(workspace).not.toBeNull();
+    rightClick(workspace as HTMLElement);
+
+    expect(screen.queryByRole("menu", { name: "File" })).toBeNull();
+    expect(screen.getByRole("menu")).toBeVisible();
   });
 });
