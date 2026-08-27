@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.10.4] - 2026-08-27
+
+An internal maintenance release with no user-facing behavior changes.
+
+### Changed
+
+- Split the workbench shell into focused menubar, context-menu, and status-bar
+  components while preserving its public props and interactions.
+
 ## [0.10.3] - 2026-08-26
 
 An internal maintenance release with no user-facing behavior changes.
