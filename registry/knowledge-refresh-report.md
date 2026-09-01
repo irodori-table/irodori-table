@@ -1,16 +1,16 @@
 # Knowledge Refresh Report
 
-Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
+Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
 
 | Metric | Count |
 | --- | ---: |
-| Sources checked | 92 |
-| Changed (new snapshot) | 89 |
+| Sources checked | 93 |
+| Changed (new snapshot) | 90 |
 | Unchanged | 0 |
 | Failed | 3 |
-| New facts | 453 |
+| New facts | 459 |
 
-## Changed sources (89)
+## Changed sources (90)
 
 | Source | Product | Latest title |
 | --- | --- | --- |
@@ -30,14 +30,14 @@ Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
 | cockroachdb-release-notes | CockroachDB | CockroachDB Releases Overview |
 | couchbase-docs | Couchbase | For AI agents: |
 | databricks-sql-docs | Databricks | Data warehousing on Databricks |
-| datagrip-features | DataGrip | Features |
+| datagrip-features | DataGrip | DataGrip features overview |
 | dbeaver-sql-editor | DBeaver | SQL Editor |
 | dbeaver-supported-databases | DBeaver | Supported Databases |
 | dbgate | DbGate | THE SMARTEST SQL & NOSQL database manager |
 | dbvisualizer-features | DbVisualizer | Features |
 | delta-lake-docs | Delta Lake | Welcome to the Delta Lake documentation |
 | duckdb-docs-stable | DuckDB | Redirecting&hellip; |
-| duckdb-release-notes | DuckDB | Search code, repositories, users, issues, pull requests... |
+| duckdb-release-notes | DuckDB | Releases: duckdb/duckdb |
 | dynamodb-docs | DynamoDB | What is Amazon DynamoDB? |
 | dynamodb-release-notes | DynamoDB | Document history for DynamoDB |
 | elasticsearch-docs | Elasticsearch | Elasticsearch documentation |
@@ -66,7 +66,7 @@ Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
 | mysql-release-notes | MySQL | MySQL :: MySQL 9.7 Release Notes |
 | neo4j-browser-docs | Neo4j | Neo4j Browser |
 | neo4j-cypher-manual | Neo4j | Introduction |
-| neo4j-graph-data-science | Neo4j Graph Data Science | The Neo4j Graph Data Science Library Manual v2026.06 |
+| neo4j-graph-data-science | Neo4j Graph Data Science | The Neo4j Graph Data Science Library Manual v2026.07 |
 | neon-docs | Neon | Neon documentation |
 | openai-mcp-connectors | OpenAI API | MCP and Connectors |
 | opensearch-docs | OpenSearch | OpenSearch Links |
@@ -74,7 +74,7 @@ Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
 | oracle-26ai-docs | Oracle | Oracle AI Database 26ai |
 | oracle-26ai-whats-new | Oracle | Oracle AI Database Oracle AI Database New Features, Release 26ai |
 | pinecone-docs | Pinecone | Pinecone documentation |
-| postgres-docs-current | PostgreSQL | PostgreSQL 18.4 Documentation |
+| postgres-docs-current | PostgreSQL | PostgreSQL 18.6 Documentation |
 | postgres-release-notes-current | PostgreSQL | PostgreSQL: Documentation: 18: Appendix E. Release Notes |
 | presto-docs | Presto | Presto Documentation ¶ |
 | qdrant-docs | Qdrant | Qdrant Documentation |
@@ -85,21 +85,22 @@ Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
 | redshift-docs | Redshift | Introduction to Amazon Redshift |
 | redshift-release-notes | Redshift | Cluster versions for Amazon Redshift |
 | s3-tables-docs | AWS S3 Tables | Working with Amazon S3 Tables and table buckets |
-| schemars | Schemars | Search code, repositories, users, issues, pull requests... |
+| schemars | Schemars | Schemars |
 | scylladb-docs | ScyllaDB | ScyllaDB Open Source Documentation ¶ |
 | snowflake-docs | Snowflake | Snowflake Documentation |
 | snowflake-release-notes | Snowflake | Snowflake server release notes and feature updates ¶ |
-| specta | Specta | Search code, repositories, users, issues, pull requests... |
+| specta | Specta | Specta |
 | sqlite-changes | SQLite | Release History |
 | sqlite-docs | SQLite | SQLite Documentation |
 | sqlserver-docs | SQL Server | SQL Server technical documentation |
+| supabase-docs | Supabase | Supabase Documentation |
 | tidb-docs | TiDB | TiDB Self-Managed |
 | timescaledb-docs | TimescaleDB | Tiger Data Documentation |
 | trino-docs | Trino | Trino documentation # |
 | trino-release-notes | Trino | Release notes # |
-| ts-rs | ts-rs | Search code, repositories, users, issues, pull requests... |
+| ts-rs | ts-rs | ts-rs |
 | tsql-reference | SQL Server | Transact-SQL reference (Database Engine) |
-| typeshare | Typeshare | Search code, repositories, users, issues, pull requests... |
+| typeshare | Typeshare | Typeshare |
 | yugabytedb-docs | YugabyteDB | YugabyteDB Documentation |
 | yugabytedb-release-notes | YugabyteDB | Releases |
 | yugabytedb-ysql-api | YugabyteDB | YSQL API reference |
@@ -112,7 +113,7 @@ Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
 | firebird-docs | Firebird | HTTP 403 |
 | firebird-release-notes | Firebird | HTTP 403 |
 
-## New facts by product (453)
+## New facts by product (459)
 
 | Product | New facts |
 | --- | ---: |
@@ -133,7 +134,7 @@ Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
 | MongoDB | 10 |
 | MySQL | 10 |
 | SQL Server | 10 |
-| Redis | 8 |
+| Redis | 9 |
 | Apache Cassandra | 7 |
 | MariaDB | 7 |
 | Trino | 7 |
@@ -160,20 +161,21 @@ Run started 2026-08-01T07:08:52.072Z, finished 2026-08-01T07:08:59.361Z (UTC).
 | Neo4j Graph Data Science | 6 |
 | Neon | 6 |
 | OpenAI API | 6 |
+| Pinecone | 6 |
 | Presto | 6 |
 | Qdrant | 6 |
 | RedisInsight | 6 |
 | Schemars | 6 |
 | ScyllaDB | 6 |
 | Specta | 6 |
+| Supabase | 6 |
 | TimescaleDB | 6 |
-| Typeshare | 6 |
 | ts-rs | 6 |
 | Amazon Athena | 5 |
 | Couchbase | 5 |
 | Oracle | 5 |
-| Pinecone | 5 |
 | Delta Lake | 4 |
+| Typeshare | 4 |
 | Apache Hudi | 2 |
 | TiDB | 2 |
 | Apache IoTDB | 1 |
