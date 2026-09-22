@@ -76,10 +76,14 @@ was missing was any way to configure them.
   dialog's props and every interaction are unchanged; the resolver and the
   environment grouping gained tests of their own.
 
-- Dependency maintenance: Vitest 5, Vite 8.3, mermaid 12, React 19.3, oxfmt
-  0.68 and oxlint 1.83 on the desktop side; rustls 0.23.45, reqwest 0.13.5,
-  mongodb 3.9, redis 1.7, scylla 1.9, the Tauri plugins, and the SignPath
-  release action v3 on the Rust side.
+- Dependency maintenance: Vitest 5, Vite 8.3, React 19.3, oxfmt 0.68 and
+  oxlint 1.83 on the desktop side; rustls 0.23.45, reqwest 0.13.5, mongodb
+  3.9, redis 1.7, scylla 1.9, the Tauri plugins, and the SignPath release
+  action v3 on the Rust side. The `mermaid` package is dropped: the ERD view
+  has rendered its own diagram since 0.3, and the app only ever *writes*
+  Mermaid text for the copy button, so the library was 118 packages of dead
+  weight — and, at 12.0, five high-severity `lodash-es` advisories through
+  `chevrotain`.
 
 ### Security
 
