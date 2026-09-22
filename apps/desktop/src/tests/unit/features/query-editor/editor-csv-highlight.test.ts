@@ -29,7 +29,7 @@ describe("tokenizeDelimited", () => {
   });
 
   it("keeps quoted delimiters and escaped quotes inside one field", () => {
-    const text = 'a,"x, y",\"he said \"\"hi\"\"\",b';
+    const text = 'a,"x, y","he said ""hi""",b';
     const fields = tokenizeDelimited(text, ",");
     expect(fields.map((field) => fieldText(text, field))).toEqual([
       "a",

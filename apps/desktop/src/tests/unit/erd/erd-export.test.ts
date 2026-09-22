@@ -164,11 +164,11 @@ describe("ERD exports", () => {
     vi.useFakeTimers();
     const { createObjectURL, revokeObjectURL } = stubObjectUrls("blob:erd-svg");
     const clickedDownloads: string[] = [];
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
-      function (this: HTMLAnchorElement) {
-        clickedDownloads.push(this.download);
-      },
-    );
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clickedDownloads.push(this.download);
+    });
     const blob = new Blob(["<svg />"], { type: "image/svg+xml" });
 
     downloadBlob(blob, "diagram.svg");
