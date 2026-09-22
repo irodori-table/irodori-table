@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
-## [0.11.0] - 2026-09-10
+## [0.11.0] - 2026-09-22
 
 Connections can reach a database through an SSH tunnel from inside the app, and
 MySQL-wire profiles can pick the charset their handshake settles on. The
@@ -66,6 +66,28 @@ was missing was any way to configure them.
   non-secret parts: host, port, user, authentication method, the path to the key
   file, and the host key to verify against. The key file is read again on every
   connection.
+
+- **The connection manager is split into focused pieces.** The profile picker
+  (grouped list, import/export menu, row context menu), the endpoint fields,
+  the sections a connector extension declares (endpoint, profile,
+  authentication, TLS), the built-in option fields, and the color picker are
+  now separate components, and the rules that decide which declared field
+  belongs to which section live in one pure `resolveConnectorFormModel`. The
+  dialog's props and every interaction are unchanged; the resolver and the
+  environment grouping gained tests of their own.
+
+- Dependency maintenance: Vitest 5, Vite 8.3, mermaid 12, React 19.3, oxfmt
+  0.68 and oxlint 1.83 on the desktop side; rustls 0.23.45, reqwest 0.13.5,
+  mongodb 3.9, redis 1.7, scylla 1.9, the Tauri plugins, and the SignPath
+  release action v3 on the Rust side.
+
+### Security
+
+- rustls is updated to 0.23.45 for
+  [RUSTSEC-2026-0285](https://rustsec.org/advisories/RUSTSEC-2026-0285), which
+  let a peer send TLS 1.3 handshake messages at the wrong encryption level
+  without the connection being rejected. The yanked `chacha20 0.10.1` and
+  `libssh2-sys 0.3.2` move to their next patch releases.
 
 ## [0.10.4] - 2026-08-27
 
