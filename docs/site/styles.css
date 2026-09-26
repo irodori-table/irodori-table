@@ -658,6 +658,12 @@ hr {
   max-width: var(--measure);
 }
 
+/* On the home page the search lives inside the Documentation section, between
+ * the heading and the cards, so it needs a gap before the cards start. */
+.docs-search {
+  margin-bottom: 1.25rem;
+}
+
 .search-label {
   display: block;
   margin-bottom: 0.35rem;
