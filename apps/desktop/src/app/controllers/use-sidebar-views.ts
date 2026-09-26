@@ -182,7 +182,17 @@ export function useSidebarViews() {
       setRightSidebarOpen(false);
       return;
     }
-    setActiveSidebarView("objectBrowser");
+    // Return to another open left view instead of always snapping back to the
+    // object browser, which discarded whatever the user was working in (closing
+    // Git jumped to the DB table view). The object browser is the last resort.
+    const state = useWorkbenchStore.getState();
+    const next = workbenchViewsForSide(
+      state.viewPlacements,
+      "left",
+      state.viewOrder,
+      withUnavailableHidden(state.viewHidden, unavailableFeatureViews),
+    ).find((id) => id !== viewId && state.viewVisibility[id]);
+    setActiveSidebarView(next ?? "objectBrowser");
   }
 
   function toggleSidebarView(

@@ -822,7 +822,7 @@ export function importVsCodeTheme(
 
 /** CSS custom properties for the workbench shell. Spread onto `.app-shell` style. */
 export function cssVariables(theme: IrodoriTheme): Record<string, string> {
-  const { ui } = theme;
+  const { ui, syntax } = theme;
   return {
     "--border": ui.border,
     "--border-strong": ui.borderStrong,
@@ -854,6 +854,20 @@ export function cssVariables(theme: IrodoriTheme): Record<string, string> {
     "--caret": ui.caret,
     "--gutter-bg": ui.gutterBg,
     "--gutter-text": ui.gutterText,
+    // Syntax palette, so non-CodeMirror previews (the metadata definition
+    // snippets) can highlight SQL with the same colors as the editor.
+    "--syntax-keyword": syntax.keyword,
+    "--syntax-string": syntax.string,
+    "--syntax-number": syntax.number,
+    "--syntax-comment": syntax.comment,
+    "--syntax-type": syntax.type,
+    "--syntax-property": syntax.property,
+    "--syntax-name": syntax.name,
+    "--syntax-operator": syntax.operator,
+    "--syntax-function": syntax.function,
+    "--syntax-bracket": syntax.bracket,
+    "--syntax-punctuation": syntax.punctuation,
+    "--syntax-bool": syntax.bool,
   };
 }
 

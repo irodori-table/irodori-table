@@ -148,6 +148,7 @@ type SidebarObjectBrowserProps = {
   onOpenConnectionManager: () => void;
   onOpenBlankSchemaDesigner: () => void;
   onNewTableFromFile: () => void;
+  onCreateDatabase: () => void;
   onOpenObjectSchemaDesigner: (object: DbObjectMetadata) => void;
   onOpenDiagram: () => void;
   onOpenSchemaDiagram: () => void;
@@ -175,6 +176,7 @@ export function SidebarObjectBrowser({
   onOpenConnectionManager,
   onOpenBlankSchemaDesigner,
   onNewTableFromFile,
+  onCreateDatabase,
   onOpenObjectSchemaDesigner,
   onOpenDiagram,
   onOpenSchemaDiagram,
@@ -333,6 +335,16 @@ export function SidebarObjectBrowser({
                       ...createMenuPopover.style,
                     }}
                   >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setCreateMenu(null);
+                        onCreateDatabase();
+                      }}
+                    >
+                      {t("sidebar.menu.newDatabase")}
+                    </button>
                     <button
                       type="button"
                       role="menuitem"

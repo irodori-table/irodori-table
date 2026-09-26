@@ -1260,6 +1260,8 @@ export const en = {
   "sidebar.noObjectsLoaded": "No objects loaded",
   "sidebar.resize": "Resize sidebar",
   "sidebar.menu.newTable": "New Table",
+  "sidebar.menu.newDatabase": "New Database",
+  "sidebar.databaseName": "Database name",
   "sidebar.menu.newTableFromFile": "New Table from File",
   "sidebar.menu.designOnCanvas": "Design on Canvas",
   "sidebar.menu.openData": "Open Data",

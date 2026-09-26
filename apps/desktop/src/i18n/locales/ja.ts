@@ -1288,6 +1288,8 @@ export const ja = {
   "sidebar.noObjectsLoaded": "オブジェクトが読み込まれていません",
   "sidebar.resize": "サイドバーのサイズを変更",
   "sidebar.menu.newTable": "新しいテーブル",
+  "sidebar.menu.newDatabase": "新しいデータベース",
+  "sidebar.databaseName": "データベース名",
   "sidebar.menu.newTableFromFile": "ファイルから新しいテーブル",
   "sidebar.menu.designOnCanvas": "キャンバスでデザイン",
   "sidebar.menu.openData": "データを開く",

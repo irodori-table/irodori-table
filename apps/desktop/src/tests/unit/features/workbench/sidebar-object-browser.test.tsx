@@ -55,6 +55,7 @@ const renderSidebar = componentRenderer(Sidebar, () => {
     onSelectConnection: vi.fn(),
     onOpenBlankSchemaDesigner: vi.fn(),
     onNewTableFromFile: vi.fn(),
+    onCreateDatabase: vi.fn(),
     onOpenObjectSchemaDesigner: vi.fn(),
     onOpenDiagram: vi.fn(),
     onOpenSchemaDiagram: vi.fn(),

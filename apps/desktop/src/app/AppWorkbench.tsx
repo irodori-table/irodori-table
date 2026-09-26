@@ -179,6 +179,7 @@ function useWorkbench() {
     notices: { list: notices, show: showActionNotice, dismiss: dismissNotice },
     confirmElement,
     promptElement,
+    prompt: promptAction,
     // Domain controllers, one per workspace concern.
     connections,
     themes,

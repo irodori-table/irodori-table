@@ -9,10 +9,12 @@ import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ChevronDown,
+  Columns3,
   Copy,
   Download,
   ListFilter,
   Search,
+  Table2,
   Undo2,
   Upload,
   X,
@@ -423,6 +425,7 @@ export function ResultsPane({
                 aria-pressed={resultMode === "data"}
                 onClick={() => onResultModeChange("data")}
               >
+                <Table2 size={13} aria-hidden="true" />
                 {t("results.mode.data")}
               </button>
               {chartAvailable ? (
@@ -464,6 +467,7 @@ export function ResultsPane({
                   aria-pressed={resultMode === "structure"}
                   onClick={() => onResultModeChange("structure")}
                 >
+                  <Columns3 size={13} aria-hidden="true" />
                   {t("results.mode.structure")}
                 </button>
               ) : null}

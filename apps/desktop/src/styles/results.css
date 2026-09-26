@@ -708,6 +708,14 @@
   cursor: pointer;
 }
 
+/* Mode tabs (Data / Structure / …) carry a leading icon so the view is
+ * scannable the way VS Code's panel tabs are. */
+.result-mode-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
 /* The selected segment was a solid `--blue` fill — the most saturated token in
    the palette, used nowhere else as a large flat area. Against a light theme's
    near-white rows it read as a heavy block rather than a selection, and the

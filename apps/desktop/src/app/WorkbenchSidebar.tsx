@@ -28,7 +28,9 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
     layout,
     notices,
     plan,
+    prompt,
     sidebars,
+    t,
     workspace,
   } = useWorkbenchContext();
   const {
@@ -57,6 +59,24 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
     (state) => state.openForObject,
   );
   const right = side === "right";
+
+  // "New Database" from the schema header menu: name it, then run the DDL
+  // through the same runner the editor uses so it lands in the results pane
+  // (and surfaces any error) instead of a bare window.prompt.
+  async function createDatabase() {
+    const name = await prompt({
+      title: t("sidebar.menu.newDatabase"),
+      label: t("sidebar.databaseName"),
+    });
+    if (!name) {
+      return;
+    }
+    const identifier = `\`${name.replace(/`/g, "``")}\``;
+    await editorCommands.runEditorSql(`CREATE DATABASE ${identifier};`, {
+      allowMagic: false,
+    });
+  }
+
   const inspectorPanel = (kind: "completion" | "history") => (
     <InspectorContent
       activeConnectionId={activeConnectionId}
@@ -196,6 +216,7 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
       onSelectConnection={connectionActions.selectSidebarConnection}
       onOpenBlankSchemaDesigner={openBlankSchemaDesigner}
       onNewTableFromFile={() => importFileRef.current?.click()}
+      onCreateDatabase={createDatabase}
       onOpenObjectSchemaDesigner={openObjectSchemaDesigner}
       onOpenDiagram={() => erd.setDiagramOpen(true)}
       onOpenSchemaDiagram={erd.openSchemaDiagramDesigner}

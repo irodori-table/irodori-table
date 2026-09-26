@@ -2706,6 +2706,45 @@ body.panel-resizing .result-grid {
   overflow-wrap: anywhere;
 }
 
+/* SQL highlighting for the metadata definition preview; roles come from the
+ * theme's `--syntax-*` variables so it matches the editor. */
+.sql-tok-keyword {
+  color: var(--syntax-keyword);
+}
+
+.sql-tok-string {
+  color: var(--syntax-string);
+}
+
+.sql-tok-number {
+  color: var(--syntax-number);
+}
+
+.sql-tok-comment {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+
+.sql-tok-property {
+  color: var(--syntax-property);
+}
+
+.sql-tok-name {
+  color: var(--syntax-name);
+}
+
+.sql-tok-operator {
+  color: var(--syntax-operator);
+}
+
+.sql-tok-bracket {
+  color: var(--syntax-bracket);
+}
+
+.sql-tok-punctuation {
+  color: var(--syntax-punctuation);
+}
+
 .sql-metadata-columns,
 .sql-metadata-keys,
 .sql-metadata-indexes,

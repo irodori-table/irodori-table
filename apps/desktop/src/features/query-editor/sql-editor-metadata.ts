@@ -71,6 +71,11 @@ export function sqlMetadataInsightExtensions(
     quickDefinitionField,
     hoverTooltip(
       (view, pos) => {
+        // The quick-definition popup owns the screen while it is open; a hover
+        // tooltip stacking over it was the "stacked popup" report.
+        if (view.state.field(quickDefinitionField, false)) {
+          return null;
+        }
         const target = inspectSqlMetadataAt(
           view.state.doc.toString(),
           pos,
@@ -151,6 +156,13 @@ export function sqlMetadataInsightExtensions(
     ]),
     EditorView.domEventHandlers({
       mousedown(event, view) {
+        // A press anywhere in the editor dismisses an open quick-definition
+        // popup; the popup stops propagation on its own mousedown, so this only
+        // fires for clicks outside it. Without this it stayed until Esc or an
+        // edit.
+        if (view.state.field(quickDefinitionField, false)) {
+          view.dispatch({ effects: setQuickDefinitionEffect.of(null) });
+        }
         if (!onMetadataJump || !(event.metaKey || event.ctrlKey)) {
           return false;
         }

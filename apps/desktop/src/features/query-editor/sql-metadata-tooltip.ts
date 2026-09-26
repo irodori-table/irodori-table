@@ -64,9 +64,9 @@ function appendObjectDetails(root: HTMLElement, object: MetadataObject) {
 
   const definition = document.createElement("pre");
   definition.className = "sql-metadata-definition";
-  definition.textContent = truncateText(
-    sqlObjectDefinitionPreview(object),
-    1_400,
+  appendHighlightedSql(
+    definition,
+    truncateText(sqlObjectDefinitionPreview(object), 1_400),
   );
   root.appendChild(definition);
 
@@ -149,9 +149,9 @@ function appendColumnDetails(
 ) {
   const definition = document.createElement("pre");
   definition.className = "sql-metadata-definition";
-  definition.textContent = sqlColumnDefinitionPreview(
-    target.object,
-    target.column,
+  appendHighlightedSql(
+    definition,
+    sqlColumnDefinitionPreview(target.object, target.column),
   );
   root.appendChild(definition);
 
@@ -312,6 +312,207 @@ function appendText(
   element.className = className;
   element.textContent = text;
   root.appendChild(element);
+}
+
+/**
+ * A deliberately small SQL tokenizer for the definition preview. It only needs
+ * to colorize a read-only snippet, so it covers comments, strings, quoted
+ * identifiers, numbers, keywords, and the bracket/operator/punctuation runs,
+ * and falls back to plain text for everything else. Roles map to the
+ * `--syntax-*` CSS variables so the snippet matches the editor palette.
+ */
+const sqlDefinitionKeywords = new Set([
+  "select",
+  "from",
+  "where",
+  "join",
+  "left",
+  "right",
+  "inner",
+  "outer",
+  "full",
+  "cross",
+  "on",
+  "and",
+  "or",
+  "not",
+  "null",
+  "is",
+  "in",
+  "like",
+  "between",
+  "group",
+  "by",
+  "order",
+  "having",
+  "limit",
+  "offset",
+  "union",
+  "all",
+  "distinct",
+  "as",
+  "insert",
+  "into",
+  "values",
+  "update",
+  "set",
+  "delete",
+  "create",
+  "alter",
+  "drop",
+  "table",
+  "view",
+  "index",
+  "database",
+  "schema",
+  "primary",
+  "key",
+  "foreign",
+  "references",
+  "unique",
+  "constraint",
+  "default",
+  "cascade",
+  "if",
+  "exists",
+  "case",
+  "when",
+  "then",
+  "else",
+  "end",
+  "using",
+  "with",
+  "recursive",
+  "returning",
+  "explain",
+  "analyze",
+  "describe",
+  "show",
+  "use",
+  "truncate",
+  "replace",
+  "ignore",
+  "collate",
+  "asc",
+  "desc",
+  "current_timestamp",
+  "current_date",
+  "current_time",
+  "interval",
+  "cast",
+  "over",
+  "partition",
+  "window",
+  "algorithm",
+  "definer",
+  "sql",
+  "security",
+  "invoker",
+  "undefined",
+  "true",
+  "false",
+]);
+
+function appendHighlightedSql(root: HTMLElement, text: string) {
+  let index = 0;
+  while (index < text.length) {
+    const char = text[index];
+    if (char === "-" && text[index + 1] === "-") {
+      const end = text.indexOf("\n", index);
+      const stop = end === -1 ? text.length : end;
+      pushSqlToken(root, text.slice(index, stop), "comment");
+      index = stop;
+      continue;
+    }
+    if (char === "/" && text[index + 1] === "*") {
+      const end = text.indexOf("*/", index + 2);
+      const stop = end === -1 ? text.length : end + 2;
+      pushSqlToken(root, text.slice(index, stop), "comment");
+      index = stop;
+      continue;
+    }
+    if (char === "'" || char === '"') {
+      let cursor = index + 1;
+      while (cursor < text.length) {
+        if (text[cursor] === char) {
+          if (text[cursor + 1] === char) {
+            cursor += 2;
+            continue;
+          }
+          cursor += 1;
+          break;
+        }
+        cursor += 1;
+      }
+      pushSqlToken(root, text.slice(index, cursor), "string");
+      index = cursor;
+      continue;
+    }
+    if (char === "`") {
+      let cursor = index + 1;
+      while (cursor < text.length) {
+        if (text[cursor] === "`") {
+          cursor += 1;
+          break;
+        }
+        cursor += 1;
+      }
+      pushSqlToken(root, text.slice(index, cursor), "property");
+      index = cursor;
+      continue;
+    }
+    if (/[0-9]/.test(char)) {
+      let cursor = index + 1;
+      while (cursor < text.length && /[0-9._]/.test(text[cursor])) {
+        cursor += 1;
+      }
+      pushSqlToken(root, text.slice(index, cursor), "number");
+      index = cursor;
+      continue;
+    }
+    if (/[A-Za-z_]/.test(char)) {
+      let cursor = index + 1;
+      while (cursor < text.length && /[A-Za-z0-9_$]/.test(text[cursor])) {
+        cursor += 1;
+      }
+      const word = text.slice(index, cursor);
+      pushSqlToken(
+        root,
+        word,
+        sqlDefinitionKeywords.has(word.toLowerCase()) ? "keyword" : "name",
+      );
+      index = cursor;
+      continue;
+    }
+    if ("()[]{}".includes(char)) {
+      pushSqlToken(root, char, "bracket");
+      index += 1;
+      continue;
+    }
+    if (char === "," || char === ";" || char === ".") {
+      pushSqlToken(root, char, "punctuation");
+      index += 1;
+      continue;
+    }
+    if ("=<>!+-*/|%&^~".includes(char)) {
+      pushSqlToken(root, char, "operator");
+      index += 1;
+      continue;
+    }
+    pushSqlToken(root, char, null);
+    index += 1;
+  }
+}
+
+function pushSqlToken(root: HTMLElement, text: string, role: string | null) {
+  if (!role) {
+    root.appendChild(document.createTextNode(text));
+    return;
+  }
+  const span = document.createElement("span");
+  span.className = `sql-tok-${role}`;
+  span.textContent = text;
+  root.appendChild(span);
 }
 
 function truncateText(value: string, maxLength: number): string {

@@ -61,14 +61,14 @@ Irodori Table はテレメトリーやクラッシュレポートをアップロ
 
 ## リポジトリ
 
-- `irodori-table`: デスクトップアプリ。
-- `irodori-kit`: 共有アプリ基盤クレートおよび拡張SDK。
-- `irodori-sql`: SQL方言、パラメータ、スキーマ、マイグレーション用SQLヘルパー。
-- `irodori-knowledge`: 共有エラー、ジョブ、ナレッジストアのプリミティブ。
-- `irodori-migration`: 実行不要のマイグレーション計画および差分クレート。
-- `irodori-samples`: ローカルサンプルデータベースコンテナ。
-- `irodori-docs`: 公開ドキュメントサイト。
-- `irodori-archive`: 過去の内部ノート。
+- [`irodori-table`](https://github.com/irodori-table/irodori-table): デスクトップアプリ。
+- [`irodori-kit`](https://github.com/irodori-table/irodori-kit): 共有アプリ基盤クレートおよび拡張SDK。
+- [`irodori-sql`](https://github.com/irodori-table/irodori-sql): SQL方言、パラメータ、スキーマ、マイグレーション用SQLヘルパー。
+- [`irodori-knowledge`](https://github.com/irodori-table/irodori-knowledge): 共有エラー、ジョブ、ナレッジストアのプリミティブ。
+- [`irodori-migration`](https://github.com/irodori-table/irodori-migration): 実行不要のマイグレーション計画および差分クレート。
+- [`irodori-samples`](https://github.com/irodori-table/irodori-samples): ローカルサンプルデータベースコンテナ。
+- [`irodori-docs`](https://github.com/irodori-table/irodori-docs): 公開ドキュメントサイト。
+- [`irodori-archive`](https://github.com/irodori-table/irodori-archive): 過去の内部ノート。
 
 ## リンク
 

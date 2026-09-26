@@ -66,6 +66,7 @@ type SidebarProps = {
   ) => void;
   onOpenBlankSchemaDesigner: () => void;
   onNewTableFromFile: () => void;
+  onCreateDatabase: () => void;
   onOpenObjectSchemaDesigner: (object: DbObjectMetadata) => void;
   onOpenDiagram: () => void;
   onOpenSchemaDiagram: () => void;
@@ -121,6 +122,7 @@ export function Sidebar({
   onSelectConnection,
   onOpenBlankSchemaDesigner,
   onNewTableFromFile,
+  onCreateDatabase,
   onOpenObjectSchemaDesigner,
   onOpenDiagram,
   onOpenSchemaDiagram,
@@ -206,6 +208,7 @@ export function Sidebar({
               onOpenConnectionManager={onOpenConnectionManager}
               onOpenBlankSchemaDesigner={onOpenBlankSchemaDesigner}
               onNewTableFromFile={onNewTableFromFile}
+              onCreateDatabase={onCreateDatabase}
               onOpenObjectSchemaDesigner={onOpenObjectSchemaDesigner}
               onOpenDiagram={onOpenDiagram}
               onOpenSchemaDiagram={onOpenSchemaDiagram}

@@ -80,14 +80,14 @@ project docs:
 
 ## Repos
 
-- `irodori-table`: desktop app.
-- `irodori-kit`: shared app foundation crates and extension SDK.
-- `irodori-sql`: SQL dialect, parameter, schema, and migration SQL helpers.
-- `irodori-knowledge`: shared error, job, and knowledge-store primitives.
-- `irodori-migration`: execution-free migration planning and diff crate.
-- `irodori-samples`: local sample database containers.
-- `irodori-docs`: public documentation site.
-- `irodori-archive`: historical internal notes.
+- [`irodori-table`](https://github.com/irodori-table/irodori-table): desktop app.
+- [`irodori-kit`](https://github.com/irodori-table/irodori-kit): shared app foundation crates and extension SDK.
+- [`irodori-sql`](https://github.com/irodori-table/irodori-sql): SQL dialect, parameter, schema, and migration SQL helpers.
+- [`irodori-knowledge`](https://github.com/irodori-table/irodori-knowledge): shared error, job, and knowledge-store primitives.
+- [`irodori-migration`](https://github.com/irodori-table/irodori-migration): execution-free migration planning and diff crate.
+- [`irodori-samples`](https://github.com/irodori-table/irodori-samples): local sample database containers.
+- [`irodori-docs`](https://github.com/irodori-table/irodori-docs): public documentation site.
+- [`irodori-archive`](https://github.com/irodori-table/irodori-archive): historical internal notes.
 
 ## Links
 
