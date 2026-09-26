@@ -462,6 +462,124 @@ fn tidb_connect() {
         .block_on(connect_only(DbEngine::TiDb, url));
 }
 
+/// Full create/read/update/delete pass over the TiDB/MySQL wire: create a table,
+/// bulk-insert 10k rows, count, update, delete, and count again. Unlike
+/// `connect_only`, this exercises the write path the results grid uses, so a
+/// regression in non-SELECT handling (DDL/DML) fails here rather than in the UI.
+#[test]
+fn tidb_crud() {
+    let Ok(url) = std::env::var("IRODORI_TIDB_URL") else {
+        eprintln!("skip: IRODORI_TIDB_URL not set");
+        return;
+    };
+    tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(tidb_crud_exercise(url));
+}
+
+async fn tidb_crud_exercise(url: String) {
+    const ROWS: i64 = 10_000;
+    let state = DbState::default();
+    let info = connect_impl(
+        &state,
+        &SecurityState::default(),
+        None,
+        url_profile("it", DbEngine::TiDb, url),
+    )
+    .await
+    .expect("connect");
+    assert_eq!(info.engine, DbEngine::TiDb);
+    eprintln!("connected: {}", info.server_version);
+
+    async fn exec(state: &DbState, sql: String) -> desktop_lib::db::QueryResult {
+        let label = sql.clone();
+        run_query_impl(state, "it".into(), sql, None)
+            .await
+            .unwrap_or_else(|error| panic!("query failed: {error}\n{label}"))
+    }
+
+    async fn count(state: &DbState) -> i64 {
+        let result = exec(state, "select count(*) as n from irodori_crud".into()).await;
+        result.rows[0][0]
+            .as_i64()
+            .or_else(|| result.rows[0][0].as_str().and_then(|s| s.parse().ok()))
+            .expect("count as integer")
+    }
+
+    exec(&state, "drop table if exists irodori_crud".into()).await;
+    exec(
+        &state,
+        "create table irodori_crud (\
+         id bigint primary key, \
+         label varchar(64) not null, \
+         amount bigint not null, \
+         updated_at timestamp default current_timestamp)"
+            .into(),
+    )
+    .await;
+
+    // Bulk insert in batches so a single statement stays under the wire limits.
+    let values: Vec<String> = (0..ROWS)
+        .map(|id| format!("({id}, 'row-{id}', {})", id % 1000))
+        .collect();
+    for chunk in values.chunks(1_000) {
+        exec(
+            &state,
+            format!(
+                "insert into irodori_crud (id, label, amount) values {}",
+                chunk.join(", ")
+            ),
+        )
+        .await;
+    }
+    assert_eq!(count(&state).await, ROWS, "all rows inserted");
+    eprintln!("inserted {ROWS} rows");
+
+    // Update.
+    exec(
+        &state,
+        "update irodori_crud set amount = amount + 1 where id < 100".into(),
+    )
+    .await;
+    let updated = exec(
+        &state,
+        "select count(*) as n from irodori_crud where id < 100 and amount = id + 1".into(),
+    )
+    .await;
+    assert_eq!(
+        updated.rows[0][0]
+            .as_i64()
+            .or_else(|| updated.rows[0][0].as_str().and_then(|s| s.parse().ok())),
+        Some(100),
+        "100 rows updated"
+    );
+
+    // Delete.
+    exec(
+        &state,
+        "delete from irodori_crud where id >= 5000".into(),
+    )
+    .await;
+    assert_eq!(count(&state).await, 5_000, "half the rows deleted");
+
+    // Read one row back.
+    let row = exec(
+        &state,
+        "select id, label, amount from irodori_crud order by id limit 1".into(),
+    )
+    .await;
+    assert_eq!(row.columns, vec!["id", "label", "amount"]);
+    assert_eq!(row.rows[0][1].as_str(), Some("row-0"));
+    assert!(
+        row.rows[0][2].as_i64().is_some_and(|amount| amount == 1),
+        "amount updated to 1, got {:?}",
+        row.rows[0][2]
+    );
+
+    exec(&state, "drop table irodori_crud".into()).await;
+    eprintln!("CRUD ok: create, {ROWS} inserts, update, delete, select, drop");
+}
+
 /// MongoDB through the same `Connection` trait: connect, version, and a
 /// collection "query" projected to a table.
 async fn exercise_mongo(url: String) {

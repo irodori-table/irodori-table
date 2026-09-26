@@ -1216,8 +1216,7 @@ export const ja = {
   "schemaDesigner.alterPrimaryKeyUnavailable":
     "Alter モードでは主キーを変更できません。生成される ALTER TABLE SQL に PRIMARY KEY 制約は含まれないため、Create モードを使うか制約を手書きしてください。",
   "run.options": "実行オプション",
-  "run.selection": "選択範囲を実行",
-  "run.current": "現在を実行",
+  "run.current": "現在の文を実行",
   "run.fromTop": "先頭から実行",
   "run.all": "すべて実行",
   "editorBar.format.title": "SQL をフォーマット",

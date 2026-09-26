@@ -696,8 +696,8 @@
 }
 
 .segmented-control button {
-  height: 20px;
-  padding: 0 8px;
+  height: 21px;
+  padding: 0 12px;
   border: 0;
   border-radius: 2px;
   color: var(--muted);
@@ -1498,6 +1498,7 @@
 .structure-view {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 34%);
+  grid-template-rows: minmax(0, 1fr);
   gap: 8px;
   min-height: 0;
   overflow: auto;

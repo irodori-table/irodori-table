@@ -3,6 +3,27 @@
 This repo ships the desktop app. Shared foundation crates and templates are
 released from sibling repositories first, then consumed here by git tag.
 
+## The common path (almost every release)
+
+```sh
+# 1. Land the change on main with a clean working tree.
+git status --short
+
+# 2. Run the local gate.
+task desktop-format-check
+task desktop-lint
+task desktop-typegen-check
+task desktop-test
+
+# 3. Cut the release: bumps every version, commits, tags vX.Y.Z, and pushes.
+task release-patch     # or release-minor / release-major
+```
+
+That is the whole everyday flow; CI builds and publishes the tag's artifacts.
+**Everything below is reference for the uncommon cases** — signed/stable
+channels, sibling-tag ordering, updater keys, and rollback. You do not need any
+of it to ship a normal patch.
+
 ## Preconditions
 
 - `git status --short` is clean except for intentional release edits.

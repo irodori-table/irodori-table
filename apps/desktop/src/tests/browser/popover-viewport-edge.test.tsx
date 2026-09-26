@@ -317,9 +317,7 @@ function RunControlHarness({ bottom }: { bottom: number }) {
         runCurrentShortcutLabel="Ctrl+Shift+Enter"
         runFromStartShortcutLabel="Ctrl+Alt+Enter"
         runAllShortcutLabel="Ctrl+Alt+A"
-        hasSelectedEditorSql={false}
         runQuery={vi.fn().mockResolvedValue(undefined)}
-        runSelectionQuery={vi.fn().mockResolvedValue(undefined)}
         runCurrentQuery={vi.fn().mockResolvedValue(undefined)}
         runFromStartQuery={vi.fn().mockResolvedValue(undefined)}
         runAllQuery={vi.fn().mockResolvedValue(undefined)}

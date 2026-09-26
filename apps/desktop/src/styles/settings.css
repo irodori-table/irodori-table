@@ -104,7 +104,7 @@
 .settings-row select {
   width: 120px;
   height: var(--control-sm);
-  padding: 0 8px;
+  padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 4px;
   color: var(--text);
@@ -114,6 +114,12 @@
 
 .settings-row input {
   text-align: right;
+}
+
+/* The native number spinner sits inside the field's right edge; without extra
+ * right padding the value collides with it. */
+.settings-row input[type="number"] {
+  padding-right: 22px;
 }
 
 .settings-row select {

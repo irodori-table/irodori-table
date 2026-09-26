@@ -28,9 +28,7 @@ export type RunControlProps = {
   runCurrentShortcutLabel: string;
   runFromStartShortcutLabel: string;
   runAllShortcutLabel: string;
-  hasSelectedEditorSql: boolean;
   runQuery: () => Promise<void>;
-  runSelectionQuery: () => Promise<void>;
   runCurrentQuery: () => Promise<void>;
   runFromStartQuery: () => Promise<void>;
   runAllQuery: () => Promise<void>;
@@ -46,9 +44,7 @@ export function RunControl({
   runCurrentShortcutLabel,
   runFromStartShortcutLabel,
   runAllShortcutLabel,
-  hasSelectedEditorSql,
   runQuery,
-  runSelectionQuery,
   runCurrentQuery,
   runFromStartQuery,
   runAllQuery,
@@ -151,9 +147,7 @@ export function RunControl({
                 runCurrentShortcutLabel={runCurrentShortcutLabel}
                 runFromStartShortcutLabel={runFromStartShortcutLabel}
                 runAllShortcutLabel={runAllShortcutLabel}
-                hasSelectedEditorSql={hasSelectedEditorSql}
                 runQuery={runQuery}
-                runSelectionQuery={runSelectionQuery}
                 runCurrentQuery={runCurrentQuery}
                 runFromStartQuery={runFromStartQuery}
                 runAllQuery={runAllQuery}
@@ -175,9 +169,7 @@ function RunOptionsMenu({
   runCurrentShortcutLabel,
   runFromStartShortcutLabel,
   runAllShortcutLabel,
-  hasSelectedEditorSql,
   runQuery,
-  runSelectionQuery,
   runCurrentQuery,
   runFromStartQuery,
   runAllQuery,
@@ -199,14 +191,6 @@ function RunOptionsMenu({
       <button type="button" role="menuitem" onClick={() => void runQuery()}>
         <span>{runPrimaryLabel}</span>
         {runShortcutLabel ? <kbd>{runShortcutLabel}</kbd> : null}
-      </button>
-      <button
-        type="button"
-        role="menuitem"
-        disabled={!hasSelectedEditorSql}
-        onClick={() => void runSelectionQuery()}
-      >
-        <span>{t("run.selection")}</span>
       </button>
       <button
         type="button"

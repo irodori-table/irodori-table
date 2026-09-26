@@ -15,6 +15,7 @@ import { useWorkbenchOverlays } from "@/app/controllers/use-workbench-overlays";
 import { WorkbenchProvider } from "@/app/workbench-context";
 import { WorkbenchRoot } from "@/app/WorkbenchRoot";
 import { useConfirm } from "@/components/ConfirmDialog";
+import { usePrompt } from "@/components/PromptDialog";
 import { usePreferencesStore } from "@/features/preferences";
 import { useSchemaDesignerStore } from "@/features/schema-designer";
 import { useStartupUpdateCheck } from "@/features/updater/use-startup-update-check";
@@ -56,6 +57,7 @@ function useWorkbench() {
   // Cross-cutting services: toasts, the shared confirm dialog, i18n.
   const { notices, showActionNotice, dismissNotice } = useActionNotices();
   const { confirm: confirmAction, confirmElement } = useConfirm();
+  const { prompt: promptAction, promptElement } = usePrompt();
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = useMemo(() => createTranslator(locale), [locale]);
   const uiZoom = usePreferencesStore((state) => state.uiZoom);
@@ -88,6 +90,7 @@ function useWorkbench() {
   const editor = useEditorWorkspace({
     keymap: keybindings.keymap,
     showActionNotice,
+    prompt: promptAction,
     t,
   });
   const layout = useWorkbenchLayout({ editor });
@@ -175,6 +178,7 @@ function useWorkbench() {
     appStyle,
     notices: { list: notices, show: showActionNotice, dismiss: dismissNotice },
     confirmElement,
+    promptElement,
     // Domain controllers, one per workspace concern.
     connections,
     themes,

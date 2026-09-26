@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import type { ActionNotice } from "@/app/ActionToast";
+import type { PromptOptions } from "@/components/PromptDialog";
 import {
   activeTabLabelForEditorGroup,
   addSqlTabToEditorGroup,
@@ -152,6 +153,7 @@ export type UseEditorGroupsDeps = {
     title: string,
     detail?: string,
   ) => void;
+  prompt: (options: PromptOptions) => Promise<string | null>;
   t: Translator["t"];
 };
 
@@ -161,6 +163,7 @@ export function useEditorGroups({
   editorApiRef,
   secondaryEditorApiRef,
   showActionNotice,
+  prompt,
   t,
 }: UseEditorGroupsDeps) {
   // Read straight from the store rather than threaded down: `useEditorGroups`
@@ -379,13 +382,15 @@ export function useEditorGroups({
     setActiveEditorGroup(group);
   }
 
-  function renameSqlTab(group: EditorGroup, tabId: string) {
+  async function renameSqlTab(group: EditorGroup, tabId: string) {
     const state = editorGroupStates[group];
     const tab = state.tabs.find((item) => item.id === tabId);
     if (!tab) return;
-    const next = window
-      .prompt(t("editorTabs.renameSqlTabPrompt"), tab.label)
-      ?.trim();
+    const next = await prompt({
+      title: t("editorTabs.renameSqlTabPrompt"),
+      label: t("editorTabs.renameTab"),
+      defaultValue: tab.label,
+    });
     if (!next || next === tab.label) {
       return;
     }

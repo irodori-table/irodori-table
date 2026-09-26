@@ -26,6 +26,7 @@ type PanelResize = ReturnType<typeof createPanelResizeController>;
 type EditorWorkspaceDeps = {
   keymap: Keymap;
   showActionNotice: ShowActionNotice;
+  prompt: Parameters<typeof useEditorGroups>[0]["prompt"];
   t: Parameters<typeof useEditorGroups>[0]["t"];
 };
 
@@ -36,6 +37,7 @@ type EditorWorkspaceDeps = {
 export function useEditorWorkspace({
   keymap,
   showActionNotice,
+  prompt,
   t,
 }: EditorWorkspaceDeps) {
   const editorApiRef = useRef<SqlEditorHandle>(null);
@@ -61,6 +63,7 @@ export function useEditorWorkspace({
     editorApiRef,
     secondaryEditorApiRef,
     showActionNotice,
+    prompt,
     t,
   });
   const {
@@ -211,11 +214,9 @@ export function useEditorWorkspace({
       runFromStartShortcutLabel,
       runAllShortcutLabel,
       runMenuOpen,
-      hasSelectedEditorSql,
       resultActionsAvailable: extra.resultActionsAvailable,
       runCommand: extra.runCommand,
       runQuery: extra.editorCommands.runQuery,
-      runSelectionQuery: extra.editorCommands.runSelectionQuery,
       runCurrentQuery: extra.editorCommands.runCurrentQuery,
       runFromStartQuery: extra.editorCommands.runFromStartQuery,
       runAllQuery: extra.editorCommands.runAllQuery,

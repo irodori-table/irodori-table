@@ -1188,8 +1188,7 @@ export const en = {
   "schemaDesigner.alterPrimaryKeyUnavailable":
     "Primary keys can't be changed in Alter mode - the generated ALTER TABLE SQL never includes a PRIMARY KEY constraint. Use Create mode or write the constraint by hand.",
   "run.options": "Run options",
-  "run.selection": "Run Selection",
-  "run.current": "Run Current",
+  "run.current": "Run Current Statement",
   "run.fromTop": "Run From Top",
   "run.all": "Run All",
   "editorBar.format.title": "Format SQL",

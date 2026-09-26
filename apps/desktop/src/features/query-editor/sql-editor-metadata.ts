@@ -296,7 +296,22 @@ function quickDefinitionTooltip(popup: QuickDefinitionPopupState): Tooltip {
 
       root.append(toolbar, body);
       root.addEventListener("mousedown", (event) => event.stopPropagation());
-      return { dom: root };
+      // Esc closes the popup. Bound on the document in the capture phase so it
+      // wins over the editor keymap and the app's transient-overlay handler,
+      // which do not know about this CodeMirror tooltip.
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key !== "Escape") {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        view.dispatch({ effects: setQuickDefinitionEffect.of(null) });
+      };
+      document.addEventListener("keydown", onKeyDown, true);
+      return {
+        dom: root,
+        destroy: () => document.removeEventListener("keydown", onKeyDown, true),
+      };
     },
   };
 }

@@ -65,9 +65,7 @@ function Harness({ startOpen = false }: { startOpen?: boolean }) {
         runCurrentShortcutLabel="Ctrl+Shift+Enter"
         runFromStartShortcutLabel="Ctrl+Alt+Enter"
         runAllShortcutLabel="Ctrl+Alt+A"
-        hasSelectedEditorSql={false}
         runQuery={vi.fn().mockResolvedValue(undefined)}
-        runSelectionQuery={vi.fn().mockResolvedValue(undefined)}
         runCurrentQuery={vi.fn().mockResolvedValue(undefined)}
         runFromStartQuery={vi.fn().mockResolvedValue(undefined)}
         runAllQuery={vi.fn().mockResolvedValue(undefined)}
@@ -147,16 +145,20 @@ describe("RunControl run menu", () => {
     });
   });
 
-  it("offers the run variants and disables selection-run without a selection", async () => {
+  it("lists the run variants without a duplicate selection entry", async () => {
     stubAnchorRect({ top: 700, right: 980 });
     const { user } = renderUi(<Harness />);
 
     await user.click(screen.getByRole("button", { name: "Run options" }));
 
+    // "Run Selection" is redundant with the primary action, which already runs
+    // the selection when one exists, so it is not a separate menu entry.
     expect(
-      screen.getByRole("menuitem", { name: "Run Selection" }),
-    ).toBeDisabled();
-    expect(screen.getAllByRole("menuitem").length).toBeGreaterThan(1);
+      screen.queryByRole("menuitem", { name: "Run Selection" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /Run Current Statement/ }),
+    ).toBeVisible();
   });
 
   it("closes on a pointer press outside the control", async () => {

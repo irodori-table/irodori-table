@@ -23,6 +23,7 @@ export function WorkbenchRoot() {
   const {
     appStyle,
     confirmElement,
+    promptElement,
     connections,
     editor,
     grid,
@@ -126,6 +127,7 @@ export function WorkbenchRoot() {
       <WorkbenchDialogs />
 
       {confirmElement}
+      {promptElement}
 
       <ActionToastStack notices={notices.list} onDismiss={notices.dismiss} />
     </div>

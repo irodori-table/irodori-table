@@ -268,8 +268,8 @@ describe("workbench store view placements", () => {
     const store = await loadWorkbenchStore();
 
     store.getState().setResultsHeight(80);
-    expect(store.getState().resultsHeight).toBe(220);
-    expect(window.localStorage.getItem(resultsHeightStorageKey)).toBe("220");
+    expect(store.getState().resultsHeight).toBe(96);
+    expect(window.localStorage.getItem(resultsHeightStorageKey)).toBe("96");
 
     store.getState().setResultsHeight(900);
     expect(store.getState().resultsHeight).toBe(560);

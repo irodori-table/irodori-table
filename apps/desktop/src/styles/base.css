@@ -59,6 +59,15 @@ textarea:disabled {
   opacity: 0.58;
 }
 
+/* The UA placeholder colour is derived from the system theme, which on a dark
+ * app theme lands near-invisible. Pin it to the muted token so field hints stay
+ * legible in both themes. */
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
 /*
  * Cross-theme primitive scales (theme-independent). Defined once for both
  * shell roots; color tokens still live per-theme in .app-shell below.
@@ -145,6 +154,10 @@ textarea:disabled {
   --bar-md: 33px;
   --status-height: 22px;
   --tab-min-width: 120px;
+  /* The title bar is the densest strip in the app and reads a touch small
+   * against the editor; it runs 1.1x while the toolbar and status bar keep
+   * their own scale. See `.titlebar` for the consumers. */
+  --titlebar-scale: 1.1;
   --neutral-dot: color-mix(in srgb, var(--muted) 62%, var(--surface-raised));
   --shadow-color: color-mix(in srgb, var(--text) 20%, transparent);
   --shadow-color-strong: color-mix(in srgb, var(--text) 28%, transparent);
@@ -176,6 +189,10 @@ textarea:disabled {
   --bar-md: 33px;
   --status-height: 22px;
   --tab-min-width: 120px;
+  /* The title bar is the densest strip in the app and reads a touch small
+   * against the editor; it runs 1.1x while the toolbar and status bar keep
+   * their own scale. See `.titlebar` for the consumers. */
+  --titlebar-scale: 1.1;
   /*
    * Pre-hydration fallback: Irodori Bloom Paper, the shipping light default.
    * AppWorkbench overwrites these from the active theme, so they only show for
@@ -226,7 +243,7 @@ textarea:disabled {
   --scrim: color-mix(in srgb, var(--text) 32%, transparent);
   --focus-ring: 0 0 0 2px color-mix(in srgb, var(--focus) 24%, transparent);
   display: grid;
-  grid-template-rows: var(--bar-sm) minmax(0, 1fr) var(--status-height);
+  grid-template-rows: calc(var(--bar-sm) * var(--titlebar-scale)) minmax(0, 1fr) var(--status-height);
   height: 100vh;
   color: var(--text);
   background: var(--surface);
@@ -247,12 +264,21 @@ textarea:disabled {
 .titlebar {
   position: relative;
   --titlebar-connection-width: clamp(320px, 46vw, 640px);
+  --titlebar-icon: calc(16px * var(--titlebar-scale));
   display: grid;
   grid-template-columns:
     minmax(0, 1fr) minmax(0, var(--titlebar-connection-width))
     minmax(0, 1fr);
   gap: 8px;
   padding: 0 8px;
+  font-size: calc(var(--font-ui-md) * var(--titlebar-scale));
+}
+
+/* The top bar runs 1.1x: text inherits the scaled root, icons and the control
+ * hit targets scale with it, so nothing sits at a different rhythm. */
+.titlebar svg {
+  width: var(--titlebar-icon);
+  height: var(--titlebar-icon);
 }
 
 .titlebar-menu-zone,
@@ -292,8 +318,8 @@ textarea:disabled {
 
 .titlebar-control-zone .icon-button,
 .titlebar-layout-controls .icon-button {
-  width: var(--control-xs);
-  height: var(--control-xs);
+  width: calc(var(--control-xs) * var(--titlebar-scale));
+  height: calc(var(--control-xs) * var(--titlebar-scale));
   padding: 0;
   border-color: transparent;
   background: transparent;
@@ -350,7 +376,7 @@ textarea:disabled {
   border-radius: 3px;
   color: var(--muted);
   background: transparent;
-  font-size: var(--font-ui-md);
+  font-size: inherit;
   cursor: pointer;
 }
 
@@ -704,11 +730,11 @@ textarea:disabled {
   width: min(100%, var(--titlebar-connection-width));
   max-width: var(--titlebar-connection-width);
   transform: none;
-  height: var(--control-xs);
+  height: calc(var(--control-xs) * var(--titlebar-scale));
   justify-content: center;
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface-raised));
-  font-size: var(--font-ui-md);
+  font-size: calc(var(--font-ui-md) * var(--titlebar-scale));
 }
 
 /* Keep the whole label cluster centered inside the wide pill instead of
@@ -718,8 +744,8 @@ textarea:disabled {
 }
 
 .titlebar-connection .connection-color-dot {
-  width: 8px;
-  height: 8px;
+  width: calc(8px * var(--titlebar-scale));
+  height: calc(8px * var(--titlebar-scale));
 }
 
 .connection-color-dot {

@@ -25,10 +25,35 @@ export const SIDEBAR_WIDTH_MIN = 140;
 export const SIDEBAR_WIDTH_MAX = 420;
 export const INSPECTOR_WIDTH_MIN = 220;
 export const INSPECTOR_WIDTH_MAX = 420;
-export const RESULTS_HEIGHT_MIN = 220;
+/**
+ * Absolute floor for the results pane. The old fixed 220 could not shrink past
+ * the header plus the action bar, so a tall grid could never give space back to
+ * the editor. The real floor is measured from the pane's own chrome in
+ * {@link resultsHeightFloor}; this is the fallback when the pane is not mounted.
+ */
+export const RESULTS_HEIGHT_MIN = 96;
 export const RESULTS_HEIGHT_MAX = 560;
 export const EDITOR_SPLIT_MIN = 28;
 export const EDITOR_SPLIT_MAX = 72;
+
+/** Keep one result row visible below the chrome, so shrinking never bottoms out. */
+const RESULTS_BODY_MIN = 24;
+
+/**
+ * Shrink no further than the pane's own chrome (header, action bar, any open
+ * error or filter rows) plus one result row. A constant floor clipped a wrapped
+ * header on narrow panes; measuring keeps the text intact and stops exactly
+ * where the content would otherwise be crushed.
+ */
+function resultsHeightFloor(): number {
+  const pane = document.querySelector<HTMLElement>(".results-pane");
+  if (!pane) return RESULTS_HEIGHT_MIN;
+  const children = Array.from(pane.children);
+  const chrome = children
+    .slice(0, Math.max(0, children.length - 1))
+    .reduce((sum, child) => sum + (child as HTMLElement).offsetHeight, 0);
+  return Math.max(RESULTS_HEIGHT_MIN, chrome + RESULTS_BODY_MIN);
+}
 
 type PanelResizeControllerOptions = {
   sidebarWidth: number;
@@ -73,7 +98,11 @@ export function createPanelResizeController({
         break;
       case "results":
         setResultsHeight((current) =>
-          clampNumber(current + delta, RESULTS_HEIGHT_MIN, RESULTS_HEIGHT_MAX),
+          clampNumber(
+            current + delta,
+            resultsHeightFloor(),
+            RESULTS_HEIGHT_MAX,
+          ),
         );
         break;
       case "editorSplit":
@@ -89,11 +118,19 @@ export function createPanelResizeController({
     event: ReactPointerEvent<HTMLDivElement>,
   ) {
     event.preventDefault();
+    const target = event.currentTarget;
+    const pointerId = event.pointerId;
+    // Capture the pointer so the matching up/cancel event is delivered here even
+    // when the drag ends outside the window. Without it a release off-window was
+    // sometimes missed and `body.panel-resizing` stayed set, leaving the resize
+    // guide line painted after the drag was over.
+    target.setPointerCapture?.(pointerId);
     const startX = event.clientX;
     const startY = event.clientY;
     const startSidebarWidth = sidebarWidth;
     const startInspectorWidth = inspectorWidth;
     const startResultsHeight = resultsHeight;
+    const resultsFloor = resultsHeightFloor();
     const editorSplitBounds = editorSplitRef.current?.getBoundingClientRect();
     document.body.classList.add("panel-resizing");
 
@@ -149,7 +186,7 @@ export function createPanelResizeController({
       setResultsHeight(
         clampNumber(
           startResultsHeight - (moveEvent.clientY - startY),
-          RESULTS_HEIGHT_MIN,
+          resultsFloor,
           RESULTS_HEIGHT_MAX,
         ),
       );
@@ -160,11 +197,18 @@ export function createPanelResizeController({
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onEnd);
       window.removeEventListener("pointercancel", onEnd);
+      target.removeEventListener("lostpointercapture", onEnd);
+      if (target.hasPointerCapture?.(pointerId)) {
+        target.releasePointerCapture(pointerId);
+      }
     };
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onEnd, { once: true });
     window.addEventListener("pointercancel", onEnd, { once: true });
+    // Fires when the capture is released for any reason, including the window
+    // losing focus mid-drag, so the guide line is always cleared.
+    target.addEventListener("lostpointercapture", onEnd, { once: true });
   }
 
   function onPanelResizeKey(
