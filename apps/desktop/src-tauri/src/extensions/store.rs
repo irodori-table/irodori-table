@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{self, Cursor};
+use std::io::{self, Cursor, Write};
 use std::path::{Component, Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -25,10 +25,27 @@ const REGISTRY_SCHEMA_VERSION: u16 = 2;
 const EXTENSIONS_DIR: &str = "extensions";
 const MANIFEST_FILE: &str = "irodori.extension.json";
 const MAX_ARCHIVE_BYTES: usize = 512 * 1024 * 1024;
+/// Ceiling on the expanded size of an archive. The compressed cap above cannot
+/// see a gzip bomb, so the unpacker tracks the running total and refuses to
+/// write past this.
+const MAX_UNPACKED_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+/// Ceiling on entry count, so a tiny archive cannot expand into millions of
+/// inodes.
+const MAX_ARCHIVE_ENTRIES: usize = 10_000;
+/// Publishers the host will install from. The catalog is fetched by the
+/// frontend today, so a compromised webview could otherwise point the installer
+/// at any repository and a matching sha256 of its own — turning one XSS into
+/// native-code execution. Restricting the owner means only code from these
+/// organizations (which the user cannot publish to) can ever be loaded.
+const TRUSTED_EXTENSION_OWNERS: &[&str] = &["irodori-table"];
 
 #[derive(Default)]
 pub struct ExtensionsState {
+    /// Serializes whole installs. Held across the download.
     install_lock: Mutex<()>,
+    /// Short lock around every read-modify-write of `installed.json`, so a
+    /// concurrent enable/uninstall cannot lose an update to a racing install.
+    registry_lock: std::sync::Mutex<()>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -66,12 +83,21 @@ struct InstalledRegistry {
     schema_version: u16,
     #[serde(default)]
     extensions: Vec<InstalledExtension>,
+    /// Version directories to delete on the next launch. A loaded cdylib cannot
+    /// be removed on Windows while it is mapped, so a failed removal is
+    /// deferred here rather than lost.
+    #[serde(default)]
+    pending_removal: Vec<String>,
 }
 
 pub(crate) fn list(
     app: &AppHandle,
-    _state: &ExtensionsState,
+    state: &ExtensionsState,
 ) -> IrodoriResult<Vec<InstalledExtension>> {
+    let _guard = state
+        .registry_lock
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let mut registry = read_registry(app)?;
     if backfill_registry(&mut registry, probe_connection_model) {
         // A registry that cannot be written is not a reason to fail the list:
@@ -160,6 +186,7 @@ pub(crate) async fn install(
 
     install_archive(
         app,
+        state,
         &request.id,
         &request.version,
         &request.permissions,
@@ -199,46 +226,59 @@ fn validated_manifest_path(manifest_path: Option<&str>) -> IrodoriResult<PathBuf
 
 pub(crate) fn uninstall(
     app: &AppHandle,
-    _state: &ExtensionsState,
+    state: &ExtensionsState,
     id: &str,
 ) -> IrodoriResult<bool> {
-    let mut registry = read_registry(app)?;
-    let before = registry.extensions.len();
-    let removed = registry
-        .extensions
-        .iter()
-        .find(|extension| extension.id == id)
-        .cloned();
-    registry.extensions.retain(|extension| extension.id != id);
-    if let Some(extension) = removed {
-        let extension_dir = extensions_root(app)?.join(safe_component(&extension.id));
-        let version_dir = extension_dir.join(safe_component(&extension.version));
-        let _ = fs::remove_dir_all(version_dir);
-        let _ = fs::remove_dir(extension_dir);
-        write_registry(app, &registry)?;
+    let existed = update_registry(app, state, |registry| {
+        let before = registry.extensions.len();
+        registry.extensions.retain(|extension| extension.id != id);
+        Ok(registry.extensions.len() != before)
+    })?;
+    if !existed {
+        return Ok(false);
     }
-    Ok(registry.extensions.len() != before)
+    let extension_dir = extensions_root(app)?.join(safe_component(id));
+    // Remove every installed version, not just the current one; a failed
+    // removal (a library still mapped on Windows) is deferred to the next
+    // launch instead of being dropped.
+    let mut deferred = Vec::new();
+    if let Ok(entries) = fs::read_dir(&extension_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() && fs::remove_dir_all(&path).is_err() {
+                if let Some(name) = entry.file_name().to_str() {
+                    deferred.push(format!("{}/{}", safe_component(id), safe_component(name)));
+                }
+            }
+        }
+    }
+    let _ = fs::remove_dir(&extension_dir);
+    if !deferred.is_empty() {
+        update_registry(app, state, |registry| {
+            registry.pending_removal.extend(deferred);
+            Ok(())
+        })?;
+    }
+    Ok(true)
 }
 
 pub(crate) fn set_enabled(
     app: &AppHandle,
-    _state: &ExtensionsState,
+    state: &ExtensionsState,
     id: &str,
     enabled: bool,
 ) -> IrodoriResult<InstalledExtension> {
-    let mut registry = read_registry(app)?;
-    let mut updated = None;
-    for extension in &mut registry.extensions {
-        if extension.id == id {
-            extension.enabled = enabled;
-            updated = Some(extension.clone());
-            break;
-        }
-    }
-    let updated = updated
-        .ok_or_else(|| IrodoriError::validation(format!("extension is not installed: {id}")))?;
-    write_registry(app, &registry)?;
-    Ok(updated)
+    update_registry(app, state, |registry| {
+        let extension = registry
+            .extensions
+            .iter_mut()
+            .find(|extension| extension.id == id)
+            .ok_or_else(|| {
+                IrodoriError::validation(format!("extension is not installed: {id}"))
+            })?;
+        extension.enabled = enabled;
+        Ok(extension.clone())
+    })
 }
 
 pub(crate) fn installed_by_id(
@@ -251,8 +291,10 @@ pub(crate) fn installed_by_id(
         .find(|extension| extension.id == id && extension.enabled))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn install_archive(
     app: &AppHandle,
+    state: &ExtensionsState,
     requested_id: &str,
     requested_version: &str,
     approved_permissions: &[String],
@@ -361,7 +403,7 @@ fn install_archive(
             supported_calls,
             connection_model,
         };
-        upsert_installed(app, installed.clone())?;
+        upsert_installed(app, state, installed.clone())?;
         Ok(installed)
     })();
 
@@ -465,16 +507,32 @@ fn validate_declarative_entry(root: &Path, entry: &str) -> IrodoriResult<()> {
     Ok(())
 }
 
-fn upsert_installed(app: &AppHandle, installed: InstalledExtension) -> IrodoriResult<()> {
-    let mut registry = read_registry(app)?;
-    registry
-        .extensions
-        .retain(|extension| extension.id != installed.id);
-    registry.extensions.push(installed);
-    registry
-        .extensions
-        .sort_by(|left, right| left.id.cmp(&right.id));
-    write_registry(app, &registry)
+fn upsert_installed(
+    app: &AppHandle,
+    state: &ExtensionsState,
+    installed: InstalledExtension,
+) -> IrodoriResult<()> {
+    update_registry(app, state, |registry| {
+        if let Some(previous) = registry
+            .extensions
+            .iter()
+            .find(|extension| extension.id == installed.id)
+        {
+            if previous.version != installed.version {
+                registry
+                    .pending_removal
+                    .push(version_dir_rel(&previous.id, &previous.version));
+            }
+        }
+        registry
+            .extensions
+            .retain(|extension| extension.id != installed.id);
+        registry.extensions.push(installed);
+        registry
+            .extensions
+            .sort_by(|left, right| left.id.cmp(&right.id));
+        Ok(())
+    })
 }
 
 async fn download_release_asset(request: &ExtensionInstallRequest) -> IrodoriResult<Vec<u8>> {
@@ -516,6 +574,7 @@ async fn download_release_asset(request: &ExtensionInstallRequest) -> IrodoriRes
 
 fn github_release_asset_url(request: &ExtensionInstallRequest) -> IrodoriResult<String> {
     let repo = normalize_github_repo(&request.repository)?;
+    ensure_trusted_owner(&repo)?;
     let asset = request
         .asset_name
         .replace("{target}", native_target_label().as_str());
@@ -549,19 +608,58 @@ fn normalize_github_repo(repository: &str) -> IrodoriResult<String> {
     )))
 }
 
+/// Reject repositories outside the trusted publisher allowlist. The catalog is
+/// resolved by the webview, so without this a single XSS could ask the host to
+/// download and load native code from any repository with any sha256.
+fn ensure_trusted_owner(repo: &str) -> IrodoriResult<()> {
+    let owner = repo.split('/').next().unwrap_or_default();
+    if TRUSTED_EXTENSION_OWNERS
+        .iter()
+        .any(|trusted| trusted.eq_ignore_ascii_case(owner))
+    {
+        return Ok(());
+    }
+    Err(IrodoriError::validation(format!(
+        "extension repository owner `{owner}` is not a trusted publisher"
+    )))
+}
+
 fn unpack_archive(bytes: &[u8], destination: &Path) -> IrodoriResult<()> {
     let decoder = GzDecoder::new(Cursor::new(bytes));
     let mut archive = Archive::new(decoder);
-    for entry in archive.entries().map_err(to_error)? {
+    let mut unpacked: u64 = 0;
+    for (index, entry) in archive.entries().map_err(to_error)?.enumerate() {
+        if index >= MAX_ARCHIVE_ENTRIES {
+            return Err(IrodoriError::validation(
+                "extension archive has too many entries",
+            ));
+        }
         let mut entry = entry.map_err(to_error)?;
-        let path = entry.path().map_err(to_error)?;
-        let Some(relative) = safe_archive_path(&path) else {
-            continue;
-        };
+        let path = entry.path().map_err(to_error)?.into_owned();
+        // Reject rather than skip: a skipped entry hides a broken or hostile
+        // archive, and the packaged extensions only ever contain regular files.
+        let relative = safe_archive_path(&path).ok_or_else(|| {
+            IrodoriError::validation(format!(
+                "unsafe path in extension archive: {}",
+                path.display()
+            ))
+        })?;
+        let kind = entry.header().entry_type();
+        if !(kind.is_dir() || kind.is_file()) {
+            return Err(IrodoriError::validation(
+                "extension archive contains a link or special file",
+            ));
+        }
+        unpacked = unpacked.saturating_add(entry.header().size().map_err(to_error)?);
+        if unpacked > MAX_UNPACKED_BYTES {
+            return Err(IrodoriError::validation(
+                "extension archive expands larger than the allowed limit",
+            ));
+        }
         let target = destination.join(relative);
-        if entry.header().entry_type().is_dir() {
+        if kind.is_dir() {
             fs::create_dir_all(&target).map_err(to_error)?;
-        } else if entry.header().entry_type().is_file() {
+        } else {
             if let Some(parent) = target.parent() {
                 fs::create_dir_all(parent).map_err(to_error)?;
             }
@@ -642,6 +740,7 @@ fn read_registry(app: &AppHandle) -> IrodoriResult<InstalledRegistry> {
         return Ok(InstalledRegistry {
             schema_version: REGISTRY_SCHEMA_VERSION,
             extensions: Vec::new(),
+            pending_removal: Vec::new(),
         });
     }
     let text = fs::read_to_string(path).map_err(to_error)?;
@@ -651,13 +750,72 @@ fn read_registry(app: &AppHandle) -> IrodoriResult<InstalledRegistry> {
 
 fn write_registry(app: &AppHandle, registry: &InstalledRegistry) -> IrodoriResult<()> {
     let path = registry_path(app)?;
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(to_error)?;
-    }
-    let text = serde_json::to_string_pretty(registry).map_err(|error| {
+    let dir = path
+        .parent()
+        .ok_or_else(|| IrodoriError::validation("extension registry has no parent directory"))?;
+    fs::create_dir_all(dir).map_err(to_error)?;
+    let text = serde_json::to_vec_pretty(registry).map_err(|error| {
         IrodoriError::validation(format!("serialize extension registry: {error}"))
     })?;
-    fs::write(path, text).map_err(to_error)
+    // Write a sibling temp file and rename, so a crash mid-write cannot leave a
+    // truncated `installed.json` that makes every extension unusable.
+    let tmp = dir.join(format!(".{REGISTRY_FILE}.tmp-{}", std::process::id()));
+    {
+        let mut file = fs::File::create(&tmp).map_err(to_error)?;
+        file.write_all(&text).map_err(to_error)?;
+        file.sync_all().map_err(to_error)?;
+    }
+    fs::rename(&tmp, &path).map_err(|error| {
+        let _ = fs::remove_file(&tmp);
+        to_error(error)
+    })
+}
+
+/// Read-modify-write `installed.json` under the registry lock. Every mutation
+/// goes through here so two of them cannot interleave and drop an update.
+fn update_registry<T>(
+    app: &AppHandle,
+    state: &ExtensionsState,
+    change: impl FnOnce(&mut InstalledRegistry) -> IrodoriResult<T>,
+) -> IrodoriResult<T> {
+    let _guard = state
+        .registry_lock
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut registry = read_registry(app)?;
+    let outcome = change(&mut registry)?;
+    write_registry(app, &registry)?;
+    Ok(outcome)
+}
+
+fn version_dir_rel(id: &str, version: &str) -> String {
+    format!("{}/{}", safe_component(id), safe_component(version))
+}
+
+/// Delete leftovers from an interrupted install and any version directories a
+/// previous run could not remove (a loaded library on Windows). Runs once at
+/// startup, before any connector is loaded.
+pub(crate) fn collect_garbage(app: &AppHandle, state: &ExtensionsState) -> IrodoriResult<()> {
+    let root = extensions_root(app)?;
+    if let Ok(entries) = fs::read_dir(&root) {
+        for entry in entries.flatten() {
+            if entry
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".staging-")
+            {
+                let _ = fs::remove_dir_all(entry.path());
+            }
+        }
+    }
+    // Keep the entries that still cannot be removed and retry next launch.
+    update_registry(app, state, |registry| {
+        registry.pending_removal.retain(|relative| {
+            let dir = root.join(relative);
+            dir.exists() && fs::remove_dir_all(&dir).is_err()
+        });
+        Ok(())
+    })
 }
 
 fn registry_path(app: &AppHandle) -> IrodoriResult<PathBuf> {
@@ -828,6 +986,7 @@ mod tests {
         InstalledRegistry {
             schema_version: registry_schema_version(),
             extensions,
+            pending_removal: Vec::new(),
         }
     }
 
@@ -961,6 +1120,39 @@ mod tests {
             ..request
         };
         assert!(github_release_asset_url(&invalid_asset).is_err());
+    }
+
+    /// The catalog is resolved by the webview, so the host must not download
+    /// and load native code from an arbitrary repository: that turns one XSS
+    /// into RCE.
+    #[test]
+    fn untrusted_repository_owner_is_rejected() {
+        let request = ExtensionInstallRequest {
+            id: "irodori.memgraph".into(),
+            version: "0.1.3".into(),
+            kind: ExtensionInstallKind::GithubRelease,
+            repository: "https://github.com/attacker/irodori-extension-memgraph".into(),
+            asset_name: "irodori-extension-memgraph.tar.gz".into(),
+            tag: "v0.1.3".into(),
+            sha256: "dc6deb44e1ecb1d0a4153917cc809692e37d1a5d814be4752af60649c5595232".into(),
+            permissions: vec!["native".into()],
+            manifest_path: None,
+        };
+        let error = github_release_asset_url(&request).unwrap_err();
+        assert!(
+            error.message.contains("trusted publisher"),
+            "message: {}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn version_dir_rel_is_sanitized() {
+        assert_eq!(
+            version_dir_rel("irodori.redis", "0.1.6"),
+            "irodori.redis/0.1.6"
+        );
+        assert_eq!(version_dir_rel("../evil", "0.1.6"), ".._evil/0.1.6");
     }
 
     #[test]

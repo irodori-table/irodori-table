@@ -14,7 +14,7 @@ pub use store::ExtensionsState;
 
 use irodori_error::Result as IrodoriResult;
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 use ts_rs::TS;
 
 /// One installed extension as shown in the manager UI.
@@ -157,4 +157,10 @@ pub(crate) fn installed_by_id(
     id: &str,
 ) -> IrodoriResult<Option<InstalledExtension>> {
     store::installed_by_id(app, id)
+}
+
+/// Delete staged leftovers and superseded versions from a previous run. Called
+/// once at startup, before any connector library is loaded.
+pub(crate) fn collect_garbage(app: &AppHandle) -> IrodoriResult<()> {
+    store::collect_garbage(app, &app.state::<ExtensionsState>())
 }

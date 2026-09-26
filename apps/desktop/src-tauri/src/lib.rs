@@ -47,6 +47,11 @@ pub fn run() {
             use tauri::Manager;
             let handle = app.handle().clone();
             app.manage(crash_report::initialize(&handle));
+            // Clear staged leftovers and superseded versions before any
+            // connector library is loaded.
+            if let Err(error) = extensions::collect_garbage(&handle) {
+                eprintln!("extension startup cleanup failed: {error}");
+            }
             let ai = app.state::<ai::AiState>();
             let security = app.state::<security::SecurityState>();
             ai::hydrate_provider(&handle, &ai, &security);
