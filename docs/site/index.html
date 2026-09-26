@@ -178,17 +178,17 @@
         </div>
       </section>
 
-      <section id="search" class="section search-section">
-        <div class="container search-layout">
-          <div class="section-heading compact">
-            <p class="eyebrow">Site search</p>
-            <h2>公式ドキュメントを全文検索。</h2>
-            <p>
-              公開ドキュメントをブラウザ内で検索できます。外部送信はありません。
-            </p>
-          </div>
-          <div class="search-panel" role="search" aria-label="サイト内検索" data-search>
-            <label class="search-label" for="site-search">検索語</label>
+      <section id="docs" class="section">
+        <div class="container section-heading">
+          <p class="eyebrow">Documentation</p>
+          <h2>実装方針と開発状況を公開しています。</h2>
+          <p>
+            使い方は公式 docs、詳細な設計・進捗は GitHub docs にまとめています。
+          </p>
+        </div>
+        <div class="container docs-search">
+          <div id="search" class="search-panel" role="search" aria-label="サイト内検索" data-search>
+            <label class="search-label" for="site-search">ドキュメントを検索</label>
             <div class="search-control">
               <input
                 id="site-search"
@@ -212,16 +212,6 @@
             </p>
             <div class="search-results" data-search-results></div>
           </div>
-        </div>
-      </section>
-
-      <section id="docs" class="section">
-        <div class="container section-heading">
-          <p class="eyebrow">Documentation</p>
-          <h2>実装方針と開発状況を公開しています。</h2>
-          <p>
-            使い方は公式 docs、詳細な設計・進捗は GitHub docs にまとめています。
-          </p>
         </div>
         <div class="container docs-grid">
           <a class="doc-card" href="docs.html">
