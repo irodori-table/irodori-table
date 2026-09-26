@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { ArrowRight, Copy, Search, X } from "lucide-react";
+import { ArrowRight, Copy, Search } from "lucide-react";
+import { CloseButton } from "@/components/CloseButton";
 import { errorMessage } from "@/core";
 
 import { usePreferencesStore } from "@/features/preferences";
@@ -100,15 +101,11 @@ export function RowDetailSidebar(props: RowDetailSidebarProps) {
         {/* Always enabled: `onClose` dismisses the panel as well as clearing
             the selection, so gating it on a selected row left the panel with
             no way out once it was opened without one. */}
-        <button
-          type="button"
+        <CloseButton
+          onClose={props.onClose}
+          label={t("rowDetail.close")}
           className="row-detail-close"
-          onClick={props.onClose}
-          aria-label={t("rowDetail.close")}
-          title={t("rowDetail.close")}
-        >
-          <X size={14} />
-        </button>
+        />
       </div>
       <div className="row-detail-controls">
         <div

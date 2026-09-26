@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { BookOpen, ExternalLink, RefreshCw, X } from "lucide-react";
+import { BookOpen, ExternalLink, RefreshCw } from "lucide-react";
+import { CloseButton } from "@/components/CloseButton";
 import type { DbEngine } from "@/generated/irodori-api";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator } from "@/i18n";
@@ -101,14 +102,7 @@ export function KnowledgePanel({
         >
           <RefreshCw size={14} className={refreshing ? "spin" : undefined} />
         </button>
-        <button
-          type="button"
-          title={t("knowledge.close")}
-          aria-label={t("knowledge.close")}
-          onClick={onClose}
-        >
-          <X size={14} />
-        </button>
+        <CloseButton onClose={onClose} label={t("knowledge.close")} />
       </div>
 
       <div className="knowledge-toolbar">

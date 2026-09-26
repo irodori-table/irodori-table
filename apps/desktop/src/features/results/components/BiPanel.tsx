@@ -1,4 +1,5 @@
-import { BarChart3, X } from "lucide-react";
+import { BarChart3 } from "lucide-react";
+import { CloseButton } from "@/components/CloseButton";
 import { usePreferencesStore } from "@/features/preferences";
 import type { QueryResultSet } from "@/generated/irodori-api";
 import { createTranslator } from "@/i18n";
@@ -36,14 +37,7 @@ export function BiPanel({
           <strong>{t("bi.title")}</strong>
           <span>{summary?.statusLabel ?? t("bi.noActiveResult")}</span>
         </div>
-        <button
-          type="button"
-          title={t("bi.close")}
-          aria-label={t("bi.close")}
-          onClick={onClose}
-        >
-          <X size={14} />
-        </button>
+        <CloseButton onClose={onClose} label={t("bi.close")} />
       </div>
       <div className="bi-panel-body">
         {summary ? (

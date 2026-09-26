@@ -60,7 +60,7 @@ const dockPanelIds: readonly WorkbenchDockPanelId[] = [
 // icons and rows truncate -- rather than a threshold to disappear at. Full
 // collapse stays on the explicit toggle, which is reversible from the titlebar.
 const LEFT_SIDEBAR_MIN_WIDTH = 132;
-const RIGHT_SIDEBAR_MIN_WIDTH = 168;
+const RIGHT_SIDEBAR_MIN_WIDTH = 132;
 
 // dockview v7 stamps a theme's `className` onto its inner `.dv-shell`, and every
 // `--dv-*` variable the dock reads is resolved there. Without an explicit theme it

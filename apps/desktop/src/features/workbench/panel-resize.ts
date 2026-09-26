@@ -23,7 +23,7 @@ export type PanelResizeKind =
  */
 export const SIDEBAR_WIDTH_MIN = 140;
 export const SIDEBAR_WIDTH_MAX = 420;
-export const INSPECTOR_WIDTH_MIN = 220;
+export const INSPECTOR_WIDTH_MIN = 168;
 export const INSPECTOR_WIDTH_MAX = 420;
 /**
  * Absolute floor for the results pane. The old fixed 220 could not shrink past
@@ -81,9 +81,21 @@ export function createPanelResizeController({
   function resizePanel(kind: PanelResizeKind, delta: number) {
     switch (kind) {
       case "sidebar":
-      case "rightSidebar":
         setSidebarWidth((current) =>
           clampNumber(current + delta, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX),
+        );
+        break;
+      case "rightSidebar":
+        // The right sidebar is sized by `inspectorWidth` (see WorkbenchShell's
+        // `--right-sidebar-width`), not `sidebarWidth`; writing the left
+        // sidebar's value here meant dragging the right edge moved the wrong
+        // panel and the right one could not be narrowed.
+        setInspectorWidth((current) =>
+          clampNumber(
+            current + delta,
+            INSPECTOR_WIDTH_MIN,
+            INSPECTOR_WIDTH_MAX,
+          ),
         );
         break;
       case "leftInspector":
@@ -152,13 +164,25 @@ export function createPanelResizeController({
         );
         return;
       }
-      if (kind === "sidebar" || kind === "rightSidebar") {
+      if (kind === "sidebar") {
         const delta = moveEvent.clientX - startX;
         setSidebarWidth(
           clampNumber(
-            startSidebarWidth + (kind === "rightSidebar" ? -delta : delta),
+            startSidebarWidth + delta,
             SIDEBAR_WIDTH_MIN,
             SIDEBAR_WIDTH_MAX,
+          ),
+        );
+        return;
+      }
+      if (kind === "rightSidebar") {
+        // Right-side panel: dragging left widens it, so invert the delta.
+        const delta = moveEvent.clientX - startX;
+        setInspectorWidth(
+          clampNumber(
+            startInspectorWidth - delta,
+            INSPECTOR_WIDTH_MIN,
+            INSPECTOR_WIDTH_MAX,
           ),
         );
         return;
