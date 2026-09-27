@@ -1,4 +1,5 @@
-import { AlertTriangle, Play, X, Zap } from "lucide-react";
+import { AlertTriangle, Play, Zap } from "lucide-react";
+import { CloseButton } from "@/components/CloseButton";
 import type {
   QueryPlanAnalysis,
   QueryPlanCopyFormat,
@@ -39,14 +40,7 @@ export function PlanPanel({
           <strong>{t("plan.title")}</strong>
           <span>{activeConnectionName}</span>
         </div>
-        <button
-          type="button"
-          title={t("plan.close")}
-          aria-label={t("plan.close")}
-          onClick={onClose}
-        >
-          <X size={13} />
-        </button>
+        <CloseButton onClose={onClose} label={t("plan.close")} size={13} />
       </div>
 
       <div className="plan-actions">

@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo } from "react";
+import { type CSSProperties, useDeferredValue, useMemo } from "react";
 import {
   buildChartResultModel,
   buildGraphResultModel,
@@ -98,6 +98,9 @@ export function useResultGridModel({
   gridRowHeight,
   t,
 }: ResultGridModelDeps) {
+  // The quick filter can scan tens of thousands of rows. Defer it so the input
+  // keeps up with typing while the grid catches up in a lower-priority render.
+  const deferredQuickFilter = useDeferredValue(quickFilter);
   const resultSets = useMemo<QueryResultSet[]>(() => {
     if (!result) {
       return [];
@@ -231,7 +234,7 @@ export function useResultGridModel({
           newRows: spilled ? EMPTY_NEW_ROWS : newRows,
           deletedRows: spilled ? EMPTY_DELETED_ROWS : deletedRows,
           filterRules: spilled ? EMPTY_FILTER_RULES : filterRules,
-          quickFilter: spilled ? "" : quickFilter,
+          quickFilter: spilled ? "" : deferredQuickFilter,
           filterJoin,
           sortRules: spilled ? EMPTY_SORT_RULES : sortRules,
         },
@@ -246,7 +249,7 @@ export function useResultGridModel({
       newRows,
       deletedRows,
       filterRules,
-      quickFilter,
+      deferredQuickFilter,
       filterJoin,
       sortRules,
       spilled,

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { FileSearch, Pencil, Search, X } from "lucide-react";
+import { FileSearch, Pencil, Search } from "lucide-react";
+import { CloseButton } from "@/components/CloseButton";
 import type { SqlMetadataToolWindowRequest } from "./SqlEditor";
 import {
   sqlMetadataTargetTitle,
@@ -76,15 +77,7 @@ export function MetadataToolWindow({
           >
             <Pencil size={14} />
           </button>
-          <button
-            className="icon-button"
-            type="button"
-            title={t("common.close")}
-            aria-label={t("common.close")}
-            onClick={onClose}
-          >
-            <X size={14} />
-          </button>
+          <CloseButton onClose={onClose} className="icon-button" />
         </div>
       </div>
       {request.mode === "definition" ? (

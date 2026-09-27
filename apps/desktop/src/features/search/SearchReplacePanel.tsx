@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, Replace, Search, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Replace, Search } from "lucide-react";
+import { CloseButton } from "@/components/CloseButton";
 import {
   findMatches,
   isValidQuery,
@@ -112,14 +113,7 @@ export function SearchReplacePanel({
         <span className="search-title">
           <Search size={14} /> {t("search.title")}
         </span>
-        <button
-          type="button"
-          title={t("common.close")}
-          aria-label={t("common.close")}
-          onClick={onClose}
-        >
-          <X size={14} />
-        </button>
+        <CloseButton onClose={onClose} />
       </header>
 
       <div className="search-inputs">

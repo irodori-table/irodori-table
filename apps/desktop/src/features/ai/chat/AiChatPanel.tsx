@@ -8,8 +8,8 @@ import {
   RefreshCw,
   Send,
   Square,
-  X,
 } from "lucide-react";
+import { CloseButton } from "@/components/CloseButton";
 import type { DbEngine } from "@/generated/irodori-api";
 import {
   aiChat,
@@ -240,14 +240,7 @@ export function AiChatPanel({
           >
             <Eraser size={13} />
           </button>
-          <button
-            type="button"
-            title={t("common.close")}
-            aria-label={t("common.close")}
-            onClick={onClose}
-          >
-            <X size={14} />
-          </button>
+          <CloseButton onClose={onClose} />
         </div>
       </header>
 

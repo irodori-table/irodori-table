@@ -5,8 +5,8 @@ import {
   FileDiff,
   GitBranch,
   RefreshCw,
-  X,
 } from "lucide-react";
+import { CloseButton } from "@/components/CloseButton";
 import type { CSSProperties } from "react";
 import { useEffect } from "react";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -305,15 +305,11 @@ export function GitPanel({ variant = "drawer", onClose }: GitPanelProps) {
         >
           <RefreshCw size={14} />
         </button>
-        <button
+        <CloseButton
+          onClose={closePanel}
+          label={t("git.close")}
           className="icon-button"
-          type="button"
-          title={t("git.close")}
-          aria-label={t("git.close")}
-          onClick={closePanel}
-        >
-          <X size={14} />
-        </button>
+        />
       </div>
 
       {/* Kept outside the status guard: when no repository resolves, status is
