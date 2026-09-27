@@ -481,8 +481,8 @@ export function extTarget(): Promise<string> {
   return invoke<string>("ext_target");
 }
 
-export function extInstall(request: ExtensionInstallRequest): Promise<InstalledExtension> {
-  return invoke<InstalledExtension>("ext_install", { request });
+export function extInstall(id: string, version: string, approvedPermissions: Array<string>): Promise<InstalledExtension> {
+  return invoke<InstalledExtension>("ext_install", { id, version, approvedPermissions });
 }
 
 export function extUninstall(id: string): Promise<boolean> {

@@ -184,9 +184,7 @@ describe("ExtensionsTab marketplace availability filter (#131)", () => {
     await user.click(await screen.findByRole("button", { name: "Update all" }));
 
     expect(extInstall).toHaveBeenCalledTimes(2);
-    const updated = vi
-      .mocked(extInstall)
-      .mock.calls.map(([request]) => request.id);
+    const updated = vi.mocked(extInstall).mock.calls.map(([id]) => id);
     expect(updated).toEqual(["works-here", "also-here"]);
   });
 

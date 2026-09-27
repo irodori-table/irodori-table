@@ -85,10 +85,13 @@ async fn feature_releases_install_toggle_and_uninstall() {
     let handle = app.handle().clone();
     let extension_state = app.state::<extensions::ExtensionsState>();
 
+    let knowledge = knowledge_release_request();
     let installed = extensions::ext_install(
         handle.clone(),
         extension_state.clone(),
-        knowledge_release_request(),
+        knowledge.id,
+        knowledge.version,
+        knowledge.permissions,
     )
     .await
     .expect("install knowledge extension");
@@ -123,10 +126,13 @@ async fn feature_releases_install_toggle_and_uninstall() {
             .expect("uninstall knowledge extension")
     );
 
+    let datalake = datalake_release_request();
     let datalake = extensions::ext_install(
         handle.clone(),
         extension_state.clone(),
-        datalake_release_request(),
+        datalake.id,
+        datalake.version,
+        datalake.permissions,
     )
     .await
     .expect("install datalake extension");
@@ -179,10 +185,13 @@ async fn memgraph_release_installs_connects_queries_metadata_and_uninstalls() {
     let handle = app.handle().clone();
     let extension_state = app.state::<extensions::ExtensionsState>();
 
+    let memgraph = memgraph_release_request();
     let installed = extensions::ext_install(
         handle.clone(),
         extension_state.clone(),
-        memgraph_release_request(),
+        memgraph.id,
+        memgraph.version,
+        memgraph.permissions,
     )
     .await
     .expect("install memgraph extension");

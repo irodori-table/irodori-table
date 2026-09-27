@@ -23,6 +23,9 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Verifies the signed extension catalog. Already in the tree via the updater
+# plugin; promoted to a direct dependency so the install path can check it.
+minisign-verify = "0.2"
 irodori-connection = { workspace = true }
 irodori-error = { workspace = true }
 irodori-jobs = { workspace = true }

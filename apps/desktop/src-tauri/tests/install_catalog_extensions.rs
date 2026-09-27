@@ -113,7 +113,15 @@ async fn install_ids_from_env() {
         let request = request_for(&catalog, id, &target);
         let version = request.version.clone();
         print!("installing {id} {version} ... ");
-        match extensions::ext_install(handle.clone(), state.clone(), request).await {
+        match extensions::ext_install(
+            handle.clone(),
+            state.clone(),
+            request.id.clone(),
+            request.version.clone(),
+            request.permissions.clone(),
+        )
+        .await
+        {
             Ok(installed) => println!(
                 "ok (runtime={}, engine={:?}, abi={:?})",
                 installed.runtime, installed.engine, installed.abi_version

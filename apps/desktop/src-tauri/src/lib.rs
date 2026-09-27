@@ -52,6 +52,11 @@ pub fn run() {
             if let Err(error) = extensions::collect_garbage(&handle) {
                 eprintln!("extension startup cleanup failed: {error}");
             }
+            if !extensions::catalog_signature_configured() {
+                eprintln!(
+                    "extension catalog signature is not configured; installs rely on the trusted-owner allowlist"
+                );
+            }
             let ai = app.state::<ai::AiState>();
             let security = app.state::<security::SecurityState>();
             ai::hydrate_provider(&handle, &ai, &security);
@@ -335,10 +340,13 @@ mod typegen {
             .command(Command::new("ext_list", "Array<InstalledExtension>"))
             .command(Command::new("ext_target", "string"))
             .command(
-                Command::new("ext_install", "InstalledExtension").arg(Arg::new(
-                    "request",
-                    TsType::named("ExtensionInstallRequest"),
-                )),
+                Command::new("ext_install", "InstalledExtension")
+                    .arg(Arg::rust("id", TsType::string()))
+                    .arg(Arg::rust("version", TsType::string()))
+                    .arg(Arg::rust(
+                        "approved_permissions",
+                        TsType::named("Array<string>"),
+                    )),
             )
             .command(
                 Command::returning("ext_uninstall", TsType::boolean())

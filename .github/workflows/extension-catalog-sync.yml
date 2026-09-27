@@ -37,16 +37,38 @@ jobs:
           node tools/extensions/sync-release-catalog.mjs --write
           node tools/docs/build-extension-catalog.mjs
 
+      - name: Sign catalog
+        if: ${{ secrets.CATALOG_SIGNING_KEY != '' }}
+        shell: bash
+        env:
+          CATALOG_SIGNING_KEY: ${{ secrets.CATALOG_SIGNING_KEY }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y minisign
+          umask 077
+          printf '%s\n' "$CATALOG_SIGNING_KEY" > "$RUNNER_TEMP/catalog.key"
+          # Default (prehashed) signature; the host verifies with
+          # allow_legacy=false. The public key goes in
+          # extensions/catalog.rs::CATALOG_PUBLIC_KEY.
+          minisign -S -s "$RUNNER_TEMP/catalog.key" \
+            -m registry/catalog/index.json \
+            -x registry/catalog/index.json.minisig
+          rm -f "$RUNNER_TEMP/catalog.key"
+
       - name: Commit catalog update
         shell: bash
         run: |
-          if git diff --quiet -- registry/catalog/index.json registry/catalog/catalog.json apps/desktop/src/features/extensions/bundled-catalog.json; then
+          # `git status` so a brand-new (untracked) signature file counts too.
+          if [ -z "$(git status --porcelain -- registry/catalog apps/desktop/src/features/extensions/bundled-catalog.json)" ]; then
             echo "Catalog is already current."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add registry/catalog/index.json registry/catalog/catalog.json apps/desktop/src/features/extensions/bundled-catalog.json
+          if [ -f registry/catalog/index.json.minisig ]; then
+            git add registry/catalog/index.json.minisig
+          fi
           git commit -m "chore(extensions): sync release catalog"
           git pull --rebase origin main
           git push origin HEAD:main

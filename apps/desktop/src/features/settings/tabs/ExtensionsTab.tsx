@@ -443,17 +443,9 @@ export function ExtensionsTab({ t, active }: ExtensionsTabProps) {
         throw new Error(t("settings.extensions.targetUnavailable"));
       }
       assertSupportedInstallKind(install);
-      await extInstall({
-        id: extension.id,
-        version: extension.version,
-        kind: install.kind,
-        repository: extension.repository,
-        assetName: asset.name,
-        tag: install.tag,
-        sha256: asset.sha256,
-        permissions: extension.permissions,
-        manifestPath: install.manifestPath,
-      });
+      // The backend resolves the repository, asset, tag, and sha256 from the
+      // signed catalog; the webview only says which id/version the user picked.
+      await extInstall(extension.id, extension.version, extension.permissions);
     },
     [nativeTarget, t],
   );

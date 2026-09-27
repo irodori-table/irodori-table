@@ -611,8 +611,14 @@ fn normalize_github_repo(repository: &str) -> IrodoriResult<String> {
 /// Reject repositories outside the trusted publisher allowlist. The catalog is
 /// resolved by the webview, so without this a single XSS could ask the host to
 /// download and load native code from any repository with any sha256.
-fn ensure_trusted_owner(repo: &str) -> IrodoriResult<()> {
-    let owner = repo.split('/').next().unwrap_or_default();
+pub(super) fn ensure_trusted_owner(repository: &str) -> IrodoriResult<()> {
+    let repository = repository.trim().trim_end_matches(".git");
+    let repository = repository
+        .strip_prefix("https://github.com/")
+        .or_else(|| repository.strip_prefix("http://github.com/"))
+        .unwrap_or(repository)
+        .trim_matches('/');
+    let owner = repository.split('/').next().unwrap_or_default();
     if TRUSTED_EXTENSION_OWNERS
         .iter()
         .any(|trusted| trusted.eq_ignore_ascii_case(owner))

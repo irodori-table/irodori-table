@@ -6,6 +6,7 @@
 //! desktop host and never execute downloaded code in the application webview.
 
 mod abi;
+mod catalog;
 mod connection;
 mod store;
 
@@ -128,8 +129,26 @@ pub async fn ext_list(
 pub async fn ext_install(
     app: AppHandle,
     state: State<'_, ExtensionsState>,
-    request: ExtensionInstallRequest,
+    id: String,
+    version: String,
+    approved_permissions: Vec<String>,
 ) -> IrodoriResult<InstalledExtension> {
+    // The webview supplies only what the user picked. Everything the installer
+    // acts on — repository, asset, tag, sha256 — is resolved from the catalog
+    // here, so a compromised webview cannot point it at its own code.
+    let catalog = catalog::fetch_verified().await?;
+    let request = catalog.install_request(&id, &version, &store::native_target_label())?;
+    let mut approved = approved_permissions;
+    approved.sort();
+    approved.dedup();
+    let mut expected = request.permissions.clone();
+    expected.sort();
+    expected.dedup();
+    if approved != expected {
+        return Err(irodori_error::IrodoriError::validation(
+            "approved permissions do not match the extension catalog",
+        ));
+    }
     store::install(&app, &state, request).await
 }
 
@@ -163,4 +182,10 @@ pub(crate) fn installed_by_id(
 /// once at startup, before any connector library is loaded.
 pub(crate) fn collect_garbage(app: &AppHandle) -> IrodoriResult<()> {
     store::collect_garbage(app, &app.state::<ExtensionsState>())
+}
+
+/// Whether the catalog signature is enforced. False means the host is relying
+/// on the trusted-owner allowlist alone.
+pub(crate) fn catalog_signature_configured() -> bool {
+    !catalog::CATALOG_PUBLIC_KEY.trim().is_empty()
 }

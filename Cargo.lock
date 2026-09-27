@@ -2826,6 +2826,7 @@ dependencies = [
  "irodori-security",
  "irodori-sql",
  "libloading 0.9.0",
+ "minisign-verify",
  "mongodb",
  "neo4rs",
  "openssl",
