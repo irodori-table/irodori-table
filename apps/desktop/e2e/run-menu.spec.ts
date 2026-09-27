@@ -53,14 +53,14 @@ test("run options menu is visible and clickable, not clipped by the editor pane"
 test("run options menu opens above the control, right edges aligned", async ({
   page,
 }) => {
-  // Wide enough that the menu is not clamped against the viewport's left
-  // margin: alignment is only meaningful when the menu actually fits.
-  await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto("/");
   await page.waitForTimeout(2000);
 
   await page.locator(".run-menu-toggle").first().click();
   await expect(page.locator(menuSelector)).toBeVisible();
+  // The menu pops in with a brief scale animation; measuring mid-animation
+  // shrinks its box and the right-edge comparison drifts.
+  await page.waitForTimeout(250);
 
   const geometry = await page.evaluate((selector) => {
     const menu = document.querySelector(selector) as HTMLElement | null;
