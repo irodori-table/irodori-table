@@ -698,19 +698,37 @@ fn connect_installed_extension(
     profile: &ConnectionProfile,
     app: Option<&tauri::AppHandle>,
 ) -> DbResult<Option<Arc<dyn Connection>>> {
-    let Some(extension_id) = profile.engine.connector_extension_id() else {
-        return Ok(None);
-    };
     let Some(app) = app else {
         return Ok(None);
     };
-    let Some(extension) = extensions::installed_by_id(app, extension_id).map_err(DbError::from)?
-    else {
+    let extension = match profile.engine.connector_extension_id() {
+        Some(extension_id) => {
+            extensions::installed_by_id(app, extension_id).map_err(DbError::from)?
+        }
+        None => None,
+    };
+    // Fall back to the registry: an extension declares its engine at install, so
+    // a connector added without a compiled dispatch entry still connects.
+    let extension = match extension {
+        Some(extension) => Some(extension),
+        None => extensions::installed_for_engine(app, &connector_engine_id(profile.engine))
+            .map_err(DbError::from)?,
+    };
+    let Some(extension) = extension else {
         return Ok(None);
     };
     let conn = extensions::NativeExtensionConnection::connect(&extension, profile)
         .map_err(DbError::connection)?;
     Ok(Some(Arc::new(ExtensionConn(conn))))
+}
+
+/// The engine id a connector declares, which is the `DbEngine` serde name and
+/// the manifest's `engine` string.
+fn connector_engine_id(engine: DbEngine) -> String {
+    serde_json::to_value(engine)
+        .ok()
+        .and_then(|value| value.as_str().map(str::to_string))
+        .unwrap_or_default()
 }
 
 #[allow(dead_code)]

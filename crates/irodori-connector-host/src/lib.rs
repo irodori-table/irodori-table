@@ -47,10 +47,26 @@ pub struct NativeConnector {
     free_buffer: FreeBufferFn,
 }
 
+/// Explain a failed `dlopen` in terms the user can act on.
+///
+/// The prebuilt Linux connectors link a recent glibc, so on an older
+/// distribution `dlopen` fails with a bare `version 'GLIBC_2.xx' not found`
+/// that reads like a corrupt file rather than a distribution mismatch.
+fn load_error(context: &str, error: impl std::fmt::Display) -> String {
+    let message = error.to_string();
+    #[cfg(all(unix, not(target_os = "macos")))]
+    if message.contains("GLIBC_") && message.contains("not found") {
+        return format!(
+            "{context}: {message}. This connector was built against a newer glibc than this system provides; use a connector build for your distribution."
+        );
+    }
+    format!("{context}: {message}")
+}
+
 impl NativeConnector {
     pub fn load(path: &Path) -> Result<Self, String> {
         let library = unsafe { Library::new(path) }
-            .map_err(|error| format!("failed to load native connector library: {error}"))?;
+            .map_err(|error| load_error("failed to load native connector library", error))?;
         unsafe { Self::from_library(library) }
     }
 
@@ -112,7 +128,7 @@ impl NativeConnector {
 
 pub fn probe_library(path: &Path) -> Result<NativeConnectorProbe, String> {
     let library = unsafe { Library::new(path) }
-        .map_err(|error| format!("failed to load native connector library: {error}"))?;
+        .map_err(|error| load_error("failed to load native connector library", error))?;
     unsafe { probe_loaded_library(&library) }
 }
 
@@ -266,4 +282,31 @@ fn connector_failure(message: &str) -> Value {
         "ok": false,
         "error": { "code": "connector.callFailed", "message": message },
     })
+}
+
+#[cfg(all(test, unix, not(target_os = "macos")))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn explains_a_glibc_mismatch() {
+        let message = load_error(
+            "failed to load native connector library",
+            "version `GLIBC_2.39' not found",
+        );
+        assert!(message.contains("newer glibc"), "{message}");
+    }
+
+    #[test]
+    fn passes_other_load_errors_through_unchanged() {
+        let message = load_error(
+            "failed to load native connector library",
+            "cannot open shared object file",
+        );
+        assert!(
+            message.contains("cannot open shared object file"),
+            "{message}"
+        );
+        assert!(!message.contains("glibc"), "{message}");
+    }
 }

@@ -179,6 +179,14 @@ pub(crate) fn installed_by_id(
     store::installed_by_id(app, id)
 }
 
+/// Find an enabled extension that declares `engine`, for the dispatch fallback.
+pub(crate) fn installed_for_engine(
+    app: &AppHandle,
+    engine: &str,
+) -> IrodoriResult<Option<InstalledExtension>> {
+    store::installed_for_engine(app, engine)
+}
+
 /// Delete staged leftovers and superseded versions from a previous run. Called
 /// once at startup, before any connector library is loaded.
 pub(crate) fn collect_garbage(app: &AppHandle) -> IrodoriResult<()> {

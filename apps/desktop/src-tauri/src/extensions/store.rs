@@ -286,6 +286,30 @@ pub(crate) fn installed_by_id(
         .find(|extension| extension.id == id && extension.enabled))
 }
 
+/// Find an enabled extension that declares `engine`.
+///
+/// Used as a fallback when the compiled dispatch table has no id for an engine:
+/// an extension declares its engine at install, so a connector added without an
+/// app release still connects.
+pub(crate) fn installed_for_engine(
+    app: &AppHandle,
+    engine: &str,
+) -> IrodoriResult<Option<InstalledExtension>> {
+    Ok(find_installed_for_engine(
+        read_registry(app)?.extensions,
+        engine,
+    ))
+}
+
+fn find_installed_for_engine(
+    extensions: Vec<InstalledExtension>,
+    engine: &str,
+) -> Option<InstalledExtension> {
+    extensions
+        .into_iter()
+        .find(|extension| extension.enabled && extension.engine.as_deref() == Some(engine))
+}
+
 #[allow(clippy::too_many_arguments)]
 fn install_archive(
     app: &AppHandle,
@@ -1336,5 +1360,25 @@ mod tests {
             model.pointer("/somethingNewer/a").and_then(Value::as_i64),
             Some(1)
         );
+    }
+
+    /// The dispatch fallback resolves a connector by the engine it declares, so
+    /// one can be added without a compiled `connector_extension_id` entry. Only
+    /// enabled extensions are targets.
+    #[test]
+    fn finds_an_enabled_extension_by_engine() {
+        let mut redis = installed("irodori.redis", Some("/ext/redis/lib.so"));
+        redis.engine = Some("redis".into());
+        let mut memgraph = installed("irodori.memgraph", Some("/ext/memgraph/lib.so"));
+        memgraph.engine = Some("memgraph".into());
+        memgraph.enabled = false;
+
+        assert_eq!(
+            find_installed_for_engine(vec![redis.clone(), memgraph], "redis")
+                .map(|extension| extension.id),
+            Some("irodori.redis".to_string())
+        );
+        assert!(find_installed_for_engine(vec![redis], "memgraph").is_none());
+        assert!(find_installed_for_engine(Vec::new(), "redis").is_none());
     }
 }
