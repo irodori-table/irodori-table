@@ -71,12 +71,12 @@ copyFileSync(buildFor(hostTriple), staged(hostTriple));
 console.log(`staged connector host for ${hostTriple}`);
 
 if (process.platform === "darwin") {
-  const archs = ["aarch64-apple-darwin", "x86_64-apple-darwin"];
-  const universal = staged("universal-apple-darwin");
-  execFileSync(
-    "lipo",
-    ["-create", "-output", universal, ...archs.map(buildFor)],
-    { stdio: "inherit" },
-  );
-  console.log("staged universal connector host for universal-apple-darwin");
+  // A universal build compiles each arch separately and validates the sidecar
+  // for that arch, then lipos them itself — so both per-arch names must exist,
+  // not a single `universal-apple-darwin` file.
+  for (const triple of ["aarch64-apple-darwin", "x86_64-apple-darwin"]) {
+    if (triple === hostTriple) continue;
+    copyFileSync(buildFor(triple), staged(triple));
+    console.log(`staged connector host for ${triple}`);
+  }
 }
