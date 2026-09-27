@@ -13,7 +13,8 @@ use tar::Archive;
 use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
 
-use super::abi::{probe_library, ABI_VERSION};
+use super::abi::ABI_VERSION;
+use super::process;
 use super::{ExtensionInstallKind, ExtensionInstallRequest, InstalledExtension};
 
 const REGISTRY_FILE: &str = "installed.json";
@@ -155,7 +156,7 @@ fn backfill_registry(
 /// worth failing the migration over — it is reported and the model left empty,
 /// which is exactly where that connector already was.
 fn probe_connection_model(library_path: &str) -> Option<Value> {
-    match probe_library(Path::new(library_path)) {
+    match process::probe_connector(Path::new(library_path)) {
         Ok(probe) => connection_model(&probe.config_json),
         Err(error) => {
             eprintln!("extension connection model backfill skipped for {library_path}: {error}");
@@ -224,11 +225,7 @@ fn validated_manifest_path(manifest_path: Option<&str>) -> IrodoriResult<PathBuf
     })
 }
 
-pub(crate) fn uninstall(
-    app: &AppHandle,
-    state: &ExtensionsState,
-    id: &str,
-) -> IrodoriResult<bool> {
+pub(crate) fn uninstall(app: &AppHandle, state: &ExtensionsState, id: &str) -> IrodoriResult<bool> {
     let existed = update_registry(app, state, |registry| {
         let before = registry.extensions.len();
         registry.extensions.retain(|extension| extension.id != id);
@@ -273,9 +270,7 @@ pub(crate) fn set_enabled(
             .extensions
             .iter_mut()
             .find(|extension| extension.id == id)
-            .ok_or_else(|| {
-                IrodoriError::validation(format!("extension is not installed: {id}"))
-            })?;
+            .ok_or_else(|| IrodoriError::validation(format!("extension is not installed: {id}")))?;
         extension.enabled = enabled;
         Ok(extension.clone())
     })
@@ -336,7 +331,8 @@ fn install_archive(
                     IrodoriError::validation(format!("invalid extension library path: {error}"))
                 })?
                 .to_path_buf();
-            let probe = probe_library(&library_path).map_err(IrodoriError::validation)?;
+            let probe =
+                process::probe_connector(&library_path).map_err(IrodoriError::validation)?;
             if probe.engine != manifest.contributes.connectors[0].engine {
                 return Err(IrodoriError::validation(format!(
                     "connector engine mismatch: manifest={}, abi={}",
@@ -805,11 +801,7 @@ pub(crate) fn collect_garbage(app: &AppHandle, state: &ExtensionsState) -> Irodo
     let root = extensions_root(app)?;
     if let Ok(entries) = fs::read_dir(&root) {
         for entry in entries.flatten() {
-            if entry
-                .file_name()
-                .to_string_lossy()
-                .starts_with(".staging-")
-            {
+            if entry.file_name().to_string_lossy().starts_with(".staging-") {
                 let _ = fs::remove_dir_all(entry.path());
             }
         }

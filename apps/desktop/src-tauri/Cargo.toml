@@ -23,6 +23,9 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# Shared connector C-ABI loader. The same crate builds the out-of-process
+# `irodori-connector-host` sidecar that runs connectors off the app process.
+irodori-connector-host = { path = "../../../crates/irodori-connector-host" }
 # Verifies the signed extension catalog. Already in the tree via the updater
 # plugin; promoted to a direct dependency so the install path can check it.
 minisign-verify = "0.2"

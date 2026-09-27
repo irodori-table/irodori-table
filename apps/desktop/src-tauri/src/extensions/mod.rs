@@ -8,6 +8,7 @@
 mod abi;
 mod catalog;
 mod connection;
+mod process;
 mod store;
 
 pub(crate) use connection::NativeExtensionConnection;

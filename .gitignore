@@ -43,3 +43,6 @@ Thumbs.db
 .codex/skills/graphify/
 .codex/hooks.json
 graphify-out/
+
+# Tauri sidecars staged by apps/desktop/tools/stage-sidecar.mjs
+apps/desktop/src-tauri/binaries/

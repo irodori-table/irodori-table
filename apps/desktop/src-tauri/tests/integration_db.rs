@@ -555,11 +555,7 @@ async fn tidb_crud_exercise(url: String) {
     );
 
     // Delete.
-    exec(
-        &state,
-        "delete from irodori_crud where id >= 5000".into(),
-    )
-    .await;
+    exec(&state, "delete from irodori_crud where id >= 5000".into()).await;
     assert_eq!(count(&state).await, 5_000, "half the rows deleted");
 
     // Read one row back.

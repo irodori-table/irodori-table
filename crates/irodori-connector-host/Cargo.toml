@@ -1,0 +1,19 @@
+[package]
+name = "irodori-connector-host"
+description = "Loads Irodori connector cdylibs over the C ABI and speaks JSON, either in-process (library use) or as the out-of-process sidecar."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "irodori_connector_host"
+path = "src/lib.rs"
+
+[[bin]]
+name = "irodori-connector-host"
+path = "src/main.rs"
+
+[dependencies]
+libloading = "0.9"
+serde_json = "1"

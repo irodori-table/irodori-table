@@ -130,8 +130,9 @@ async fn http_get(url: &str) -> IrodoriResult<Vec<u8>> {
 fn verify_signature(body: &[u8], signature_text: &[u8]) -> IrodoriResult<()> {
     use minisign_verify::{PublicKey, Signature};
 
-    let key = PublicKey::from_base64(CATALOG_PUBLIC_KEY)
-        .map_err(|error| IrodoriError::validation(format!("invalid catalog public key: {error}")))?;
+    let key = PublicKey::from_base64(CATALOG_PUBLIC_KEY).map_err(|error| {
+        IrodoriError::validation(format!("invalid catalog public key: {error}"))
+    })?;
     let signature_text = std::str::from_utf8(signature_text)
         .map_err(|_| IrodoriError::validation("catalog signature is not UTF-8"))?;
     let signature = Signature::decode(signature_text)
@@ -190,8 +191,14 @@ mod tests {
         let request = catalog()
             .install_request("irodori.redis", "0.1.6", "x86_64-linux")
             .expect("resolve");
-        assert_eq!(request.repository, "https://github.com/irodori-table/irodori-extension-redis");
-        assert_eq!(request.asset_name, "irodori-extension-redis-x86_64-linux.tar.gz");
+        assert_eq!(
+            request.repository,
+            "https://github.com/irodori-table/irodori-extension-redis"
+        );
+        assert_eq!(
+            request.asset_name,
+            "irodori-extension-redis-x86_64-linux.tar.gz"
+        );
         assert_eq!(request.tag, "v0.1.6");
         assert_eq!(request.sha256, "sha256:aa");
         assert_eq!(request.permissions, vec!["native"]);
@@ -212,7 +219,11 @@ mod tests {
         let error = catalog()
             .install_request("irodori.evil", "1.0.0", "x86_64-linux")
             .unwrap_err();
-        assert!(error.message.contains("trusted publisher"), "{}", error.message);
+        assert!(
+            error.message.contains("trusted publisher"),
+            "{}",
+            error.message
+        );
     }
 
     #[test]

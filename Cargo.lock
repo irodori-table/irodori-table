@@ -2707,6 +2707,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "irodori-connector-host"
+version = "0.11.5"
+dependencies = [
+ "libloading 0.9.0",
+ "serde_json",
+]
+
+[[package]]
 name = "irodori-error"
 version = "0.3.2"
 source = "git+https://github.com/irodori-table/irodori-knowledge?tag=v0.3.2#cf4c30cb1e8b137fd49ca2e7fb6d1c8ba4e31bf1"
@@ -2816,6 +2824,7 @@ dependencies = [
  "futures-util",
  "irodori-completion",
  "irodori-connection",
+ "irodori-connector-host",
  "irodori-error",
  "irodori-generate",
  "irodori-jobs",
