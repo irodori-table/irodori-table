@@ -242,6 +242,19 @@ jobs:
               ;;
           esac
 
+          # Bundle the out-of-process connector host. It lives in a separate
+          # config so plain `cargo build`/`test`/`clippy` (which do not set
+          # TAURI_CONFIG) never validate the sidecar and never need it staged.
+          if [ -n "${linux_tauri_args}" ]; then
+            linux_tauri_args="${linux_tauri_args} --config src-tauri/tauri.bundle.conf.json"
+          fi
+          if [ -n "${macos_tauri_args}" ]; then
+            macos_tauri_args="${macos_tauri_args} --config src-tauri/tauri.bundle.conf.json"
+          fi
+          if [ -n "${windows_tauri_args}" ]; then
+            windows_tauri_args="${windows_tauri_args} --config src-tauri/tauri.bundle.conf.json"
+          fi
+
           {
             echo "channel=${channel}"
             echo "release_tag=${release_tag}"
