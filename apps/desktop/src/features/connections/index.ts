@@ -58,6 +58,12 @@ export {
   type SshTunnelIo,
 } from "./ssh-tunnel-request";
 export {
+  PASSWORD_SECRET_OPTION,
+  defaultCredentialIo,
+  prepareStoredPassword,
+  type CredentialIo,
+} from "./connection-credentials";
+export {
   connectionTransferFormatOptions,
   exportConnectionProfiles,
   importConnectionProfiles,

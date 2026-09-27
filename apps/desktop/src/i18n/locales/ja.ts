@@ -1168,6 +1168,8 @@ export const ja = {
   "connection.field.warehouse": "ウェアハウス",
   "connection.placeholder.databaseName": "データベース名",
   "connection.placeholder.password": "セッションのみ",
+  "connection.rememberPassword":
+    "パスワードを記憶する（OSのキーチェーンに保存）",
   "connection.placeholder.username": "ユーザー名",
   "connection.extension.endpoint": "エンドポイント",
   "connection.extension.endpointMode": "エンドポイント方式",

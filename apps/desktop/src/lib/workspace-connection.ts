@@ -40,6 +40,12 @@ export type ConnectionDraft = {
   port: string;
   user: string;
   password: string;
+  /**
+   * Whether the connection password is kept in the OS keychain so the field
+   * does not have to be re-entered each launch. Defaults to true; a false
+   * value keeps the password session-only and clears any stored copy.
+   */
+  rememberPassword?: boolean;
   database: string;
   socketPath: string;
   readOnly: boolean;

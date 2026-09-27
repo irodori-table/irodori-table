@@ -780,3 +780,18 @@
     white-space: nowrap;
   }
 }
+
+/* Remember-password opt-in under the password field. */
+.connection-remember-password {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--font-ui-md);
+}
+
+.connection-remember-password input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent);
+}

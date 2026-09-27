@@ -10,6 +10,7 @@ import {
   memoryDefaults,
   newDraft,
   prepareConnectionRequest,
+  prepareStoredPassword,
   profileFromDraft,
   repairBuiltinSampleProfile,
   sanitizedProfile,
@@ -366,8 +367,15 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         profileFromDraft(draft, model),
         model,
       );
+      // Test only forwards an already-remembered handle; it never writes one.
+      const credentials = await prepareStoredPassword(
+        draft,
+        request.profile,
+        undefined,
+        false,
+      );
       try {
-        await queryService.connect({ ...request.profile, id: testId });
+        await queryService.connect({ ...credentials.profile, id: testId });
       } finally {
         await request.release();
       }
@@ -415,12 +423,22 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         profileFromDraft(profile, model),
         model,
       );
+      const credentials = await prepareStoredPassword(profile, request.profile);
       let info: ConnectionInfo;
       try {
-        info = await queryService.connect(request.profile);
+        info = await queryService.connect(credentials.profile);
       } finally {
         await request.release();
       }
+      // Persist the keychain handle (a handle, not the password) so the next
+      // launch resolves it with an empty field.
+      setProfiles((current) =>
+        current.map((item) =>
+          item.id === profile.id
+            ? { ...item, options: credentials.options }
+            : item,
+        ),
+      );
       await afterConnect?.(info.id);
       const elapsedMs = Math.max(1, Math.round(performance.now() - started));
       const nextConnection = describeConnection(

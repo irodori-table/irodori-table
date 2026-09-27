@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
 use std::time::Instant;
 
+use irodori_connection::SecretRef;
 use irodori_error::{IrodoriError, Result as IrodoriResult};
+use irodori_secure_store::SecureStore;
 use irodori_security::AuditEventKind;
 use tokio::sync::mpsc;
 
@@ -9,6 +11,39 @@ use crate::jobs::JobState;
 use crate::security::SecurityState;
 
 use super::*;
+
+/// The profile option that carries a keychain handle for a remembered
+/// password. It is a handle, not the secret, so it is safe to persist with the
+/// profile; the value stays in the OS keychain and never reaches the webview.
+pub(crate) const PASSWORD_SECRET_OPTION: &str = "passwordSecret";
+
+/// Fill a blank `password` from the OS keychain when the profile remembers one.
+///
+/// The form leaves the field empty on a later launch — the password is not in
+/// localStorage — so the connect request would otherwise go out without it. The
+/// lookup happens here, in the backend, so the stored secret is never sent back
+/// to the webview.
+fn resolve_stored_password(store: &impl SecureStore, profile: &mut ConnectionProfile) {
+    if profile
+        .password
+        .as_deref()
+        .is_some_and(|value| !value.is_empty())
+    {
+        return;
+    }
+    let Some(raw) = profile.options.get(PASSWORD_SECRET_OPTION) else {
+        return;
+    };
+    let Ok(secret) = serde_json::from_str::<SecretRef>(raw) else {
+        eprintln!("stored connection password handle is not a valid SecretRef");
+        return;
+    };
+    match store.get(&secret) {
+        Ok(Some(value)) if !value.is_empty() => profile.password = Some(value),
+        Ok(_) => {}
+        Err(error) => eprintln!("stored connection password lookup failed: {error}"),
+    }
+}
 
 #[tauri::command]
 pub async fn db_autocomplete(
@@ -82,8 +117,9 @@ pub async fn db_connect(
     state: tauri::State<'_, DbState>,
     security: tauri::State<'_, SecurityState>,
     app: tauri::AppHandle,
-    profile: ConnectionProfile,
+    mut profile: ConnectionProfile,
 ) -> IrodoriResult<ConnectionInfo> {
+    resolve_stored_password(security.store(), &mut profile);
     let connection_id = profile.id.clone();
     let engine = format!("{:?}", profile.engine);
     let started = Instant::now();
@@ -523,4 +559,95 @@ pub async fn db_disconnect(
         )
         .await;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use irodori_secure_store::{MemorySecureStore, SecretPurpose, SecretValue};
+
+    fn profile_with(options: BTreeMap<String, String>) -> ConnectionProfile {
+        ConnectionProfile {
+            id: "prod".into(),
+            engine: DbEngine::Postgres,
+            host: Some("db.example.test".into()),
+            port: Some(5432),
+            user: Some("reader".into()),
+            password: None,
+            auth: Default::default(),
+            tls: Default::default(),
+            database: Some("app".into()),
+            socket_path: None,
+            url: None,
+            transport: None,
+            read_only: false,
+            options,
+        }
+    }
+
+    /// A remembered password lives in the OS keychain; the form comes back with
+    /// an empty field, so the backend has to fill it before connecting.
+    #[test]
+    fn fills_a_blank_password_from_the_keychain() {
+        let store = MemorySecureStore::new();
+        let secret = store
+            .put_connection_secret(
+                "prod",
+                SecretPurpose::Password,
+                SecretValue::new("s3cret").unwrap(),
+            )
+            .unwrap();
+        let mut profile = profile_with(BTreeMap::from([(
+            PASSWORD_SECRET_OPTION.to_string(),
+            serde_json::to_string(&secret).unwrap(),
+        )]));
+
+        resolve_stored_password(&store, &mut profile);
+
+        assert_eq!(profile.password.as_deref(), Some("s3cret"));
+    }
+
+    #[test]
+    fn a_typed_password_wins_over_the_stored_one() {
+        let store = MemorySecureStore::new();
+        let secret = store
+            .put_connection_secret(
+                "prod",
+                SecretPurpose::Password,
+                SecretValue::new("stored").unwrap(),
+            )
+            .unwrap();
+        let mut profile = profile_with(BTreeMap::from([(
+            PASSWORD_SECRET_OPTION.to_string(),
+            serde_json::to_string(&secret).unwrap(),
+        )]));
+        profile.password = Some("typed".into());
+
+        resolve_stored_password(&store, &mut profile);
+
+        assert_eq!(profile.password.as_deref(), Some("typed"));
+    }
+
+    #[test]
+    fn a_profile_without_a_handle_is_left_blank() {
+        let store = MemorySecureStore::new();
+        let mut profile = profile_with(BTreeMap::new());
+
+        resolve_stored_password(&store, &mut profile);
+
+        assert!(profile.password.is_none());
+    }
+
+    #[test]
+    fn a_missing_secret_is_not_an_error() {
+        let store = MemorySecureStore::new();
+        let mut profile = profile_with(BTreeMap::from([(
+            PASSWORD_SECRET_OPTION.to_string(),
+            serde_json::to_string(&SecretRef::new("connections/prod/password")).unwrap(),
+        )]));
+
+        resolve_stored_password(&store, &mut profile);
+
+        assert!(profile.password.is_none());
+    }
 }

@@ -147,17 +147,31 @@ export function ConnectionEndpointFields({
           </label>
         ) : null}
         {!connectionModel && engineSettings.showPassword ? (
-          <label>
-            <span>{engineSettings.passwordLabel}</span>
-            <input
-              type="password"
-              value={draft.password}
-              placeholder={engineSettings.passwordPlaceholder}
-              onChange={(event) =>
-                onUpdateDraft({ password: event.currentTarget.value })
-              }
-            />
-          </label>
+          <>
+            <label>
+              <span>{engineSettings.passwordLabel}</span>
+              <input
+                type="password"
+                value={draft.password}
+                placeholder={engineSettings.passwordPlaceholder}
+                onChange={(event) =>
+                  onUpdateDraft({ password: event.currentTarget.value })
+                }
+              />
+            </label>
+            <label className="connection-remember-password full-row">
+              <input
+                type="checkbox"
+                checked={draft.rememberPassword !== false}
+                onChange={(event) =>
+                  onUpdateDraft({
+                    rememberPassword: event.currentTarget.checked,
+                  })
+                }
+              />
+              <span>{t("connection.rememberPassword")}</span>
+            </label>
+          </>
         ) : null}
         {showDatabase ? (
           <label className="full-row">

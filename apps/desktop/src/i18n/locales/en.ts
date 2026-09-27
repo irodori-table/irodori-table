@@ -1141,6 +1141,8 @@ export const en = {
   "connection.field.warehouse": "Warehouse",
   "connection.placeholder.databaseName": "database name",
   "connection.placeholder.password": "Session only",
+  "connection.rememberPassword":
+    "Remember password (stored in the OS keychain)",
   "connection.placeholder.username": "username",
   "connection.extension.endpoint": "Endpoint",
   "connection.extension.endpointMode": "Endpoint mode",

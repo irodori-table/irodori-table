@@ -142,12 +142,19 @@ a real guarantee, use a database role with restricted rights.
 
 ## Where credentials go
 
-**Connection passwords are not saved.** The password placeholder reads **Session
-only** and that is literal: profiles are persisted to browser local storage under
+**Connection passwords are kept in the OS keychain by default.** Typing a
+password and connecting stores it there. The profile itself never holds the
+secret: it is persisted to browser local storage under
 `irodori.connectionProfiles.v1` after being passed through a sanitiser that
 blanks the password field, strips `password=` / `pwd=` / `pass=` /
 `passphrase=` parameters from connection strings, and clears the userinfo
-password from URLs. You re-enter the password each time the app starts.
+password from URLs. The profile carries only a keychain *handle*, and the
+backend resolves it when the connection opens — so the field comes back empty on
+the next launch and you do not re-enter it. A password you type always wins over
+a stored one.
+
+Untick **Remember password** to keep the password session-only: any stored copy
+is deleted and nothing new is written to the keychain.
 
 The same rule applies to extension-declared tokens, private keys, passphrases,
 and custom driver options. They live only in the open form and are added to one
