@@ -442,6 +442,21 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npm run release:prepare-macos-signing
 
+      # Idempotent re-dispatch: tauri-action does not overwrite an asset that a
+      # previous run already uploaded, so clear this platform's copies first.
+      - name: Clear macOS assets from an earlier run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ needs.release-gates.outputs.release_tag }}"
+          names="$(gh release view "$tag" --json assets -q '.assets[].name' 2>/dev/null || true)"
+          printf '%s\n' "$names" \
+            | grep -Ei '\.(dmg|app\.tar\.gz)(\.sig)?$' \
+            | while read -r name; do
+                [ -n "$name" ] && gh release delete-asset "$tag" "$name" -y || true
+              done || true
+
       - name: Build and Publish Tauri App
         uses: tauri-apps/tauri-action@v1
         env:
@@ -520,6 +535,21 @@ jobs:
           AZURE_TRUSTED_SIGNING_ACCOUNT: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT }}
           AZURE_TRUSTED_SIGNING_PROFILE: ${{ secrets.AZURE_TRUSTED_SIGNING_PROFILE }}
         run: npm run release:prepare-windows-azure-signing
+
+      # Idempotent re-dispatch: clear this platform's copies first, since
+      # tauri-action does not overwrite existing assets.
+      - name: Clear Windows assets from an earlier run
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ needs.release-gates.outputs.release_tag }}"
+          names="$(gh release view "$tag" --json assets -q '.assets[].name' 2>/dev/null || true)"
+          printf '%s\n' "$names" \
+            | grep -Ei '\.(exe|msi)(\.sig)?$' \
+            | while read -r name; do
+                [ -n "$name" ] && gh release delete-asset "$tag" "$name" -y || true
+              done || true
 
       - name: Build and Publish Tauri App
         id: publish-tauri-windows
