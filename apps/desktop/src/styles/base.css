@@ -271,7 +271,9 @@ textarea::placeholder {
     minmax(0, 1fr);
   gap: 8px;
   padding: 0 8px;
-  font-size: calc(var(--font-ui-md) * var(--titlebar-scale));
+  /* One rung above the shell default, so the top bar reads a touch larger
+   * without leaving the type-scale ladder (12px -> 13px). */
+  font-size: var(--font-ui-lg);
 }
 
 /* The top bar runs 1.1x: text inherits the scaled root, icons and the control
@@ -734,7 +736,7 @@ textarea::placeholder {
   justify-content: center;
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface-raised));
-  font-size: calc(var(--font-ui-md) * var(--titlebar-scale));
+  font-size: var(--font-ui-lg);
 }
 
 /* Keep the whole label cluster centered inside the wide pill instead of

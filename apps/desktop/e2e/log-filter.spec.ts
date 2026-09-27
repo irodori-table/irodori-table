@@ -15,18 +15,25 @@ const logFixture = [
   "2026-07-18 10:00:03 WARN slow response",
 ].join("\n");
 
+/// The rename prompt is the in-app PromptDialog, not `window.prompt`.
+async function renameSqlTab(page: Page, name: string) {
+  const dialog = page.getByRole("dialog", { name: "Rename SQL tab" });
+  await dialog.getByRole("textbox").fill(name);
+  await dialog.getByRole("button", { name: "Confirm" }).click();
+}
+
 async function openLogTab(page: Page) {
   await page.addInitScript(() => window.localStorage.clear());
   await page.goto("/");
   await expect(page.locator(".cm-editor").first()).toBeVisible();
 
   // Rename the active tab to a .log name via the tab context menu; the
-  // rename prompt is a plain window.prompt.
-  page.once("dialog", (dialog) => void dialog.accept("app.log"));
+  // rename prompt is the in-app PromptDialog.
   await page
     .getByRole("tab", { name: "scratch.sql" })
     .click({ button: "right" });
   await page.getByRole("menuitem", { name: "Rename tab" }).click();
+  await renameSqlTab(page, "app.log");
   await expect(page.getByRole("group", { name: "Log filters" })).toBeVisible();
 
   // Replace the seeded SQL with the log fixture.
@@ -123,9 +130,9 @@ test("filters stay with their tab instead of leaking or resetting", async ({
 
   await page.getByRole("button", { name: "New SQL tab" }).click();
   const activeTab = page.locator(".editor-tab-strip .tab.active .tab-select");
-  page.once("dialog", (dialog) => void dialog.accept("worker.log"));
   await activeTab.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Rename tab" }).click();
+  await renameSqlTab(page, "worker.log");
 
   await expect(page.getByRole("button", { name: "All" })).toHaveAttribute(
     "aria-pressed",

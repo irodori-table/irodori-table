@@ -85,9 +85,11 @@ test.describe("ui type scale", () => {
     });
 
     // The complaint this encodes: "if the menu text is the baseline, the rest
-    // is too big". The menu is body text, so it renders at the shell default.
-    expect(census.menu).toBe(census.base);
+    // is too big". The top bar deliberately runs one rung above the shell
+    // default (13px) so it reads a touch larger, and nothing renders off the
+    // ladder.
     expect(census.base).toBe("12px");
+    expect(census.menu).toBe("13px");
 
     // And nothing renders off the ladder.
     const ladder = new Set(["10px", "11px", "12px", "13px", "15px"]);

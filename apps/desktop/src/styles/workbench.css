@@ -2806,7 +2806,7 @@ body.panel-resizing .result-grid {
   border-radius: 3px;
   color: var(--text);
   background: transparent;
-  font-size: calc(var(--font-ui-sm) * var(--quick-definition-scale));
+  font-size: var(--font-ui-md);
   line-height: 1;
   cursor: pointer;
 }
