@@ -67,16 +67,34 @@ const staged = (triple) =>
     `irodori-connector-host-${triple}${triple.includes("windows") ? ".exe" : ""}`,
   );
 
-copyFileSync(buildFor(hostTriple), staged(hostTriple));
-console.log(`staged connector host for ${hostTriple}`);
+// A universal macOS build needs each per-arch sidecar (validated during the
+// per-arch compile) AND a `universal-apple-darwin` file (copied during
+// bundling). Stage all of them.
+const macArchs =
+  process.platform === "darwin"
+    ? ["aarch64-apple-darwin", "x86_64-apple-darwin"]
+    : [];
+const triples = macArchs.length > 0 ? macArchs : [hostTriple];
 
-if (process.platform === "darwin") {
-  // A universal build compiles each arch separately and validates the sidecar
-  // for that arch, then lipos them itself — so both per-arch names must exist,
-  // not a single `universal-apple-darwin` file.
-  for (const triple of ["aarch64-apple-darwin", "x86_64-apple-darwin"]) {
-    if (triple === hostTriple) continue;
-    copyFileSync(buildFor(triple), staged(triple));
-    console.log(`staged connector host for ${triple}`);
-  }
+const builtByTriple = new Map();
+for (const triple of triples) {
+  builtByTriple.set(triple, buildFor(triple));
+}
+for (const [triple, executable] of builtByTriple) {
+  copyFileSync(executable, staged(triple));
+  console.log(`staged connector host for ${triple}`);
+}
+
+if (macArchs.length > 0) {
+  execFileSync(
+    "lipo",
+    [
+      "-create",
+      "-output",
+      staged("universal-apple-darwin"),
+      ...macArchs.map((triple) => builtByTriple.get(triple)),
+    ],
+    { stdio: "inherit" },
+  );
+  console.log("staged universal connector host for universal-apple-darwin");
 }
