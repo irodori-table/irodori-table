@@ -358,6 +358,23 @@ jobs:
           IRODORI_UPDATER_ENDPOINT: ${{ vars.IRODORI_UPDATER_ENDPOINT }}
         run: npm run release:prepare-updater
 
+      # The lightweight tag release publishes Linux packages first; a stable or
+      # preview re-dispatch rebuilds them (with updater signatures) and
+      # tauri-action does not overwrite existing assets, so clear the earlier
+      # copies first.
+      - name: Clear Linux assets from an earlier channel
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ needs.release-gates.outputs.release_tag }}"
+          names="$(gh release view "$tag" --json assets -q '.assets[].name' 2>/dev/null || true)"
+          printf '%s\n' "$names" \
+            | grep -Ei '\.(AppImage|deb|rpm)(\.sig|\.tar\.gz(\.sig)?)?$' \
+            | while read -r name; do
+                [ -n "$name" ] && gh release delete-asset "$tag" "$name" -y || true
+              done || true
+
       - name: Build and Publish Tauri App
         uses: tauri-apps/tauri-action@v1
         env:
