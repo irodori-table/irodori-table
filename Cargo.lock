@@ -4794,12 +4794,13 @@ dependencies = [
 
 [[package]]
 name = "rowan"
-version = "0.16.1"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "417a3a9f582e349834051b8a10c8d71ca88da4211e4093528e36b9845f6b5f21"
+checksum = "14b574c58582fa59fa43a2feb6608b8744184659f08a2e0117e4b8224d95ed61"
 dependencies = [
  "countme",
  "hashbrown 0.14.5",
+ "memoffset",
  "rustc-hash 1.1.0",
  "text-size",
 ]
@@ -5583,8 +5584,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-formatter"
-version = "1.22.2"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.2#fdaeb60cad9580bfb86dc001e2966482a930cf00"
+version = "1.22.3"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.3#d671ea26e4b531109ee75374b77b08f2ce945824"
 dependencies = [
  "sql-dialect-fmt-lexer",
  "sql-dialect-fmt-parser",
@@ -5595,8 +5596,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-lexer"
-version = "1.22.2"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.2#fdaeb60cad9580bfb86dc001e2966482a930cf00"
+version = "1.22.3"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.3#d671ea26e4b531109ee75374b77b08f2ce945824"
 dependencies = [
  "sql-dialect-fmt-syntax",
  "sql-dialect-fmt-text",
@@ -5604,8 +5605,8 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-parser"
-version = "1.22.2"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.2#fdaeb60cad9580bfb86dc001e2966482a930cf00"
+version = "1.22.3"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.3#d671ea26e4b531109ee75374b77b08f2ce945824"
 dependencies = [
  "rowan",
  "sql-dialect-fmt-lexer",
@@ -5615,16 +5616,16 @@ dependencies = [
 
 [[package]]
 name = "sql-dialect-fmt-syntax"
-version = "1.22.2"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.2#fdaeb60cad9580bfb86dc001e2966482a930cf00"
+version = "1.22.3"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.3#d671ea26e4b531109ee75374b77b08f2ce945824"
 dependencies = [
  "rowan",
 ]
 
 [[package]]
 name = "sql-dialect-fmt-text"
-version = "1.22.2"
-source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.2#fdaeb60cad9580bfb86dc001e2966482a930cf00"
+version = "1.22.3"
+source = "git+https://github.com/hjosugi/sql-dialect-fmt?tag=v1.22.3#d671ea26e4b531109ee75374b77b08f2ce945824"
 
 [[package]]
 name = "sqlx"
@@ -6061,9 +6062,9 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tauri"
-version = "2.11.5"
+version = "2.11.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "667b20e2726d572dea2de7370da16e188eb06008faf9a92fab7cdc46791190b5"
+checksum = "6fa5bacdb9bbad5954af3d1bd6cf6ae9192cab1b2e270f4a07f904610b9e85f4"
 dependencies = [
  "anyhow",
  "bytes",
@@ -6254,9 +6255,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-plugin-updater"
-version = "2.11.0"
+version = "2.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b28d8cabdeb0564f03ae261963de4bc3d98321cd3d213e76a81b7d344e5df606"
+checksum = "7a5cad8ed5948d988e1018ecd31e27cacedbf72ce3fb972940c3e4bf51639e4b"
 dependencies = [
  "base64 0.22.1",
  "dirs",
