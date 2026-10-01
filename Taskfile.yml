@@ -299,6 +299,21 @@ tasks:
     desc: 'Fail when the stable Latest release has fallen behind the pre-releases'
     cmds: ['node tools/release/check-stable-latest.mjs']
 
+  # Local distribution packaging. CI does the signed publish; these are for
+  # reproducing it by hand. See RELEASING.md -> Linux Distribution Packages.
+  packaging-apt:
+    desc: 'Build an unsigned APT repo: DEBS=<dir> REPO=<dir>'
+    cmds:
+      - 'node tools/release/apt-repo.mjs --input {{.DEBS}} --repo {{.REPO}} --dist {{.DIST | default "stable"}} --allow-unsigned'
+  packaging-apt-verify:
+    desc: 'Verify a signed APT repo: REPO=<dir>'
+    cmds:
+      - 'node tools/release/apt-repo.mjs --repo {{.REPO}} --dist {{.DIST | default "stable"}} --verify'
+  packaging-aur:
+    desc: 'Render the AUR package: VERSION=<x.y.z> DEBS=<dir with debs + LICENSE>'
+    cmds:
+      - 'node tools/release/aur-package.mjs --version {{.VERSION}} --input {{.DEBS}} --out {{.OUT | default ".irodori-local/aur"}} --validate'
+
   # --- knowledge base and generated docs ------------------------------------
   knowledge-refresh:
     desc: 'Fetch official docs, then extract facts (changed-only). LIMIT=16'
