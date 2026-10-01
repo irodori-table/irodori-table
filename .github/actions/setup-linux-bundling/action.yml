@@ -7,6 +7,14 @@ description: >-
   The local build wrapper repeats the shim setup idempotently so direct local
   release commands have the same protection (#214).
 
+inputs:
+  appimage_shim:
+    description: >-
+      Install the AppImage host-library exclusion shim and cache the AppImage
+      tooling. Set to 'false' for aarch64 lanes that build deb/rpm only.
+    required: false
+    default: 'true'
+
 runs:
   using: composite
   steps:
@@ -37,7 +45,10 @@ runs:
     # build-linux-release.mjs sets XDG_CACHE_HOME to the repo-relative .cache
     # directory, so Tauri downloads linuxdeploy and its plugins here. Keep this
     # path in sync with that wrapper; dirs::cache_dir() observes the override.
+    # The AppImage tooling is x86_64-only, so aarch64 lanes that build deb/rpm
+    # only skip it (appimage_shim: false).
     - name: Cache AppImage tooling
+      if: inputs.appimage_shim == 'true'
       uses: actions/cache@v6
       with:
         path: .cache/tauri
@@ -47,5 +58,6 @@ runs:
     # build-linux-release.mjs. Prepare the same shim here for that consumer;
     # the wrapper's repeat call is intentionally idempotent.
     - name: Exclude host-provided libraries from the AppImage
+      if: inputs.appimage_shim == 'true'
       shell: bash
       run: scripts/appimage-exclude-host-libs.sh

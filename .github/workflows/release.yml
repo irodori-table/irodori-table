@@ -51,6 +51,7 @@ jobs:
       prerelease: ${{ steps.resolve.outputs.prerelease }}
       upload_updater: ${{ steps.resolve.outputs.upload_updater }}
       linux_tauri_args: ${{ steps.resolve.outputs.linux_tauri_args }}
+      linux_arm_tauri_args: ${{ steps.resolve.outputs.linux_arm_tauri_args }}
       macos_tauri_args: ${{ steps.resolve.outputs.macos_tauri_args }}
       windows_tauri_args: ${{ steps.resolve.outputs.windows_tauri_args }}
       release_body: ${{ steps.resolve.outputs.release_body }}
@@ -263,12 +264,22 @@ jobs:
             windows_tauri_args="${windows_tauri_args} --config src-tauri/tauri.bundle.conf.json"
           fi
 
+          # aarch64 builds deb and rpm only. The AppImage tooling the bundler
+          # drives (linuxdeploy and its plugins) is not dependable on arm64
+          # runners, and the apt repository and the AUR recipe both consume the
+          # .deb payload, so nothing downstream needs an aarch64 AppImage.
+          linux_arm_tauri_args=""
+          if [ -n "${linux_tauri_args}" ]; then
+            linux_arm_tauri_args="${linux_tauri_args/--bundles appimage,deb,rpm/--bundles deb,rpm}"
+          fi
+
           {
             echo "channel=${channel}"
             echo "release_tag=${release_tag}"
             echo "prerelease=${prerelease}"
             echo "upload_updater=${upload_updater}"
             echo "linux_tauri_args=${linux_tauri_args}"
+            echo "linux_arm_tauri_args=${linux_arm_tauri_args}"
             echo "macos_tauri_args=${macos_tauri_args}"
             echo "windows_tauri_args=${windows_tauri_args}"
             echo "windows_signing=${windows_signing}"
@@ -298,7 +309,7 @@ jobs:
             elif [[ "${channel}" == "preview" ]]; then
               echo "Unsigned universal macOS and Windows preview artifacts added to the existing lightweight Linux pre-release. These artifacts are not part of the stable updater channel and may trigger operating-system trust warnings."
             else
-              echo "Lightweight Linux pre-release with AppImage, deb, and rpm packages. Built with default features only; updater artifacts and platform signing are intentionally omitted. Use the preview channel to append universal macOS and Windows packages, optionally signing Windows through SignPath. DuckDB is distributed through its installable connector extension."
+              echo "Lightweight Linux pre-release with AppImage, deb, and rpm packages for x86_64 and deb and rpm packages for arm64. Built with default features only; updater artifacts and platform signing are intentionally omitted. Use the preview channel to append universal macOS and Windows packages, optionally signing Windows through SignPath. DuckDB is distributed through its installable connector extension."
             fi
             echo "EOF_RELEASE_BODY"
           } >> "${GITHUB_OUTPUT}"
@@ -340,10 +351,10 @@ jobs:
           echo "release_id=${release_id}" >> "${GITHUB_OUTPUT}"
 
   publish-linux:
-    name: Publish Linux packages
+    name: Publish Linux packages (x86_64)
     needs: release-gates
     if: needs.release-gates.outputs.linux_tauri_args != ''
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout irodori-table
         uses: actions/checkout@v7
@@ -369,7 +380,8 @@ jobs:
       # The lightweight tag release publishes Linux packages first; a stable or
       # preview re-dispatch rebuilds them (with updater signatures) and
       # tauri-action does not overwrite existing assets, so clear the earlier
-      # copies first.
+      # copies first. Restrict the pattern to x86_64 names so the concurrent
+      # aarch64 lane does not delete the other lane's assets.
       - name: Clear Linux assets from an earlier channel
         shell: bash
         env:
@@ -378,7 +390,7 @@ jobs:
           tag="${{ needs.release-gates.outputs.release_tag }}"
           names="$(gh release view "$tag" --json assets -q '.assets[].name' 2>/dev/null || true)"
           printf '%s\n' "$names" \
-            | grep -Ei '\.(AppImage|deb|rpm)(\.sig|\.tar\.gz(\.sig)?)?$' \
+            | grep -Ei '(_amd64\.deb|-1\.x86_64\.rpm|\.AppImage)(\.sig|\.tar\.gz(\.sig)?)?$' \
             | while read -r name; do
                 [ -n "$name" ] && gh release delete-asset "$tag" "$name" -y || true
               done || true
@@ -408,6 +420,74 @@ jobs:
       - name: Verify Linux package artifacts
         working-directory: apps/desktop
         run: npm run release:verify-linux
+
+  publish-linux-aarch64:
+    name: Publish Linux packages (aarch64)
+    needs: release-gates
+    if: needs.release-gates.outputs.linux_arm_tauri_args != ''
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout irodori-table
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-gates.outputs.release_tag }}
+
+      - name: Set up Linux bundling
+        uses: ./.github/actions/setup-linux-bundling
+        with:
+          # No AppImage on aarch64; the tooling is x86_64-only.
+          appimage_shim: 'false'
+
+      - name: Set up the desktop build toolchain
+        uses: ./.github/actions/setup-desktop-toolchain
+
+      - name: Prepare stable updater signing config
+        if: needs.release-gates.outputs.upload_updater == 'true'
+        working-directory: apps/desktop
+        env:
+          TAURI_UPDATER_PUBLIC_KEY: ${{ secrets.TAURI_UPDATER_PUBLIC_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          IRODORI_UPDATER_ENDPOINT: ${{ vars.IRODORI_UPDATER_ENDPOINT }}
+        run: npm run release:prepare-updater
+
+      # Same idempotent re-dispatch problem as x86_64, but scoped to arm64 asset
+      # names so this lane never clears the x86_64 lane's uploads.
+      - name: Clear Linux assets from an earlier channel
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${{ needs.release-gates.outputs.release_tag }}"
+          names="$(gh release view "$tag" --json assets -q '.assets[].name' 2>/dev/null || true)"
+          printf '%s\n' "$names" \
+            | grep -Ei '(_arm64\.deb|-1\.aarch64\.rpm)(\.sig)?$' \
+            | while read -r name; do
+                [ -n "$name" ] && gh release delete-asset "$tag" "$name" -y || true
+              done || true
+
+      - name: Build and Publish Tauri App
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ needs.release-gates.outputs.upload_updater == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ needs.release-gates.outputs.upload_updater == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD || '' }}
+        with:
+          tagName: ${{ needs.release-gates.outputs.release_tag }}
+          releaseName: 'Irodori Table ${{ needs.release-gates.outputs.release_tag }}'
+          releaseBody: ${{ needs.release-gates.outputs.release_body }}
+          releaseDraft: false
+          prerelease: ${{ needs.release-gates.outputs.prerelease }}
+          releaseId: ${{ needs.release-gates.outputs.release_id }}
+          uploadUpdaterJson: false
+          uploadUpdaterSignatures: ${{ needs.release-gates.outputs.upload_updater }}
+          retryAttempts: 3
+          projectPath: apps/desktop
+          args: ${{ needs.release-gates.outputs.linux_arm_tauri_args }}
+
+      - name: Verify Linux package artifacts
+        working-directory: apps/desktop
+        run: npm run release:verify-linux -- --bundles deb,rpm --skip-exec
 
   publish-macos:
     name: Publish macOS app
@@ -698,11 +778,195 @@ jobs:
             }
           }
 
+  publish-apt:
+    name: Publish APT repository
+    needs:
+      - release-gates
+      - publish-linux
+      - publish-linux-aarch64
+    # Packages are a stable-channel artifact only: the published apt suite is
+    # `stable`, so a pre-release must never leak into it.
+    if: |
+      needs.release-gates.outputs.prerelease == 'false'
+      && needs.publish-linux.result == 'success'
+      && needs.publish-linux-aarch64.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.release-gates.outputs.release_tag }}
+      APT_GPG_KEY_ID: ${{ secrets.APT_GPG_KEY_ID }}
+    steps:
+      # Default checkout, not the release tag: an older tag predates the apt
+      # tooling, and this job only ever needs tools/release/apt-repo.mjs.
+      - name: Checkout irodori-table
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Import APT signing key
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+          APT_GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APT_GPG_PRIVATE_KEY:-}" ]; then
+            echo "::error::APT_GPG_PRIVATE_KEY is not set; cannot sign the repository."
+            exit 1
+          fi
+          gnupg="${RUNNER_TEMP}/apt-gnupg"
+          install -m 700 -d "$gnupg"
+          printf '%s' "$APT_GPG_PRIVATE_KEY" | gpg --batch --homedir "$gnupg" --import
+          echo "GNUPGHOME=$gnupg" >> "${GITHUB_ENV}"
+          if [ -n "${APT_GPG_PASSPHRASE:-}" ]; then
+            printf '%s' "$APT_GPG_PASSPHRASE" > "${RUNNER_TEMP}/apt-passphrase"
+            chmod 600 "${RUNNER_TEMP}/apt-passphrase"
+            echo "APT_GPG_PASSPHRASE_FILE=${RUNNER_TEMP}/apt-passphrase" >> "${GITHUB_ENV}"
+          fi
+
+      - name: Download release packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p debs
+          gh release download "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" \
+            --pattern '*.deb' --dir debs
+          ls -la debs
+
+      - name: Check out irodori-packages
+        env:
+          PACKAGES_TOKEN: ${{ secrets.IRODORI_PACKAGES_TOKEN }}
+        run: |
+          set -euo pipefail
+          git clone --depth 1 \
+            "https://x-access-token:${PACKAGES_TOKEN}@github.com/irodori-table/irodori-packages.git" \
+            pkgs
+
+      - name: Build and sign the APT repository
+        run: |
+          set -euo pipefail
+          args=(--input debs --repo pkgs/apt --dist stable --component main
+                --sign-key "${APT_GPG_KEY_ID}"
+                --keyring-out pkgs/apt/irodori-archive-keyring.gpg)
+          if [ -n "${APT_GPG_PASSPHRASE_FILE:-}" ]; then
+            args+=(--passphrase-file "${APT_GPG_PASSPHRASE_FILE}")
+          fi
+          node tools/release/apt-repo.mjs "${args[@]}"
+          node tools/release/apt-repo.mjs --repo pkgs/apt --dist stable --verify
+
+      - name: Commit and push the repository
+        run: |
+          set -euo pipefail
+          cd pkgs
+          git config user.name "irodori-table-bot"
+          git config user.email "irodori-bot@users.noreply.github.com"
+          git add apt
+          if git diff --cached --quiet; then
+            echo "No APT changes to publish."
+            exit 0
+          fi
+          git commit -m "apt: publish Irodori Table ${RELEASE_TAG#v}"
+          git push
+
+  publish-aur:
+    name: Publish AUR package
+    needs:
+      - release-gates
+      - publish-linux
+      - publish-linux-aarch64
+    if: |
+      needs.release-gates.outputs.prerelease == 'false'
+      && needs.publish-linux.result == 'success'
+      && needs.publish-linux-aarch64.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.release-gates.outputs.release_tag }}
+    steps:
+      - name: Checkout irodori-table
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Download release packages and license
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p debs
+          gh release download "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" \
+            --pattern '*.deb' --dir debs
+          curl -fsSL \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${RELEASE_TAG}/LICENSE" \
+            -o debs/LICENSE
+          ls -la debs
+
+      - name: Render the AUR package
+        run: |
+          set -euo pipefail
+          node tools/release/aur-package.mjs \
+            --version "${RELEASE_TAG#v}" \
+            --input debs \
+            --out "${RUNNER_TEMP}/aurout"
+          cat "${RUNNER_TEMP}/aurout/.SRCINFO"
+
+      # The AUR push needs an account SSH key; without it the package is still
+      # rendered and attached as a workflow artifact so a maintainer can push.
+      - name: Check for an AUR SSH key
+        id: aur-key
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${AUR_SSH_PRIVATE_KEY:-}" ]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+            echo "::warning::AUR_SSH_PRIVATE_KEY is not set; skipping the AUR push and attaching the generated package instead."
+          fi
+
+      - name: Push to AUR
+        if: steps.aur-key.outputs.available == 'true'
+        env:
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d "${HOME}/.ssh"
+          printf '%s\n' "${AUR_SSH_PRIVATE_KEY}" > "${HOME}/.ssh/aur"
+          chmod 600 "${HOME}/.ssh/aur"
+          export GIT_SSH_COMMAND="ssh -i ${HOME}/.ssh/aur -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git clone "ssh://aur@aur.archlinux.org/irodori-table.git" "${RUNNER_TEMP}/aurpkg"
+          cp "${RUNNER_TEMP}/aurout/PKGBUILD" "${RUNNER_TEMP}/aurout/.SRCINFO" "${RUNNER_TEMP}/aurpkg/"
+          cd "${RUNNER_TEMP}/aurpkg"
+          git config user.name "irodori-table-bot"
+          git config user.email "irodori-bot@users.noreply.github.com"
+          git add PKGBUILD .SRCINFO
+          if git diff --cached --quiet; then
+            echo "AUR package already up to date."
+            exit 0
+          fi
+          git commit -m "upgpkg: irodori-table ${RELEASE_TAG#v}-1"
+          git push
+
+      - name: Attach the AUR package for manual push
+        if: steps.aur-key.outputs.available != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: irodori-aur-${{ needs.release-gates.outputs.release_tag }}
+          path: ${{ runner.temp }}/aurout/*
+          if-no-files-found: error
+          retention-days: 14
+
   publish-updater:
     name: Publish and verify updater manifest
     needs:
       - release-gates
       - publish-linux
+      - publish-linux-aarch64
       - publish-macos
       - publish-windows
     # The manifest must describe every platform, so require all three lanes.
@@ -712,6 +976,7 @@ jobs:
     if: |
       needs.release-gates.outputs.upload_updater == 'true'
       && needs.publish-linux.result == 'success'
+      && needs.publish-linux-aarch64.result == 'success'
       && needs.publish-macos.result == 'success'
       && needs.publish-windows.result == 'success'
     runs-on: ubuntu-latest

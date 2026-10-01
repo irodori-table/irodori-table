@@ -55,6 +55,11 @@ jobs:
           - os: ubuntu-latest
             label: Linux
             targets: ''
+          # aarch64 warms its own cache key; the release aarch64 lane restores
+          # it. `runner.arch` in the shared-key keeps it distinct from x86_64.
+          - os: ubuntu-24.04-arm
+            label: Linux arm64
+            targets: ''
           - os: macos-15
             label: macOS
             # The release lane builds universal-apple-darwin, which compiles
@@ -69,7 +74,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Linux build dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -97,7 +102,8 @@ jobs:
         with:
           workspaces: '. -> .irodori-local/target'
           # Same shared-key as the release lanes — this is what makes the
-          # warmed cache reachable from a release run.
+          # warmed cache reachable from a release run. `runner.arch` keeps the
+          # x86_64 and aarch64 Linux caches distinct.
           #
           # Deliberately no cache-on-failure: a failed warm run saves a PARTIAL
           # cache under the same key, and rust-cache skips saving when the key
@@ -105,7 +111,7 @@ jobs:
           # set changes. That is exactly what happened here — the Windows lane
           # restored "full match: true" and still rebuilt ~140 crates. Saving
           # nothing is better than poisoning the key.
-          shared-key: release-${{ runner.os }}
+          shared-key: release-${{ runner.os }}-${{ runner.arch }}
 
       # The Tauri crate requires frontendDist to exist when its compile-time
       # context is generated. rust-cache deliberately removes workspace-crate
