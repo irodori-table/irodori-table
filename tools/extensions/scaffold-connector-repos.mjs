@@ -2,7 +2,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { basename, dirname, resolve } from "node:path";
+import { basename, dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -11,6 +11,8 @@ const defaultExtensionsRoot = resolve(root, "../../irodori-extensions");
 const extensionsRoot =
   process.env.IRODORI_EXTENSIONS_ROOT ?? defaultExtensionsRoot;
 const options = parseArgs(process.argv.slice(2));
+const kitTag = "v0.9.1";
+const maintainedRepositories = new Set();
 
 if (options.help) {
   printHelp();
@@ -173,6 +175,7 @@ function writeConnectorRepo(entry) {
     return "skipped";
   }
   if (implementedMarkers.length > 0 && options.force) {
+    maintainedRepositories.add(repoDir);
     const forceVerb = options.dryRun ? "would rewrite" : "rewriting";
     const rustNote = preserveRustSources
       ? "; keeping its Rust sources, pass --force-drivers to overwrite them"
@@ -180,7 +183,7 @@ function writeConnectorRepo(entry) {
     console.log(
       `connector-scaffold: ${forceVerb} implemented repo ${repoName} because --force is set (${implementedMarkers.join(
         ", ",
-      )})${rustNote}`,
+      )}); keeping existing metadata, docs and build files${rustNote}`,
     );
   } else if (options.dryRun) {
     console.log(`connector-scaffold: would write ${repoName}`);
@@ -340,7 +343,9 @@ function writeConnectorRepo(entry) {
     releaseWorkflow(isDuckDbBackedConnector(engine)),
   );
   writeText(resolve(repoDir, "dist/native/.gitkeep"), "");
-  formatRustSources(repoDir);
+  if (!preserveRustSources) {
+    formatRustSources(repoDir);
+  }
   return "written";
 }
 
@@ -1841,7 +1846,7 @@ function authMethodsForEngine(engine, engineMeta) {
   if (["duckdb"].includes(engine)) {
     add(authToken("extensionCredential", "Extension or remote storage token"));
   } else if (["motherduck"].includes(engine)) {
-    add(authToken("motherduckToken", "MotherDuck token"), authOauth2(), authBrowserSso());
+    add(authToken("motherduckToken", "MotherDuck token"));
   } else if (["bigquery", "bigtable", "cloudSpanner"].includes(engine)) {
     add(
       authToken("oauthAccessToken", "OAuth 2.0 access token"),
@@ -1870,9 +1875,6 @@ function authMethodsForEngine(engine, engineMeta) {
       authPrivateKeyJwt("snowflakeKeyPair", "Key-pair JWT"),
       authOauth2(),
       authToken("snowflakeSessionToken", "Session token"),
-      authBrowserSso(),
-      authSaml(),
-      authExternalBrowser(),
     );
   } else if (engine === "databricks") {
     add(
@@ -1888,7 +1890,7 @@ function authMethodsForEngine(engine, engineMeta) {
   } else if (["cassandra", "scylladb"].includes(engine)) {
     add(authUserPassword(), authSaslPlain(), authSaslScram(), authClientCertificate(), authKerberos());
   } else if (engine === "mongodb") {
-    add(authUserPassword("scram", "SCRAM user/password"), authClientCertificate("mongodbX509", "X.509 client certificate"), authAwsIam(), authKerberos(), authLdap(), authOauth2("oidc", "OIDC / workload identity"));
+    add(authUserPassword("scram", "SCRAM user/password"), authClientCertificate("mongodbX509", "X.509 client certificate"), authAwsIam(), authLdap(), authOauth2("oidc", "OIDC / workload identity"));
   } else if (engine === "sqlserver") {
     add(authUserPassword("sqlPassword", "SQL Server user/password"), authKerberos("windowsIntegrated", "Windows integrated / Kerberos"), authAzureAd(), authServicePrincipal(), authManagedIdentity(), authToken("accessToken", "Access token"));
   } else if (engine === "oracle") {
@@ -1905,7 +1907,7 @@ function authMethodsForEngine(engine, engineMeta) {
       add(authAwsSigV4());
     }
   } else if (engine === "couchbase") {
-    add(authUserPassword(), authClientCertificate(), authLdap(), authSaml(), authOauth2("oidc", "OIDC"));
+    add(authUserPassword(), authClientCertificate(), authLdap(), authOauth2("oidc", "OIDC"));
   } else if (engine === "arangodb") {
     add(authBasic(), authToken("jwt", "JWT bearer token"), authClientCertificate());
   } else if (engine === "firebird") {
@@ -2072,17 +2074,6 @@ function authBrowserSso() {
   return authMethod("browserSso", "Browser SSO", "browserSso", ["token"]);
 }
 
-function authExternalBrowser() {
-  return authMethod("externalBrowser", "External browser", "browserSso", ["token"]);
-}
-
-function authSaml(id = "saml", label = "SAML SSO") {
-  return authMethod(id, label, "saml", ["token"], [
-    field("idpUrl", "Identity provider URL", "uri"),
-    field("assertion", "SAML assertion", "secret", { secretPurpose: "token" }),
-  ]);
-}
-
 function authKerberos(id = "kerberos", label = "Kerberos / GSSAPI") {
   return authMethod(id, label, "kerberos", ["token"], [
     field("principal", "Principal", "string"),
@@ -2244,17 +2235,32 @@ function ensureDir(path) {
 }
 
 function copyFile(source, destination) {
-  if (options.dryRun) {
+  if (options.dryRun || preserveExistingFile(destination)) {
     return;
   }
   copyFileSync(source, destination);
 }
 
 function writeText(path, content) {
-  if (options.dryRun) {
+  if (options.dryRun || preserveExistingFile(path)) {
     return;
   }
   writeFileSync(path, content);
+}
+
+// Scaffolding bootstraps missing files; maintained repositories own their
+// metadata, dependency pins, docs and packaging. Reapplying the template must
+// not roll those changes back (#232), even when Rust sources are reset.
+function preserveExistingFile(path) {
+  if (!existsSync(path)) {
+    return false;
+  }
+  for (const repoDir of maintainedRepositories) {
+    if (path.startsWith(`${repoDir}${sep}`)) {
+      return !(options.forceDrivers && path.startsWith(`${repoDir}${sep}src${sep}`));
+    }
+  }
+  return false;
 }
 
 function unique(values) {
@@ -2270,12 +2276,12 @@ bundled-duckdb = ["duckdb/bundled"]
 
 [dependencies]
 duckdb = { version = "1", default-features = false }
-irodori-connector-abi = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.6.0" }
+irodori-connector-abi = { git = "https://github.com/irodori-table/irodori-kit", tag = "${kitTag}" }
 serde_json = "1"
 `
     : `
 [dependencies]
-irodori-connector-abi = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.6.0" }
+irodori-connector-abi = { git = "https://github.com/irodori-table/irodori-kit", tag = "${kitTag}" }
 serde_json = "1"
 `;
   return `[package]
@@ -2346,7 +2352,7 @@ function writeRustSources(
 }
 
 function removeIfExists(path) {
-  if (options.dryRun) {
+  if (options.dryRun || preserveExistingFile(path)) {
     return;
   }
   rmSync(path, { force: true });
@@ -2402,12 +2408,14 @@ Bootstraps connector extension repositories from registry/catalog/index.json.
 
 Options:
   --dry-run  Report which repositories would be written or skipped.
-  --force    Rewrite implemented repositories (those with connector.source.json
-             or src/driver.rs). Their Rust sources under src/ are PRESERVED:
+  --force    Bootstrap missing files in implemented repositories (those with
+             connector.source.json or src/driver.rs). Existing metadata, docs,
+             dependency pins, CI and packaging files are PRESERVED. Their Rust
+             sources under src/ are also PRESERVED:
              the template is a bootstrap, and the implemented drivers have
              deliberately diverged from it (Iceberg REST catalog browsing,
-             Hudi timeline-aware reads, Delta transaction-log checks). Manifest,
-             docs, CI and packaging files are regenerated as usual.
+             Hudi timeline-aware reads, Delta transaction-log checks). Change
+             maintained connector metadata in the owning connector repository.
   --force-drivers
              Implies --force and additionally overwrites src/*.rs, reverting
              those driver fixes to the naive template — including the
@@ -3453,7 +3461,7 @@ permissions:
 
 jobs:
   extension-ci:
-    uses: irodori-table/irodori-kit/.github/workflows/extension-ci.yml@v0.6.9
+    uses: irodori-table/irodori-kit/.github/workflows/extension-ci.yml@${kitTag}
     with:
       manifest-root: "."
       package-command: "make package"
@@ -3480,7 +3488,7 @@ permissions:
 
 jobs:
   extension-release:
-    uses: irodori-table/irodori-kit/.github/workflows/extension-release.yml@v0.6.9
+    uses: irodori-table/irodori-kit/.github/workflows/extension-release.yml@${kitTag}
     with:
       release_tag: \${{ inputs.release_tag || github.ref_name }}
       duckdb_backed: ${duckDbBacked}
