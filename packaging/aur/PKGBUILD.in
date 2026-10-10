@@ -1,0 +1,48 @@
+# Maintainer: Irodori Table <irodori-table@users.noreply.github.com>
+#
+# This file is a template. `tools/release/aur-package.mjs` renders it into the
+# AUR package (PKGBUILD + .SRCINFO) for a released version; do not edit the
+# rendered copies by hand.
+#
+# The desktop app is already compiled and packaged as a .deb by the release
+# workflow, so this PKGBUILD repackages that payload rather than rebuilding the
+# Rust/Tauri tree in the AUR. That keeps AUR builds to a couple of seconds and
+# avoids pinning the whole webkit2gtk toolchain in an AUR recipe.
+
+pkgname=irodori-table
+pkgver={{pkgver}}
+pkgrel=1
+pkgdesc='Fast desktop SQL workbench for querying, browsing, and editing databases'
+arch=('x86_64' 'aarch64')
+url='https://github.com/irodori-table/irodori-table'
+license=('0BSD')
+depends=('gtk3' 'webkit2gtk-4.1')
+provides=('irodori-table')
+conflicts=('irodori-table')
+options=('!strip' '!debug')
+_base="https://github.com/irodori-table/irodori-table/releases/download/v${pkgver}"
+
+source_x86_64=("Irodori.Table_${pkgver}_amd64.deb::${_base}/Irodori.Table_${pkgver}_amd64.deb"
+               "LICENSE::https://raw.githubusercontent.com/irodori-table/irodori-table/v${pkgver}/LICENSE")
+source_aarch64=("Irodori.Table_${pkgver}_arm64.deb::${_base}/Irodori.Table_${pkgver}_arm64.deb"
+                "LICENSE::https://raw.githubusercontent.com/irodori-table/irodori-table/v${pkgver}/LICENSE")
+sha256sums_x86_64=('{{sha256_x86_64}}'
+                   '{{sha256_license}}')
+sha256sums_aarch64=('{{sha256_aarch64}}'
+                    '{{sha256_license}}')
+
+package() {
+  local deb
+  case "$CARCH" in
+    x86_64) deb="Irodori.Table_${pkgver}_amd64.deb" ;;
+    aarch64) deb="Irodori.Table_${pkgver}_arm64.deb" ;;
+    *) error "Unsupported architecture for this package: $CARCH" ;;
+  esac
+
+  # Unpack the .deb payload (usr/...) straight into the package root.
+  bsdtar -xf "${srcdir}/${deb}"
+  bsdtar -xf data.tar.gz -C "${pkgdir}"
+
+  install -Dm644 "${srcdir}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

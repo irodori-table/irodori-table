@@ -99,7 +99,8 @@ bindings.
 1. Push the release commit and tag created by the release target.
 2. Watch the release workflow in GitHub Actions.
 3. The tag workflow publishes a lightweight Linux pre-release with AppImage,
-   deb, and rpm packages and default features only. When explicitly requested,
+   deb, and rpm packages for x86_64, plus deb and rpm packages for arm64, and
+   default features only. When explicitly requested,
    manually dispatch the `preview` channel for the same tag to append unsigned
    universal macOS app/dmg packages and Windows NSIS/MSI installers. Select
    `windows_signing=signpath` to replace the Windows assets with SignPath-signed
@@ -298,6 +299,73 @@ credentials block neither prerelease checkpoints nor stable releases.
 | `APPLE_API_KEY` | macOS notarization | App Store Connect API Key ID. |
 | `APPLE_API_KEY_P8` | macOS notarization | Raw or base64-encoded App Store Connect `.p8` private key. |
 | `APPLE_ID` / `APPLE_PASSWORD` / `APPLE_TEAM_ID` | macOS notarization | Alternative notarization path if App Store Connect API secrets are not used. |
+
+## Linux Distribution Packages
+
+Stable releases also republish the Linux `.deb` payload into package-manager
+repositories, so users can `apt install irodori-table` or `yay -S irodori-table`
+instead of downloading an AppImage.
+
+- The `publish-linux` lane builds `appimage,deb,rpm` for **x86_64** on
+  `ubuntu-24.04`; `publish-linux-aarch64` builds **deb,rpm** for **arm64** on
+  `ubuntu-24.04-arm`. aarch64 skips the AppImage because the linuxdeploy tooling
+  the bundler drives is x86_64-only, and nothing downstream needs an aarch64
+  AppImage.
+- `publish-apt` and `publish-aur` run only for a **stable** release
+  (`prerelease == false`), after both Linux lanes finish. Pre-releases never leak
+  into the `stable` apt suite or the AUR.
+- `publish-apt` signs the repository with the project GPG key and pushes
+  `dists/`, `pool/`, and `irodori-archive-keyring.gpg` to the
+  [`irodori-packages`](https://github.com/irodori-table/irodori-packages)
+  repository, which GitHub Pages serves at
+  `https://irodori-table.github.io/irodori-packages/apt`.
+- `publish-aur` renders `packaging/aur/PKGBUILD.in` into an AUR package (the
+  `.deb` payload repackaged) and pushes it to
+  `ssh://aur@aur.archlinux.org/irodori-table.git`. Without `AUR_SSH_PRIVATE_KEY`
+  it attaches the rendered `PKGBUILD`/`.SRCINFO` as a workflow artifact instead
+  of failing the release.
+
+| Secret | Used by | Notes |
+| --- | --- | --- |
+| `APT_GPG_KEY_ID` | APT signing | Fingerprint of the project signing key. |
+| `APT_GPG_PRIVATE_KEY` | APT signing | ASCII-armored private key (`gpg --armor --export-secret-keys`). |
+| `APT_GPG_PASSPHRASE` | APT signing | Optional; only if the key is passphrase-protected. |
+| `IRODORI_PACKAGES_TOKEN` | APT publish | Fine-grained PAT with **Contents: read and write** on `irodori-table/irodori-packages` only. |
+| `AUR_SSH_PRIVATE_KEY` | AUR publish | SSH private key registered with the AUR account that owns `irodori-table`. |
+
+### Generating the APT signing key
+
+Run once, offline, and back the private key up:
+
+```sh
+gpg --batch --quick-generate-key \
+  "Irodori Table <irodori-table@users.noreply.github.com>" ed25519 sign 2y
+fingerprint="$(gpg --list-keys --with-colons irodori-table@users.noreply.github.com \
+  | awk -F: '/^fpr:/{print $10; exit}')"
+gpg --armor --export-secret-keys "$fingerprint"   # -> APT_GPG_PRIVATE_KEY
+```
+
+Set `APT_GPG_KEY_ID` to `$fingerprint`. The public half is re-exported to
+`apt/irodori-archive-keyring.gpg` on every publish, so rotating the key only
+needs the secret updated.
+
+### Publishing without CI
+
+Both tools are dependency-free Node scripts, so the same repository can be built
+locally:
+
+```sh
+# APT (unsigned dry run)
+node tools/release/apt-repo.mjs --input <dir-with-debs> --repo <repo-dir> --allow-unsigned
+
+# APT (signed, then verified)
+node tools/release/apt-repo.mjs --input <dir> --repo <repo-dir> --sign-key <fpr>
+node tools/release/apt-repo.mjs --repo <repo-dir> --dist stable --verify
+
+# AUR (renders PKGBUILD + .SRCINFO; --validate diffs against makepkg)
+node tools/release/aur-package.mjs --version <ver> \
+  --input <dir-with-debs-and-LICENSE> --out <out> --validate
+```
 
 ## Rollback
 

@@ -37,26 +37,53 @@ const cargoTargetDir = resolve(
   process.env.CARGO_TARGET_DIR ?? fromRepoRoot(".irodori-local/target"),
 );
 const bundleRoot = resolve(cargoTargetDir, profile, "bundle");
-const appImage = await requiredBundle("appimage", ".AppImage");
-const deb = await requiredBundle("deb", ".deb");
-const rpm = await requiredBundle("rpm", ".rpm");
-
 const pkg = JSON.parse(await readFile(fromDesktopRoot("package.json"), "utf8"));
-await verifyAppImage(appImage, pkg.version);
-await verifyPackage(deb, pkg.version, "Debian", Buffer.from("!<arch>\n"));
-await verifyPackage(
-  rpm,
-  pkg.version,
-  "RPM",
-  Buffer.from([0xed, 0xab, 0xee, 0xdb]),
-);
-console.log(`linux-release: ok (${appImage}, ${deb}, ${rpm})`);
+
+// aarch64 lanes build deb/rpm only (see release.yml), so callers can narrow the
+// set; the default still demands the full Linux set.
+const verified = [];
+if (options.bundles.includes("appimage")) {
+  const appImage = await requiredBundle("appimage", ".AppImage");
+  await verifyAppImage(appImage, pkg.version);
+  verified.push(appImage);
+}
+if (options.bundles.includes("deb")) {
+  const deb = await requiredBundle("deb", ".deb");
+  await verifyPackage(deb, pkg.version, "Debian", Buffer.from("!<arch>\n"));
+  verified.push(deb);
+}
+if (options.bundles.includes("rpm")) {
+  const rpm = await requiredBundle("rpm", ".rpm");
+  await verifyPackage(
+    rpm,
+    pkg.version,
+    "RPM",
+    Buffer.from([0xed, 0xab, 0xee, 0xdb]),
+  );
+  verified.push(rpm);
+}
+console.log(`linux-release: ok (${verified.join(", ")})`);
 
 function parseArgs(argv) {
-  return {
+  const options = {
     debug: argv.includes("--debug"),
     skipExec: argv.includes("--skip-exec"),
+    bundles: ["appimage", "deb", "rpm"],
   };
+
+  const index = argv.indexOf("--bundles");
+  if (index !== -1) {
+    const value = argv[index + 1];
+    if (!value) {
+      fail("--bundles requires a comma-separated value.");
+    }
+    options.bundles = value
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+  }
+
+  return options;
 }
 
 async function requiredBundle(directory, extension) {

@@ -54,7 +54,10 @@ runs:
       uses: Swatinem/rust-cache@v2
       with:
         workspaces: '. -> .irodori-local/target'
-        shared-key: release-${{ runner.os }}
+        # Must match warm-release-cache.yml's shared-key exactly so the release
+        # lanes restore what the warm run saved. `runner.arch` keeps the
+        # x86_64 and aarch64 Linux caches separate.
+        shared-key: release-${{ runner.os }}-${{ runner.arch }}
         # Restore only. rust-cache skips saving when the key already exists, so
         # whichever workflow writes first owns that key until the dependency set
         # changes — and a release lane's target dir is not the complete
