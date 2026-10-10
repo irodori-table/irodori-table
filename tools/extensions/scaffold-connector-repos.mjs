@@ -5,9 +5,15 @@ import { spawnSync } from "node:child_process";
 import { basename, dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { defaultExtensionsRoot } from "./lib/tooling.mjs";
+
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const root = resolve(scriptDir, "../..");
-const defaultExtensionsRoot = resolve(root, "../../irodori-extensions");
+// Resolve the fleet the same way the rest of tools/extensions does: prefer the
+// sibling `../irodori-extensions` checkout, falling back to `../../`. A
+// `../../`-only default pointed at a directory that does not exist in the
+// documented layout, so every maintained repo looked unimplemented and the
+// scaffold reported that it "would write" all of them (#232).
 const extensionsRoot =
   process.env.IRODORI_EXTENSIONS_ROOT ?? defaultExtensionsRoot;
 const options = parseArgs(process.argv.slice(2));
