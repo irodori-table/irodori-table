@@ -23,16 +23,18 @@
 // Pass --allow-unsigned for a local dry run. --verify re-checks an existing
 // tree instead of regenerating it.
 
+import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   copyFile,
   mkdir,
+  mkdtemp,
   readFile,
   readdir,
   rm,
-  stat,
   writeFile,
 } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { gzipSync } from "node:zlib";
 
@@ -220,7 +222,6 @@ async function buildRepo(options) {
   await rm(distDir, { recursive: true, force: true });
 
   const staged = [];
-  const releaseEntries = [];
   for (const architecture of architectures) {
     const packages = all
       .filter((entry) => entry.architecture === architecture)
@@ -311,23 +312,60 @@ async function readControl(debPath) {
   // Extract into a scratch directory instead of streaming a fixed member name:
   // some .deb producers prefix members with `./`, and GNU tar's `-O control`
   // then misses. Extracting by directory handles both forms.
-  const script = [
-    "set -euo pipefail",
-    'tmp="$(mktemp -d)"',
-    "trap 'rm -rf \"$tmp\"' EXIT",
-    'ar p "$1" control.tar.gz | tar -xz -C "$tmp"',
-    'cat "$tmp/control"',
-  ].join("\n");
-  const { code, stdout, stderr } = await runCapture("bash", [
-    "-c",
-    script,
-    "apt-repo",
-    debPath,
-  ]);
-  if (code !== 0) {
-    fail(`Could not read control from ${debPath}: ${stderr.trim()}`);
+  const scratch = await mkdtemp(join(tmpdir(), "irodori-deb-control-"));
+  try {
+    await extractControlArchive(debPath, scratch);
+    return parseControl(await readFile(join(scratch, "control"), "utf8"));
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
   }
-  return parseControl(stdout);
+}
+
+// `ar p <deb> control.tar.gz` writes a binary gzip stream that must not be
+// decoded as text, so pipe it straight into `tar` rather than shelling out to
+// `bash -c` and round-tripping the bytes through a string.
+function extractControlArchive(debPath, targetDir) {
+  return new Promise((resolvePromise, reject) => {
+    const ar = spawn("ar", ["p", debPath, "control.tar.gz"], {
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const tar = spawn("tar", ["-xz", "-C", targetDir], {
+      stdio: ["pipe", "ignore", "pipe"],
+    });
+    let stderr = "";
+    ar.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    tar.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    ar.on("error", reject);
+    tar.on("error", reject);
+    // A closed downstream pipe (ar failed early) surfaces as EPIPE on tar's
+    // stdin; the exit-code checks below already report the real failure.
+    tar.stdin.on("error", () => {});
+    ar.stdout.on("error", () => {});
+    ar.stdout.pipe(tar.stdin);
+    ar.on("close", (code) => {
+      if (code !== 0) {
+        tar.stdin.destroy();
+        reject(
+          new Error(
+            `ar p ${debPath} control.tar.gz failed with exit code ${code}: ${stderr.trim()}`,
+          ),
+        );
+      }
+    });
+    tar.on("close", (code) => {
+      if (code === 0) {
+        resolvePromise();
+      } else {
+        reject(
+          new Error(`tar -xz failed with exit code ${code}: ${stderr.trim()}`),
+        );
+      }
+    });
+  });
 }
 
 function parseControl(text) {
@@ -351,7 +389,6 @@ function parseControl(text) {
 }
 
 async function renderStanza(control, poolPath, repoRoot) {
-  const info = await stat(poolPath);
   const buffer = await readFile(poolPath);
   const filename = relative(repoRoot, poolPath).split("\\").join("/");
   const description = requiredField(control, "Description", poolPath);
@@ -376,7 +413,7 @@ async function renderStanza(control, poolPath, repoRoot) {
     lines.push(`Priority: ${control.Priority}`);
   }
   lines.push(`Filename: ${filename}`);
-  lines.push(`Size: ${info.size}`);
+  lines.push(`Size: ${buffer.length}`);
   lines.push(`MD5sum: ${hash(buffer, "md5")}`);
   lines.push(`SHA1: ${hash(buffer, "sha1")}`);
   lines.push(`SHA256: ${hash(buffer, "sha256")}`);

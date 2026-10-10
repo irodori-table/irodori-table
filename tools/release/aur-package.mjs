@@ -16,7 +16,7 @@
 // PATH) and fails if the generated .SRCINFO differs.
 
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -76,11 +76,13 @@ function parseArgs(argv) {
   if (!parsed.input) {
     fail("--input is required.");
   }
-  parsed.out = parsed.out ?? join(tmpdir(), `irodori-aur-${parsed.version}`);
+  // Default the output directory lazily with mkdtemp in run(): a fixed name
+  // under the shared temp dir would be world-writable and predictable.
   return parsed;
 }
 
 async function run(options) {
+  options.out = options.out ?? (await mkdtemp(join(tmpdir(), "irodori-aur-")));
   const debAmd64 = join(
     options.input,
     `Irodori.Table_${options.version}_amd64.deb`,
