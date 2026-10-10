@@ -28,7 +28,7 @@ serde_json = "1"
 irodori-connector-host = { path = "../../../crates/irodori-connector-host" }
 # Verifies the signed extension catalog. Already in the tree via the updater
 # plugin; promoted to a direct dependency so the install path can check it.
-minisign-verify = "0.2"
+minisign-verify = "0.3"
 irodori-connection = { workspace = true }
 irodori-error = { workspace = true }
 irodori-jobs = { workspace = true }
@@ -42,7 +42,7 @@ irodori-migration.workspace = true
 # external/subscription models work without the heavy embedded `llama` build.
 irodori-generate = { workspace = true, features = ["http"] }
 irodori-knowledge.workspace = true
-sql-dialect-fmt-formatter = { git = "https://github.com/hjosugi/sql-dialect-fmt", tag = "v1.22.3" }
+sql-dialect-fmt-formatter = { git = "https://github.com/hjosugi/sql-dialect-fmt", tag = "v1.29.0" }
 ts-rs = { version = "12.0.1", features = ["serde-json-impl"] }
 
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs", "io-util"] }
@@ -92,7 +92,7 @@ mongodb = { version = "3", optional = true }
 # (datetime/datetime2/date/time/datetimeoffset -> chrono types); exact numerics
 # use tiberius' built-in `Numeric` (no extra feature) so DECIMAL/NUMERIC/MONEY
 # keep full precision.
-tiberius = { version = "0.12", optional = true, default-features = false, features = [
+tiberius = { version = "0.13", optional = true, default-features = false, features = [
     "tds73",
     "native-tls",
     "chrono",
