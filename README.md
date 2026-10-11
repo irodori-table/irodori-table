@@ -12,14 +12,34 @@ checking data across many engines.
 
 ## Install
 
-Use the public install guide for the current desktop downloads and
-OS-specific install paths:
+Download a package from the
+[latest release](https://github.com/irodori-table/irodori-table/releases), or use
+a package manager.
 
-<https://irodori-table.github.io/irodori-docs/install-guide.html>
+**Debian / Ubuntu** (signed APT repository):
 
-Release assets are published from GitHub Releases:
+```bash
+curl -fsSL https://irodori-table.github.io/irodori-packages/apt/irodori-archive-keyring.gpg \
+  | sudo tee /usr/share/keyrings/irodori-archive-keyring.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/irodori-archive-keyring.gpg] https://irodori-table.github.io/irodori-packages/apt stable main" \
+  | sudo tee /etc/apt/sources.list.d/irodori.list
+sudo apt update && sudo apt install irodori-table
+```
 
-<https://github.com/irodori-table/irodori-table/releases>
+**Arch Linux** (AUR):
+
+```bash
+yay -S irodori-table
+```
+
+**Linux (portable)**: download the `.AppImage`, make it executable, and run it.
+
+**macOS / Windows**: download the universal `.dmg` or the setup `.exe`/`.msi`
+from the [latest release](https://github.com/irodori-table/irodori-table/releases).
+
+The APT and AUR channels are refreshed for stable releases only. Full
+OS-specific steps, prerequisites, and troubleshooting live in the
+[install guide](https://irodori-table.github.io/irodori-docs/install-guide.html).
 
 ## Privacy
 

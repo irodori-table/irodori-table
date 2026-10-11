@@ -11,13 +11,29 @@
 
 ## インストール
 
-現在のデスクトップ版ダウンロードおよびOS別インストール手順については、以下の公開インストールガイドをご利用ください：
+[最新リリース](https://github.com/irodori-table/irodori-table/releases) からパッケージをダウンロードするか、パッケージマネージャーを利用できます。
 
-<https://irodori-table.github.io/irodori-docs/install-guide.html>
+**Debian / Ubuntu**（署名済み APT リポジトリ）:
 
-リリースアセットはGitHub Releasesから公開されています：
+```bash
+curl -fsSL https://irodori-table.github.io/irodori-packages/apt/irodori-archive-keyring.gpg \
+  | sudo tee /usr/share/keyrings/irodori-archive-keyring.gpg >/dev/null
+echo "deb [signed-by=/usr/share/keyrings/irodori-archive-keyring.gpg] https://irodori-table.github.io/irodori-packages/apt stable main" \
+  | sudo tee /etc/apt/sources.list.d/irodori.list
+sudo apt update && sudo apt install irodori-table
+```
 
-<https://github.com/irodori-table/irodori-table/releases>
+**Arch Linux**（AUR）:
+
+```bash
+yay -S irodori-table
+```
+
+**Linux（ポータブル）**: `.AppImage` をダウンロードし、実行権限を付けて起動します。
+
+**macOS / Windows**: 最新リリースから universal `.dmg` または setup `.exe`/`.msi` をダウンロードします。
+
+APT と AUR は安定版リリース時のみ更新されます。OS別の詳細手順・前提条件・トラブルシューティングは[インストールガイド](https://irodori-table.github.io/irodori-docs/install-guide.html)にあります。
 
 ## プライバシー (Privacy)
 
