@@ -2690,7 +2690,7 @@ dependencies = [
 
 [[package]]
 name = "irodori-connector-host"
-version = "0.11.15"
+version = "0.11.16"
 dependencies = [
  "libloading 0.9.0",
  "serde_json",
@@ -2798,7 +2798,7 @@ dependencies = [
 
 [[package]]
 name = "irodori-table-desktop"
-version = "0.11.15"
+version = "0.11.16"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
