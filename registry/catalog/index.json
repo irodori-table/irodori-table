@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-23T03:35:19Z",
+  "updatedAt": "2026-10-24T12:46:18Z",
   "source": "https://github.com/irodori-table/irodori-table/tree/main/registry/catalog",
   "extensions": [
     {
@@ -140,7 +140,7 @@
       "id": "irodori.cloud-spanner",
       "name": "Cloud Spanner Connector",
       "publisher": "irodori",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds Google Cloud Spanner connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -168,36 +168,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:26:38Z",
+      "publishedAt": "2026-10-24T12:45:52Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-cloud-spanner/releases/tag/v0.1.8",
-        "tag": "v0.1.8",
+        "url": "https://github.com/irodori-table/irodori-extension-cloud-spanner/releases/tag/v0.1.9",
+        "tag": "v0.1.9",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-cloud-spanner-aarch64-linux.tar.gz",
-            "sha256": "sha256:52f754ac27fa331757d82da696efc11fa6bdacd62d194e257b4917fb54cb1023"
+            "sha256": "sha256:726674427b6b5e3cb2b299cea05429e7d8a473ddce78ce8273105da9604da6e9"
           },
           "aarch64-macos": {
             "name": "irodori-extension-cloud-spanner-aarch64-macos.tar.gz",
-            "sha256": "sha256:7d36550dd1db031c22c4113a43c050e827b91aff2c749b59568a55d0d37fd7dd"
+            "sha256": "sha256:95412cf343beb80b776d1280265d61cb269b97a4221a99d7c4d2bf92e4fd2dbe"
           },
           "aarch64-windows": {
             "name": "irodori-extension-cloud-spanner-aarch64-windows.tar.gz",
-            "sha256": "sha256:c99b3eca72ecc19de5f3c77fa720f3b9febaf1cc3a5a6dec25b8081c60fb5284"
+            "sha256": "sha256:6f02ec76d0929850f5c615d810c5ee08ed73089b57136d34e35495124d4fa588"
           },
           "x86_64-linux": {
             "name": "irodori-extension-cloud-spanner.tar.gz",
-            "sha256": "sha256:f4b8b2648a984f5cc3a4af1de5591a401861aab2a959eed0f61c4a4dcfedac58"
+            "sha256": "sha256:e10485e4bf8842d0bb4171fa96cc508640eb7a86e387164d03c934c363e7510e"
           },
           "x86_64-macos": {
             "name": "irodori-extension-cloud-spanner-x86_64-macos.tar.gz",
-            "sha256": "sha256:fdc17148070e85278e76a2fce010b2d6eba3839dafc4f21843d62bb4c4aa44b6"
+            "sha256": "sha256:b4c41941197a59732b228909990ea0ea95084d1f7744a2ac0efb589776838d93"
           },
           "x86_64-windows": {
             "name": "irodori-extension-cloud-spanner-x86_64-windows.tar.gz",
-            "sha256": "sha256:5547c94d6c75686ca98469299bed774a96a7325112a100dfe681f21a6dbdcdd6"
+            "sha256": "sha256:b1f9cab72b348b6fe6380e5aedd99110358544f7243e4b50641d2c5a6ae2185d"
           }
         }
       }
@@ -206,7 +206,7 @@
       "id": "irodori.redis",
       "name": "Redis Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Redis connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -232,36 +232,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:35:09Z",
+      "publishedAt": "2026-10-24T12:30:35Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-redis/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-redis/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-redis-aarch64-linux.tar.gz",
-            "sha256": "sha256:4c56b572f7ac06ca006e2336938c34da489e7bfbed64bb21f0b5b153cbae6b49"
+            "sha256": "sha256:fbd643fa297b72fc802697713a259ea3fcfdb46c476d271ffb96fe3e58ee38e8"
           },
           "aarch64-macos": {
             "name": "irodori-extension-redis-aarch64-macos.tar.gz",
-            "sha256": "sha256:004c124e2f3588b6b12156a93c5c04795ad8fd275f0f8a6097ce5814862e364d"
+            "sha256": "sha256:fda12092fb75362bab1fe44d9c62590726316fc8dd5efa0c0ffbe3a70d9c0d62"
           },
           "aarch64-windows": {
             "name": "irodori-extension-redis-aarch64-windows.tar.gz",
-            "sha256": "sha256:5e5160aad80d7ecdc257c7e5ccd101d2e8c4550d6110aa72147548360b64db0e"
+            "sha256": "sha256:7f6f393b540cec7cdd8e9fce3c7852d886dee5ac55c32b6f2026c5b5485cd3db"
           },
           "x86_64-linux": {
             "name": "irodori-extension-redis.tar.gz",
-            "sha256": "sha256:739a599280893566d8fd54eebd9b417b75e54dbcdf916d3b65028521ebb46c5c"
+            "sha256": "sha256:3858d95335d869afbf7cb1af17da00dc67671bbd9bf79aaea4b1160998051c34"
           },
           "x86_64-macos": {
             "name": "irodori-extension-redis-x86_64-macos.tar.gz",
-            "sha256": "sha256:54962b204552d3fc929263f827f9f42ae0d8ae3d7c50e34231518946f308efba"
+            "sha256": "sha256:c276f23b3ba0b1e47390ae1a4dd984d9a64a9caaa81fdd3a3d3b800d86fba4d6"
           },
           "x86_64-windows": {
             "name": "irodori-extension-redis-x86_64-windows.tar.gz",
-            "sha256": "sha256:8ab00d46389c39cca3836a0a8ea0105748329754ccedad13ad98bffcfac50894"
+            "sha256": "sha256:4f4282c461527cddaa0e25067f6c7f0c3d1c7a3326f6d7768c75c95ad3e53de6"
           }
         }
       }
@@ -270,7 +270,7 @@
       "id": "irodori.dynamodb",
       "name": "DynamoDB Connector",
       "publisher": "irodori",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "apiVersion": "0.1",
       "summary": "Adds DynamoDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -298,36 +298,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-23T03:35:19Z",
+      "publishedAt": "2026-10-24T12:46:18Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-dynamodb/releases/tag/v0.1.10",
-        "tag": "v0.1.10",
+        "url": "https://github.com/irodori-table/irodori-extension-dynamodb/releases/tag/v0.1.11",
+        "tag": "v0.1.11",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-dynamodb-aarch64-linux.tar.gz",
-            "sha256": "sha256:5ca367db96a2dd684ff28e0ee62f3af0e47a968de36788d741738678ad666bce"
+            "sha256": "sha256:1965bf53857f1407522a9f067e6198e8f27fb73cc306f125934a5689c94a502e"
           },
           "aarch64-macos": {
             "name": "irodori-extension-dynamodb-aarch64-macos.tar.gz",
-            "sha256": "sha256:49cfb95fac6cd37acb68f8a77af150a9ee5834490a8f70e509db7620621b9a32"
+            "sha256": "sha256:ebc711c2339fd1c435990b926e1f1498a2e8a906caaad2a1865aad9d7121a0d4"
           },
           "aarch64-windows": {
             "name": "irodori-extension-dynamodb-aarch64-windows.tar.gz",
-            "sha256": "sha256:d5de902e3126cb0eaa3dbd6edfdbfb029a2cc8cff1f2d5701f01954ec263fa8d"
+            "sha256": "sha256:1b07e4c802391e7430d8849d0158d82aa6674c7da352e4bc26529f184589fdf0"
           },
           "x86_64-linux": {
             "name": "irodori-extension-dynamodb.tar.gz",
-            "sha256": "sha256:3ba891f760f690460156ff2c56d6f2ebe2ac72334d14c40cd9d9f4159e1be6ea"
+            "sha256": "sha256:1adebaef970b06c1fe4992f79bfe991735dc226f5b465f9d5f1fe43a3a5d9c6b"
           },
           "x86_64-macos": {
             "name": "irodori-extension-dynamodb-x86_64-macos.tar.gz",
-            "sha256": "sha256:8e24542e0dd19512a214d8317cfff0591c4848a0b14c656cf97d0f942398a77b"
+            "sha256": "sha256:9918cf0d8b69d6fe88cdcf59211be77db92170295762dde9f924a722d86771bf"
           },
           "x86_64-windows": {
             "name": "irodori-extension-dynamodb-x86_64-windows.tar.gz",
-            "sha256": "sha256:62c69606d7148802932211402c93aa8d8d5461692fdb29ada9efb5ca69e0dd00"
+            "sha256": "sha256:2f728e127a3ed0ecda1dff5e142603879f5272caed3bc81deb85db9d8fb4c725"
           }
         }
       }
@@ -336,7 +336,7 @@
       "id": "irodori.snowflake",
       "name": "Snowflake Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Snowflake connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -363,36 +363,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:38:27Z",
+      "publishedAt": "2026-10-24T12:11:29Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-snowflake/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-snowflake/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-snowflake-aarch64-linux.tar.gz",
-            "sha256": "sha256:fce3eb7aedcec5876f5d343864c1f719bc23e542ab600cd621a2e4d2ddcaf056"
+            "sha256": "sha256:5725288cc360676ec97fbd17d9f24f3bf44dc89238220ac0f8a1b1f449ef3a67"
           },
           "aarch64-macos": {
             "name": "irodori-extension-snowflake-aarch64-macos.tar.gz",
-            "sha256": "sha256:d1b73d637e7be8b0d0b198c041ac1605668a2d2f6fc6df189a40108ed21222cb"
+            "sha256": "sha256:3a4ddad88889fb3dd6ace87e5258dcef26ade04f5556a460f97d4811f826ac7b"
           },
           "aarch64-windows": {
             "name": "irodori-extension-snowflake-aarch64-windows.tar.gz",
-            "sha256": "sha256:aae14b1f1f1112776067cc3e61727e0fd089f40e41974c1bc1322fe7ea9ad80f"
+            "sha256": "sha256:58bd6f4931b5c2b6bb22fd175817678d327d01731d2f02337e3e31712decb691"
           },
           "x86_64-linux": {
             "name": "irodori-extension-snowflake.tar.gz",
-            "sha256": "sha256:b94fdf0891d5949f16df747819c9f8b5c24294a7c4e111cd480878eace99fb70"
+            "sha256": "sha256:5255fc082db0ce5119a0468bde41eeb0902221ff5ea1faf261c09f66d84e2fa6"
           },
           "x86_64-macos": {
             "name": "irodori-extension-snowflake-x86_64-macos.tar.gz",
-            "sha256": "sha256:585837da4876523704a8bf470b16a06f4b8233f9d3213c891fd23bbdcc287d9e"
+            "sha256": "sha256:01681a7e7228ce59bb211f0276271240f6b60ba5a4b62cd4608ce67fb87648dd"
           },
           "x86_64-windows": {
             "name": "irodori-extension-snowflake-x86_64-windows.tar.gz",
-            "sha256": "sha256:6599c43ac2eb4efe2ba1cebcf4f7eda6befbbddd6caff689ba8cc0b6dc704fa6"
+            "sha256": "sha256:b5a9ae79e3eb812a46cd81d9d291b938adbf85c8a80789ddb86424f1f1b16ec0"
           }
         }
       }
@@ -401,7 +401,7 @@
       "id": "irodori.bigquery",
       "name": "BigQuery Connector",
       "publisher": "irodori",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds BigQuery connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -429,36 +429,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:18:29Z",
+      "publishedAt": "2026-10-24T12:40:36Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-bigquery/releases/tag/v0.1.8",
-        "tag": "v0.1.8",
+        "url": "https://github.com/irodori-table/irodori-extension-bigquery/releases/tag/v0.1.9",
+        "tag": "v0.1.9",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-bigquery-aarch64-linux.tar.gz",
-            "sha256": "sha256:14e0887c41d4063442de35f613d4d259a4541530a67eb4fa00b20a251834b5c9"
+            "sha256": "sha256:b90685cbf24f89bd636c7de16f1e8b78fd6db9a37db6ef6e9e80ba014760b81f"
           },
           "aarch64-macos": {
             "name": "irodori-extension-bigquery-aarch64-macos.tar.gz",
-            "sha256": "sha256:d57a0f8301e25b76a69e1a5fd3e6e9d4ca180762efff6b8f4d1304c05e5f729c"
+            "sha256": "sha256:b1f076652f0364694b634d3092a8dc06a555ec50d87b6dd85b41af737fa4ef10"
           },
           "aarch64-windows": {
             "name": "irodori-extension-bigquery-aarch64-windows.tar.gz",
-            "sha256": "sha256:764f04adb082a346a756f953b1b8030db4f7c49902500ea55b8e37a482ea45f1"
+            "sha256": "sha256:7973fd04698c4c5395ca2886a7f3744f808271fa06105006ef2e606999377175"
           },
           "x86_64-linux": {
             "name": "irodori-extension-bigquery.tar.gz",
-            "sha256": "sha256:e7d6dc53fd08e09114443cea4f18eeb0c6f97e3aef897dcc0d8c7982da9c4c1b"
+            "sha256": "sha256:e68d165235aa6ea1b528e4f51dc1511d71ccc860ad9ab6afbbd6bccb78167cf6"
           },
           "x86_64-macos": {
             "name": "irodori-extension-bigquery-x86_64-macos.tar.gz",
-            "sha256": "sha256:2749c1ccddf4106beea4d44fd7b8ff8505bdca7e9e254213e52faf44a2bc23f1"
+            "sha256": "sha256:915e8207b69a4448061209a591b7e059d35a93d91b4517ac073363a544a4418e"
           },
           "x86_64-windows": {
             "name": "irodori-extension-bigquery-x86_64-windows.tar.gz",
-            "sha256": "sha256:77ee5d0ac045a76dda09d38783cf9308cd20e309f5906c06fdce02ffb382f3b1"
+            "sha256": "sha256:93cbace664ed6fb72ea4efa75f825b98a41cfa7af326d4fe8d8103484d8fb2f4"
           }
         }
       }
@@ -467,7 +467,7 @@
       "id": "irodori.bigtable",
       "name": "Bigtable Connector",
       "publisher": "irodori",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds Bigtable connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -495,36 +495,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:16:27Z",
+      "publishedAt": "2026-10-24T12:43:13Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-bigtable/releases/tag/v0.1.8",
-        "tag": "v0.1.8",
+        "url": "https://github.com/irodori-table/irodori-extension-bigtable/releases/tag/v0.1.9",
+        "tag": "v0.1.9",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-bigtable-aarch64-linux.tar.gz",
-            "sha256": "sha256:ae5064f8302ad3c2ac49cd0a42384439f6e2dffc946e86d652d097bb5e25421c"
+            "sha256": "sha256:f8acff60ee0d6febd0b687eb1851befde7e5916a3a11a2b60f24a8aeba8bde5a"
           },
           "aarch64-macos": {
             "name": "irodori-extension-bigtable-aarch64-macos.tar.gz",
-            "sha256": "sha256:86d7465c5e7c1659ac7c48fccb4c8196c6247e84f831bfbf734f0670d56d8f78"
+            "sha256": "sha256:58f6d2669a749c0e37f422718177edb45c0e04d75fe1032754587ddf3bbc93ff"
           },
           "aarch64-windows": {
             "name": "irodori-extension-bigtable-aarch64-windows.tar.gz",
-            "sha256": "sha256:4fa903eeb97ad6138f79fa445413f9a4ca8d8b448843a41dac7345cfc3f324d8"
+            "sha256": "sha256:f8a689714e6a51e7bb91f5d7df7e1faee3bf6f9431ad661ad2c07bc3d96a31a4"
           },
           "x86_64-linux": {
             "name": "irodori-extension-bigtable.tar.gz",
-            "sha256": "sha256:10a5bbe9a2c3c33e91b2a1139519ab6ae05fce0387ac758367ea5dab04712479"
+            "sha256": "sha256:b6563c16e76762ab00d791e946abdb39a5d80451c9e63c43cc70d64466b85e57"
           },
           "x86_64-macos": {
             "name": "irodori-extension-bigtable-x86_64-macos.tar.gz",
-            "sha256": "sha256:0c1fef7c87b865fd3799f7436862b8fe43fa2a9be36bb3c0aa559592b4d3897c"
+            "sha256": "sha256:d34238e3bb8bc0f46ca6ab088c30bb44456880548c02d514ad7d3b9718ac7006"
           },
           "x86_64-windows": {
             "name": "irodori-extension-bigtable-x86_64-windows.tar.gz",
-            "sha256": "sha256:571f22db2e2dce76ae639f8a80cd5464dc41601716e072bb3f3abfaa980de8fd"
+            "sha256": "sha256:eb6c6ca94ee5f5d3750965fd278a8c8396e50857686d7a86bf2fbcc44369b598"
           }
         }
       }
@@ -533,7 +533,7 @@
       "id": "irodori.mongodb",
       "name": "MongoDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds MongoDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -560,36 +560,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:40:53Z",
+      "publishedAt": "2026-10-24T12:34:11Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-mongodb/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-mongodb/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-mongodb-aarch64-linux.tar.gz",
-            "sha256": "sha256:d6c4b4869bb489138b03e6964161f961c7b57cf6eff49a008104df834cd9c1da"
+            "sha256": "sha256:02eb4569901a968183a29bc3c72c06f014c96a88f4d7213ea579ced408dbe7e0"
           },
           "aarch64-macos": {
             "name": "irodori-extension-mongodb-aarch64-macos.tar.gz",
-            "sha256": "sha256:4f207a67b6f31bdc24d6d7572571a065a17a66d87b6a574b40faf52ffb7663f8"
+            "sha256": "sha256:c1e997b39e3f02d38c3c5b88ddfd8231766d60fb28b4fa9e7d9a834f0f723a1f"
           },
           "aarch64-windows": {
             "name": "irodori-extension-mongodb-aarch64-windows.tar.gz",
-            "sha256": "sha256:6ee5a5b04ac5664c5b68172b52dd54c66efae1b1f922025426a89628a1578ff8"
+            "sha256": "sha256:0f408c3f60cc762a910143bd30875361c5de78e29bb0d84d7126a64461792976"
           },
           "x86_64-linux": {
             "name": "irodori-extension-mongodb.tar.gz",
-            "sha256": "sha256:058efcf0a29a36b8e52c2ac4907c07bd4bb0c06b98bba9d5d24aa78c0cb5229c"
+            "sha256": "sha256:498dd9a1984fbbaca02f787c8f364fc3e1f4c159a8fc9c2f967d3b56a15d2a55"
           },
           "x86_64-macos": {
             "name": "irodori-extension-mongodb-x86_64-macos.tar.gz",
-            "sha256": "sha256:b4abfbbc057421e13f2ca2f0e1db55a0f3c88ea6d42c018eac2d0c92af2036b0"
+            "sha256": "sha256:9a781189bc93e87549cfc555988f774b980bec9c26a4a054bb28b364baa8cf5f"
           },
           "x86_64-windows": {
             "name": "irodori-extension-mongodb-x86_64-windows.tar.gz",
-            "sha256": "sha256:990a8cb9d74c5df660bf6b44a4072b5d44635b4c63e3977344b3113a417efd40"
+            "sha256": "sha256:48683542268a5bdcc5bd53f752538094b0756749cb6a6d40e2ec2a64f740f6fc"
           }
         }
       }
@@ -598,7 +598,7 @@
       "id": "irodori.clickhouse",
       "name": "ClickHouse Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds ClickHouse connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -625,36 +625,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:06:39Z",
+      "publishedAt": "2026-10-24T12:41:14Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-clickhouse/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-clickhouse/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-clickhouse-aarch64-linux.tar.gz",
-            "sha256": "sha256:e6d79c3e51d89e39c40cea57c9f74b010b9c348a4052e6e9c57e43bac1872d83"
+            "sha256": "sha256:8d47e007ccf91dfc4ef8e094de5f87208b464d19cd518f773cb3e2bb162d4bdb"
           },
           "aarch64-macos": {
             "name": "irodori-extension-clickhouse-aarch64-macos.tar.gz",
-            "sha256": "sha256:3548ae102ce0ef8391d6d80900dd2878ff473a2f6d72acd56411fba5bd954ccd"
+            "sha256": "sha256:5720eab66e36e7f60e94be4c4363d04c0ebf7ebe81716c32266eeff1203aab1c"
           },
           "aarch64-windows": {
             "name": "irodori-extension-clickhouse-aarch64-windows.tar.gz",
-            "sha256": "sha256:c455b9b8ce13a8c6d684180b25cc384ee99d491b6c0c3cd8c8925894e15e6f0a"
+            "sha256": "sha256:54f73dfb255f56fd7906339162831b0dcb6dc8e777de805fc08de837a7ac9820"
           },
           "x86_64-linux": {
             "name": "irodori-extension-clickhouse.tar.gz",
-            "sha256": "sha256:e526785888cc9e9d069a2c526d0d614b2fcdf117165caca3ca46d8ac61b3ce5b"
+            "sha256": "sha256:d54c445a87991a5c079001a496711c127c281fff430c60e95bc92e276c4698dd"
           },
           "x86_64-macos": {
             "name": "irodori-extension-clickhouse-x86_64-macos.tar.gz",
-            "sha256": "sha256:0122b5e24b730a2ab96f9d35bc3724ca6fdaa1b93b0ae7698eefe77fee857529"
+            "sha256": "sha256:7f2c0df480cf911e2603ed2023d0706e17e28c6f3602770e714077477329407b"
           },
           "x86_64-windows": {
             "name": "irodori-extension-clickhouse-x86_64-windows.tar.gz",
-            "sha256": "sha256:a0a8d3c05f1d6c7ca24ac66726e2e748a6f0d2731fe835befc9cdcc5415274bf"
+            "sha256": "sha256:c17d1934514561e257b216f4362fd0a46a4205d1315ecea00cb4fd73c3c3d63f"
           }
         }
       }
@@ -663,7 +663,7 @@
       "id": "irodori.cassandra",
       "name": "Cassandra Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Apache Cassandra connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -691,36 +691,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:24:56Z",
+      "publishedAt": "2026-10-24T12:43:02Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-cassandra/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-cassandra/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-cassandra-aarch64-linux.tar.gz",
-            "sha256": "sha256:2c305b945c77e33b42d47f76f69ab209d04b946b9d1125d38d79be521ed6dc32"
+            "sha256": "sha256:ec047c066bba200389509a80c1a0961939c1033a7c302a03db01cf5d2b75e883"
           },
           "aarch64-macos": {
             "name": "irodori-extension-cassandra-aarch64-macos.tar.gz",
-            "sha256": "sha256:ed5e9618f78f81c67f3838c27f73c210162a7ba73deaff998520b9710db0339c"
+            "sha256": "sha256:4500543ec7efaa0ce4c73e3fb810a4b76ec98687f554bb08347cf882d0a14d60"
           },
           "aarch64-windows": {
             "name": "irodori-extension-cassandra-aarch64-windows.tar.gz",
-            "sha256": "sha256:14c0c2d33741838216d6edcbf650470f152fbb0ebef8077fe066f522c407d7e8"
+            "sha256": "sha256:029c6bf1641d89e0ef551fb72f102b7ab87c48cec53171f0b6834081a2135a9a"
           },
           "x86_64-linux": {
             "name": "irodori-extension-cassandra.tar.gz",
-            "sha256": "sha256:8865ada72f81a601a208b079297d53cf24440c0a91c07e8ec2453280f8113851"
+            "sha256": "sha256:3b66a6720b6168be60e992abd25c0cf943105f9443d925e482851a81561311d9"
           },
           "x86_64-macos": {
             "name": "irodori-extension-cassandra-x86_64-macos.tar.gz",
-            "sha256": "sha256:5c3f84d77e819a149c4f50f4158cc360aa619c35239e5ae3d1b738ce7e84e595"
+            "sha256": "sha256:de643d0b827c067a7814f17d6003979648cca3381a3036368dcba36068112037"
           },
           "x86_64-windows": {
             "name": "irodori-extension-cassandra-x86_64-windows.tar.gz",
-            "sha256": "sha256:db29484076ef1b674d0388060533255c3162750ddb4dd9f253cd499435409794"
+            "sha256": "sha256:0013884c58f072dc419b6b5bba0c9c03b34641e05ce979f16debbb7b00ac3a6c"
           }
         }
       }
@@ -729,7 +729,7 @@
       "id": "irodori.scylladb",
       "name": "ScyllaDB Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds ScyllaDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -757,36 +757,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:28:40Z",
+      "publishedAt": "2026-10-24T12:27:28Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-scylladb/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-scylladb/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-scylladb-aarch64-linux.tar.gz",
-            "sha256": "sha256:74382cc3994cfb7f2ce08d3e031cd54968e62ea52155009c1b0d3c91064435fc"
+            "sha256": "sha256:2a08bbf9066bb0a84a5ebb9c23321827895f55d7aed97561861d3a6b8a02be69"
           },
           "aarch64-macos": {
             "name": "irodori-extension-scylladb-aarch64-macos.tar.gz",
-            "sha256": "sha256:1fa00c769aa385dd0a966cab8c00d3ecb155316fca3b896fc118bb728f228b6d"
+            "sha256": "sha256:4df64dc188c9748c5564cd687119326d61ef0a16f25f068f04c2cff22d41f834"
           },
           "aarch64-windows": {
             "name": "irodori-extension-scylladb-aarch64-windows.tar.gz",
-            "sha256": "sha256:dfc5f45f3f6b13bed3e7fca1d263289a629cb71eb5f8700c2f6ef15abbef4eea"
+            "sha256": "sha256:7fb6de757aa16cf14d166c88e493584148529bab806a0c2c8eba92aec69f952b"
           },
           "x86_64-linux": {
             "name": "irodori-extension-scylladb.tar.gz",
-            "sha256": "sha256:4e0cba12661557fc0782901abb0c8cedaa49184521493a0e354c9d66985ef86d"
+            "sha256": "sha256:0309c22b89b1fd8062d9dbe8acf9b1fd9da3b847b18ea119b74309ce0b9680de"
           },
           "x86_64-macos": {
             "name": "irodori-extension-scylladb-x86_64-macos.tar.gz",
-            "sha256": "sha256:5b40d8af86f6764328ec7403dece2c389983370f4619b60b3e2130571d6ec69a"
+            "sha256": "sha256:99969d3194be4a0251ccbed06b7805a4300b7d33ed13ee733fce0eab02c17cde"
           },
           "x86_64-windows": {
             "name": "irodori-extension-scylladb-x86_64-windows.tar.gz",
-            "sha256": "sha256:0cfc1d7a3a88809eb130578cd5b11a4fd43c9bab8a29a75027bb02b6a26c91b8"
+            "sha256": "sha256:b5f66a340101e8c77c94d59203a5fb94eb51158cbeff82f71fb88a61253bce31"
           }
         }
       }
@@ -795,7 +795,7 @@
       "id": "irodori.neo4j",
       "name": "Neo4j Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds Neo4j connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -821,36 +821,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:38:32Z",
+      "publishedAt": "2026-10-24T12:27:33Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-neo4j/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-neo4j/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-neo4j-aarch64-linux.tar.gz",
-            "sha256": "sha256:42646abd75846cce9432894b2d6831c33c7dbfdecebfc6de9f160243ca7d500d"
+            "sha256": "sha256:dbc5e5126436f7a8a648c8712e9ced3e81cbcf5c9c5ff22dcaf07a8e675ab90c"
           },
           "aarch64-macos": {
             "name": "irodori-extension-neo4j-aarch64-macos.tar.gz",
-            "sha256": "sha256:2caf2c39651d03ed0909ddf110e9a6561559d3bbb01945aa340647fcdc82caf9"
+            "sha256": "sha256:501d11efeacc047819e05e949d23bb6c7cf54afb68d209babbe1b260825ac35b"
           },
           "aarch64-windows": {
             "name": "irodori-extension-neo4j-aarch64-windows.tar.gz",
-            "sha256": "sha256:2d558eb423a52a5b303b132b3f1531442be7d7c76a82dd188f05f053b4887968"
+            "sha256": "sha256:8af71a511963c30f90cfe0075d38f5fa8b3e03c5441493b3f0f30ff9a5ea7061"
           },
           "x86_64-linux": {
             "name": "irodori-extension-neo4j.tar.gz",
-            "sha256": "sha256:c7e0ad5c113f20414db585a2732c7be61f8f49af110af0459fe169d7f5d557b1"
+            "sha256": "sha256:e61627a3907336d99f70082f66a777950b958001705911d226378c89da1151dd"
           },
           "x86_64-macos": {
             "name": "irodori-extension-neo4j-x86_64-macos.tar.gz",
-            "sha256": "sha256:a51dece4fe081ffedd60a1687f51ad77b9dde388f733bfcb999e01a775d05ed7"
+            "sha256": "sha256:b7eacb9dc044ee2fb2197ed323c5ab47d16e851461e66f0651c76a5b1542375a"
           },
           "x86_64-windows": {
             "name": "irodori-extension-neo4j-x86_64-windows.tar.gz",
-            "sha256": "sha256:8f08f89fcb8d94d4ebfcfcc39dec2182bc6a71650915c4a22ab648d0c391dc06"
+            "sha256": "sha256:ce91c3fe7c897c56d178a66b4f5f97d331bf1e65bed769c0b2d5a3e11b0ec5ca"
           }
         }
       }
@@ -859,7 +859,7 @@
       "id": "irodori.memgraph",
       "name": "Memgraph Connector",
       "publisher": "irodori",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds Memgraph connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -885,36 +885,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:42Z",
+      "publishedAt": "2026-10-24T12:24:05Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-memgraph/releases/tag/v0.1.8",
-        "tag": "v0.1.8",
+        "url": "https://github.com/irodori-table/irodori-extension-memgraph/releases/tag/v0.1.9",
+        "tag": "v0.1.9",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-memgraph-aarch64-linux.tar.gz",
-            "sha256": "sha256:437102f91cd031809078d5cb41b2a3205e9be595c546d8ca6117797469924144"
+            "sha256": "sha256:ffa2cc5862b1c29eca1296b08450655bf4b333d1cd4fb630ed7d8c168ea4bdbd"
           },
           "aarch64-macos": {
             "name": "irodori-extension-memgraph-aarch64-macos.tar.gz",
-            "sha256": "sha256:043fce3f6d6c0da77ca9521c4f1e3d356f5b244445ecbf03bce256c1f091ed14"
+            "sha256": "sha256:379355686443c4a82fd132f4073c0069082d0bedc9b525b3e98450a1bcdbfda1"
           },
           "aarch64-windows": {
             "name": "irodori-extension-memgraph-aarch64-windows.tar.gz",
-            "sha256": "sha256:1899ab625204100157be97043cef3c7bd96b06563e325e6cdaac428b5b090b01"
+            "sha256": "sha256:d6c226ad0f54517cfa50ee32f96057b3a757504037f76421dd5df9c937c3e6da"
           },
           "x86_64-linux": {
             "name": "irodori-extension-memgraph.tar.gz",
-            "sha256": "sha256:a7e90704c29db18915e5586ee33b11e8538ec21e5719063e3da1192387c38bd0"
+            "sha256": "sha256:38a348117fc4d0d6631de861c135f38c6c0d317931539f4063afa2f20acb0509"
           },
           "x86_64-macos": {
             "name": "irodori-extension-memgraph-x86_64-macos.tar.gz",
-            "sha256": "sha256:2f197b4c587dbafb1a455a2d88f23efe30374198c30717fdc0f915dff42bf1f3"
+            "sha256": "sha256:46bc7acb55ce1739f6743a74d71c9fa6b03c6ac141bb62516e0b6f180ca0d876"
           },
           "x86_64-windows": {
             "name": "irodori-extension-memgraph-x86_64-windows.tar.gz",
-            "sha256": "sha256:ba1fdc9093b24d7aeefa89547fd9a558f6140084d006d139d0778e35a096b8d4"
+            "sha256": "sha256:aea04866233f14c71de62281b75fc6dca62a14dc5d49188db224532e32694520"
           }
         }
       }
@@ -923,7 +923,7 @@
       "id": "irodori.elasticsearch",
       "name": "Elasticsearch Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds complete Elasticsearch index, search, mapping, aggregation, and bulk workflows as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -950,36 +950,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:39:12Z",
+      "publishedAt": "2026-10-24T12:43:04Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-elasticsearch/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-elasticsearch/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-elasticsearch-aarch64-linux.tar.gz",
-            "sha256": "sha256:b73e0b8b5a0129112a623cdaca2d9171dfad461223967ec697ba72eea3fb9937"
+            "sha256": "sha256:b7160c7dc7338d6fb65cabbacfa42db81db9d7843dc13523ba323276ed92ea14"
           },
           "aarch64-macos": {
             "name": "irodori-extension-elasticsearch-aarch64-macos.tar.gz",
-            "sha256": "sha256:341c984aea637d98bd83f2b24cee6fd58b12e72599e5fbca57c600b17836d02b"
+            "sha256": "sha256:d019703a4227b01d6350c52144d5492a0d6c9c0e1f180aa5bb62632863cb016b"
           },
           "aarch64-windows": {
             "name": "irodori-extension-elasticsearch-aarch64-windows.tar.gz",
-            "sha256": "sha256:e3bd82166dc0e24b02d537d37ff0e5bc185ae7e9456ca163521c732f3732b65f"
+            "sha256": "sha256:e8b53120e0d92899e4d19eaf64b8cfba6677207028dceef0294111aacd10e00f"
           },
           "x86_64-linux": {
             "name": "irodori-extension-elasticsearch.tar.gz",
-            "sha256": "sha256:5fc5b04d648a36bd6bcc7ae99ec6fdb71f53797f05b42ad73abe4942deab41a6"
+            "sha256": "sha256:ff1fcef248bce2ff865b499e9d9a7503c1fee4e2b13121b5566b54898c787692"
           },
           "x86_64-macos": {
             "name": "irodori-extension-elasticsearch-x86_64-macos.tar.gz",
-            "sha256": "sha256:b71443434dd45386414d9e49a5b8603a6f0772b58e801f0ce578e25af67bb40c"
+            "sha256": "sha256:0a54eae97ba8118dc7319a01a87df52c718d5e171c66bac8bffbb554bf933111"
           },
           "x86_64-windows": {
             "name": "irodori-extension-elasticsearch-x86_64-windows.tar.gz",
-            "sha256": "sha256:537a9bbef62c8e115085608b33a3b90e7897376cbff7c9d6ddf11ed183b20535"
+            "sha256": "sha256:db8f13b0517d862f0c6af81b742c46a93d7a5864c262e7cd569f20ea846a0dbe"
           }
         }
       }
@@ -988,7 +988,7 @@
       "id": "irodori.opensearch",
       "name": "OpenSearch Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds OpenSearch index, search, mapping, aggregation, and bulk workflows as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1015,36 +1015,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:35:39Z",
+      "publishedAt": "2026-10-24T12:41:37Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-opensearch/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-opensearch/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-opensearch-aarch64-linux.tar.gz",
-            "sha256": "sha256:431d92e88f70a6fc907230655c927167df6c29dc72dee8596e98b9855c3c5fa2"
+            "sha256": "sha256:dbffdb141a91f16f8d7aeae6d6e66e24739adb5e1fc182c54cf563bd1724fbd2"
           },
           "aarch64-macos": {
             "name": "irodori-extension-opensearch-aarch64-macos.tar.gz",
-            "sha256": "sha256:af107a9e2d4b601af73221253b35754fd7a11245ff80d7e3d4c10ac2f37f451e"
+            "sha256": "sha256:ec7bd05da74eec2127043a5ded6cdb1aaaafff110c66c0ec3319fd9d24fa674b"
           },
           "aarch64-windows": {
             "name": "irodori-extension-opensearch-aarch64-windows.tar.gz",
-            "sha256": "sha256:2a94d523ab2fedd05c34d8397acb471e01d9300efe36916a47718bde5de955af"
+            "sha256": "sha256:044dedc84d38096814ddf852cc331dca9d72211b8ede333e4f673cd2f8c707d0"
           },
           "x86_64-linux": {
             "name": "irodori-extension-opensearch.tar.gz",
-            "sha256": "sha256:b6960c9d4f55ae45ae2f511b7315f643cc739d8a886df9ec641b19d4a39657eb"
+            "sha256": "sha256:05f28f0e44ef32d5ae1cee9e797153b88cdfe7b7546a2d9c939f21435a3f102f"
           },
           "x86_64-macos": {
             "name": "irodori-extension-opensearch-x86_64-macos.tar.gz",
-            "sha256": "sha256:cffb5b471675b351ccacf251b231034b83665a5a3c6f8b1dd2f4f0ee7caf15cf"
+            "sha256": "sha256:d13e3f415bc27a03ae5301ab29aebd5004af3df5d8dbc54d15283b5b7096d088"
           },
           "x86_64-windows": {
             "name": "irodori-extension-opensearch-x86_64-windows.tar.gz",
-            "sha256": "sha256:74d21e39a77e3a9131f8ea4bbfe903fca338f3f01b2f0330d33b9b513c19302e"
+            "sha256": "sha256:d64cf95563293af96d3501c05b0b36ab9bd10aadc51fdef1edfc5a2411d86ebb"
           }
         }
       }
@@ -1053,7 +1053,7 @@
       "id": "irodori.sqlserver",
       "name": "SQL Server Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds SQL Server connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1080,36 +1080,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:41:34Z",
+      "publishedAt": "2026-10-24T12:21:17Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-sqlserver/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-sqlserver/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-sqlserver-aarch64-linux.tar.gz",
-            "sha256": "sha256:dba59bb4d8a34c0c3a803691668159eb2d157c22850bf934dee2e98299b61e7f"
+            "sha256": "sha256:8f12bfdbc1a4ac6abe93dc8e35e0c68197b50f800c214f660fa7bf1085bc9c77"
           },
           "aarch64-macos": {
             "name": "irodori-extension-sqlserver-aarch64-macos.tar.gz",
-            "sha256": "sha256:f14a58814d974b9403780ef8fb9e8162a4a2dfd5e9b6008b5f3d4f71d3057578"
+            "sha256": "sha256:5f9be51309f0821db4a401d37f5cfaaec82efc2c6c34d1dc3d2fa8b08a2c8fcf"
           },
           "aarch64-windows": {
             "name": "irodori-extension-sqlserver-aarch64-windows.tar.gz",
-            "sha256": "sha256:963372be788f9db88392fe04f78398c79a989ba54f2b15f9913cdc6fa5ccdb42"
+            "sha256": "sha256:9b07cc34c0ceff4f13bf953638982bea9429cb36da2ecdbe072f6ceb32b3b501"
           },
           "x86_64-linux": {
             "name": "irodori-extension-sqlserver.tar.gz",
-            "sha256": "sha256:d0668b23f01daae443ab070bb44112616c443a7580c797ac2d7171edc1a9e72b"
+            "sha256": "sha256:8b8aae0b4fce32899635b9551054a3bbaabc828813b9ee331274ecbed9d5e4aa"
           },
           "x86_64-macos": {
             "name": "irodori-extension-sqlserver-x86_64-macos.tar.gz",
-            "sha256": "sha256:fe2d776111092ebe26c2126e60354310547945bb9b1a8d40983c9f1250f45f3e"
+            "sha256": "sha256:cd89acb787ad5dc25280e93d414659d02dcfe2ca69f281679621c57520e3e4f9"
           },
           "x86_64-windows": {
             "name": "irodori-extension-sqlserver-x86_64-windows.tar.gz",
-            "sha256": "sha256:4d473f803e8c1f2485859c92141fdf91521de7e4a58d02767db5796a72472e17"
+            "sha256": "sha256:1002aedef9501f7262071d04dda6b67749b3d2b87aa429e570528564f34768b3"
           }
         }
       }
@@ -1118,7 +1118,7 @@
       "id": "irodori.oracle",
       "name": "Oracle Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Oracle connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1145,36 +1145,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:38:00Z",
+      "publishedAt": "2026-10-24T12:26:33Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-oracle/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-oracle/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-oracle-aarch64-linux.tar.gz",
-            "sha256": "sha256:ab561dbe877a045d691be7a5e19d8af15b22c2d265e17e9902de7b117e299119"
+            "sha256": "sha256:d98730563627b895bdac8b2ddcd5adc7009196baadff412bcc8eaa472ba81b26"
           },
           "aarch64-macos": {
             "name": "irodori-extension-oracle-aarch64-macos.tar.gz",
-            "sha256": "sha256:e9fd312033579ab9665477d93187b234c2c1534e6362e2c13bb047ee8d174a76"
+            "sha256": "sha256:05b7ac583b179d7f3a6ad284255a8b855d0168073b0981a5144ee624b744cc03"
           },
           "aarch64-windows": {
             "name": "irodori-extension-oracle-aarch64-windows.tar.gz",
-            "sha256": "sha256:076ac01d8c356e3d745c6d5af90dcb55801afd94127d9b27823462b24911380e"
+            "sha256": "sha256:78fd484fdf86450c58721fd4d722d6ae40a100c1e5a5b71d5b7658a0d4b390e1"
           },
           "x86_64-linux": {
             "name": "irodori-extension-oracle.tar.gz",
-            "sha256": "sha256:416a4eb2c8d4cfd48fd238df79b3557c01ff8a78b4e802be4a2fe599c9ef8e1d"
+            "sha256": "sha256:d7f1f60be96aa1da8b2ea61756ceac171ce46350d054de0cd2697b8ffac3ff52"
           },
           "x86_64-macos": {
             "name": "irodori-extension-oracle-x86_64-macos.tar.gz",
-            "sha256": "sha256:c36dad92126f1dcdab2388b13eb0c74be5a2334b8360be1b999fa1ecaa207984"
+            "sha256": "sha256:f091abbccc5e7ea0798c7cb867c90720fd88e9dd0d43b1ecfb5ec62dfe1905cc"
           },
           "x86_64-windows": {
             "name": "irodori-extension-oracle-x86_64-windows.tar.gz",
-            "sha256": "sha256:df0ced7aeb8978754f56f6d26eb0e44f92665a9e699fbb16a4dd413cc892b9e8"
+            "sha256": "sha256:fa0835832a143668a377ce7f6a1540c20d9df3d92485fd9f362ed0e6924ff92e"
           }
         }
       }
@@ -1183,7 +1183,7 @@
       "id": "irodori.influxdb",
       "name": "InfluxDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds InfluxDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1209,36 +1209,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:40:25Z",
+      "publishedAt": "2026-10-24T12:26:54Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-influxdb/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-influxdb/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-influxdb-aarch64-linux.tar.gz",
-            "sha256": "sha256:cdb6ee6c0248f5757739ebeea13a74651c2b30289561413a19818224ef72556f"
+            "sha256": "sha256:472294ffb831acb911a940ce29e280ac1ba8e09b019d1873d21fe0604d23fdcb"
           },
           "aarch64-macos": {
             "name": "irodori-extension-influxdb-aarch64-macos.tar.gz",
-            "sha256": "sha256:cb18bf9fa93d48e90ae3e77a831f1749532e9ac6910effed216f992ca6e8698b"
+            "sha256": "sha256:e78bdce9bc70687ec5168f8e68ea9e3eafa265c2665aa77d15560aadb00bb565"
           },
           "aarch64-windows": {
             "name": "irodori-extension-influxdb-aarch64-windows.tar.gz",
-            "sha256": "sha256:799b3aa355842ec4ddf7f112d0751965a6a88368bc7f131cd9a7084731b541f5"
+            "sha256": "sha256:9914b506803161c9ef5832b2b6ce49621a71994a0770c6d5040408603e2f8e4c"
           },
           "x86_64-linux": {
             "name": "irodori-extension-influxdb.tar.gz",
-            "sha256": "sha256:6ad7820258d35bece9e05566f17a30d923dfca70dcc935025516fe7538c6e789"
+            "sha256": "sha256:9b7c0081f2f2e18fdeed5fa291b9a1bf0665d9f1a7d7f8ecc59c362d39c2be9c"
           },
           "x86_64-macos": {
             "name": "irodori-extension-influxdb-x86_64-macos.tar.gz",
-            "sha256": "sha256:7d4a650549f8d343b5d9ea12afa6f824af2038bb4ff4af13fef452d877395081"
+            "sha256": "sha256:57770ab9007383dedce5f74e68d81a8a34a8123a9e1ea0ce54ef47f9762662c6"
           },
           "x86_64-windows": {
             "name": "irodori-extension-influxdb-x86_64-windows.tar.gz",
-            "sha256": "sha256:527e12a531c8a8c129ec466ab18f023583b4a83b96467fb7311452ac2ccc7b8e"
+            "sha256": "sha256:ce96a632af15c6d3ea7811435630d8683ec2c8fbe6469529d2f55ab24c9ce43e"
           }
         }
       }
@@ -1247,7 +1247,7 @@
       "id": "irodori.qdrant",
       "name": "Qdrant Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Qdrant vector database connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1273,36 +1273,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:37:24Z",
+      "publishedAt": "2026-10-24T12:29:45Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-qdrant/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-qdrant/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-qdrant-aarch64-linux.tar.gz",
-            "sha256": "sha256:a75525114ef54481cecc247a149c5388495a46fae5cd5b1b88227d0b10721aae"
+            "sha256": "sha256:14decc2655ce740f7d95a0a25b4b17292529303d5caed10629a113b5af86cf55"
           },
           "aarch64-macos": {
             "name": "irodori-extension-qdrant-aarch64-macos.tar.gz",
-            "sha256": "sha256:da69d5a884489b87e639f578d086229077ce5656a613c077d9678f8c91da925c"
+            "sha256": "sha256:1c45899d880494ee944233eb5f4f53a89855f88880a746d5be4d7194029d5025"
           },
           "aarch64-windows": {
             "name": "irodori-extension-qdrant-aarch64-windows.tar.gz",
-            "sha256": "sha256:4bcaa69b005d8c2eaa1cbbfc5f5de353741dbe8368efc87414cd7b754147d76e"
+            "sha256": "sha256:1d1db38d1df798733e6294cb19d969c057c8d9752cbe480fca11695400e8603c"
           },
           "x86_64-linux": {
             "name": "irodori-extension-qdrant.tar.gz",
-            "sha256": "sha256:e2b162277fdeed80dc3ab1150b8830ed821acdf2af763e169b1c1a8d9797a171"
+            "sha256": "sha256:5ebdca9071a108698e1d0306383f5a7369b7d262d2355695cb4f533af8d7a726"
           },
           "x86_64-macos": {
             "name": "irodori-extension-qdrant-x86_64-macos.tar.gz",
-            "sha256": "sha256:fea52cc07ca068fc66905df72bebf295d86a4c6dc0435670b760c0215773460c"
+            "sha256": "sha256:5c13e642ac828ec1c9ae3526adb88d562347adbbd29c1709b8b44d4c66d8cef6"
           },
           "x86_64-windows": {
             "name": "irodori-extension-qdrant-x86_64-windows.tar.gz",
-            "sha256": "sha256:2e14654fdfbcbde45d0e1bee0913837dccb35070e410c3bd64359a29e23c3377"
+            "sha256": "sha256:f17f18bd078017cd5def139e577e28306b373dc8300d6ce6673d02d758fe186d"
           }
         }
       }
@@ -1311,7 +1311,7 @@
       "id": "irodori.milvus",
       "name": "Milvus Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Milvus vector database connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1337,36 +1337,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:51Z",
+      "publishedAt": "2026-10-24T12:44:02Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-milvus/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-milvus/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-milvus-aarch64-linux.tar.gz",
-            "sha256": "sha256:862bec4decfe71e3f24b99dec5e9f618e8a0c49e344cc50c6b7e157b38665a16"
+            "sha256": "sha256:788b418592d17a78e6bc0b9cef95c590e035bfb9fc098ef350eaea157fc72657"
           },
           "aarch64-macos": {
             "name": "irodori-extension-milvus-aarch64-macos.tar.gz",
-            "sha256": "sha256:57fe77d09a1ac3b5dcc813b737f4ccfdf0168b4132376a943ae995d5758caadb"
+            "sha256": "sha256:bdc810d73137c62be1aefd06ae84b71c71561d7acbcdae23c3a5ca7e25c7425f"
           },
           "aarch64-windows": {
             "name": "irodori-extension-milvus-aarch64-windows.tar.gz",
-            "sha256": "sha256:b4faebc02dce06e2f2f7108c4a776c268d488d074667f0790c42392e0831d31e"
+            "sha256": "sha256:3fb39c7b530517b03d7b3c0661a0145b7bef9ab5bd09eb746837338be53a94a0"
           },
           "x86_64-linux": {
             "name": "irodori-extension-milvus.tar.gz",
-            "sha256": "sha256:7b70904fa1aae4b68436ce21b139e37472aef2671c051c4162298771166f3dc9"
+            "sha256": "sha256:99db4e30299832030698151e6ac6bf7b80b4629816029849683ca9024426973f"
           },
           "x86_64-macos": {
             "name": "irodori-extension-milvus-x86_64-macos.tar.gz",
-            "sha256": "sha256:7918f566c942e60a977b038204a34c6adab10af044451914e1c0a1f77e797f61"
+            "sha256": "sha256:347dfd6499588979412ec44dd0d36eb4b61106fb3c3927e8438e255ee21ce121"
           },
           "x86_64-windows": {
             "name": "irodori-extension-milvus-x86_64-windows.tar.gz",
-            "sha256": "sha256:db1bc57d8b1ebe9c5681c190083e22c0404d380d40346379bfdef85a5f1b2c67"
+            "sha256": "sha256:5d3e8188666bb910bd7d80c634a4169c6239de186b7bb1e4cf2e749e0191886e"
           }
         }
       }
@@ -1375,7 +1375,7 @@
       "id": "irodori.pinecone",
       "name": "Pinecone Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Pinecone vector database connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1402,36 +1402,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:31Z",
+      "publishedAt": "2026-10-24T12:41:04Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-pinecone/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-pinecone/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-pinecone-aarch64-linux.tar.gz",
-            "sha256": "sha256:38308752b77c326b7774961da020851eeaa0ed7b6564b27c2b7c30bcbbc806e8"
+            "sha256": "sha256:715dbc5e5237b67fa07903a5aa9fbe01c10fab023c75a7de0bdfc5d27c3a0194"
           },
           "aarch64-macos": {
             "name": "irodori-extension-pinecone-aarch64-macos.tar.gz",
-            "sha256": "sha256:947f2a01a8114b838bdff69f9c6a7b1ca585c684af770be7eb9e82a7b7eaaac6"
+            "sha256": "sha256:19ea74f5ffaa131d15d396bf0c1fcb1fb33d258db86b1516e507e536f10b4132"
           },
           "aarch64-windows": {
             "name": "irodori-extension-pinecone-aarch64-windows.tar.gz",
-            "sha256": "sha256:691dfb322bc2b92f02c13d600e854ecf691f4fca06f11cd28522a476e3a1661c"
+            "sha256": "sha256:a8abe628ddb2f90f9d25d5845d574aa8fffd4c52d6e14ff4b20ae01fe8bb95b2"
           },
           "x86_64-linux": {
             "name": "irodori-extension-pinecone.tar.gz",
-            "sha256": "sha256:8c4cf2d3e4733f5959ce619168536e2619041678ee62bf172f6f7401edc60611"
+            "sha256": "sha256:c0bd78ed18da5b0c735c149351701886632109cab1e6e4d3f5b0944f612c1495"
           },
           "x86_64-macos": {
             "name": "irodori-extension-pinecone-x86_64-macos.tar.gz",
-            "sha256": "sha256:797964ab0e8bd07cc57a1eae7f075c86f6c0f6a84352d3d03694c57ad65099e6"
+            "sha256": "sha256:7da9d435338b11ee4094c5e361cbf36c28a230a9c3d397addc2e8d6f6eda0e94"
           },
           "x86_64-windows": {
             "name": "irodori-extension-pinecone-x86_64-windows.tar.gz",
-            "sha256": "sha256:63a9b5e9787946156d0d979e3d5124f1c548572f9453f8b964c3d4213a207995"
+            "sha256": "sha256:ab73d14549c0e0392a7755017c2e48b8207ff18fbe1c7d7d13abbd7874fb6c58"
           }
         }
       }
@@ -1440,7 +1440,7 @@
       "id": "irodori.couchbase",
       "name": "Couchbase Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Couchbase connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1467,36 +1467,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:26:17Z",
+      "publishedAt": "2026-10-24T12:11:01Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-couchbase/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-couchbase/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-couchbase-aarch64-linux.tar.gz",
-            "sha256": "sha256:caa351d31f05cf57a5de7348d1720aed8d1d125fff571b20063329e8650b5954"
+            "sha256": "sha256:8e2c5449e00f1f324fe2e419cd17381550ed39062c910ccdfc7e1fef3fdefb2b"
           },
           "aarch64-macos": {
             "name": "irodori-extension-couchbase-aarch64-macos.tar.gz",
-            "sha256": "sha256:27953ccc692620ecaa3cb6353a08a39fcf9b4cf61b92e80d980b75d58cc6e387"
+            "sha256": "sha256:517736bad61fdbbcb192de42921fc1dd7f58e39b2c0f1c499d02fb3a1471bf57"
           },
           "aarch64-windows": {
             "name": "irodori-extension-couchbase-aarch64-windows.tar.gz",
-            "sha256": "sha256:4eb35d4703b09c82f12a828e180c6803d14c4e05ad76aee8e9e42144f96e39ff"
+            "sha256": "sha256:0a7354fa597b094824c43efa1c0ecf165ef713710d80568b8420246903e63182"
           },
           "x86_64-linux": {
             "name": "irodori-extension-couchbase.tar.gz",
-            "sha256": "sha256:0512f4043286fcb63b55d35d7addcf76dc6dca60cd9891a9a382382a6819b2c9"
+            "sha256": "sha256:86319452d1567ab955519e9852d9b4975116b0221f28f2ab3d297d8ce8923fa2"
           },
           "x86_64-macos": {
             "name": "irodori-extension-couchbase-x86_64-macos.tar.gz",
-            "sha256": "sha256:57ebdbd94f7a1ba0cf83d6c9c9b0ed093f03939b24ee3d9d079f9a099d8d261c"
+            "sha256": "sha256:5397eda0d0be3e65630df538cf41d344c2143aee8a2dedef2fd88c7d1ad79e08"
           },
           "x86_64-windows": {
             "name": "irodori-extension-couchbase-x86_64-windows.tar.gz",
-            "sha256": "sha256:3f3d694a6901260d16fedfb96140e2cc78a34c021f254aca99a1a5d4b6bc5af1"
+            "sha256": "sha256:731a21b4f10c8bbd653bd473884908e8d4c9e57f63ef4dce2499f12322fdc82f"
           }
         }
       }
@@ -1505,7 +1505,7 @@
       "id": "irodori.arangodb",
       "name": "ArangoDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds ArangoDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1532,36 +1532,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:26:31Z",
+      "publishedAt": "2026-10-24T12:44:43Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-arangodb/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-arangodb/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-arangodb-aarch64-linux.tar.gz",
-            "sha256": "sha256:3be51e006c8151978502b1509df02ad49aaa0039a335eb6463f39c2366468f63"
+            "sha256": "sha256:751f6c2b9260412fb53df9a5fb61c6e51f33aa01a86362f1bf5ba083cc892652"
           },
           "aarch64-macos": {
             "name": "irodori-extension-arangodb-aarch64-macos.tar.gz",
-            "sha256": "sha256:2dce7bccce5fef730f6f98fb5fe4395d1ee800b0874e0f2398f3f10bb7c6011c"
+            "sha256": "sha256:70c1b86b175e3457b42f566b3a5d72cf2fd520f20cba5fce05b72d07d457bb30"
           },
           "aarch64-windows": {
             "name": "irodori-extension-arangodb-aarch64-windows.tar.gz",
-            "sha256": "sha256:99a8501661f254fcde91c5791523e2924d2e56ef76a83848bec160135fba8099"
+            "sha256": "sha256:e976d06be976f8eee3b2396396b11ce8f7870211e19c75c022c3a75556608910"
           },
           "x86_64-linux": {
             "name": "irodori-extension-arangodb.tar.gz",
-            "sha256": "sha256:7140c97c00cc94822282717e68603e2988347e1e5574acc9af6d9e0daca8eeea"
+            "sha256": "sha256:c583ff9ce8373d7b5a628fce5e26c1730b2e57e483827a272a55e23565319077"
           },
           "x86_64-macos": {
             "name": "irodori-extension-arangodb-x86_64-macos.tar.gz",
-            "sha256": "sha256:c52f759e2993ba3cda83229d3d422015432ab29395a66b59790d6329885c20fd"
+            "sha256": "sha256:80e129192a5559218447ba6f3cbfd4d153e13af56a0f289d2a9672a5be9d6d01"
           },
           "x86_64-windows": {
             "name": "irodori-extension-arangodb-x86_64-windows.tar.gz",
-            "sha256": "sha256:297a171f1d32f757e6a064e5a9cde9034999511dfcc72069e37db40c94bef398"
+            "sha256": "sha256:6ff019269fe45274d45c7ad402fef914071c4488ad3bdd2b1806d4deb2fc6b15"
           }
         }
       }
@@ -1570,7 +1570,7 @@
       "id": "irodori.questdb",
       "name": "QuestDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds QuestDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1596,36 +1596,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:41:17Z",
+      "publishedAt": "2026-10-24T12:24:31Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-questdb/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-questdb/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-questdb-aarch64-linux.tar.gz",
-            "sha256": "sha256:d885a0aee10ca7a663f9d9caf2bef6425e5e7a3af56764ecc98a242d9012f01e"
+            "sha256": "sha256:c52b55eabc498ab9311d89eadd7a24568c82c1278ec388f0cc157e8118b90f58"
           },
           "aarch64-macos": {
             "name": "irodori-extension-questdb-aarch64-macos.tar.gz",
-            "sha256": "sha256:7bf3f80ae6f88f52840bb3f15d662cd184e7b9789685be7641d25669d3b074ba"
+            "sha256": "sha256:62b06334d2ba112ef4ec8dd4a269ac4f8c4418ed5d1681e0562512cf8818879a"
           },
           "aarch64-windows": {
             "name": "irodori-extension-questdb-aarch64-windows.tar.gz",
-            "sha256": "sha256:001be90189b576f46e05a6b895c635c98667c0491c56fafdd724f39c5fcc7de5"
+            "sha256": "sha256:25769c96c5e5e3252c4ff61e38376945342b7d142891dc3c765300d00f80a19d"
           },
           "x86_64-linux": {
             "name": "irodori-extension-questdb.tar.gz",
-            "sha256": "sha256:eb50faf71eddf30d4fc88f82ae6dbb3819d7beb649d27bfe3dd2216de2b634a7"
+            "sha256": "sha256:1e8d9f88ce79c6c652327db8de7564e43e25c96ef89afd9bb467bdb0b0d79b42"
           },
           "x86_64-macos": {
             "name": "irodori-extension-questdb-x86_64-macos.tar.gz",
-            "sha256": "sha256:4ac965e3ee39bfe2de54abf5d1b3025547feab0bfd5986a242c6271bda0e5e4a"
+            "sha256": "sha256:6e4c3beeeae77d776a5f569948a94616cdb1d916dbb3efca4015a0c4d54574cd"
           },
           "x86_64-windows": {
             "name": "irodori-extension-questdb-x86_64-windows.tar.gz",
-            "sha256": "sha256:1dcd2762d0fcc6e7de43ccae8b456eedfbe8ec0988880ba9a52d60a3f2228134"
+            "sha256": "sha256:37d895a766ed3dd37cab78e2faa44cdbef1e3a154bd1a1ef2013111f14dca20d"
           }
         }
       }
@@ -1634,7 +1634,7 @@
       "id": "irodori.iotdb",
       "name": "IoTDB Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Apache IoTDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1660,36 +1660,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:27Z",
+      "publishedAt": "2026-10-24T12:31:53Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-iotdb/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-iotdb/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-iotdb-aarch64-linux.tar.gz",
-            "sha256": "sha256:dd7a86e30fbfd10f9857ca89bcb9409b67e54bd3b4ba9c7e432e27c230765b91"
+            "sha256": "sha256:73d8524ed6b02510e076dbb8dfb0853d1fab4c3c0f879ad9762574139a5519da"
           },
           "aarch64-macos": {
             "name": "irodori-extension-iotdb-aarch64-macos.tar.gz",
-            "sha256": "sha256:fc0340a9d750e18dcbb4e728fddf20acc311e3fc37bbfe7f993223b973f55d22"
+            "sha256": "sha256:aeae5f3df06dd8a3821d2766ce30c5eacf91409ca8c905b45d6d7e97ff6c7651"
           },
           "aarch64-windows": {
             "name": "irodori-extension-iotdb-aarch64-windows.tar.gz",
-            "sha256": "sha256:ea655e5fa19604c832413fdcdddad4e1c16283a232d6c9fd6192ebb23bd27dc2"
+            "sha256": "sha256:caa266d51bdde7916f2929807a4049054db3fd80235b3a68a39336a4e31f127d"
           },
           "x86_64-linux": {
             "name": "irodori-extension-iotdb.tar.gz",
-            "sha256": "sha256:c3951aebdbdabfe50389e4a0ccc5bcf238983ee180b8eec05a9e9f780fdc6901"
+            "sha256": "sha256:3c32f3dcba826d9016b3ddf217d416f26507f9fda3a3e059aa9d0b22f11d1724"
           },
           "x86_64-macos": {
             "name": "irodori-extension-iotdb-x86_64-macos.tar.gz",
-            "sha256": "sha256:53f96c7e2116276cdd2b0b85603b4906553de7f7c657400753bb33fc6a7d3071"
+            "sha256": "sha256:9f04671709300bd35bdfbdbacc52d068eab8482531bae26f200ef84ae98a4ef8"
           },
           "x86_64-windows": {
             "name": "irodori-extension-iotdb-x86_64-windows.tar.gz",
-            "sha256": "sha256:19428ef016075f082abfa62f799f5eedc69aaf8101e1f6e8c5d2cb0c8694c28c"
+            "sha256": "sha256:ca28afc9c4dacb1f03683dea97b5b0d95e66985de6404ebdb01568b430e95d15"
           }
         }
       }
@@ -1698,7 +1698,7 @@
       "id": "irodori.trino-presto",
       "name": "Trino / Presto Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Trino and Presto connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1725,36 +1725,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:40Z",
+      "publishedAt": "2026-10-24T12:22:45Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-trino-presto/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-trino-presto/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-trino-presto-aarch64-linux.tar.gz",
-            "sha256": "sha256:ba0f5c283beced947371d1b6e755003ed0c3902cc8b84eff50b3e2d6f53eddc3"
+            "sha256": "sha256:63e1e13eea029a7d8f11cce590729e77a1a5cb450255570936af1eaed84a5f86"
           },
           "aarch64-macos": {
             "name": "irodori-extension-trino-presto-aarch64-macos.tar.gz",
-            "sha256": "sha256:1182bc0def276bb30376863c5c1037a00919484d7b09b8a12070c1762e331b49"
+            "sha256": "sha256:5495b196141034e327dab15af80ff005ff5f8694f0b5ea1aa5f3e49c5d097c11"
           },
           "aarch64-windows": {
             "name": "irodori-extension-trino-presto-aarch64-windows.tar.gz",
-            "sha256": "sha256:a09a4334db054e060b592c5facc9f6ba9c3e1551a23fb35491d30027d78d2fa5"
+            "sha256": "sha256:28253f9d50f570629f8de780600e0326f80ff5121ef47b1c11682e3ec9e114c7"
           },
           "x86_64-linux": {
             "name": "irodori-extension-trino-presto.tar.gz",
-            "sha256": "sha256:a586654604667dbe1ba799ad3d7a3f7d19f669923612bc3c7213e8e20f53edc7"
+            "sha256": "sha256:9cafd04961cf790792c85b759cc3b01d82d872c9da08490d39fb6101837751df"
           },
           "x86_64-macos": {
             "name": "irodori-extension-trino-presto-x86_64-macos.tar.gz",
-            "sha256": "sha256:cfd500709e9e9725abea5d682ac260a83ef6b6867d9a5ef06d5461d55352b0bc"
+            "sha256": "sha256:dcc3994ce874d7838377ba5f68d48c62f12e1a6b1050fc5e71a15c10e69c6c4a"
           },
           "x86_64-windows": {
             "name": "irodori-extension-trino-presto-x86_64-windows.tar.gz",
-            "sha256": "sha256:d6c22a75dd168ac51becea0cc741c6dfc742d5cf19982e9abecdacaa1a73473d"
+            "sha256": "sha256:5ae3a7c0f452f3b24191ccc7d1be0bc0fc9e25dd36a96b940f213c6a325e4d11"
           }
         }
       }
@@ -1828,7 +1828,7 @@
       "id": "irodori.databricks",
       "name": "Databricks Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Databricks SQL Warehouse connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -1855,36 +1855,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:32:04Z",
+      "publishedAt": "2026-10-24T12:28:02Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-databricks/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-databricks/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-databricks-aarch64-linux.tar.gz",
-            "sha256": "sha256:b4511c271843d2e5a430bfe72159981b80d7924d6b9e921cd6dd793b6ff975ba"
+            "sha256": "sha256:56a5c1e47677db50eeb296a9818c15b8e10b04fd4dfcb6d06079b7b3858ca1c7"
           },
           "aarch64-macos": {
             "name": "irodori-extension-databricks-aarch64-macos.tar.gz",
-            "sha256": "sha256:8ad33fd74f1b5829a39e49fccf321e22b98d3b089a09c5d4ed34b8ac0bfff1cd"
+            "sha256": "sha256:df67dbd5ac93c782f96b72b2da374e9c6c31e449b61c5dcc5cc151584ea61331"
           },
           "aarch64-windows": {
             "name": "irodori-extension-databricks-aarch64-windows.tar.gz",
-            "sha256": "sha256:898fef9c4d376f5aaae219a4dc3729eb8e9a12957cf880b7ed71571f844ea510"
+            "sha256": "sha256:8d4fcdbb5ec6f7e3f078a331a7ee4afdd66fde48cff7a3e25c039fd582b4fe33"
           },
           "x86_64-linux": {
             "name": "irodori-extension-databricks.tar.gz",
-            "sha256": "sha256:bd685704c68589a62d6a3296efa847f085d937b5f7a090052f1eaf43bbcac37d"
+            "sha256": "sha256:93a2c666b6f20454ba3e7967f7b55707fe86187c9ad44f96de0f93b837a29a95"
           },
           "x86_64-macos": {
             "name": "irodori-extension-databricks-x86_64-macos.tar.gz",
-            "sha256": "sha256:fd41a738ba5623410bde561abaf119a69db906d9ae69649c23c4ed4b9d6cfd16"
+            "sha256": "sha256:36ab1282e3c6892ec33c1b4fae8413cf0a9519a8086857b16897651d3391b6e3"
           },
           "x86_64-windows": {
             "name": "irodori-extension-databricks-x86_64-windows.tar.gz",
-            "sha256": "sha256:614ba5cae3ae1e4848c8f64d2f7cda80d923b7b8dab0bb47ea15f237b1cea3de"
+            "sha256": "sha256:f8edf5f01033c19cbe61b8d412ad423a8db804bf5e3a88eb0bb87062cdf31cc5"
           }
         }
       }

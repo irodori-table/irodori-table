@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-23T03:35:19Z",
+  "updatedAt": "2026-10-24T12:46:18Z",
   "source": "prebuilt-extension-catalog",
   "extensions": [
     {
@@ -97,7 +97,7 @@
       "id": "irodori.cloud-spanner",
       "name": "Cloud Spanner Connector",
       "publisher": "irodori",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds Google Cloud Spanner connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -107,13 +107,13 @@
       "engines": ["cloudSpanner"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:26:38Z"
+      "publishedAt": "2026-10-24T12:45:52Z"
     },
     {
       "id": "irodori.redis",
       "name": "Redis Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Redis connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -123,13 +123,13 @@
       "engines": ["redis"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:35:09Z"
+      "publishedAt": "2026-10-24T12:30:35Z"
     },
     {
       "id": "irodori.dynamodb",
       "name": "DynamoDB Connector",
       "publisher": "irodori",
-      "version": "0.1.10",
+      "version": "0.1.11",
       "apiVersion": "0.1",
       "summary": "Adds DynamoDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -139,13 +139,13 @@
       "engines": ["dynamodb"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-23T03:35:19Z"
+      "publishedAt": "2026-10-24T12:46:18Z"
     },
     {
       "id": "irodori.snowflake",
       "name": "Snowflake Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Snowflake connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -155,13 +155,13 @@
       "engines": ["snowflake"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:38:27Z"
+      "publishedAt": "2026-10-24T12:11:29Z"
     },
     {
       "id": "irodori.bigquery",
       "name": "BigQuery Connector",
       "publisher": "irodori",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds BigQuery connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -171,13 +171,13 @@
       "engines": ["bigquery"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:18:29Z"
+      "publishedAt": "2026-10-24T12:40:36Z"
     },
     {
       "id": "irodori.bigtable",
       "name": "Bigtable Connector",
       "publisher": "irodori",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds Bigtable connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -187,13 +187,13 @@
       "engines": ["bigtable"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:16:27Z"
+      "publishedAt": "2026-10-24T12:43:13Z"
     },
     {
       "id": "irodori.mongodb",
       "name": "MongoDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds MongoDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -203,13 +203,13 @@
       "engines": ["mongodb"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:40:53Z"
+      "publishedAt": "2026-10-24T12:34:11Z"
     },
     {
       "id": "irodori.clickhouse",
       "name": "ClickHouse Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds ClickHouse connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -219,13 +219,13 @@
       "engines": ["clickhouse"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:06:39Z"
+      "publishedAt": "2026-10-24T12:41:14Z"
     },
     {
       "id": "irodori.cassandra",
       "name": "Cassandra Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Apache Cassandra connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -235,13 +235,13 @@
       "engines": ["cassandra"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:24:56Z"
+      "publishedAt": "2026-10-24T12:43:02Z"
     },
     {
       "id": "irodori.scylladb",
       "name": "ScyllaDB Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds ScyllaDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -251,13 +251,13 @@
       "engines": ["scylladb"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:28:40Z"
+      "publishedAt": "2026-10-24T12:27:28Z"
     },
     {
       "id": "irodori.neo4j",
       "name": "Neo4j Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds Neo4j connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -267,13 +267,13 @@
       "engines": ["neo4j"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:38:32Z"
+      "publishedAt": "2026-10-24T12:27:33Z"
     },
     {
       "id": "irodori.memgraph",
       "name": "Memgraph Connector",
       "publisher": "irodori",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "apiVersion": "0.1",
       "summary": "Adds Memgraph connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -283,13 +283,13 @@
       "engines": ["memgraph"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:42Z"
+      "publishedAt": "2026-10-24T12:24:05Z"
     },
     {
       "id": "irodori.elasticsearch",
       "name": "Elasticsearch Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds complete Elasticsearch index, search, mapping, aggregation, and bulk workflows as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -299,13 +299,13 @@
       "engines": ["elasticsearch"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:39:12Z"
+      "publishedAt": "2026-10-24T12:43:04Z"
     },
     {
       "id": "irodori.opensearch",
       "name": "OpenSearch Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds OpenSearch index, search, mapping, aggregation, and bulk workflows as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -315,13 +315,13 @@
       "engines": ["openSearch"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:35:39Z"
+      "publishedAt": "2026-10-24T12:41:37Z"
     },
     {
       "id": "irodori.sqlserver",
       "name": "SQL Server Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds SQL Server connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -331,13 +331,13 @@
       "engines": ["sqlserver"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:41:34Z"
+      "publishedAt": "2026-10-24T12:21:17Z"
     },
     {
       "id": "irodori.oracle",
       "name": "Oracle Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Oracle connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -347,13 +347,13 @@
       "engines": ["oracle"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:38:00Z"
+      "publishedAt": "2026-10-24T12:26:33Z"
     },
     {
       "id": "irodori.influxdb",
       "name": "InfluxDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds InfluxDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -363,13 +363,13 @@
       "engines": ["influxdb"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:40:25Z"
+      "publishedAt": "2026-10-24T12:26:54Z"
     },
     {
       "id": "irodori.qdrant",
       "name": "Qdrant Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Qdrant vector database connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -401,13 +401,13 @@
       },
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:37:24Z"
+      "publishedAt": "2026-10-24T12:29:45Z"
     },
     {
       "id": "irodori.milvus",
       "name": "Milvus Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Milvus vector database connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -439,13 +439,13 @@
       },
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:51Z"
+      "publishedAt": "2026-10-24T12:44:02Z"
     },
     {
       "id": "irodori.pinecone",
       "name": "Pinecone Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Pinecone vector database connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -482,13 +482,13 @@
       },
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:31Z"
+      "publishedAt": "2026-10-24T12:41:04Z"
     },
     {
       "id": "irodori.couchbase",
       "name": "Couchbase Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Couchbase connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -498,13 +498,13 @@
       "engines": ["couchbase"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:26:17Z"
+      "publishedAt": "2026-10-24T12:11:01Z"
     },
     {
       "id": "irodori.arangodb",
       "name": "ArangoDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds ArangoDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -514,13 +514,13 @@
       "engines": ["arangodb"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:26:31Z"
+      "publishedAt": "2026-10-24T12:44:43Z"
     },
     {
       "id": "irodori.questdb",
       "name": "QuestDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds QuestDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -530,13 +530,13 @@
       "engines": ["questdb"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:41:17Z"
+      "publishedAt": "2026-10-24T12:24:31Z"
     },
     {
       "id": "irodori.iotdb",
       "name": "IoTDB Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Apache IoTDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -546,13 +546,13 @@
       "engines": ["iotdb"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:27Z"
+      "publishedAt": "2026-10-24T12:31:53Z"
     },
     {
       "id": "irodori.trino-presto",
       "name": "Trino / Presto Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Trino and Presto connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -562,7 +562,7 @@
       "engines": ["trinoPresto"],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:36:40Z"
+      "publishedAt": "2026-10-24T12:22:45Z"
     },
     {
       "id": "irodori.firebird",
@@ -584,7 +584,7 @@
       "id": "irodori.databricks",
       "name": "Databricks Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds Databricks SQL Warehouse connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -618,7 +618,7 @@
       },
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:32:04Z"
+      "publishedAt": "2026-10-24T12:28:02Z"
     },
     {
       "id": "irodori.knowledge",
