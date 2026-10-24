@@ -345,10 +345,6 @@ export function WorkbenchDockLayout({
       restoreLayout(api);
       readyRef.current = true;
       saveLayout(api);
-      layoutDisposableRef.current?.dispose();
-      layoutDisposableRef.current = api.onDidLayoutChange(() =>
-        saveLayout(api),
-      );
     },
     [restoreLayout, saveLayout],
   );
@@ -362,15 +358,21 @@ export function WorkbenchDockLayout({
     saveLayout(api);
   }, [saveLayout, syncPanels]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    const api = apiRef.current;
+    if (api && readyRef.current) {
+      layoutDisposableRef.current = api.onDidLayoutChange(() =>
+        saveLayout(api),
+      );
+    }
+    return () => {
       layoutDisposableRef.current?.dispose();
       layoutDisposableRef.current = null;
-      apiRef.current = null;
-      readyRef.current = false;
-    },
-    [],
-  );
+      // Dockview keeps its API during React's StrictMode effect replay and
+      // does not fire onReady again. Keep that reference so later toggles
+      // can still add panels; only the subscription belongs to this effect.
+    };
+  }, [saveLayout]);
 
   return (
     <DockPanelContentContext.Provider value={panelContent}>
