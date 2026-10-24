@@ -15,19 +15,25 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
-  security-events: write
 
 jobs:
   scorecard:
     name: Scorecard
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      issues: read
+      pull-requests: read
+      security-events: write
 
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
-      - uses: ossf/scorecard-action@v2.4.4
+      - uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
         with:
           results_file: scorecard.sarif
           results_format: sarif

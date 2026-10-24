@@ -3,6 +3,9 @@ name: Release dry run
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   linux-packages:
     name: Linux package dry run (${{ matrix.label }})

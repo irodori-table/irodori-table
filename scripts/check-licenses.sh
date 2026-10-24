@@ -5,6 +5,15 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 missing=0
 
 while IFS= read -r manifest; do
+  # The reviewed GTK3 security backport retains its upstream MIT license.
+  # Do not relabel third-party code with the project's 0BSD license.
+  if [[ "$manifest" == "$root/vendor/glib-0.18.5-patched/Cargo.toml" ]] &&
+    grep -Eq '^[[:space:]]*license[[:space:]]*=[[:space:]]*"MIT"' "$manifest" &&
+    [[ -s "$root/vendor/glib-0.18.5-patched/LICENSE" ]] &&
+    [[ -s "$root/vendor/glib-0.18.5-patched/PROVENANCE.md" ]]; then
+    continue
+  fi
+
   if grep -Eq '^[[:space:]]*license[[:space:]]*=[[:space:]]*"0BSD"' "$manifest"; then
     continue
   fi

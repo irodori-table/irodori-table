@@ -30,6 +30,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   docs-check:
     name: Validate data-source docs
