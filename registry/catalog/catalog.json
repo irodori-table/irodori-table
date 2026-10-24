@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-24T12:46:18Z",
+  "updatedAt": "2026-10-24T13:18:22Z",
   "source": "prebuilt-extension-catalog",
   "extensions": [
     {
       "id": "irodori.duckdb",
       "name": "DuckDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds DuckDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -46,13 +46,13 @@
       },
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:35:13Z"
+      "publishedAt": "2026-10-24T13:18:22Z"
     },
     {
       "id": "irodori.motherduck",
       "name": "MotherDuck Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds MotherDuck connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -91,7 +91,7 @@
       },
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:41:29Z"
+      "publishedAt": "2026-10-24T13:17:29Z"
     },
     {
       "id": "irodori.cloud-spanner",

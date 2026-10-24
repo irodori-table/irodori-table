@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-24T12:46:18Z",
+  "updatedAt": "2026-10-24T13:18:22Z",
   "source": "bundled-extension-catalog",
   "extensions": [
     {
       "id": "irodori.duckdb",
       "name": "DuckDB Connector",
       "publisher": "irodori",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "apiVersion": "0.1",
       "summary": "Adds DuckDB connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -54,36 +54,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:35:13Z",
+      "publishedAt": "2026-10-24T13:18:22Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-duckdb/releases/tag/v0.1.7",
-        "tag": "v0.1.7",
+        "url": "https://github.com/irodori-table/irodori-extension-duckdb/releases/tag/v0.1.8",
+        "tag": "v0.1.8",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-duckdb-aarch64-linux.tar.gz",
-            "sha256": "sha256:acb34cb73cc1a2604a36db458d0bd0e6cf8c8463443e96511733376024599171"
+            "sha256": "sha256:ab0e7e02ffd938e06f0f7558c033d5389db9e5783e532adf5755868ddc014f74"
           },
           "aarch64-macos": {
             "name": "irodori-extension-duckdb-aarch64-macos.tar.gz",
-            "sha256": "sha256:721a0ab7578e1af8e6c5b2bfc9a071d7cda7055eee2fdae0367b7341dfe89cc4"
+            "sha256": "sha256:52717d1d609d98d141fac152c4b0a009f1bc710dc54f799cac0fa1ce74b656ea"
           },
           "aarch64-windows": {
             "name": "irodori-extension-duckdb-aarch64-windows.tar.gz",
-            "sha256": "sha256:de70f9017699e610eb6fb47d388ec15754791bac847ec865e08b91cb6251c3c9"
+            "sha256": "sha256:9b1edd1a02a5c33f95db6fdd7dbcbac8876607959969c7ce311bd67fb6792d0a"
           },
           "x86_64-linux": {
             "name": "irodori-extension-duckdb.tar.gz",
-            "sha256": "sha256:08db53071d8a69e93697b428eb6be8af557f53bb50da448a616b1da466dbaa58"
+            "sha256": "sha256:86c5acf29182394050674721e7394af4935e1fc64a21c2fdc98ce0c496709497"
           },
           "x86_64-macos": {
             "name": "irodori-extension-duckdb-x86_64-macos.tar.gz",
-            "sha256": "sha256:8061c36ffd7dbfa1647ed53b758abe7407d2af9afb7dcf561772b59c7c3427be"
+            "sha256": "sha256:35266cc2605c307673bc5ea4821d4aa896f38332159fd4301a8560704416e9be"
           },
           "x86_64-windows": {
             "name": "irodori-extension-duckdb-x86_64-windows.tar.gz",
-            "sha256": "sha256:9f31dd55fff9e993f7390c456d2e6bb32dc3b8705d5d1a8d8458d3923cd06a91"
+            "sha256": "sha256:72927a9c8699b33578636d888fb1daa332ca6694f8115abf7a54947692e6d509"
           }
         }
       }
@@ -92,7 +92,7 @@
       "id": "irodori.motherduck",
       "name": "MotherDuck Connector",
       "publisher": "irodori",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "apiVersion": "0.1",
       "summary": "Adds MotherDuck connectivity as an installable connector extension.",
       "license": "MIT OR 0BSD",
@@ -139,36 +139,36 @@
       ],
       "runtime": "native",
       "verified": true,
-      "publishedAt": "2026-08-15T05:41:29Z",
+      "publishedAt": "2026-10-24T13:17:29Z",
       "install": {
         "kind": "githubRelease",
-        "url": "https://github.com/irodori-table/irodori-extension-motherduck/releases/tag/v0.1.6",
-        "tag": "v0.1.6",
+        "url": "https://github.com/irodori-table/irodori-extension-motherduck/releases/tag/v0.1.7",
+        "tag": "v0.1.7",
         "manifestPath": "irodori.extension.json",
         "assets": {
           "aarch64-linux": {
             "name": "irodori-extension-motherduck-aarch64-linux.tar.gz",
-            "sha256": "sha256:ee676f73261059c064140fc0de977fc283b0880cbc60ab1b063d54db47308594"
+            "sha256": "sha256:5fa6497225fbe0fef7d8c94fbd8bd1c6b76d621f84bdf34a66ce07aad246280f"
           },
           "aarch64-macos": {
             "name": "irodori-extension-motherduck-aarch64-macos.tar.gz",
-            "sha256": "sha256:b883100b79c5d4de3366c0fb285252647ebcc3e197dfe58e6b34172f6b3b5318"
+            "sha256": "sha256:0810ff943b4be3ab18e027d4d19e3c5a073bbe82b5d865ffe17278459540bd62"
           },
           "aarch64-windows": {
             "name": "irodori-extension-motherduck-aarch64-windows.tar.gz",
-            "sha256": "sha256:5e0de5e2583f0c3f45689f403907279ebdcfb5ee221fab656954c7279d8b90a1"
+            "sha256": "sha256:735a09abdc71485a0e05bda6fab1688296141b7a0e6741cb9706b4c3169dff23"
           },
           "x86_64-linux": {
             "name": "irodori-extension-motherduck.tar.gz",
-            "sha256": "sha256:5176d31e6023164608fc69e6a59f73f4a440374e1c5ec2ec1b95b9c340824fb0"
+            "sha256": "sha256:eb39e8f214090c9f1b44eaed4fb4992eeaad47a47b8ee66046804a6e48ecaad1"
           },
           "x86_64-macos": {
             "name": "irodori-extension-motherduck-x86_64-macos.tar.gz",
-            "sha256": "sha256:46fae58630c6dc07ef19a9fdc7409308d6a684186dcc1071d1bd76e7307d4958"
+            "sha256": "sha256:a93c11aa0228c3a6eddc35c00ce506d25d15e4a2abd6d751524e3f3126cdbd00"
           },
           "x86_64-windows": {
             "name": "irodori-extension-motherduck-x86_64-windows.tar.gz",
-            "sha256": "sha256:4fd7463bb21f7504ff21bf041d35f89962f1c854a9d6a78166a4ca0df1e6353c"
+            "sha256": "sha256:a77c20e245874eb5613e5b7e1786c242e2e34cb9833b7e98cf25a92472ab9f0d"
           }
         }
       }
