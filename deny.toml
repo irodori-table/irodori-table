@@ -19,6 +19,9 @@ ignore = [
   { id = "RUSTSEC-2025-0100", reason = "transitive parser/schema dependency with no compatible upstream replacement yet" },
   { id = "RUSTSEC-2026-0194", reason = "Tauri 2 reaches quick-xml through plist 1.9.0; remove when plist accepts >=0.41.0" },
   { id = "RUSTSEC-2026-0195", reason = "Tauri 2 reaches quick-xml through plist 1.9.0; remove when plist accepts >=0.41.0" },
+  { id = "RUSTSEC-2026-0370", reason = "unmaintained zvariant 5 pulled in by zbus 5; merged into zbus 6, which has no Tauri 2 release yet" },
+  { id = "RUSTSEC-2026-0371", reason = "unmaintained zbus_names 4 pulled in by zbus 5; merged into zbus 6, which has no Tauri 2 release yet" },
+  { id = "RUSTSEC-2026-0372", reason = "unmaintained zvariant_derive 5 pulled in by zbus 5; merged into zbus 6, which has no Tauri 2 release yet" },
 ]
 
 [licenses]
