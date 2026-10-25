@@ -17,7 +17,7 @@ const root = resolve(scriptDir, "../..");
 const extensionsRoot =
   process.env.IRODORI_EXTENSIONS_ROOT ?? defaultExtensionsRoot;
 const options = parseArgs(process.argv.slice(2));
-const kitTag = "v0.9.1";
+const kitTag = "v0.9.3";
 const maintainedRepositories = new Set();
 
 if (options.help) {
