@@ -20,6 +20,12 @@ RUSTSEC-2024-0429 glib via Tauri/wry Linux WebKitGTK
 RUSTSEC-2026-0194 quick-xml via Tauri/plist; no compatible plist release yet
 RUSTSEC-2026-0195 quick-xml via Tauri/plist; no compatible plist release yet
 
+# zbus 5 crates reached through tauri-plugin-opener. Upstream merged them into
+# zbus 6.0.0, but Tauri 2 has no release on that line yet.
+RUSTSEC-2026-0370 zvariant via zbus 5; merged into zbus 6, no Tauri 2 release yet
+RUSTSEC-2026-0371 zbus_names via zbus 5; merged into zbus 6, no Tauri 2 release yet
+RUSTSEC-2026-0372 zvariant_derive via zbus 5; merged into zbus 6, no Tauri 2 release yet
+
 # Optional/database/tooling transitive crates with no compatible upstream
 # replacement in the current dependency graph.
 RUSTSEC-2024-0370 proc-macro-error via schema/codegen tooling
