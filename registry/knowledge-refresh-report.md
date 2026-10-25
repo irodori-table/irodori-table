@@ -1,6 +1,6 @@
 # Knowledge Refresh Report
 
-Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
+Run started 2026-10-01T13:22:38.649Z, finished 2026-10-01T13:22:45.374Z (UTC).
 
 | Metric | Count |
 | --- | ---: |
@@ -8,13 +8,14 @@ Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
 | Changed (new snapshot) | 90 |
 | Unchanged | 0 |
 | Failed | 3 |
-| New facts | 459 |
+| New facts | 464 |
 
 ## Changed sources (90)
 
 | Source | Product | Latest title |
 | --- | --- | --- |
 | amazon-s3-docs | Amazon S3 | What is Amazon S3? |
+| arangodb-docs | ArangoDB | Recommended Resources |
 | athena-docs | Amazon Athena | What is Amazon Athena? |
 | azure-blob-docs | Azure Blob Storage | Introduction to Azure Blob Storage |
 | bigquery-google-sql | BigQuery | Query syntax Stay organized with collections Save and categorize content based on your preferences. |
@@ -66,9 +67,9 @@ Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
 | mysql-release-notes | MySQL | MySQL :: MySQL 9.7 Release Notes |
 | neo4j-browser-docs | Neo4j | Neo4j Browser |
 | neo4j-cypher-manual | Neo4j | Introduction |
-| neo4j-graph-data-science | Neo4j Graph Data Science | The Neo4j Graph Data Science Library Manual v2026.07 |
+| neo4j-graph-data-science | Neo4j Graph Data Science | The Neo4j Graph Data Science Library Manual v2026.09 |
 | neon-docs | Neon | Neon documentation |
-| openai-mcp-connectors | OpenAI API | MCP and Connectors |
+| openai-mcp-connectors | OpenAI API | MCP servers |
 | opensearch-docs | OpenSearch | OpenSearch Links |
 | opensearch-release-notes | OpenSearch | Version history |
 | oracle-26ai-docs | Oracle | Oracle AI Database 26ai |
@@ -76,7 +77,6 @@ Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
 | pinecone-docs | Pinecone | Pinecone documentation |
 | postgres-docs-current | PostgreSQL | PostgreSQL 18.6 Documentation |
 | postgres-release-notes-current | PostgreSQL | PostgreSQL: Documentation: 18: Appendix E. Release Notes |
-| presto-docs | Presto | Presto Documentation ¶ |
 | qdrant-docs | Qdrant | Qdrant Documentation |
 | questdb-docs | QuestDB | Introduction |
 | redis-commands | Redis | Commands |
@@ -109,11 +109,11 @@ Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
 
 | Source | Product | Error |
 | --- | --- | --- |
-| arangodb-docs | ArangoDB | HTTP 403 |
 | firebird-docs | Firebird | HTTP 403 |
 | firebird-release-notes | Firebird | HTTP 403 |
+| presto-docs | Presto | HTTP 403 |
 
-## New facts by product (459)
+## New facts by product (464)
 
 | Product | New facts |
 | --- | ---: |
@@ -125,16 +125,16 @@ Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
 | DynamoDB | 12 |
 | Elasticsearch | 12 |
 | InfluxDB | 12 |
+| MongoDB | 12 |
 | Neo4j | 12 |
 | OpenSearch | 12 |
 | Redshift | 12 |
 | SQLite | 12 |
 | Snowflake | 12 |
 | PostgreSQL | 11 |
-| MongoDB | 10 |
+| Redis | 11 |
+| SQL Server | 11 |
 | MySQL | 10 |
-| SQL Server | 10 |
-| Redis | 9 |
 | Apache Cassandra | 7 |
 | MariaDB | 7 |
 | Trino | 7 |
@@ -142,6 +142,7 @@ Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
 | Amazon S3 | 6 |
 | Apache Hive | 6 |
 | Apache Iceberg | 6 |
+| ArangoDB | 6 |
 | Azure Blob Storage | 6 |
 | ClickHouse | 6 |
 | CockroachDB | 6 |
@@ -162,7 +163,6 @@ Run started 2026-09-01T06:43:25.636Z, finished 2026-09-01T06:43:31.164Z (UTC).
 | Neon | 6 |
 | OpenAI API | 6 |
 | Pinecone | 6 |
-| Presto | 6 |
 | Qdrant | 6 |
 | RedisInsight | 6 |
 | Schemars | 6 |
