@@ -41,6 +41,50 @@ The APT and AUR channels are refreshed for stable releases only. Full
 OS-specific steps, prerequisites, and troubleshooting live in the
 [install guide](https://irodori-table.github.io/irodori-docs/install-guide.html).
 
+## Update
+
+**In the app** (stable builds): Irodori Table checks for a signed update at
+startup. You can also run **Check for Updates** from **Tools** or the command
+palette. Press **Install**, then restart the app. Preview and lightweight
+pre-release builds have no updater, so update them with the commands below.
+See [docs/updater.md](docs/updater.md).
+
+**Windows** (PowerShell): quit the app, then download and run the latest setup
+`.exe`. It replaces the installed version.
+
+```powershell
+$ProgressPreference = 'SilentlyContinue'
+$release = Invoke-RestMethod https://api.github.com/repos/irodori-table/irodori-table/releases/latest
+$asset = $release.assets | Where-Object name -like '*_x64-setup.exe'
+$installer = Join-Path $env:TEMP $asset.name
+Invoke-WebRequest $asset.browser_download_url -OutFile $installer
+Start-Process $installer -Wait
+```
+
+**macOS**: quit the app, then replace it with the latest universal `.dmg`.
+
+```bash
+url=$(curl -fsSL https://api.github.com/repos/irodori-table/irodori-table/releases/latest \
+  | grep -o '"browser_download_url": *"[^"]*_universal\.dmg"' | cut -d'"' -f4)
+curl -fL "$url" -o /tmp/irodori-table.dmg
+hdiutil attach /tmp/irodori-table.dmg -nobrowse -mountpoint /Volumes/irodori-table
+rm -rf "/Applications/Irodori Table.app"
+ditto "/Volumes/irodori-table/Irodori Table.app" "/Applications/Irodori Table.app"
+hdiutil detach /Volumes/irodori-table
+```
+
+If macOS blocks an unsigned build, open **System Settings ▸ Privacy & Security**
+and choose **Open Anyway**.
+
+**Linux**:
+
+```bash
+sudo apt update && sudo apt install --only-upgrade irodori-table   # Debian / Ubuntu
+yay -Syu irodori-table                                              # Arch Linux (AUR)
+```
+
+For the AppImage, download the new `.AppImage` and replace the old file.
+
 ## Privacy
 
 Irodori Table does not upload telemetry or crash reports. It connects only to
@@ -97,6 +141,58 @@ project docs:
 - [macOS development](https://irodori-table.github.io/irodori-docs/macos-development.html)
 - [Linux development](https://irodori-table.github.io/irodori-docs/linux-development.html)
 - [Extension development](https://irodori-table.github.io/irodori-docs/extension-development.html)
+
+## Release
+
+Maintainers release from `main`. GitHub Actions builds the Windows and macOS
+executables, so you do not need a Windows or Mac machine. You need the
+[GitHub CLI](https://cli.github.com/) (`gh auth login`). Full details live in
+[RELEASING.md](RELEASING.md).
+
+```sh
+# 1. Start from a clean, current main and run the local gate.
+git switch main && git pull --ff-only
+task desktop-format-check
+task desktop-lint
+task desktop-typegen-check
+task desktop-test
+
+# 2. Bump the version, commit, tag vX.Y.Z, and push.
+#    The tag push builds the Linux pre-release (AppImage, deb, rpm).
+task release-patch     # or release-minor / release-major
+
+# 3. Build the Windows (.exe, .msi) and universal macOS (.dmg, .app) packages.
+#    The stable channel adds them to the same release, adds the updater files,
+#    and marks the release as Latest.
+VERSION="v$(node -p "require('./apps/desktop/package.json').version")"
+gh workflow run release.yml -f release_tag="$VERSION" -f channel=stable
+
+# 4. Watch the run, then check the uploaded files.
+gh run list --workflow release.yml --limit 3     # find the new run ID
+gh run watch <run-id> --exit-status
+gh release view "$VERSION" --json assets -q '.assets[].name'
+```
+
+When step 3 finishes, installed stable builds find the new version on their
+next update check. Use `-f channel=preview` instead to add unsigned Windows and
+macOS test builds to the pre-release without making it Latest.
+
+### Build an executable locally
+
+Tauri builds for the OS it runs on, so run each command on that OS. Run
+`task setup` first. The output goes to `.irodori-local/target/`. Local builds
+are unsigned and have no updater.
+
+```sh
+# Windows: NSIS setup .exe and .msi
+npm --prefix apps/desktop run tauri build -- --bundles "nsis,msi" --config src-tauri/tauri.bundle.conf.json
+# -> .irodori-local/target/release/bundle/nsis/ and .irodori-local/target/release/bundle/msi/
+
+# macOS: universal .app and .dmg (Apple silicon + Intel)
+rustup target add aarch64-apple-darwin x86_64-apple-darwin
+npm --prefix apps/desktop run tauri build -- --target universal-apple-darwin --bundles "app,dmg" --config src-tauri/tauri.bundle.conf.json
+# -> .irodori-local/target/universal-apple-darwin/release/bundle/dmg/
+```
 
 ## Repos
 

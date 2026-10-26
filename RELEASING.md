@@ -17,9 +17,16 @@ task desktop-test
 
 # 3. Cut the release: bumps every version, commits, tags vX.Y.Z, and pushes.
 task release-patch     # or release-minor / release-major
+
+# 4. Promote it: build Windows + macOS, add updater files, and mark it Latest.
+VERSION="v$(node -p "require('./apps/desktop/package.json').version")"
+gh workflow run release.yml -f release_tag="$VERSION" -f channel=stable
 ```
 
-That is the whole everyday flow; CI builds and publishes the tag's artifacts.
+That is the whole everyday flow. The tag push publishes the Linux pre-release;
+the stable dispatch in step 4 adds the Windows and macOS packages and the
+updater manifest (see [Signing, Notarization, And Updates](#signing-notarization-and-updates)
+for why it is required).
 **Everything below is reference for the uncommon cases** — signed/stable
 channels, sibling-tag ordering, updater keys, and rollback. You do not need any
 of it to ship a normal patch.
