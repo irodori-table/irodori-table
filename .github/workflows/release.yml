@@ -961,6 +961,26 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # Rebuilt after every channel, because each one adds or replaces packages.
+  # A lane the channel does not build is skipped, which is fine; a failed or
+  # cancelled lane leaves the release incomplete, so hash nothing for it.
+  publish-checksums:
+    name: Publish checksums
+    needs:
+      - release-gates
+      - publish-linux
+      - publish-linux-aarch64
+      - publish-macos
+      - publish-windows
+    if: |
+      always()
+      && needs.release-gates.result == 'success'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled')
+    uses: ./.github/workflows/release-checksums.yml
+    with:
+      release_tag: ${{ needs.release-gates.outputs.release_tag }}
+
   publish-updater:
     name: Publish and verify updater manifest
     needs:

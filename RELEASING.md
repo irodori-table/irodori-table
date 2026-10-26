@@ -121,6 +121,15 @@ bindings.
 6. Publish release notes that separate app changes from sibling-crate and
    extension SDK changes.
 
+Every channel ends by rewriting `SHA256SUMS.txt` from the packages the release
+holds at that point (`release-checksums.yml`), so do not upload it by hand: a
+later channel replaces packages and a hand-made file would go stale. To repair
+an existing release without rebuilding it, dispatch the workflow on its own:
+
+```sh
+gh workflow run release-checksums.yml -f release_tag=vX.Y.Z
+```
+
 ## Signing, Notarization, And Updates
 
 ### Build cache ordering

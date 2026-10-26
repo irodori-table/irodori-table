@@ -1,0 +1,82 @@
+name: Release checksums
+
+# Publishes SHA256SUMS.txt for a release from the packages it holds right now.
+#
+# A hand-uploaded checksum file goes stale the moment a later channel replaces
+# assets: v0.11.17's file listed the lightweight Linux packages, and the stable
+# dispatch then rebuilt every one of them, so none of its hashes matched. The
+# release workflow calls this after its platform lanes, so each channel
+# rewrites the file to match what it just published. Dispatch it by hand to
+# repair an existing release without rebuilding anything.
+
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        description: 'Existing v* release to hash'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing v* release to hash'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  sha256sums:
+    name: Publish SHA256SUMS.txt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hash release packages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          if [[ "${RELEASE_TAG}" != v* ]]; then
+            echo "::error::release_tag must be an existing v* tag; got '${RELEASE_TAG}'."
+            exit 1
+          fi
+          dir="${RUNNER_TEMP}/packages"
+          mkdir -p "${dir}"
+          # Installable packages only. Updater signatures, latest.json, and this
+          # file describe those packages rather than being downloads themselves.
+          gh release download "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" \
+            --dir "${dir}" \
+            --pattern '*.AppImage' --pattern '*.deb' --pattern '*.rpm' \
+            --pattern '*.dmg' --pattern '*.app.tar.gz' \
+            --pattern '*.exe' --pattern '*.msi'
+          if [[ -z "$(ls -A "${dir}")" ]]; then
+            echo "::error::release ${RELEASE_TAG} has no packages to hash."
+            exit 1
+          fi
+          (cd "${dir}" && sha256sum -- * | LC_ALL=C sort -k 2) > "${RUNNER_TEMP}/SHA256SUMS.txt"
+          cat "${RUNNER_TEMP}/SHA256SUMS.txt"
+
+      - name: Publish SHA256SUMS.txt
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          gh release upload "${RELEASE_TAG}" "${RUNNER_TEMP}/SHA256SUMS.txt" \
+            --repo "${GITHUB_REPOSITORY}" --clobber
+
+      # Re-download rather than trusting the local copy, so this asserts what a
+      # user verifying their download will actually fetch.
+      - name: Verify published checksums
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          gh release download "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" \
+            --pattern SHA256SUMS.txt --dir "${RUNNER_TEMP}/verify"
+          cd "${RUNNER_TEMP}/packages"
+          sha256sum --check --strict "${RUNNER_TEMP}/verify/SHA256SUMS.txt"
