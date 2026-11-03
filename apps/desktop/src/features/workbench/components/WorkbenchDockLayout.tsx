@@ -457,12 +457,10 @@ export function WorkbenchDockLayout({
         doc.removeEventListener("pointerup", finish);
         doc.removeEventListener("pointercancel", finish);
         delete dock.dataset.snapClose;
-        const { onSidebarWidthChange, onSidebarSnapClose } =
-          sidebarCallbacksRef.current;
-        for (const drag of drags) {
+        const outcomes = drags.flatMap((drag) => {
           const endWidth = api.getPanel(drag.id)?.api.width;
           if (endWidth === undefined) {
-            continue;
+            return [];
           }
           const outcome = settleSidebarDrag(
             {
@@ -474,13 +472,24 @@ export function WorkbenchDockLayout({
             },
             drag.minimum,
           );
-          if (outcome.rememberWidth !== null) {
-            onSidebarWidthChange?.(drag.side, outcome.rememberWidth);
+          return [{ side: drag.side, ...outcome }];
+        });
+        // dockview records the dragged sizes in its own pointerup listener,
+        // which runs after this one. A re-render before then relays the dock
+        // out from the pre-drag proportions and undoes the drag, so the store
+        // is only told once this event has finished dispatching.
+        setTimeout(() => {
+          const { onSidebarWidthChange, onSidebarSnapClose } =
+            sidebarCallbacksRef.current;
+          for (const outcome of outcomes) {
+            if (outcome.rememberWidth !== null) {
+              onSidebarWidthChange?.(outcome.side, outcome.rememberWidth);
+            }
+            if (outcome.close) {
+              onSidebarSnapClose?.(outcome.side);
+            }
           }
-          if (outcome.close) {
-            onSidebarSnapClose?.(drag.side);
-          }
-        }
+        }, 0);
       };
       doc.addEventListener("pointermove", preview);
       doc.addEventListener("pointerup", finish);
