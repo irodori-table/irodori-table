@@ -71,6 +71,8 @@ export function useWorkbenchActions({
     schemaDraft,
     setQuery: editor.setQuery,
     openSqlInNewTab: editor.openSqlInNewTab,
+    showTableTab: editor.showTableTab,
+    queryRunning: queryRunner.running,
     setMigrationStudioOpen: overlays.setMigrationStudioOpen,
     setSchemaDesignerOpen,
     setObjectActionMenu: connections.setObjectActionMenu,
@@ -147,7 +149,6 @@ export function useWorkbenchActions({
   // Finished prop bundles for the two center panes.
   const queryEditorController = editor.buildQueryEditorController({
     running: queryRunner.running,
-    resultActionsAvailable: Boolean(grid.activeResult),
     theme: themes.theme,
     activeMetadata: connections.activeMetadata,
     editorEngine: connections.editorEngine,

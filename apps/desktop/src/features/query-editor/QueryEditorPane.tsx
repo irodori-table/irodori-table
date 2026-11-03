@@ -20,6 +20,7 @@ import type { SqlFormatterId } from "../../sql/formatter";
 import type { SqlMetadataTarget } from "../../sql/metadata-inspection";
 import type { SqlLinterId } from "../../sql/linter";
 import type { IrodoriTheme } from "@/theme";
+import type { Keymap } from "@/core";
 import type { EditorSplitMode } from "@/lib/editor-split-mode";
 import { EditorCommandBar } from "./EditorCommandBar";
 import { EditorContextMenu } from "./EditorContextMenu";
@@ -74,7 +75,7 @@ export interface QueryEditorPaneProps {
   runFromStartShortcutLabel: string;
   runAllShortcutLabel: string;
   runMenuOpen: boolean;
-  resultActionsAvailable: boolean;
+  keymap: Keymap;
   runCommand: (commandId: string) => void;
   runQuery: () => Promise<void>;
   runCurrentQuery: () => Promise<void>;
@@ -127,7 +128,7 @@ export function QueryEditorPane({
   runFromStartShortcutLabel,
   runAllShortcutLabel,
   runMenuOpen,
-  resultActionsAvailable,
+  keymap,
   runCommand,
   runQuery,
   runCurrentQuery,
@@ -257,8 +258,7 @@ export function QueryEditorPane({
           <EditorContextMenu
             position={contextMenu}
             runPrimaryLabel={runPrimaryLabel}
-            runShortcutLabel={runShortcutLabel}
-            resultActionsAvailable={resultActionsAvailable}
+            keymap={keymap}
             onCommand={runContextCommand}
             onClose={closeEditorContextMenu}
           />

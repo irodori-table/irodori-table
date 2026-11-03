@@ -48,7 +48,39 @@ describe("selectedOrCurrentStatement", () => {
   it("returns the last statement for a caret past the final delimiter", () => {
     expect(selectedOrCurrentStatement(22, 22, sql)).toBe("select 3");
   });
-  it("falls back to the whole buffer when there are no delimiters", () => {
+  it("runs a lone statement that has no delimiter", () => {
     expect(selectedOrCurrentStatement(0, 0, "select 42")).toBe("select 42");
+  });
+
+  it("runs the statement before a caret on the blank last line, not the tab", () => {
+    // The caret sat on the empty line after "rollback;". The old fallback
+    // sent the whole tab, begin/delete/rollback together.
+    const script =
+      "begin;\n\ndelete from research_runs;\n\n-- commit;\nrollback;\n\n";
+
+    expect(
+      selectedOrCurrentStatement(script.length, script.length, script),
+    ).toBe("-- commit;\nrollback;");
+  });
+
+  it("keeps blank lines before a statement with that statement", () => {
+    const script = "select 1;\n\n\nselect 2;";
+    const blankLine = "select 1;\n\n".length;
+
+    expect(selectedOrCurrentStatement(blankLine, blankLine, script)).toBe(
+      "select 2;",
+    );
+  });
+
+  it("skips empty statements when walking back", () => {
+    const script = "select 1;;\n\n";
+
+    expect(
+      selectedOrCurrentStatement(script.length, script.length, script),
+    ).toBe("select 1;");
+  });
+
+  it("runs nothing in a buffer of whitespace", () => {
+    expect(selectedOrCurrentStatement(2, 2, " \n \n")).toBe("");
   });
 });

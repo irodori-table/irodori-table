@@ -40,7 +40,9 @@ export function useWorkbenchLayout({ editor }: WorkbenchLayoutDeps) {
 
   return {
     sidebarWidth,
+    setSidebarWidth,
     inspectorWidth,
+    setInspectorWidth,
     resultsHeight,
     editorSplitPercent,
     beginPanelResize,

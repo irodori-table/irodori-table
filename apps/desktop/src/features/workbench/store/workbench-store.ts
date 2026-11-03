@@ -6,6 +6,10 @@ import {
   resolveValue,
 } from "@/core";
 import {
+  LEFT_SIDEBAR_MIN_WIDTH,
+  RIGHT_SIDEBAR_MIN_WIDTH,
+} from "../dock-constraints";
+import {
   defaultWorkbenchViewHidden,
   defaultWorkbenchViewVisibility,
   defaultWorkbenchViewPlacements,
@@ -69,13 +73,13 @@ const editorSplitModeStorageKey = "irodori.editor.splitMode.v1";
 const editorSplitSizeStorageKey = "irodori.editor.splitSize.v1";
 
 const sidebarWidthDefault = 200;
-// Floors match the dock panel minimums in WorkbenchDockLayout: narrow enough to
-// be a real compact state (icon view tabs, truncated rows) rather than a point
-// at which the panel is taken away.
-const sidebarWidthMin = 132;
+// These are the widths a sidebar reopens at, so the floors are the sidebars'
+// usable minimums: a narrower dragged width, or the snap width a drag closed
+// it at, is never worth coming back to.
+const sidebarWidthMin = LEFT_SIDEBAR_MIN_WIDTH;
 const sidebarWidthMax = 640;
 const inspectorWidthDefault = 300;
-const inspectorWidthMin = 168;
+const inspectorWidthMin = RIGHT_SIDEBAR_MIN_WIDTH;
 const inspectorWidthMax = 640;
 const resultsHeightDefault = 340;
 const resultsHeightMin = 96;

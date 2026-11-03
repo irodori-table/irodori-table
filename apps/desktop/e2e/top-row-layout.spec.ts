@@ -3,7 +3,8 @@ import { expect, type Page, test } from "@playwright/test";
 // The top band is three regions side by side -- the left sidebar's view tabs,
 // the editor tab strip, and the right sidebar's view tabs. It has to stay one
 // level row as width comes off, and the sidebars have to compact rather than
-// take their content away. Tauri `invoke` rejects here and the app falls back
+// clip their content -- until a drag past their snap point closes them
+// outright. Tauri `invoke` rejects here and the app falls back
 // to its mock snapshot, which is enough to lay the row out.
 
 const bothSidebars = {
@@ -188,25 +189,42 @@ test.describe("top row layout", () => {
     }
   });
 
-  test("dragging a sidebar narrow compacts it instead of hiding it", async ({
+  // The left sidebar's own sash: the vertical one on its right edge.
+  async function dragLeftSidebarSash(page: Page, toOffsets: number[]) {
+    const sidebar = await page.locator("aside.sidebar-left").boundingBox();
+    expect(sidebar).not.toBeNull();
+    const edge = sidebar!.x + sidebar!.width;
+    const sash = await page.evaluate((x) => {
+      for (const element of document.querySelectorAll(".dv-sash.dv-enabled")) {
+        const box = element.getBoundingClientRect();
+        if (box.height > box.width && box.left - 1 <= x && x <= box.right + 1) {
+          return { x: box.x + box.width / 2 };
+        }
+      }
+      return null;
+    }, edge);
+    expect(sash, "no sash on the left sidebar's edge").not.toBeNull();
+
+    await page.mouse.move(sash!.x, 400);
+    await page.mouse.down();
+    for (const offset of toOffsets) {
+      await page.mouse.move(sidebar!.x + offset, 400, { steps: 4 });
+    }
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+  }
+
+  // Short of the snap point (half the 120px floor), the sidebar stops at its
+  // floor: narrower than the 132px it used to stop at, still whole.
+  test("dragging a sidebar narrow compacts it at its floor", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1536, height: 900 });
     await openWorkbench(page, bothSidebars);
 
-    const sash = page.locator(".dv-sash.dv-enabled").first();
-    const box = await sash.boundingBox();
-    expect(box).not.toBeNull();
+    await dragLeftSidebarSash(page, [220, 160, 120, 90]);
 
-    await page.mouse.move(box!.x + box!.width / 2, 400);
-    await page.mouse.down();
-    for (const target of [220, 160, 100, 40]) {
-      await page.mouse.move(target, 400, { steps: 4 });
-    }
-    await page.mouse.up();
-    await page.waitForTimeout(400);
-
-    const sidebar = page.locator("aside.sidebar").first();
+    const sidebar = page.locator("aside.sidebar-left");
     await expect(sidebar).toBeVisible();
 
     const compact = await sidebar.evaluate((element) => {
@@ -224,11 +242,40 @@ test.describe("top row layout", () => {
       };
     });
 
-    // It got genuinely narrow...
-    expect(compact.width).toBeLessThanOrEqual(140);
+    // It got genuinely narrow, down to the floor and no further...
+    expect(Math.round(compact.width)).toBe(120);
     // ...but it is still there, still usable, and still inside its own box.
-    expect(compact.width).toBeGreaterThan(0);
     expect(compact.viewTabs).toBeGreaterThan(0);
     expect(compact.spilling).toBe(0);
+  });
+
+  // Past the snap point it closes, VS Code-style, and the titlebar toggle
+  // brings it back at the width it had before the drag -- not the floor it
+  // was dragged through.
+  test("dragging a sidebar past its snap point closes it", async ({ page }) => {
+    await page.setViewportSize({ width: 1536, height: 900 });
+    await openWorkbench(page, bothSidebars);
+
+    const sidebar = page.locator("aside.sidebar-left");
+    const before = await sidebar.boundingBox();
+    expect(before).not.toBeNull();
+
+    await dragLeftSidebarSash(page, [220, 160, 100, 40]);
+
+    await expect(sidebar).toHaveCount(0);
+    const stored = await page.evaluate(() => ({
+      open: window.localStorage.getItem("irodori.sidebar.open.v1"),
+      width: Number(window.localStorage.getItem("irodori.sidebar.width.v2")),
+    }));
+    expect(stored.open).toBe("false");
+    expect(stored.width).toBeCloseTo(before!.width, -1);
+
+    await page
+      .locator('.titlebar-control-zone [data-sidebar-toggle="left"]')
+      .click();
+    await expect(sidebar).toBeVisible();
+    await page.waitForTimeout(400);
+    const reopened = await sidebar.boundingBox();
+    expect(reopened!.width).toBeCloseTo(before!.width, -1);
   });
 });

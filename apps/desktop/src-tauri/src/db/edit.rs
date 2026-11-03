@@ -7,6 +7,8 @@
 //! caller-supplied key set (the table's primary key where available); a `NULL`
 //! key becomes `IS NULL` so it still matches.
 
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -110,31 +112,77 @@ fn get_dialect(wire: Wire) -> Box<dyn SqlDialect> {
 
 /// Build the parameterized statements for a batch of edits.
 pub(crate) fn plan(wire: Wire, edits: &TableEdits) -> DbResult<Plan> {
+    plan_typed(wire, edits, &ColumnTypes::new())
+}
+
+/// Column name to the SQL type each of its placeholders is cast to.
+pub(crate) type ColumnTypes = HashMap<String, String>;
+
+/// [`plan`], with every placeholder of a column listed in `types` written as
+/// `CAST(<placeholder> AS <type>)`. A driver that binds strings with a concrete
+/// type (sqlx sends Postgres `text`) otherwise leaves the server comparing or
+/// assigning `text` to a `uuid`, numeric, json or timestamp column, which
+/// Postgres rejects because it has no implicit conversion from `text`.
+pub(crate) fn plan_typed(wire: Wire, edits: &TableEdits, types: &ColumnTypes) -> DbResult<Plan> {
     if edits.table.trim().is_empty() {
         return Err(DbError::validation("no target table for edits"));
     }
     let dialect = get_dialect(wire);
     let target = qualified(&*dialect, edits.schema.as_deref(), &edits.table);
+    let params = Placeholders {
+        dialect: &*dialect,
+        types,
+    };
     Ok(Plan {
         deletes: edits
             .deletes
             .iter()
-            .map(|d| build_delete(&*dialect, &target, d))
+            .map(|d| build_delete(&params, &target, d))
             .collect::<Result<_, _>>()?,
         updates: edits
             .updates
             .iter()
-            .map(|u| build_update(&*dialect, &target, u))
+            .map(|u| build_update(&params, &target, u))
             .collect::<Result<_, _>>()?,
         inserts: edits
             .inserts
             .iter()
-            .map(|i| build_insert(&*dialect, &target, i))
+            .map(|i| build_insert(&params, &target, i))
             .collect::<Result<_, _>>()?,
     })
 }
 
-fn build_update(dialect: &dyn SqlDialect, target: &str, update: &RowUpdate) -> DbResult<Statement> {
+/// The table an edit batch targets, quoted for `wire`.
+pub(crate) fn target(wire: Wire, edits: &TableEdits) -> String {
+    qualified(&*get_dialect(wire), edits.schema.as_deref(), &edits.table)
+}
+
+/// Placeholder text for one column's value: the dialect's positional marker,
+/// cast to the column's type when that is known.
+struct Placeholders<'a> {
+    dialect: &'a dyn SqlDialect,
+    types: &'a ColumnTypes,
+}
+
+impl Placeholders<'_> {
+    fn quote(&self, column: &str) -> String {
+        self.dialect.quote_identifier(column)
+    }
+
+    fn for_column(&self, column: &str, index: usize) -> String {
+        let placeholder = self.dialect.placeholder(index);
+        match self.types.get(column) {
+            Some(ty) => format!("CAST({placeholder} AS {ty})"),
+            None => placeholder,
+        }
+    }
+}
+
+fn build_update(
+    params_for: &Placeholders,
+    target: &str,
+    update: &RowUpdate,
+) -> DbResult<Statement> {
     if update.set.is_empty() {
         return Err(DbError::validation("update has no columns to set"));
     }
@@ -150,20 +198,24 @@ fn build_update(dialect: &dyn SqlDialect, target: &str, update: &RowUpdate) -> D
         .iter()
         .map(|cell| {
             params.push(cell.value.clone());
-            let ph = dialect.placeholder(next);
+            let ph = params_for.for_column(&cell.column, next);
             next += 1;
-            format!("{} = {ph}", dialect.quote_identifier(&cell.column))
+            format!("{} = {ph}", params_for.quote(&cell.column))
         })
         .collect::<Vec<_>>()
         .join(", ");
-    let where_clause = build_where(dialect, &update.keys, &mut params, &mut next);
+    let where_clause = build_where(params_for, &update.keys, &mut params, &mut next);
     Ok(Statement {
         sql: format!("UPDATE {target} SET {set} WHERE {where_clause}"),
         params,
     })
 }
 
-fn build_delete(dialect: &dyn SqlDialect, target: &str, delete: &RowDelete) -> DbResult<Statement> {
+fn build_delete(
+    params_for: &Placeholders,
+    target: &str,
+    delete: &RowDelete,
+) -> DbResult<Statement> {
     if delete.keys.is_empty() {
         return Err(DbError::validation(
             "delete has no key columns (would touch every row)",
@@ -171,14 +223,18 @@ fn build_delete(dialect: &dyn SqlDialect, target: &str, delete: &RowDelete) -> D
     }
     let mut params = Vec::new();
     let mut next = 1;
-    let where_clause = build_where(dialect, &delete.keys, &mut params, &mut next);
+    let where_clause = build_where(params_for, &delete.keys, &mut params, &mut next);
     Ok(Statement {
         sql: format!("DELETE FROM {target} WHERE {where_clause}"),
         params,
     })
 }
 
-fn build_insert(dialect: &dyn SqlDialect, target: &str, insert: &RowInsert) -> DbResult<Statement> {
+fn build_insert(
+    params_for: &Placeholders,
+    target: &str,
+    insert: &RowInsert,
+) -> DbResult<Statement> {
     if insert.values.is_empty() {
         return Err(DbError::validation("insert has no values"));
     }
@@ -187,7 +243,7 @@ fn build_insert(dialect: &dyn SqlDialect, target: &str, insert: &RowInsert) -> D
     let columns = insert
         .values
         .iter()
-        .map(|cell| dialect.quote_identifier(&cell.column))
+        .map(|cell| params_for.quote(&cell.column))
         .collect::<Vec<_>>()
         .join(", ");
     let placeholders = insert
@@ -195,7 +251,7 @@ fn build_insert(dialect: &dyn SqlDialect, target: &str, insert: &RowInsert) -> D
         .iter()
         .map(|cell| {
             params.push(cell.value.clone());
-            let ph = dialect.placeholder(next);
+            let ph = params_for.for_column(&cell.column, next);
             next += 1;
             ph
         })
@@ -210,19 +266,19 @@ fn build_insert(dialect: &dyn SqlDialect, target: &str, insert: &RowInsert) -> D
 /// Build a `key = ? AND ...` clause; a JSON `null` key becomes `key IS NULL` so it
 /// still matches and does not consume a placeholder.
 fn build_where(
-    dialect: &dyn SqlDialect,
+    params_for: &Placeholders,
     keys: &[CellValue],
     params: &mut Vec<serde_json::Value>,
     next: &mut usize,
 ) -> String {
     keys.iter()
         .map(|cell| {
-            let ident = dialect.quote_identifier(&cell.column);
+            let ident = params_for.quote(&cell.column);
             if cell.value.is_null() {
                 format!("{ident} IS NULL")
             } else {
                 params.push(cell.value.clone());
-                let ph = dialect.placeholder(*next);
+                let ph = params_for.for_column(&cell.column, *next);
                 *next += 1;
                 format!("{ident} = {ph}")
             }
@@ -323,6 +379,53 @@ mod tests {
             "INSERT INTO \"t\" (\"a\", \"b\") VALUES ($1, $2)"
         );
         assert_eq!(s.inserts[0].params, vec![json!(1), json!("x")]);
+    }
+
+    #[test]
+    fn typed_plan_casts_each_known_column() {
+        // sqlx binds strings as Postgres `text`, which has no implicit
+        // conversion to uuid or double precision: `"id" = $1` failed with
+        // "operator does not exist: uuid = text".
+        let edits = TableEdits {
+            schema: Some("public".into()),
+            table: "messages".into(),
+            updates: vec![RowUpdate {
+                set: vec![cell("cost_usd", json!("1")), cell("note", json!("x"))],
+                keys: vec![cell("id", json!("01a1-uuid"))],
+            }],
+            inserts: vec![RowInsert {
+                values: vec![cell("id", json!("01a2-uuid")), cell("note", json!("y"))],
+            }],
+            deletes: vec![RowDelete {
+                keys: vec![cell("id", json!("01a3-uuid"))],
+            }],
+        };
+        let types = ColumnTypes::from([
+            ("id".to_string(), "uuid".to_string()),
+            ("cost_usd".to_string(), "double precision".to_string()),
+        ]);
+
+        let pg = plan_typed(Wire::Postgres, &edits, &types).unwrap();
+
+        assert_eq!(
+            pg.updates[0].sql,
+            "UPDATE \"public\".\"messages\" SET \"cost_usd\" = CAST($1 AS double precision), \
+             \"note\" = $2 WHERE \"id\" = CAST($3 AS uuid)"
+        );
+        assert_eq!(
+            pg.deletes[0].sql,
+            "DELETE FROM \"public\".\"messages\" WHERE \"id\" = CAST($1 AS uuid)"
+        );
+        assert_eq!(
+            pg.inserts[0].sql,
+            "INSERT INTO \"public\".\"messages\" (\"id\", \"note\") VALUES (CAST($1 AS uuid), $2)"
+        );
+        // Without types the plan is unchanged.
+        assert_eq!(
+            plan(Wire::Postgres, &edits).unwrap().deletes[0].sql,
+            "DELETE FROM \"public\".\"messages\" WHERE \"id\" = $1"
+        );
+        assert_eq!(target(Wire::Postgres, &edits), "\"public\".\"messages\"");
     }
 
     #[test]

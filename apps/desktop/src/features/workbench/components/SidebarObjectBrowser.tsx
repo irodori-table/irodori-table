@@ -15,6 +15,7 @@ import {
   Boxes,
   Columns3,
   Folder,
+  List,
   MoreHorizontal,
   Network,
   Plus,
@@ -31,6 +32,7 @@ import type {
 } from "@/generated/irodori-api";
 import { createTranslator, type TranslationKey } from "@/i18n";
 import type { WorkspaceConnection } from "@/lib/workspace-connection";
+import { columnTypeDetail, shortColumnType } from "../column-type-label";
 
 type SnapshotObject = WorkspaceConnection["objects"][number];
 type ObjectActionMenuPosition = {
@@ -135,7 +137,7 @@ function handleTreeKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
 }
 
 type SidebarObjectBrowserProps = {
-  connectionsCount: number;
+  savedConnectionsCount: number;
   activeConnection: WorkspaceConnection;
   activeConnectionOpen: boolean;
   activeMetadata: DatabaseMetadata | undefined;
@@ -163,7 +165,7 @@ type SidebarObjectBrowserProps = {
 };
 
 export function SidebarObjectBrowser({
-  connectionsCount,
+  savedConnectionsCount,
   activeConnection,
   activeConnectionOpen,
   activeMetadata,
@@ -311,6 +313,16 @@ export function SidebarObjectBrowser({
             : t("sidebar.databaseObjects")}
         </span>
         <div className="section-heading-actions">
+          {/* The rail lists open connections only, so this is the way back to
+              a saved one that is not open. */}
+          <button
+            type="button"
+            title={t("sidebar.savedConnections")}
+            aria-label={t("sidebar.savedConnections")}
+            onClick={onOpenConnectionManager}
+          >
+            <List size={14} />
+          </button>
           <div className="schema-create-menu-wrap" ref={createMenuAnchorRef}>
             <button
               type="button"
@@ -477,9 +489,7 @@ export function SidebarObjectBrowser({
                         >
                           {object.name}
                         </button>
-                        <small>
-                          {objectKindLabel(object)} · {object.columns.length}
-                        </small>
+                        <small>{objectKindLabel(object)}</small>
                         <button
                           className="object-menu-button"
                           type="button"
@@ -568,14 +578,11 @@ export function SidebarObjectBrowser({
                               className="metadata-row field-row"
                               key={`${object.schema}.${object.name}.${column.name}`}
                               type="button"
-                              title={`${column.name}: ${column.dataType}`}
+                              title={columnTypeDetail(column)}
                             >
                               <Columns3 size={13} />
                               <span>{column.name}</span>
-                              <small>
-                                {column.dataType}
-                                {column.nullable ? "" : " not null"}
-                              </small>
+                              <small>{shortColumnType(column.dataType)}</small>
                             </button>
                           ))
                         ) : (
@@ -631,7 +638,7 @@ export function SidebarObjectBrowser({
         ) : !activeConnectionOpen ? (
           <div className="empty-browser-cta">
             <p>{t("sidebar.empty.notConnected")}</p>
-            {connectionsCount > 0 ? (
+            {savedConnectionsCount > 0 ? (
               <button
                 type="button"
                 className="text-button primary"
@@ -643,7 +650,9 @@ export function SidebarObjectBrowser({
             <button
               type="button"
               className={
-                connectionsCount > 0 ? "text-button" : "text-button primary"
+                savedConnectionsCount > 0
+                  ? "text-button"
+                  : "text-button primary"
               }
               onClick={onAddProfile}
             >
