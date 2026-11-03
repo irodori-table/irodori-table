@@ -115,7 +115,13 @@
   margin-top: auto;
 }
 
+/* dockview layers its own chrome with large z-indexes (sashes at 99, drop
+   targets at 9999). Without a stacking context of its own, those compete with
+   the app's layers on the root, so a sash out-ranked --modal-z: its resize
+   line drew across an open dialog and still took the pointer. Isolating the
+   dock keeps those values local to it. */
 .workbench-dock {
+  isolation: isolate;
   width: 100%;
   height: 100%;
   min-width: 0;
