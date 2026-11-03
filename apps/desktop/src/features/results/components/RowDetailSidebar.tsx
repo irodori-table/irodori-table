@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
-import { ArrowRight, Copy, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Check, Copy, Search } from "lucide-react";
 import { CloseButton } from "@/components/CloseButton";
 import { errorMessage } from "@/core";
 
+import { writeTextToClipboard } from "@/features/erd";
 import { usePreferencesStore } from "@/features/preferences";
 import {
   dbRunQuery,
@@ -14,6 +15,7 @@ import {
 import {
   buildJsonTree,
   buildForeignKeyLookup,
+  detailCopyText,
   findTableByName,
   foreignKeyColumns,
   formatRowAsJson,
@@ -24,6 +26,8 @@ import {
 import { createTranslator, type Translator } from "@/i18n";
 
 const MAX_FK_DEPTH = 6;
+/** How long a field's copy button shows its copied/failed state. */
+const FIELD_COPY_STATUS_MS = 1500;
 
 type DetailMode = "fields" | "json" | "tree";
 
@@ -229,7 +233,33 @@ function RowDetailFields(props: RowDetailFieldsProps) {
   const [referenced, setReferenced] = useState<ReferencedRow | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldCopy, setFieldCopy] = useState<{
+    index: number;
+    status: "copied" | "failed";
+  } | null>(null);
   const normalizedFilter = filter.trim().toLowerCase();
+
+  // A fresh object per copy restarts the timer, so repeat clicks on the same
+  // field keep the check visible for the full interval.
+  useEffect(() => {
+    if (!fieldCopy) {
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setFieldCopy(null),
+      FIELD_COPY_STATUS_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [fieldCopy]);
+
+  async function copyField(index: number) {
+    try {
+      await writeTextToClipboard(detailCopyText(values[index]));
+      setFieldCopy({ index, status: "copied" });
+    } catch {
+      setFieldCopy({ index, status: "failed" });
+    }
+  }
 
   async function navigate(
     columnIndex: number,
@@ -306,6 +336,8 @@ function RowDetailFields(props: RowDetailFieldsProps) {
         const binding = fkColumns.get(index);
         const navigable = binding !== undefined && depth < MAX_FK_DEPTH;
         const open = navigable && openColumn === index;
+        const copyStatus = fieldCopy?.index === index ? fieldCopy.status : null;
+        const copyLabel = t("rowDetail.copyField", { name: column });
         return (
           <div className="detail-row" key={`${column}-${index}`}>
             <dt className="detail-key">
@@ -313,6 +345,25 @@ function RowDetailFields(props: RowDetailFieldsProps) {
               {dataType ? (
                 <span className="detail-type">{dataType}</span>
               ) : null}
+              <button
+                type="button"
+                className={`detail-copy${copyStatus ? ` is-${copyStatus}` : ""}`}
+                onClick={() => void copyField(index)}
+                aria-label={copyLabel}
+                title={
+                  copyStatus === "copied"
+                    ? t("rowDetail.copied")
+                    : copyStatus === "failed"
+                      ? t("rowDetail.failed")
+                      : copyLabel
+                }
+              >
+                {copyStatus === "copied" ? (
+                  <Check size={12} aria-hidden="true" />
+                ) : (
+                  <Copy size={12} aria-hidden="true" />
+                )}
+              </button>
             </dt>
             <dd className="detail-value">
               {navigable ? (

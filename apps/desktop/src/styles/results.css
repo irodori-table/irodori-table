@@ -1069,6 +1069,38 @@
   white-space: nowrap;
 }
 
+/* Same subtle icon button as .row-detail-close. Always shown: the panel has no
+   hover-reveal controls, and the negative margins keep the 16px box inside the
+   key line so cards are no taller than before. */
+.detail-copy {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: -2px -2px -2px auto;
+  padding: 2px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.detail-copy:hover,
+.detail-copy:focus-visible {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.detail-copy.is-copied {
+  color: var(--blue);
+}
+
+.detail-copy.is-failed {
+  color: var(--red);
+}
+
 .detail-value {
   margin: 0;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;

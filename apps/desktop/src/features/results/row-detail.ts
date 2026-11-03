@@ -61,6 +61,17 @@ export function formatDetailValue(value: unknown): DetailValue {
   return { text: String(value), json: false };
 }
 
+/** Clipboard text for one field: the value as the panel shows it, NULL as "". */
+export function detailCopyText(value: unknown): string {
+  // The "NULL" the panel draws is a placeholder, not data. Pasting it would
+  // turn into the four-letter string in most targets, so a null copies as
+  // nothing, the same as a NULL cell in the CSV/TSV export.
+  if (value === null || value === undefined) {
+    return "";
+  }
+  return formatDetailValue(value).text;
+}
+
 /** Convert result columns + values into a full-row JSON object without losing duplicates. */
 export function rowToJsonObject(
   columns: readonly string[],

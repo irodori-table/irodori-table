@@ -500,6 +500,7 @@ export const en = {
   "rowDetail.mode.json": "JSON",
   "rowDetail.mode.tree": "Tree",
   "rowDetail.copyJson": "Copy JSON",
+  "rowDetail.copyField": "Copy {name}",
   "rowDetail.copied": "Copied",
   "rowDetail.failed": "Failed",
   "rowDetail.search": "Search row fields",
