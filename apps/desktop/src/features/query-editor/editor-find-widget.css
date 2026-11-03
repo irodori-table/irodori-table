@@ -1,0 +1,196 @@
+/* The SQL editor's find widget (editor-find-widget.ts). Colours come from the
+   shell's CSS variables, so every built-in and imported theme, light or dark,
+   is covered without a per-theme rule. */
+
+/* The find widget is the only top panel the SQL editor opens (gotoLine and the
+   lint panel sit at the bottom). Collapsing the panel strip to zero height lets
+   the widget float over the text instead of pushing it down; the strip stays
+   position: sticky, so it is the widget's containing block. */
+.cm-host .cm-editor > .cm-panels-top {
+  height: 0;
+  border: 0;
+  background: transparent;
+}
+
+.cm-find-widget {
+  position: absolute;
+  top: 4px;
+  right: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  box-sizing: border-box;
+  width: 430px;
+  max-width: calc(100% - 26px);
+  padding: 4px 4px 4px 2px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--surface-raised);
+  box-shadow: 0 6px 18px var(--shadow-color-strong);
+  font-family: inherit;
+  font-size: var(--font-ui-md);
+  line-height: var(--line-ui);
+}
+
+.cm-find-widget [hidden] {
+  display: none;
+}
+
+/* One grid for both rows, so the replace field lines up with the find field
+   whatever width the match count takes: field | count | prev | next | close. */
+.cm-find-rows {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto auto;
+  align-items: center;
+  gap: 4px 2px;
+  min-width: 0;
+}
+
+.cm-find-row {
+  display: contents;
+}
+
+.cm-find-replace-actions {
+  grid-column: 2 / -1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.cm-find-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  height: 24px;
+  padding-right: 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--input-bg);
+}
+
+.cm-find-field:focus-within {
+  border-color: var(--focus);
+  box-shadow: var(--focus-ring);
+}
+
+.cm-find-field.is-invalid,
+.cm-find-field.is-invalid:focus-within {
+  border-color: var(--red);
+}
+
+/* The field box draws the border and focus ring, so the input itself opts out
+   of the global input:focus-visible outline. */
+.cm-find-field .cm-find-input,
+.cm-find-field .cm-find-input:focus-visible {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  padding: 0 6px;
+  border: 0;
+  outline: none;
+  color: var(--text);
+  background: transparent;
+  font: inherit;
+}
+
+.cm-find-field .cm-find-input::placeholder {
+  color: var(--muted);
+}
+
+/* Same toggles as the sidebar search panel's Aa / ab / .* row. */
+.cm-find-option {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: var(--muted);
+  background: transparent;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: var(--font-ui-sm);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cm-find-option-wholeWord {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cm-find-option:hover {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.cm-find-option[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.cm-find-count {
+  flex: 0 0 auto;
+  min-width: 68px;
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: var(--font-ui-sm);
+  white-space: nowrap;
+}
+
+.cm-find-count.is-empty {
+  color: var(--red);
+}
+
+.cm-find-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.cm-find-button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--hover);
+}
+
+.cm-find-button:focus-visible,
+.cm-find-option:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.cm-find-button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.cm-find-toggle-replace {
+  align-self: stretch;
+  width: 16px;
+  height: auto;
+}
+
+.cm-find-toggle-replace svg {
+  transition: transform 120ms ease;
+}
+
+.cm-find-widget.is-replace-expanded .cm-find-toggle-replace svg {
+  transform: rotate(90deg);
+}

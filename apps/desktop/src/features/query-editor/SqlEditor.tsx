@@ -26,11 +26,7 @@ import {
   type SelectionRange,
 } from "@codemirror/state";
 import { acceptCompletion, completionStatus } from "@codemirror/autocomplete";
-import {
-  highlightSelectionMatches,
-  search,
-  searchKeymap,
-} from "@codemirror/search";
+import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import {
   linter,
   lintGutter,
@@ -51,6 +47,7 @@ import { vim } from "@replit/codemirror-vim";
 import { basicSetup } from "codemirror";
 import { indentOnInput } from "@codemirror/language";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
+import { editorFindWidget } from "./editor-find-widget";
 import { rainbowBrackets } from "./editor-rainbow-brackets";
 import { delimitedHighlighting } from "./editor-csv-highlight";
 import { logHighlighting } from "./editor-log-highlight";
@@ -245,7 +242,7 @@ function createSqlEditorState({
         highlightActiveBlock: true,
         hideFirstIndent: false,
       }),
-      search({ top: true }),
+      editorFindWidget(),
       highlightSelectionMatches(),
       Prec.highest(keymap.of(searchKeymap)),
       gutterLineSelection(),

@@ -1595,6 +1595,17 @@ export const en = {
   "editor.logMarks.color.green": "Green",
   "editor.logMarks.color.blue": "Blue",
   "editor.logMarks.color.red": "Red",
+  "editor.find.label": "Find and replace",
+  "editor.find.toggleReplace": "Toggle Replace",
+  "editor.find.placeholder": "Find",
+  "editor.find.replacePlaceholder": "Replace",
+  "editor.find.previous": "Previous Match",
+  "editor.find.next": "Next Match",
+  "editor.find.close": "Close",
+  "editor.find.replace": "Replace",
+  "editor.find.replaceAll": "Replace All",
+  "editor.find.matchCount": "{current} of {total}",
+  "editor.find.noResults": "No results",
 } as const;
 
 export type TranslationKey = keyof typeof en;
