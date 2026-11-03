@@ -156,7 +156,6 @@ export function useEditorWorkspace({
 
   function buildQueryEditorController(extra: {
     running: boolean;
-    resultActionsAvailable: boolean;
     theme: IrodoriTheme;
     activeMetadata: DatabaseMetadata | undefined;
     editorEngine: DbEngine;
@@ -215,7 +214,7 @@ export function useEditorWorkspace({
       runFromStartShortcutLabel,
       runAllShortcutLabel,
       runMenuOpen,
-      resultActionsAvailable: extra.resultActionsAvailable,
+      keymap,
       runCommand: extra.runCommand,
       runQuery: extra.editorCommands.runQuery,
       runCurrentQuery: extra.editorCommands.runCurrentQuery,

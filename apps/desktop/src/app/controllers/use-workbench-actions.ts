@@ -149,7 +149,6 @@ export function useWorkbenchActions({
   // Finished prop bundles for the two center panes.
   const queryEditorController = editor.buildQueryEditorController({
     running: queryRunner.running,
-    resultActionsAvailable: Boolean(grid.activeResult),
     theme: themes.theme,
     activeMetadata: connections.activeMetadata,
     editorEngine: connections.editorEngine,
