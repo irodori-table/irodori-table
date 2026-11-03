@@ -2080,6 +2080,14 @@
   min-width: 250px;
 }
 
+/* Every item carries a shortcut here, so plain --muted (which sits close to
+   --text in the light themes) made the column read as part of the labels.
+   The 85% mix stays at or above 3:1 on the menu and hover backgrounds across
+   the built-in themes, light and dark. */
+.editor-context-menu kbd {
+  color: color-mix(in srgb, var(--muted) 85%, var(--surface-raised));
+}
+
 .editor-tab-menu {
   position: fixed;
   top: auto;
