@@ -26,8 +26,19 @@ const version = releaseTag.replace(/^v/, "");
 // A universal macOS build serves both architectures from one artifact, so both
 // darwin keys point at the same bundle. Updater clients look themselves up by
 // exact key, so omitting one would strand those users.
+//
+// Linux clients look up `linux-x86_64-<bundle>` (appimage, deb, rpm) before the
+// bare `linux-x86_64` key, and install the payload with the installer matching
+// the bundle they were built as. A deb/rpm install that fell back to the bare
+// key got the AppImage and failed with "invalid updater binary format", so each
+// bundle type gets its own entry; the bare key stays for older clients.
 const TARGETS = [
-  { suffix: ".AppImage.sig", platforms: ["linux-x86_64"] },
+  {
+    suffix: ".AppImage.sig",
+    platforms: ["linux-x86_64", "linux-x86_64-appimage"],
+  },
+  { suffix: "_amd64.deb.sig", platforms: ["linux-x86_64-deb"] },
+  { suffix: ".x86_64.rpm.sig", platforms: ["linux-x86_64-rpm"] },
   { suffix: ".app.tar.gz.sig", platforms: ["darwin-aarch64", "darwin-x86_64"] },
   { suffix: "-setup.exe.sig", platforms: ["windows-x86_64"] },
 ];
