@@ -60,6 +60,7 @@ mod query_executor;
 mod redis;
 mod result_spill_manager;
 mod runner;
+mod session;
 mod snowflake;
 mod spill;
 mod sqlite;

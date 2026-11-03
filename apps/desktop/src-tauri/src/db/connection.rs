@@ -29,6 +29,7 @@ use super::profile::{
 use super::query::{PreparedQuery, RawResultSet, RowSet};
 #[cfg(feature = "redis-connector")]
 use super::redis;
+use super::session::Session;
 use super::stream;
 use super::{clickhouse, influx, mysql, postgres, snowflake, sqlite, DatabaseMetadata, DbEngine};
 use crate::extensions;
@@ -148,6 +149,8 @@ pub(crate) trait Connection: Send + Sync {
 
 struct PgConn {
     pool: sqlx::PgPool,
+    /// The user's statements; everything else uses `pool`.
+    session: Session<sqlx::Postgres>,
     engine: DbEngine,
 }
 #[async_trait]
@@ -160,24 +163,32 @@ impl Connection for PgConn {
         postgres::version(&self.pool).await
     }
     async fn run_query(&self, sql: &str, cap: usize) -> DbResult<RowSet> {
-        postgres::run_query(&self.pool, sql, cap).await
+        let mut session = self.session.begin().await?;
+        let result = postgres::run_query(session.conn(), sql, cap).await;
+        session.finish(result).await
     }
     async fn run_prepared_query(&self, query: &PreparedQuery, cap: usize) -> DbResult<RowSet> {
-        postgres::run_prepared_query(&self.pool, query, cap).await
+        let mut session = self.session.begin().await?;
+        let result = postgres::run_prepared_query(session.conn(), query, cap).await;
+        session.finish(result).await
     }
     async fn stream_query(
         &self,
         sql: &str,
         ctx: &stream::StreamCtx,
     ) -> DbResult<stream::StreamSummary> {
-        postgres::stream_query(&self.pool, sql, ctx).await
+        let mut session = self.session.begin().await?;
+        let result = postgres::stream_query(session.conn(), sql, ctx).await;
+        session.finish(result).await
     }
     async fn stream_prepared_query(
         &self,
         query: &PreparedQuery,
         ctx: &stream::StreamCtx,
     ) -> DbResult<stream::StreamSummary> {
-        postgres::stream_prepared_query(&self.pool, query, ctx).await
+        let mut session = self.session.begin().await?;
+        let result = postgres::stream_prepared_query(session.conn(), query, ctx).await;
+        session.finish(result).await
     }
     async fn apply_edits(&self, edits: &TableEdits) -> DbResult<AppliedEdits> {
         postgres::apply_edits(&self.pool, edits).await
@@ -189,7 +200,7 @@ impl Connection for PgConn {
         postgres::explain_query(&self.pool, self.wire(), sql, mode).await
     }
     async fn close(&self) {
-        self.pool.close().await
+        self.session.close().await
     }
 }
 
@@ -258,7 +269,11 @@ impl Connection for InfluxConnection {
     async fn close(&self) {}
 }
 
-struct MysqlConn(sqlx::MySqlPool);
+struct MysqlConn {
+    pool: sqlx::MySqlPool,
+    /// The user's statements; everything else uses `pool`.
+    session: Session<sqlx::MySql>,
+}
 #[async_trait]
 impl Connection for MysqlConn {
     fn wire(&self) -> Wire {
@@ -266,39 +281,47 @@ impl Connection for MysqlConn {
     }
 
     async fn version(&self) -> Option<String> {
-        mysql::version(&self.0).await
+        mysql::version(&self.pool).await
     }
     async fn run_query(&self, sql: &str, cap: usize) -> DbResult<RowSet> {
-        mysql::run_query(&self.0, sql, cap).await
+        let mut session = self.session.begin().await?;
+        let result = mysql::run_query(session.conn(), sql, cap).await;
+        session.finish(result).await
     }
     async fn run_prepared_query(&self, query: &PreparedQuery, cap: usize) -> DbResult<RowSet> {
-        mysql::run_prepared_query(&self.0, query, cap).await
+        let mut session = self.session.begin().await?;
+        let result = mysql::run_prepared_query(session.conn(), query, cap).await;
+        session.finish(result).await
     }
     async fn stream_query(
         &self,
         sql: &str,
         ctx: &stream::StreamCtx,
     ) -> DbResult<stream::StreamSummary> {
-        mysql::stream_query(&self.0, sql, ctx).await
+        let mut session = self.session.begin().await?;
+        let result = mysql::stream_query(session.conn(), sql, ctx).await;
+        session.finish(result).await
     }
     async fn stream_prepared_query(
         &self,
         query: &PreparedQuery,
         ctx: &stream::StreamCtx,
     ) -> DbResult<stream::StreamSummary> {
-        mysql::stream_prepared_query(&self.0, query, ctx).await
+        let mut session = self.session.begin().await?;
+        let result = mysql::stream_prepared_query(session.conn(), query, ctx).await;
+        session.finish(result).await
     }
     async fn apply_edits(&self, edits: &TableEdits) -> DbResult<AppliedEdits> {
-        mysql::apply_edits(&self.0, edits).await
+        mysql::apply_edits(&self.pool, edits).await
     }
     async fn metadata(&self) -> DbResult<DatabaseMetadata> {
-        mysql::metadata(&self.0).await
+        mysql::metadata(&self.pool).await
     }
     async fn explain_query(&self, sql: &str, mode: QueryPlanMode) -> DbResult<QueryPlanAnalysis> {
-        mysql::explain_query(&self.0, self.wire(), sql, mode).await
+        mysql::explain_query(&self.pool, self.wire(), sql, mode).await
     }
     async fn close(&self) {
-        self.0.close().await
+        self.session.close().await
     }
 }
 
@@ -570,13 +593,21 @@ pub(crate) async fn connect_engine(
         return Ok(conn);
     }
     let conn: Arc<dyn Connection> = match profile.engine.wire() {
-        Wire::Postgres => Arc::new(PgConn {
-            pool: postgres::connect(&engine::build_url(profile)?).await?,
-            engine: profile.engine,
-        }),
-        Wire::Mysql => Arc::new(MysqlConn(
-            mysql::connect(&engine::build_url(profile)?).await?,
-        )),
+        Wire::Postgres => {
+            let pool = postgres::connect(&engine::build_url(profile)?).await?;
+            Arc::new(PgConn {
+                session: postgres::session(pool.clone()),
+                pool,
+                engine: profile.engine,
+            })
+        }
+        Wire::Mysql => {
+            let pool = mysql::connect(&engine::build_url(profile)?).await?;
+            Arc::new(MysqlConn {
+                session: mysql::session(pool.clone()),
+                pool,
+            })
+        }
         Wire::Sqlite => {
             let pool = sqlite::connect(&engine::build_url(profile)?).await?;
             if should_seed_builtin_sample(profile) {

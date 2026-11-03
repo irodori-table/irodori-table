@@ -21,6 +21,37 @@ pub async fn connect(url: &str) -> DbResult<PgPool> {
         .map_err(|e| DbError::connection(format!("connect failed: {e}")))
 }
 
+/// The editor's session connection (see `session`): user statements run on
+/// one held connection, so a transaction opened with `begin` is still open for
+/// the next run.
+pub(crate) fn session(pool: PgPool) -> super::session::Session<sqlx::Postgres> {
+    super::session::Session::new(pool, backend_pid, cancel_backend)
+}
+
+fn backend_pid(conn: &mut sqlx::PgConnection) -> futures_util::future::BoxFuture<'_, Option<i64>> {
+    Box::pin(async move {
+        sqlx::query_scalar::<_, i32>("select pg_backend_pid()")
+            .fetch_one(conn)
+            .await
+            .ok()
+            .map(i64::from)
+    })
+}
+
+/// Best effort: a Postgres-wire engine without `pg_cancel_backend` still has
+/// its connection closed, which ends the statement once the server notices.
+fn cancel_backend(pool: PgPool, pid: i64) -> futures_util::future::BoxFuture<'static, ()> {
+    Box::pin(async move {
+        let Ok(pid) = i32::try_from(pid) else {
+            return;
+        };
+        let _ = sqlx::query("select pg_cancel_backend($1)")
+            .bind(pid)
+            .execute(&pool)
+            .await;
+    })
+}
+
 pub async fn version(pool: &PgPool) -> Option<String> {
     sqlx::query_scalar::<_, String>("select version()")
         .fetch_one(pool)
@@ -28,9 +59,9 @@ pub async fn version(pool: &PgPool) -> Option<String> {
         .ok()
 }
 
-pub async fn run_query(pool: &PgPool, sql: &str, cap: usize) -> DbResult<RowSet> {
+pub async fn run_query(conn: &mut sqlx::PgConnection, sql: &str, cap: usize) -> DbResult<RowSet> {
     super::stream::collect_capped(
-        sqlx::query(super::audited_sql(sql)).fetch(pool),
+        sqlx::query(super::audited_sql(sql)).fetch(conn),
         cap,
         cell_to_json,
     )
@@ -38,20 +69,20 @@ pub async fn run_query(pool: &PgPool, sql: &str, cap: usize) -> DbResult<RowSet>
 }
 
 pub async fn run_prepared_query(
-    pool: &PgPool,
+    conn: &mut sqlx::PgConnection,
     query: &PreparedQuery,
     cap: usize,
 ) -> DbResult<RowSet> {
-    super::stream::collect_capped(bind_query(query).fetch(pool), cap, cell_to_json).await
+    super::stream::collect_capped(bind_query(query).fetch(conn), cap, cell_to_json).await
 }
 
 pub async fn stream_query(
-    pool: &PgPool,
+    conn: &mut sqlx::PgConnection,
     sql: &str,
     ctx: &super::stream::StreamCtx,
 ) -> DbResult<super::stream::StreamSummary> {
     super::stream::stream_capped(
-        sqlx::query(super::audited_sql(sql)).fetch(pool),
+        sqlx::query(super::audited_sql(sql)).fetch(conn),
         ctx,
         cell_to_json,
     )
@@ -59,11 +90,11 @@ pub async fn stream_query(
 }
 
 pub async fn stream_prepared_query(
-    pool: &PgPool,
+    conn: &mut sqlx::PgConnection,
     query: &PreparedQuery,
     ctx: &super::stream::StreamCtx,
 ) -> DbResult<super::stream::StreamSummary> {
-    super::stream::stream_capped(bind_query(query).fetch(pool), ctx, cell_to_json).await
+    super::stream::stream_capped(bind_query(query).fetch(conn), ctx, cell_to_json).await
 }
 
 pub async fn explain_query(
