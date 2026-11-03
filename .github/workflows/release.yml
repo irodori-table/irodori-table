@@ -1052,6 +1052,7 @@ jobs:
           # caught anything before.
           jq -e '
             (.platforms | keys | any(startswith("linux-"))) and
+            (.platforms | has("linux-x86_64-appimage") and has("linux-x86_64-deb") and has("linux-x86_64-rpm")) and
             (.platforms | keys | any(startswith("darwin-"))) and
             (.platforms | keys | any(startswith("windows-"))) and
             (([.platforms[] | select((.signature | type == "string") and (.signature | length > 0))] | length) >= 3) and
