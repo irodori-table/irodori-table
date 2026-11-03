@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
 import {
@@ -18,12 +19,16 @@ import {
 } from "dockview-react";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator } from "@/i18n";
-
-type WorkbenchDockPanelId =
-  | "leftSidebar"
-  | "editor"
-  | "results"
-  | "rightSidebar";
+import {
+  dockPanelConstraints,
+  LEFT_SIDEBAR_MIN_WIDTH,
+  RIGHT_SIDEBAR_MIN_WIDTH,
+  settleSidebarDrag,
+  shouldSnapClose,
+  withCurrentPanelConstraints,
+  type WorkbenchDockPanelId,
+} from "../dock-constraints";
+import type { WorkbenchSide } from "../types";
 
 type WorkbenchDockPanelContent = Record<WorkbenchDockPanelId, ReactNode>;
 
@@ -41,6 +46,10 @@ export type WorkbenchDockLayoutProps = {
   rightSidebar: ReactNode;
   editor: ReactNode;
   results: ReactNode;
+  /** A sash drag left this sidebar at a usable width worth reopening at. */
+  onSidebarWidthChange?: (side: WorkbenchSide, width: number) => void;
+  /** A sash drag pulled this sidebar to its snap width: close it. */
+  onSidebarSnapClose?: (side: WorkbenchSide) => void;
 };
 
 // v2: sidebars dock at the root edges (full workspace height, VS Code-style)
@@ -55,12 +64,10 @@ const dockPanelIds: readonly WorkbenchDockPanelId[] = [
   "rightSidebar",
 ];
 
-// Dragging a sidebar narrow should compact it, not take it away: these floors
-// are the width at which the panel is still usable -- view tabs fall back to
-// icons and rows truncate -- rather than a threshold to disappear at. Full
-// collapse stays on the explicit toggle, which is reversible from the titlebar.
-const LEFT_SIDEBAR_MIN_WIDTH = 132;
-const RIGHT_SIDEBAR_MIN_WIDTH = 132;
+const sidebarPanels = [
+  { side: "left", id: "leftSidebar", minimum: LEFT_SIDEBAR_MIN_WIDTH },
+  { side: "right", id: "rightSidebar", minimum: RIGHT_SIDEBAR_MIN_WIDTH },
+] as const;
 
 // dockview v7 stamps a theme's `className` onto its inner `.dv-shell`, and every
 // `--dv-*` variable the dock reads is resolved there. Without an explicit theme it
@@ -98,12 +105,20 @@ export function WorkbenchDockLayout({
   rightSidebar,
   editor,
   results,
+  onSidebarWidthChange,
+  onSidebarSnapClose,
 }: WorkbenchDockLayoutProps) {
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = createTranslator(locale);
   const apiRef = useRef<DockviewApi | null>(null);
   const readyRef = useRef(false);
   const layoutDisposableRef = useRef<Disposable | null>(null);
+  // Read when a sash drag ends, which can be after a re-render.
+  const sidebarCallbacksRef = useRef({
+    onSidebarWidthChange,
+    onSidebarSnapClose,
+  });
+  sidebarCallbacksRef.current = { onSidebarWidthChange, onSidebarSnapClose };
   const panelContent = useMemo<WorkbenchDockPanelContent>(
     () => ({
       leftSidebar,
@@ -134,8 +149,7 @@ export function WorkbenchDockLayout({
         component: "workbenchPanel",
         title: t("dock.sqlEditor"),
         renderer: "always",
-        minimumWidth: 360,
-        minimumHeight: 220,
+        ...dockPanelConstraints.editor,
       });
     },
     [t],
@@ -153,7 +167,7 @@ export function WorkbenchDockLayout({
         title: t("dock.results"),
         renderer: "always",
         initialHeight: resultsHeight,
-        minimumHeight: 180,
+        ...dockPanelConstraints.results,
         position: {
           referencePanel: "editor",
           direction: "below",
@@ -177,7 +191,7 @@ export function WorkbenchDockLayout({
         title: t("dock.explorer"),
         renderer: "always",
         initialWidth: sidebarWidth,
-        minimumWidth: LEFT_SIDEBAR_MIN_WIDTH,
+        ...dockPanelConstraints.leftSidebar,
         // Dock at the root edge (no reference panel) so the sidebar spans
         // the full workspace height with the editor/results split inside.
         position: {
@@ -214,7 +228,7 @@ export function WorkbenchDockLayout({
         title: t("dock.inspector"),
         renderer: "always",
         initialWidth: inspectorWidth,
-        minimumWidth: RIGHT_SIDEBAR_MIN_WIDTH,
+        ...dockPanelConstraints.rightSidebar,
         // Root-edge dock, same reason as the left sidebar.
         position: {
           direction: "right",
@@ -327,7 +341,9 @@ export function WorkbenchDockLayout({
         return;
       }
       try {
-        api.fromJSON(JSON.parse(raw) as SerializedDockview);
+        api.fromJSON(
+          withCurrentPanelConstraints(JSON.parse(raw) as SerializedDockview),
+        );
         syncPanels(api);
       } catch {
         window.localStorage.removeItem(dockLayoutStorageKey);
@@ -374,9 +390,111 @@ export function WorkbenchDockLayout({
     };
   }, [saveLayout]);
 
+  // dockview has no snap-to-close for its groups, and it holds a sidebar at
+  // its minimum while the pointer keeps going, so sidebar drags are settled
+  // here: the pointer, not the clamped panel, says how far the user dragged.
+  // Only a sash drag can close a sidebar -- shrinking the window squeezes
+  // sidebars too, and that must not take one away.
+  const handleSashPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const api = apiRef.current;
+      const sash =
+        event.target instanceof Element
+          ? event.target.closest(".dv-sash")
+          : null;
+      if (!api || !sash) {
+        return;
+      }
+      const dock = event.currentTarget;
+      const sashBox = sash.getBoundingClientRect();
+      const verticalSash = sashBox.height > sashBox.width;
+      const startX = event.clientX;
+      const drags = sidebarPanels.flatMap((sidebar) => {
+        const panel = api.getPanel(sidebar.id);
+        const content = dock.querySelector(
+          `.workbench-dock-panel.${sidebar.id}`,
+        );
+        if (!panel || !content) {
+          return [];
+        }
+        const box = content.getBoundingClientRect();
+        const innerEdge = sidebar.side === "left" ? box.right : box.left;
+        return [
+          {
+            ...sidebar,
+            startWidth: panel.api.width,
+            // The sash on the sidebar's inner edge is its own; any other
+            // sash can only push it.
+            ownSash:
+              verticalSash &&
+              innerEdge >= sashBox.left - 1 &&
+              innerEdge <= sashBox.right + 1,
+          },
+        ];
+      });
+      const draggedTo = (drag: (typeof drags)[number], clientX: number) =>
+        drag.ownSash
+          ? drag.startWidth +
+            (drag.side === "left" ? clientX - startX : startX - clientX)
+          : null;
+
+      const doc = dock.ownerDocument;
+      // Dim the sidebar while releasing would close it, the cue VS Code gives
+      // by collapsing it under the pointer.
+      const preview = (move: PointerEvent) => {
+        const closing = drags.find((drag) => {
+          const width = draggedTo(drag, move.clientX);
+          return width !== null && shouldSnapClose(width, drag.minimum);
+        });
+        if (closing) {
+          dock.dataset.snapClose = closing.side;
+        } else {
+          delete dock.dataset.snapClose;
+        }
+      };
+      const finish = (end: PointerEvent) => {
+        doc.removeEventListener("pointermove", preview);
+        doc.removeEventListener("pointerup", finish);
+        doc.removeEventListener("pointercancel", finish);
+        delete dock.dataset.snapClose;
+        const { onSidebarWidthChange, onSidebarSnapClose } =
+          sidebarCallbacksRef.current;
+        for (const drag of drags) {
+          const endWidth = api.getPanel(drag.id)?.api.width;
+          if (endWidth === undefined) {
+            continue;
+          }
+          const outcome = settleSidebarDrag(
+            {
+              startWidth: drag.startWidth,
+              endWidth,
+              // A cancelled drag never asks to close anything.
+              draggedTo:
+                end.type === "pointerup" ? draggedTo(drag, end.clientX) : null,
+            },
+            drag.minimum,
+          );
+          if (outcome.rememberWidth !== null) {
+            onSidebarWidthChange?.(drag.side, outcome.rememberWidth);
+          }
+          if (outcome.close) {
+            onSidebarSnapClose?.(drag.side);
+          }
+        }
+      };
+      doc.addEventListener("pointermove", preview);
+      doc.addEventListener("pointerup", finish);
+      doc.addEventListener("pointercancel", finish);
+    },
+    [],
+  );
+
   return (
     <DockPanelContentContext.Provider value={panelContent}>
-      <div className="workbench-dock dockview-theme-irodori">
+      <div
+        className="workbench-dock dockview-theme-irodori"
+        onPointerDownCapture={handleSashPointerDown}
+      >
         <DockviewReact
           components={dockComponents}
           defaultTabComponent={WorkbenchDockTab}

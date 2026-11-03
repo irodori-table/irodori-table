@@ -250,8 +250,8 @@ describe("workbench store view placements", () => {
     const store = await loadWorkbenchStore();
 
     store.getState().setSidebarWidth(80);
-    expect(store.getState().sidebarWidth).toBe(132);
-    expect(window.localStorage.getItem(sidebarWidthStorageKey)).toBe("132");
+    expect(store.getState().sidebarWidth).toBe(120);
+    expect(window.localStorage.getItem(sidebarWidthStorageKey)).toBe("120");
 
     store.getState().setSidebarWidth(900);
     expect(store.getState().sidebarWidth).toBe(640);

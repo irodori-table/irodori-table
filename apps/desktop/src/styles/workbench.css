@@ -225,6 +225,12 @@
   border-left: 0;
 }
 
+/* Releasing the sash now would snap this sidebar closed. */
+.workbench-dock[data-snap-close="left"] .workbench-dock-panel.leftSidebar,
+.workbench-dock[data-snap-close="right"] .workbench-dock-panel.rightSidebar {
+  opacity: 0.4;
+}
+
 .workbench-dock-tab {
   display: inline-flex;
   align-items: center;
@@ -464,6 +470,20 @@
 
   .sidebar-view-switcher:has(> button:nth-child(6)) button span {
     display: none;
+  }
+}
+
+/* Five icon tabs at their 24px minimum need 128px. Below that, trim them to
+ * the 22px of the section-heading buttons and drop the gaps, so a sidebar at
+ * its minimum width still shows the default tabs instead of scrolling one
+ * past its edge. */
+@container (max-width: 127px) {
+  .sidebar-view-switcher {
+    gap: 0;
+  }
+
+  .sidebar-view-switcher button {
+    min-width: 22px;
   }
 }
 
