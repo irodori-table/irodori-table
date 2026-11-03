@@ -127,7 +127,7 @@
 .palette-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: var(--modal-z);
   display: flex;
   justify-content: center;
   padding-top: 12vh;
