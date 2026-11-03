@@ -91,8 +91,12 @@ export function statementDelimiters(sql: string): number[] {
 
 /**
  * The SQL to run: the trimmed selection if one exists, otherwise the single
- * statement under the caret (between the surrounding `;` boundaries), falling
- * back to the whole buffer.
+ * statement under the caret (between the surrounding `;` boundaries). In the
+ * blank space after a statement, such as the empty last line, that is the
+ * nearest statement before the caret. It is never the whole buffer: falling
+ * back to it sent every statement in the tab at once, which Postgres rejects
+ * ("cannot insert multiple commands into a prepared statement") and an engine
+ * that accepts several statements would have run, deletes included.
  */
 export function selectedOrCurrentStatement(
   selectionStart: number,
@@ -117,6 +121,17 @@ export function selectedOrCurrentStatement(
   const start = previous === undefined ? 0 : previous + 1;
   const end = next === undefined ? sql.length : next + 1;
   const statement = sql.slice(start, end).trim();
+  if (statement) {
+    return statement;
+  }
 
-  return statement || sql.trim();
+  // Walk back over empty statements (";;") to the nearest one with text.
+  const before = delimiters.filter((delimiter) => delimiter < cursor);
+  for (let index = before.length - 1; index >= 0; index -= 1) {
+    const from = index === 0 ? 0 : before[index - 1] + 1;
+    if (sql.slice(from, before[index]).trim()) {
+      return sql.slice(from, before[index] + 1).trim();
+    }
+  }
+  return "";
 }
