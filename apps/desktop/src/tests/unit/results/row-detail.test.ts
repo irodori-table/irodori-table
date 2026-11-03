@@ -8,6 +8,7 @@ import type {
 import {
   buildJsonTree,
   buildForeignKeyLookup,
+  detailCopyText,
   findTableByName,
   findTableMetadata,
   formatRowAsJson,
@@ -70,6 +71,26 @@ describe("formatDetailValue", () => {
   it("renders bigint values without throwing", () => {
     expect(formatDetailValue(42n)).toEqual({ text: "42", json: false });
     expect(formatDetailValue({ id: 42n }).text).toBe('{\n  "id": "42"\n}');
+  });
+});
+
+describe("detailCopyText", () => {
+  it("copies NULL as an empty string, not the placeholder", () => {
+    expect(detailCopyText(null)).toBe("");
+    expect(detailCopyText(undefined)).toBe("");
+  });
+
+  it("copies scalars as their literal text", () => {
+    expect(detailCopyText("Kawase Foods")).toBe("Kawase Foods");
+    expect(detailCopyText(0)).toBe("0");
+    expect(detailCopyText(false)).toBe("false");
+    expect(detailCopyText("")).toBe("");
+    expect(detailCopyText(42n)).toBe("42");
+  });
+
+  it("copies objects and arrays as the JSON the card shows", () => {
+    expect(detailCopyText({ a: 1 })).toBe('{\n  "a": 1\n}');
+    expect(detailCopyText([1, "x"])).toBe('[\n  1,\n  "x"\n]');
   });
 });
 

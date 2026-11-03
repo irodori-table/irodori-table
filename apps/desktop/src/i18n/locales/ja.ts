@@ -507,6 +507,7 @@ export const ja = {
   "rowDetail.mode.json": "JSON",
   "rowDetail.mode.tree": "ツリー",
   "rowDetail.copyJson": "JSON をコピー",
+  "rowDetail.copyField": "{name} をコピー",
   "rowDetail.copied": "コピーしました",
   "rowDetail.failed": "失敗しました",
   "rowDetail.search": "行フィールドを検索",
