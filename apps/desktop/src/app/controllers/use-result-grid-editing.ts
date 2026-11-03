@@ -205,7 +205,15 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
 
   function beginCellEdit(key: string, col: number, seed?: string) {
     if (!editMode) {
-      return;
+      // A double-click on a cell starts editing it, as in any grid; it used
+      // to do nothing until Edit data had been pressed. A result that cannot
+      // be written back (a join, no usable key, a read-only connection) stays
+      // as it was, and the double-click still just selects the text.
+      if (!canEditActiveResult()) {
+        return;
+      }
+      setCommitError(null);
+      setEditMode(true);
     }
     selectGridCell(key, col);
     setEditingCell(seed === undefined ? { key, col } : { key, col, seed });
