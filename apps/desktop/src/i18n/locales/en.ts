@@ -443,7 +443,8 @@ export const en = {
   "results.rowSqlTitle": "Generate SQL for the selected row",
   "results.editData": "Edit data",
   "results.readOnlyConnection": "Read-only connection",
-  "results.requiresEditableTarget": "Requires a single editable table result",
+  "results.requiresEditableTarget":
+    "Open the table from the sidebar to edit its rows",
   "results.addRow": "Add row",
   "results.undoEditTitle": "Undo last staged edit ({count} staged)",
   "results.saveChanges": "Save changes ({count})",
@@ -459,10 +460,11 @@ export const en = {
   "results.noRowsReturned": "No rows returned",
   "results.webGlUnavailable": "WebGL unavailable",
   "results.webGlPreview": "Query result WebGL preview",
-  "results.confirmDeleteRows.title": "Delete {count} rows from {table}?",
-  "results.confirmDeleteRows.message":
-    "Deletes are applied to the database and cannot be undone.",
-  "results.confirmDeleteRows.confirm": "Delete rows",
+  "results.confirmApplyEdits.title": "Apply {count} changes to {table}?",
+  "results.confirmApplyEdits.message":
+    "{updates} updated, {inserts} added, {deletes} deleted. Changes are written to the database.",
+  "results.confirmApplyEdits.deleteWarning": "Deleted rows cannot be restored.",
+  "results.confirmApplyEdits.confirm": "Apply changes",
   "results.discardEdits": "Discard",
   "results.confirmDiscardEdits.title": "Discard {count} unsaved changes?",
   "results.confirmDiscardEdits.message":

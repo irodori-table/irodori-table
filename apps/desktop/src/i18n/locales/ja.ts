@@ -448,7 +448,8 @@ export const ja = {
   "results.rowSqlTitle": "選択行の SQL を生成",
   "results.editData": "データ編集",
   "results.readOnlyConnection": "読み取り専用接続",
-  "results.requiresEditableTarget": "編集可能な単一テーブル結果が必要です",
+  "results.requiresEditableTarget":
+    "サイドバーからテーブルを開くと行を編集できます",
   "results.addRow": "行を追加",
   "results.undoEditTitle":
     "直前のステージ済み編集を戻す（ステージ済み {count} 件）",
@@ -465,10 +466,12 @@ export const ja = {
   "results.noRowsReturned": "返された行はありません",
   "results.webGlUnavailable": "WebGL を利用できません",
   "results.webGlPreview": "クエリ結果 WebGL プレビュー",
-  "results.confirmDeleteRows.title": "{table} から {count} 行を削除しますか？",
-  "results.confirmDeleteRows.message":
-    "削除はデータベースへ適用され、元に戻せません。",
-  "results.confirmDeleteRows.confirm": "行を削除",
+  "results.confirmApplyEdits.title":
+    "{table} に {count} 件の変更を反映しますか？",
+  "results.confirmApplyEdits.message":
+    "更新 {updates}・追加 {inserts}・削除 {deletes}。変更はデータベースに書き込まれます。",
+  "results.confirmApplyEdits.deleteWarning": "削除した行は元に戻せません。",
+  "results.confirmApplyEdits.confirm": "変更を反映",
   "results.discardEdits": "破棄",
   "results.confirmDiscardEdits.title":
     "未保存の変更 {count} 件を破棄しますか？",

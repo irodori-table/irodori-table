@@ -23,10 +23,11 @@ import {
   type QueryParameterMemory,
 } from "@/features/query-editor";
 import {
+  isTablePreviewSql,
   queryService as defaultQueryService,
   type QueryService,
 } from "@/features/workbench";
-import { errorMessage, isRetryableError } from "@/core";
+import { errorMessage, isRetryableError, type ValueUpdater } from "@/core";
 import type { Translator } from "@/i18n";
 import {
   isQueryBusy,
@@ -82,7 +83,7 @@ export type QueryRunnerDeps = {
   setPlanLoading: (value: boolean) => void;
   setPlanError: (value: string | null) => void;
   setResultMode: (value: "data") => void;
-  setTableViewObject: (value: DbObjectMetadata | null) => void;
+  setTableViewObject: (value: ValueUpdater<DbObjectMetadata | null>) => void;
   setActiveResultIndex: (value: number) => void;
   resetEdits: () => void;
   resetGridView: () => void;
@@ -297,7 +298,16 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
     setQueryError(null);
     setLastRunSql(sqlToRun);
     setResultMode("data");
-    setTableViewObject(options.sourceObject ?? null);
+    // A run of a table tab's untouched preview stays that table's data, the
+    // only result rows can be written back from, whether it came from the
+    // sidebar, Ctrl+Enter or the refresh after saving. Any other SQL is not.
+    setTableViewObject(
+      (current) =>
+        options.sourceObject ??
+        (current && isTablePreviewSql(activeEngine, current, sqlToRun)
+          ? current
+          : null),
+    );
     setActiveResultIndex(0);
     resetEdits();
     resetGridView();

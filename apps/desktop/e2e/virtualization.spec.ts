@@ -430,6 +430,17 @@ async function runFixtureQuery(page: Page, expectedDoneCount: number) {
   await waitForCompletedRun(page, expectedDoneCount);
 }
 
+// Rows are editable only in a table's own tab, so the edit-mode checks open
+// the fixture table from the object browser rather than typing its SELECT.
+// The mock streams the same fixture for any query.
+async function openFixtureTable(page: Page, expectedDoneCount: number) {
+  await page
+    .locator(".object-name-button", { hasText: "huge_table" })
+    .first()
+    .click();
+  await waitForCompletedRun(page, expectedDoneCount);
+}
+
 async function scrollGridTo(
   grid: Locator,
   position: { top?: number; left?: number },
@@ -654,7 +665,7 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
     await page.goto("/");
 
     await connectMockDatabase(page);
-    await runFixtureQuery(page, 1);
+    await openFixtureTable(page, 1);
     await waitForGridPaint();
 
     const grid = page.locator(".result-grid");
@@ -872,7 +883,7 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
     await page.goto("/");
 
     await connectMockDatabase(page);
-    await runFixtureQuery(page, 1);
+    await openFixtureTable(page, 1);
     await waitForGridPaint();
 
     const grid = page.locator(".result-grid");
