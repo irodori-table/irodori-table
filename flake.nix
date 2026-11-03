@@ -61,6 +61,11 @@
             mold
 
             pkg-config
+
+            # The OS keychain store (irodori-secure-store) runs `secret-tool` on
+            # Linux. Without it, saving or reading a remembered password fails
+            # with "OS keychain command is unavailable".
+            libsecret
           ]
           ++ desktopLibs;
 
