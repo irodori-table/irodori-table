@@ -536,23 +536,6 @@
   }
 }
 
-/* The object browser's header carries five 22px actions, which with their
-   gaps no longer fit the narrowest sidebar and painted past its edge. Close
-   the gaps and trim the hit area a little rather than drop an action. */
-@container (max-width: 150px) {
-  .section-heading {
-    padding: 0 4px;
-  }
-
-  .section-heading-actions {
-    gap: 0;
-  }
-
-  .section-heading-actions button {
-    width: 20px;
-  }
-}
-
 .plan-panel {
   display: grid;
   align-content: start;
@@ -1224,6 +1207,25 @@
   border-color: var(--border);
   color: var(--text);
   background: var(--hover);
+}
+
+/* The object browser's header carries five 22px actions, which with their
+   gaps no longer fit the narrowest sidebar and painted past its edge. Close
+   the gaps and trim the hit area a little rather than drop an action. This
+   sits after the base rules on purpose: a container query adds no
+   specificity, so placed earlier it lost to them. */
+@container (max-width: 150px) {
+  .section-heading {
+    padding: 0 4px;
+  }
+
+  .section-heading-actions {
+    gap: 0;
+  }
+
+  .section-heading-actions button {
+    width: 20px;
+  }
 }
 
 .schema-create-menu-wrap {
