@@ -15,6 +15,12 @@ use parser::{parse_branch_line, parse_commit_line, parse_remotes, parse_status};
 const DIFF_TEXT_LIMIT: usize = 240_000;
 const LOG_LIMIT_MAX: u32 = 120;
 
+// "Nothing to open yet" outcomes. The panel turns these codes into a setup
+// prompt instead of an error, so they are part of the frontend contract.
+const REPO_UNCONFIGURED_CODE: &str = "git.repo.unconfigured";
+const REPO_MISSING_CODE: &str = "git.repo.missing";
+const REPO_NOT_REPOSITORY_CODE: &str = "git.repo.notRepository";
+
 #[tauri::command]
 pub fn git_status(repo_path: Option<String>) -> IrodoriResult<GitStatusSummary> {
     let repo_root = resolve_repo_root(repo_path.as_deref())?;
@@ -253,6 +259,34 @@ pub fn git_checkout_branch(
 }
 
 #[tauri::command]
+pub fn git_init(repo_path: String) -> IrodoriResult<GitCommandOutput> {
+    let raw = repo_path.trim();
+    let path = Path::new(raw);
+    // A relative path would land wherever the app process happens to run.
+    if raw.is_empty() || !path.is_absolute() {
+        return Err(IrodoriError::validation(
+            "an absolute folder path is required to initialize a git repository",
+        ));
+    }
+    if !path.is_dir() {
+        return Err(IrodoriError::validation(format!("{raw} is not a folder")));
+    }
+    // Initializing inside an existing worktree would nest a second repository
+    // in it; the panel only offers this for folders outside any repository.
+    match try_repo_root(path) {
+        Err(RepoLookupError::NotRepository(_)) => {}
+        Err(RepoLookupError::Failed(error)) => return Err(error),
+        Ok(_) => {
+            return Err(IrodoriError::validation(format!(
+                "{raw} is already inside a git repository"
+            )));
+        }
+    }
+    let output = run_git(path, &["init"], &[0])?;
+    Ok(command_output(path.to_path_buf(), output))
+}
+
+#[tauri::command]
 pub fn git_delete_branch(
     repo_path: Option<String>,
     branch: String,
@@ -355,42 +389,106 @@ fn git_commit_diff(
 }
 
 fn resolve_repo_root(repo_path: Option<&str>) -> IrodoriResult<PathBuf> {
+    resolve_repo_root_with_fallbacks(repo_path, &dev_fallback_roots())
+}
+
+fn resolve_repo_root_with_fallbacks(
+    repo_path: Option<&str>,
+    fallbacks: &[PathBuf],
+) -> IrodoriResult<PathBuf> {
     if let Some(raw) = repo_path.map(str::trim).filter(|path| !path.is_empty()) {
-        return try_repo_root(Path::new(raw)).map_err(|message| {
-            IrodoriError::validation(format!("{raw} is not a readable git repository: {message}"))
+        let path = Path::new(raw);
+        if !path.is_dir() {
+            return Err(IrodoriError::new(
+                IrodoriErrorKind::NotFound,
+                format!("{raw} is not a folder"),
+            )
+            .with_code(REPO_MISSING_CODE));
+        }
+        return try_repo_root(path).map_err(|error| match error {
+            RepoLookupError::NotRepository(message) => IrodoriError::new(
+                IrodoriErrorKind::NotFound,
+                format!("{raw} is not a git repository: {message}"),
+            )
+            .with_code(REPO_NOT_REPOSITORY_CODE),
+            RepoLookupError::Failed(error) => error,
         });
     }
 
-    if let Ok(current_dir) = std::env::current_dir() {
-        if let Ok(root) = try_repo_root(&current_dir) {
-            return Ok(root);
-        }
-    }
-
-    let manifest_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
-    try_repo_root(&manifest_root).map_err(|message| {
-        IrodoriError::validation(format!(
-            "default workspace is not a git repository: {message}"
-        ))
-    })
+    // A missing or broken fallback is not worth reporting: the user never chose
+    // it, so the honest answer is that nothing is configured yet.
+    fallbacks
+        .iter()
+        .find_map(|path| try_repo_root(path).ok())
+        .ok_or_else(|| {
+            IrodoriError::new(
+                IrodoriErrorKind::NotFound,
+                "no git repository is configured",
+            )
+            .with_code(REPO_UNCONFIGURED_CODE)
+        })
 }
 
-fn try_repo_root(path: &Path) -> Result<PathBuf, String> {
+/// Where a debug build looks when the panel has no repository configured, so
+/// `tauri dev` opens the checkout being worked on. Release builds get nothing:
+/// `CARGO_MANIFEST_DIR` is baked in at compile time, so in a shipped binary it
+/// names the CI runner's checkout, and the directory a launched app runs in
+/// (`/`, `$HOME`) is not a repository the user picked.
+#[cfg(debug_assertions)]
+fn dev_fallback_roots() -> Vec<PathBuf> {
+    let mut roots: Vec<PathBuf> = std::env::current_dir().into_iter().collect();
+    roots.push(Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.."));
+    roots
+}
+
+#[cfg(not(debug_assertions))]
+fn dev_fallback_roots() -> Vec<PathBuf> {
+    Vec::new()
+}
+
+enum RepoLookupError {
+    /// git ran and reported that the folder is outside any repository.
+    NotRepository(String),
+    /// git could not run, or found a repository it refuses to use (for
+    /// example `safe.directory`); the user needs to see these as errors.
+    Failed(IrodoriError),
+}
+
+fn try_repo_root(path: &Path) -> Result<PathBuf, RepoLookupError> {
     let output = Command::new("git")
         .arg("-C")
         .arg(path)
         .args(["rev-parse", "--show-toplevel"])
         .env("GIT_TERMINAL_PROMPT", "0")
+        // Untranslated output, so "not a git repository" can be matched below.
+        .env("LC_ALL", "C")
         .output()
-        .map_err(|error| format!("git is not available: {error}"))?;
+        .map_err(|error| RepoLookupError::Failed(git_spawn_error(error)))?;
     if !output.status.success() {
-        return Err(output_stderr(output));
+        let message = output_stderr(output);
+        if message.contains("not a git repository") {
+            return Err(RepoLookupError::NotRepository(message));
+        }
+        return Err(RepoLookupError::Failed(IrodoriError::validation(format!(
+            "{} is not a readable git repository: {message}",
+            path.display()
+        ))));
     }
     let root = output_stdout(output).trim().to_string();
     if root.is_empty() {
-        return Err("git returned an empty repository root".into());
+        return Err(RepoLookupError::Failed(IrodoriError::validation(
+            "git returned an empty repository root",
+        )));
     }
     Ok(PathBuf::from(root))
+}
+
+fn git_spawn_error(error: std::io::Error) -> IrodoriError {
+    IrodoriError::new(
+        IrodoriErrorKind::Transport,
+        format!("git is not available: {error}"),
+    )
+    .with_code("git.spawn")
 }
 
 fn run_git(repo_root: &Path, args: &[&str], success_codes: &[i32]) -> IrodoriResult<Output> {
@@ -401,13 +499,7 @@ fn run_git(repo_root: &Path, args: &[&str], success_codes: &[i32]) -> IrodoriRes
         .env("GIT_TERMINAL_PROMPT", "0")
         .env("LC_ALL", "C")
         .output()
-        .map_err(|error| {
-            IrodoriError::new(
-                IrodoriErrorKind::Transport,
-                format!("git is not available: {error}"),
-            )
-            .with_code("git.spawn")
-        })?;
+        .map_err(git_spawn_error)?;
 
     let code = output.status.code().unwrap_or(-1);
     if success_codes.contains(&code) {

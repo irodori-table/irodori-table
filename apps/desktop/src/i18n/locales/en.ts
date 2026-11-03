@@ -275,6 +275,7 @@ export const en = {
   "git.actions.push": "Push",
   "git.actions.checkout": "Checkout",
   "git.actions.switch": "Switch",
+  "git.actions.initialize": "Initialize",
   "git.confirm.commitAll.title": "Commit all changes?",
   "git.confirm.commitAll.message": "All visible changes will be committed.",
   "git.confirm.commitStaged.title": "Commit staged changes?",
@@ -293,6 +294,14 @@ export const en = {
   "git.confirm.deleteCurrent.message":
     "Switch to another branch before deleting the current branch.",
   "git.confirm.deleteBranch.title": "Delete branch {branch}?",
+  "git.confirm.init.title": "Initialize a Git repository?",
+  "git.confirm.init.message": "A new Git repository will be created in {path}.",
+  "git.setup.unconfigured":
+    "Choose a Git repository to see its history and changes.",
+  "git.setup.missing": "This folder no longer exists.",
+  "git.setup.notRepository": "This folder is not a Git repository.",
+  "git.setup.openRepository": "Open repository…",
+  "git.setup.initRepository": "Initialize repository here",
   "git.branches": "Branches",
   "git.createBranchFrom": "Create branch {branch} from {ref}",
   "git.localBranchExists": "Local branch {branch} already exists",

@@ -156,6 +156,7 @@ pub(crate) fn invoke_handler() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         git::git_discard_files,
         git::git_checkout_branch,
         git::git_delete_branch,
+        git::git_init,
         security::security_get_privacy_mode,
         security::security_set_privacy_mode,
         security::security_redact_text,

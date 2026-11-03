@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { keyMessage, textMessage, type LocalizedMessage } from "@/core";
-import { errorMessage } from "@/core";
+import { errorMessage, isIrodoriError } from "@/core";
 import {
   gitCheckoutBranch,
   gitCommitAll,
@@ -10,6 +10,7 @@ import {
   gitDiff,
   gitDiscardFiles,
   gitFetch,
+  gitInit,
   gitLog,
   gitPull,
   gitPush,
@@ -26,8 +27,18 @@ import { normalizeHexColor } from "./git-format";
 
 export type GitDrawerView = "graph" | "changes";
 
+/** Why there is no repository to show: the panel offers setup, not an error. */
+export type GitRepoSetupReason = "unconfigured" | "missing" | "notRepository";
+
 const repoPathStorageKey = "irodori.git.repoPath.v1";
 const repoColorsStorageKey = "irodori.git.repoColors.v1";
+
+// Codes the backend attaches when no repository resolves (see git/mod.rs).
+const setupReasonByCode: Record<string, GitRepoSetupReason> = {
+  "git.repo.unconfigured": "unconfigured",
+  "git.repo.missing": "missing",
+  "git.repo.notRepository": "notRepository",
+};
 
 type GitState = {
   open: boolean;
@@ -35,6 +46,7 @@ type GitState = {
   repoPath: string;
   repoPathDraft: string;
   repoColors: Record<string, string>;
+  setupReason: GitRepoSetupReason | null;
   status: GitStatusSummary | null;
   graphCommits: GitCommitSummary[];
   selectedCommitHash: string | null;
@@ -65,6 +77,7 @@ type GitState = {
   setCommitMessage: (message: string) => void;
   setBranchDraft: (branchDraft: string) => void;
   refresh: () => Promise<void>;
+  initRepository: () => Promise<boolean>;
   selectFile: (path: string | null) => Promise<void>;
   commitAll: () => Promise<boolean>;
   commitStaged: () => Promise<boolean>;
@@ -106,6 +119,13 @@ function repoArg(state: GitState) {
   return state.repoPath.trim() || undefined;
 }
 
+function repoSetupReason(error: unknown): GitRepoSetupReason | null {
+  if (!isIrodoriError(error) || !error.code) {
+    return null;
+  }
+  return setupReasonByCode[error.code] ?? null;
+}
+
 function selectedPaths(paths: string[]) {
   return paths.map((path) => path.trim()).filter(Boolean);
 }
@@ -138,6 +158,7 @@ export const useGitStore = create<GitState>((set, get) => ({
   repoPath: loadRepoPath(),
   repoPathDraft: loadRepoPath(),
   repoColors: loadRepoColors(),
+  setupReason: null,
   status: null,
   graphCommits: [],
   selectedCommitHash: null,
@@ -168,6 +189,8 @@ export const useGitStore = create<GitState>((set, get) => ({
     set({
       repoPath: next,
       repoPathDraft: next,
+      // The old reason names the old path; the refresh below decides anew.
+      setupReason: null,
       status: null,
       graphCommits: [],
       selectedCommitHash: null,
@@ -257,6 +280,7 @@ export const useGitStore = create<GitState>((set, get) => ({
           ? get().selectedCommitHash
           : (graphCommits[0]?.hash ?? null);
       set({
+        setupReason: null,
         status,
         graphCommits,
         selectedCommitHash,
@@ -269,11 +293,44 @@ export const useGitStore = create<GitState>((set, get) => ({
         get().selectCommitFile(null),
       ]);
     } catch (error) {
+      const setupReason = repoSetupReason(error);
+      if (setupReason) {
+        // No repository yet is the normal first-run state, not a failure.
+        set({
+          setupReason,
+          status: null,
+          graphCommits: [],
+          selectedCommitHash: null,
+          commitDiff: null,
+          selectedCommitPath: null,
+          diff: null,
+          selectedPath: null,
+          loading: false,
+          logLoading: false,
+        });
+        return;
+      }
       set({
         error: textMessage(errorMessage(error)),
         loading: false,
         logLoading: false,
       });
+    }
+  },
+  initRepository: async () => {
+    const repoPath = get().repoPath.trim();
+    if (!repoPath) {
+      return false;
+    }
+    set({ loading: true, error: null, commandOutput: null });
+    try {
+      const commandOutput = await gitInit(repoPath);
+      set({ commandOutput, loading: false });
+      await get().refresh();
+      return true;
+    } catch (error) {
+      set({ error: textMessage(errorMessage(error)), loading: false });
+      return false;
     }
   },
   selectFile: async (selectedPath) => {
