@@ -46,5 +46,7 @@ export async function buildXlsxBlob(
   );
   const data = [header, ...rows];
   const sheet = sheetName.slice(0, 31) || "Result";
-  return writeXlsxFile(data, { sheet }) as unknown as Promise<Blob>;
+  // write-excel-file v4 returns `{ toBlob, toFile }` rather than a Blob; the
+  // bytes have to be requested explicitly.
+  return writeXlsxFile(data, { sheet }).toBlob();
 }
