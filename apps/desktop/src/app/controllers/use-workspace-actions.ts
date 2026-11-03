@@ -12,6 +12,7 @@ import {
   tauriRuntimeError,
 } from "@/app/app-workbench-utils";
 import { flushEditorTabsEvent } from "@/app/controllers/use-editor-groups";
+import { tableTabId } from "@/app/editor-tabs";
 import {
   detectImportFileKind,
   generateImportSql,
@@ -59,6 +60,8 @@ export type WorkspaceActionsDeps = {
   schemaDraft: SchemaDesignerDraft;
   setQuery: (value: string) => void;
   openSqlInNewTab: (sql: string) => void;
+  showTableTab: (tab: { id: string; label: string; query: string }) => string;
+  queryRunning: boolean;
   setMigrationStudioOpen: (value: boolean) => void;
   setSchemaDesignerOpen: (value: boolean) => void;
   setObjectActionMenu: (value: ValueUpdater<string | null>) => void;
@@ -87,6 +90,8 @@ export function useWorkspaceActions({
   schemaDraft,
   setQuery,
   openSqlInNewTab,
+  showTableTab,
+  queryRunning,
   setMigrationStudioOpen,
   setSchemaDesignerOpen,
   setObjectActionMenu,
@@ -260,13 +265,29 @@ export function useWorkspaceActions({
     if (object.kind !== "table" && object.kind !== "view") {
       return;
     }
-    const sql = tablePreviewSql(editorEngine, object);
-    setQuery(sql);
+    // Clicking again while the last click's query runs would only queue the
+    // same SQL behind it.
+    if (queryRunning) {
+      return;
+    }
+    // Each table opens in its own tab rather than over the SQL in the current
+    // one; another click on it selects that tab again instead of adding more.
+    const preview = tablePreviewSql(editorEngine, object);
+    const sql = showTableTab({
+      id: tableTabId(object.schema, object.name),
+      label: object.name,
+      query: preview,
+    });
     setObjectActionMenu(null);
-    setTableViewObject(object);
+    // SQL typed into the table's tab runs as written, and only the untouched
+    // preview is the table's own data, the one Edit data can write back to.
+    const sourceObject = sql === preview ? object : undefined;
+    setTableViewObject(sourceObject ?? null);
     setResultMode("data");
-    if (activeConnectionOpen) {
-      await executeQuery(sql, undefined, { sourceObject: object });
+    // The result pane is shared by every tab, so the tab is run again to put
+    // its rows back on screen.
+    if (activeConnectionOpen && sql.trim()) {
+      await executeQuery(sql, undefined, { sourceObject });
     }
   }
 

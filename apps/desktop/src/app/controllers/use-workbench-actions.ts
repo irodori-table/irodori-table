@@ -71,6 +71,8 @@ export function useWorkbenchActions({
     schemaDraft,
     setQuery: editor.setQuery,
     openSqlInNewTab: editor.openSqlInNewTab,
+    showTableTab: editor.showTableTab,
+    queryRunning: queryRunner.running,
     setMigrationStudioOpen: overlays.setMigrationStudioOpen,
     setSchemaDesignerOpen,
     setObjectActionMenu: connections.setObjectActionMenu,

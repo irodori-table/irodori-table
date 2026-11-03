@@ -49,9 +49,10 @@ const DISMISS_DELAY_MS: Record<ActionNotice["kind"], number | null> = {
 };
 
 /**
- * Queue of workbench notifications. Notices stack (newest at the bottom)
- * instead of overwriting each other; the queue is capped so rapid failures
- * drop the oldest entry rather than growing without bound.
+ * Queue of workbench notifications. Different notices stack (newest at the
+ * bottom) instead of overwriting each other, a repeat replaces its earlier
+ * copy, and the queue is capped so rapid failures drop the oldest entry
+ * rather than growing without bound.
  */
 export function useActionNotices() {
   const [notices, setNotices] = useState<ActionNotice[]>([]);
@@ -78,8 +79,19 @@ export function useActionNotices() {
     (kind, title, detail, options) => {
       const id = nextIdRef.current++;
       setNotices((current) => {
+        // A notice of the same kind and title replaces the one on screen
+        // instead of stacking under it: running a query five times leaves one
+        // "Query finished", with the latest detail, not five cards over the
+        // grid. The detail is left out of the match because it is often a
+        // timing that differs on every run.
+        const repeated = current.filter(
+          (notice) => notice.kind === kind && notice.title === title,
+        );
+        for (const notice of repeated) {
+          clearTimer(notice.id);
+        }
         const next = [
-          ...current,
+          ...current.filter((notice) => !repeated.includes(notice)),
           { id, kind, title, detail, action: options?.action },
         ];
         const overflow = next.length - MAX_VISIBLE_NOTICES;

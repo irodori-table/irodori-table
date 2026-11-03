@@ -94,6 +94,48 @@ describe("useActionNotices dismissal", () => {
     // Oldest dropped, newest kept.
     expect(notices[notices.length - 1]?.title).toBe("Failure 7");
   });
+
+  it("replaces a repeat instead of stacking another card", () => {
+    const { result } = renderHook(() => useActionNotices());
+
+    act(() => {
+      result.current.showActionNotice("success", "Saved", "first");
+      result.current.showActionNotice("success", "Query finished", "0 ms");
+    });
+    act(() => {
+      vi.advanceTimersByTime(3_000);
+    });
+    act(() => {
+      result.current.showActionNotice("success", "Query finished", "1 ms");
+    });
+
+    expect(
+      result.current.notices.map(({ title, detail }) => [title, detail]),
+    ).toEqual([
+      ["Saved", "first"],
+      ["Query finished", "1 ms"],
+    ]);
+
+    // The repeat starts its own timer; the copy it replaced does not take the
+    // new card down with it.
+    act(() => {
+      vi.advanceTimersByTime(1_000);
+    });
+    expect(result.current.notices.map(({ title }) => title)).toEqual([
+      "Query finished",
+    ]);
+  });
+
+  it("keeps different kinds with the same title apart", () => {
+    const { result } = renderHook(() => useActionNotices());
+
+    act(() => {
+      result.current.showActionNotice("info", "Update");
+      result.current.showActionNotice("error", "Update");
+    });
+
+    expect(result.current.notices).toHaveLength(2);
+  });
 });
 
 describe("ActionToast rendering", () => {
