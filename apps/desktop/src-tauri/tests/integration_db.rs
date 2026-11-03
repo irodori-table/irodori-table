@@ -871,3 +871,125 @@ async fn postgres_client_certificate_authenticates_without_a_password() {
     assert!(!version.is_empty(), "server version present");
     eprintln!("connected by client certificate: {version}");
 }
+
+/// Grid edits against columns a bound `text` value cannot reach on its own.
+///
+/// sqlx binds strings as `text`, and Postgres has no implicit conversion from
+/// `text` to uuid, double precision, jsonb or timestamptz: editing a row keyed
+/// by a uuid failed with "operator does not exist: uuid = text", for updates
+/// and deletes alike. Every placeholder is now cast to its column's type.
+#[test]
+fn postgres_edits_reach_typed_columns() {
+    let Ok(url) = std::env::var("IRODORI_PG_URL") else {
+        eprintln!("skip: IRODORI_PG_URL not set");
+        return;
+    };
+    tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(postgres_typed_edits(url));
+}
+
+async fn postgres_typed_edits(url: String) {
+    use desktop_lib::db::{
+        apply_edits_impl, CellValue, RowDelete, RowInsert, RowUpdate, TableEdits,
+    };
+    use serde_json::json;
+
+    fn cell(column: &str, value: serde_json::Value) -> CellValue {
+        CellValue {
+            column: column.to_string(),
+            value,
+        }
+    }
+
+    let state = DbState::default();
+    connect_impl(
+        &state,
+        &SecurityState::default(),
+        None,
+        url_profile("pg-edit", DbEngine::Postgres, url),
+    )
+    .await
+    .expect("connect");
+    // A real table, not a temp one: the edits may run on another pooled
+    // connection, where a temp table would not exist.
+    let table = format!("irodori_it_edit_{}", std::process::id());
+    let run = |sql: String| run_query_impl(&state, "pg-edit".into(), sql, None);
+    run(format!(
+        "create table public.{table} (id uuid primary key, cost double precision, \
+         note varchar(8), data jsonb, at timestamptz)"
+    ))
+    .await
+    .expect("create");
+    run(format!(
+        "insert into public.{table} values \
+         ('00000000-0000-0000-0000-000000000001', 0, 'a', '{{}}', now()), \
+         ('00000000-0000-0000-0000-000000000002', 0, 'b', '{{}}', now())"
+    ))
+    .await
+    .expect("seed");
+
+    let applied = apply_edits_impl(
+        &state,
+        "pg-edit".into(),
+        TableEdits {
+            schema: Some("public".into()),
+            table: table.clone(),
+            updates: vec![RowUpdate {
+                keys: vec![cell("id", json!("00000000-0000-0000-0000-000000000001"))],
+                set: vec![
+                    cell("cost", json!("1.5")),
+                    cell("data", json!("{\"k\": 1}")),
+                    cell("at", json!("2026-11-01T14:48:39Z")),
+                ],
+            }],
+            inserts: vec![RowInsert {
+                values: vec![
+                    cell("id", json!("00000000-0000-0000-0000-000000000003")),
+                    cell("cost", json!(2)),
+                    cell("note", json!("c")),
+                ],
+            }],
+            deletes: vec![RowDelete {
+                keys: vec![cell("id", json!("00000000-0000-0000-0000-000000000002"))],
+            }],
+        },
+    )
+    .await;
+    // Over-long text must still be rejected by the column, not cut to fit.
+    let too_long = apply_edits_impl(
+        &state,
+        "pg-edit".into(),
+        TableEdits {
+            schema: Some("public".into()),
+            table: table.clone(),
+            updates: vec![RowUpdate {
+                keys: vec![cell("id", json!("00000000-0000-0000-0000-000000000001"))],
+                set: vec![cell("note", json!("far too long"))],
+            }],
+            inserts: vec![],
+            deletes: vec![],
+        },
+    )
+    .await;
+    let rows = run(format!(
+        "select id::text, cost, data::text, note from public.{table} order by id"
+    ))
+    .await;
+    run(format!("drop table public.{table}"))
+        .await
+        .expect("drop");
+
+    let applied = applied.expect("apply typed edits");
+    assert_eq!(
+        (applied.updated, applied.inserted, applied.deleted),
+        (1, 1, 1)
+    );
+    assert!(too_long.is_err(), "varchar(8) accepted 12 characters");
+    let rows = rows.expect("select").rows;
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0][1], json!(1.5));
+    assert_eq!(rows[0][2], json!("{\"k\": 1}"));
+    assert_eq!(rows[0][3], json!("a"));
+    assert_eq!(rows[1][0], json!("00000000-0000-0000-0000-000000000003"));
+}
