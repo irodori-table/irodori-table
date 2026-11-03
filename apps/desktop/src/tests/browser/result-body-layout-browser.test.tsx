@@ -135,7 +135,8 @@ function editModeGridProps(): ResultBodyProps {
     unfilteredRowCount: rows.length,
     visibleRows: rows,
     visibleColumnIndexes: columns.map((_, index) => index),
-    selectedRowKey: "o4",
+    // Row n is child n + 2 (the header is child 1), so o3 is an odd child.
+    selectedRowKey: "o3",
     gridTotalWidth: totalWidth,
     gridRowStyle: {
       gridTemplateColumns: [
@@ -156,6 +157,51 @@ function colorAlpha(color: string) {
     color.match(/\/\s*([\d.]+)\)$/)?.[1];
   return alpha === undefined ? 1 : Number(alpha);
 }
+
+function resolvedColor(scope: HTMLElement, value: string) {
+  const probe = document.createElement("span");
+  probe.style.backgroundColor = value;
+  scope.append(probe);
+  const color = getComputedStyle(probe).backgroundColor;
+  probe.remove();
+  return color;
+}
+
+/**
+ * The stripe rule (`:not(.header):nth-child(odd)`, specificity 0,3,0) used to
+ * outrank the selected/edited/new rules (0,2,0), so those rows lost their tint
+ * whenever they landed on an odd child. In dark mode a themed copy of it beat
+ * focus-visible as well.
+ */
+describe("result grid row tints (real layout)", () => {
+  for (const theme of ["light", "dark"] as const) {
+    it(`lets row states win over the stripe on odd rows (${theme})`, () => {
+      const { pane, render } = mountPane(640, 600, theme);
+      const props = editModeGridProps();
+      render(props);
+      const rows = props.gridRef.current!.querySelectorAll<HTMLElement>(
+        ".grid-row:not(.header)",
+      );
+      const tint = (index: number) =>
+        getComputedStyle(rows[index]!).backgroundColor;
+      const resolve = (value: string) =>
+        resolvedColor(pane.parentElement!, value);
+      const stripe = resolve("var(--grid-row-alt)");
+
+      // Plain rows: o0 is an even child, o9 an odd one.
+      expect(tint(0)).toBe("rgba(0, 0, 0, 0)");
+      expect(tint(9)).toBe(stripe);
+      // Edited: o1 (odd) matches o4 (even).
+      expect(tint(1)).toBe(resolve("var(--warning-bg)"));
+      expect(tint(4)).toBe(tint(1));
+      // New: o5 (odd) matches o2 (even).
+      expect(tint(5)).not.toBe(stripe);
+      expect(tint(5)).toBe(tint(2));
+      // Selected: o3 (odd).
+      expect(tint(3)).toBe(resolve("var(--selected-strong)"));
+    });
+  }
+});
 
 /**
  * In edit mode a sticky gutter of row-delete buttons pins to the grid's left

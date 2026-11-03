@@ -263,11 +263,9 @@
 }
 
 /* Row tints go through --grid-row-bg so the edit-mode gutter can match them
-   (see results.css). */
-.app-shell[data-theme="dark"] .grid-row:not(.header):nth-child(odd) {
-  --grid-row-bg: var(--grid-row-alt);
-}
-
+   (see results.css). Striping comes from the low-specificity rule there:
+   a themed copy here outranked the light state rules (e.g. focus-visible)
+   on odd rows. */
 .app-shell[data-theme="dark"] .grid-row.row-new {
   --grid-row-bg: color-mix(in srgb, var(--green) 17%, var(--editor-bg));
 }

@@ -1254,7 +1254,10 @@
   font-size: var(--font-code);
 }
 
-.grid-row:not(.header):nth-child(odd) {
+/* :where() keeps the stripe at the specificity of a bare `.grid-row`, so
+   every state below (new, edited, hover, focus, selected) outranks it in
+   both themes. At (0,3,0) it beat them on odd rows, hiding their tint. */
+.grid-row:where(:not(.header):nth-child(odd)) {
   --grid-row-bg: var(--grid-row-alt);
 }
 
