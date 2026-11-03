@@ -622,8 +622,12 @@ function addRelationCandidates(
         : qualifiedName(entry);
     const matchTexts = objectMatchTexts(entry);
     if (!matchesAny(prefix, matchTexts)) continue;
+    // A table that matches only through its schema ("publ" against
+    // "public.orders") ranks under the schema itself, so typing a schema's
+    // name offers the schema first instead of the schema's first table.
+    const throughSchemaOnly = !matchesAny(prefix, [entry.name]);
     const rank =
-      (options.lowPriority ? 130 : 330) +
+      (throughSchemaOnly ? 120 : options.lowPriority ? 130 : 330) +
       (entry.kind === "table" ? 12 : 0) +
       matchBonus(prefix, ...matchTexts);
     candidates.push({
@@ -635,11 +639,21 @@ function addRelationCandidates(
         detail: `${entry.schema} ${entry.kind}`,
         type: entry.kind === "view" ? "type" : "class",
         section: RELATION_SECTION,
-        commitCharacters: ["."],
+        // No "." commit character: a table also matches its schema's name, so
+        // typing "public." committed whichever table was highlighted first.
         boost: clampBoost(rank - 300),
       },
     });
   }
+}
+
+/**
+ * Whether picking this completion should list what comes next straight away.
+ * A schema completes to "name.", and the tables inside it are what the user
+ * wants to see then; without this the list closed until another keystroke.
+ */
+export function completionOpensNextLevel(completion: Completion): boolean {
+  return typeof completion.apply === "string" && completion.apply.endsWith(".");
 }
 
 function addSchemaCandidates(

@@ -16,6 +16,7 @@ import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator } from "@/i18n";
 import { GitChangesView } from "./GitChangesView";
 import { GitGraphView } from "./GitGraphView";
+import { GitSetupView } from "./GitSetupView";
 import { branchSummary, gitAccentColor, providerLabel } from "./git-format";
 import { useGitStore } from "./git-store";
 
@@ -64,6 +65,7 @@ export function GitPanel({ variant = "drawer", onClose }: GitPanelProps) {
   const repoPath = useGitStore((state) => state.repoPath);
   const repoPathDraft = useGitStore((state) => state.repoPathDraft);
   const repoColors = useGitStore((state) => state.repoColors);
+  const setupReason = useGitStore((state) => state.setupReason);
   const status = useGitStore((state) => state.status);
   const graphCommits = useGitStore((state) => state.graphCommits);
   const selectedCommitHash = useGitStore((state) => state.selectedCommitHash);
@@ -84,6 +86,7 @@ export function GitPanel({ variant = "drawer", onClose }: GitPanelProps) {
   const closeDrawer = useGitStore((state) => state.closeDrawer);
   const closePanel = onClose ?? closeDrawer;
   const refresh = useGitStore((state) => state.refresh);
+  const initRepository = useGitStore((state) => state.initRepository);
   const setView = useGitStore((state) => state.setView);
   const setRepoPath = useGitStore((state) => state.setRepoPath);
   const setRepoPathDraft = useGitStore((state) => state.setRepoPathDraft);
@@ -200,6 +203,19 @@ export function GitPanel({ variant = "drawer", onClose }: GitPanelProps) {
     if (typeof result === "string") {
       setRepoPath(result);
     }
+  }
+
+  async function onInitRepository() {
+    if (
+      !(await confirm({
+        title: t("git.confirm.init.title"),
+        message: t("git.confirm.init.message", { path: repoPath }),
+        confirmLabel: t("git.actions.initialize"),
+      }))
+    ) {
+      return;
+    }
+    await initRepository();
   }
 
   async function onCheckoutBranch(branch: string) {
@@ -450,9 +466,18 @@ export function GitPanel({ variant = "drawer", onClose }: GitPanelProps) {
       ) : null}
 
       <div
-        className={`git-drawer-body ${view === "graph" ? "graph-mode" : ""}`}
+        className={`git-drawer-body ${setupReason ? "setup-mode" : view === "graph" ? "graph-mode" : ""}`}
       >
-        {view === "graph" ? (
+        {setupReason ? (
+          <GitSetupView
+            reason={setupReason}
+            repoPath={repoPath}
+            busy={loading}
+            onOpenRepository={() => void onBrowseRepo()}
+            onInitRepository={() => void onInitRepository()}
+            t={t}
+          />
+        ) : view === "graph" ? (
           <GitGraphView
             commits={graphCommits}
             locale={locale}

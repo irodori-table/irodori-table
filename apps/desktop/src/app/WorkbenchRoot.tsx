@@ -121,6 +121,16 @@ export function WorkbenchRoot() {
             </div>
           }
           results={<ResultsPane {...resultGridController} />}
+          onSidebarWidthChange={(side, width) =>
+            side === "left"
+              ? layout.setSidebarWidth(width)
+              : layout.setInspectorWidth(width)
+          }
+          onSidebarSnapClose={(side) =>
+            side === "left"
+              ? sidebars.setSidebarOpen(false)
+              : sidebars.setRightSidebarOpen(false)
+          }
         />
       </WorkbenchShell>
 

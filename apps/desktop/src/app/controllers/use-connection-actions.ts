@@ -178,31 +178,23 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     return true;
   }
 
+  // Add only opens a blank form. The profile joins the saved list when it is
+  // saved or connected (both go through saveDraft), so pressing Add and walking
+  // away no longer leaves a "Connection N" that nobody filled in.
   function addProfile() {
-    // Reuse an untouched draft instead of persisting another "Connection N"
-    // on every open of the manager.
-    const pristine = profiles.find(isPristineDraftProfile);
-    if (pristine) {
-      setSelectedProfileId(pristine.id);
-      setDraft(pristine);
-      setConnectionError(null);
-      return;
-    }
     const usedIds = new Set(profiles.map((profile) => profile.id));
     let seed = profiles.length + 1;
     while (usedIds.has(`connection-${seed}`)) {
       seed += 1;
     }
     const next = newDraft(seed);
-    setProfiles((current) => [...current, sanitizedProfile(next)]);
     setSelectedProfileId(next.id);
     setDraft(next);
     setConnectionError(null);
-    showActionNotice("info", t("notice.connection.draftCreated"), next.name);
   }
 
-  // Closing the manager throws away drafts the user never touched, so
-  // open/close cycles stop accumulating persisted "Connection N" entries.
+  // Add used to save the untouched draft straight away. Closing the manager
+  // still clears those leftovers out of the saved list.
   function prunePristineDrafts() {
     setProfiles((current) => {
       const kept = current.filter((profile) => {
@@ -219,7 +211,12 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
       if (kept.length === current.length) {
         return current;
       }
-      if (!kept.some((profile) => profile.id === draft.id)) {
+      // Only a draft whose saved row was just pruned falls back. An unsaved
+      // draft from Add was never in the list, and it keeps its edits.
+      const draftWasPruned =
+        current.some((profile) => profile.id === draft.id) &&
+        !kept.some((profile) => profile.id === draft.id);
+      if (draftWasPruned) {
         const fallback = kept[0] ?? null;
         if (fallback) {
           setSelectedProfileId(fallback.id);

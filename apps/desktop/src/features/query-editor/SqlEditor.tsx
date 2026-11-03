@@ -25,7 +25,11 @@ import {
   type Extension,
   type SelectionRange,
 } from "@codemirror/state";
-import { acceptCompletion, completionStatus } from "@codemirror/autocomplete";
+import {
+  acceptCompletion,
+  autocompletion,
+  completionStatus,
+} from "@codemirror/autocomplete";
 import {
   highlightSelectionMatches,
   search,
@@ -49,6 +53,7 @@ import {
 } from "@codemirror/commands";
 import { vim } from "@replit/codemirror-vim";
 import { basicSetup } from "codemirror";
+import { deferAppKeybindings } from "./app-key-ownership";
 import { indentOnInput } from "@codemirror/language";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
 import { rainbowBrackets } from "./editor-rainbow-brackets";
@@ -75,7 +80,10 @@ import {
   type EditorLanguage,
 } from "@/lib/editor-language";
 import type { DatabaseMetadata, DbEngine } from "@/generated/irodori-api";
-import type { SqlSnippetDefinition } from "@/sql/completion";
+import {
+  completionOpensNextLevel,
+  type SqlSnippetDefinition,
+} from "@/sql/completion";
 import { buildSqlExtensions } from "@/sql/dialect";
 import { formatSqlDocument, type SqlFormatterId } from "@/sql/formatter";
 import { sqlHighlightingExtensions } from "@/sql/highlighting";
@@ -88,6 +96,7 @@ import {
 import { editorThemeExtensions, type IrodoriTheme } from "@/theme";
 import {
   openQuickDefinitionAtSelection,
+  quickDefinitionIsOpen,
   sqlMetadataInsightExtensions,
 } from "./sql-editor-metadata";
 import { errorMessage } from "@/core";
@@ -239,11 +248,16 @@ function createSqlEditorState({
       editorSelectAllShortcut(),
       compartments.clipboard.of(vimMode ? vimClipboardShortcuts() : []),
       compartments.vim.of(vimMode ? vim() : []),
+      deferAppKeybindings((view) => quickDefinitionIsOpen(view.state)),
       basicSetup,
+      // basicSetup already installs autocompletion; this only adds config.
+      autocompletion({ activateOnCompletion: completionOpensNextLevel }),
       indentOnInput(),
       indentationMarkers({
         highlightActiveBlock: true,
-        hideFirstIndent: false,
+        // A guide in column 0 marks no indentation at all; it only drew a
+        // line down the left edge of every statement.
+        hideFirstIndent: true,
       }),
       search({ top: true }),
       highlightSelectionMatches(),

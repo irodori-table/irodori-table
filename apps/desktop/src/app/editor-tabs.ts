@@ -197,6 +197,38 @@ export function addSqlTabToEditorGroup(
   };
 }
 
+/** The tab a table opens into: one per table, so another click finds it. */
+export function tableTabId(schema: string, name: string) {
+  return `table:${schema}.${name}`;
+}
+
+/**
+ * Bring up a table's own tab. The group gets a new tab holding `query` when it
+ * has none; a closed one comes back holding `query`; an open one is only
+ * selected, so SQL typed into it survives another click on the table.
+ */
+export function showTableTabInEditorGroup(
+  state: EditorGroupState,
+  tab: { id: string; label: string; query: string },
+): EditorGroupState {
+  if (state.openTabIds.includes(tab.id)) {
+    return { ...state, activeTabId: tab.id };
+  }
+  if (state.tabs.some((item) => item.id === tab.id)) {
+    return {
+      ...state,
+      openTabIds: [...state.openTabIds, tab.id],
+      activeTabId: tab.id,
+      queryByTabId: { ...state.queryByTabId, [tab.id]: tab.query },
+      selectionsByTabId: {
+        ...state.selectionsByTabId,
+        [tab.id]: defaultEditorSelections,
+      },
+    };
+  }
+  return addSqlTabToEditorGroup(state, tab);
+}
+
 export function renameSqlTabInEditorGroup(
   state: EditorGroupState,
   tabId: string,

@@ -195,7 +195,7 @@ export function Sidebar({
           />
           {activeView === "objectBrowser" ? (
             <SidebarObjectBrowser
-              connectionsCount={connections.length}
+              savedConnectionsCount={profileById.size}
               activeConnection={activeConnection}
               activeConnectionOpen={activeConnectionOpen}
               activeMetadata={activeMetadata}

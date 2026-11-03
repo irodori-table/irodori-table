@@ -347,6 +347,17 @@
   overflow: hidden;
 }
 
+/* The setup card replaces both views, so it needs neither view's row split. */
+.git-drawer-body.setup-mode {
+  grid-template-rows: auto;
+  align-content: start;
+}
+
+/* Folder paths have no spaces to break at in a narrow sidebar. */
+.git-setup small {
+  overflow-wrap: anywhere;
+}
+
 .git-view-switch {
   height: var(--control-sm);
 }

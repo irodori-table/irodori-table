@@ -120,14 +120,16 @@ pub async fn explain_query(
 }
 
 /// Apply result-grid edits in one transaction (rolls back on the first failure).
-/// Note: JSON params bind by inferred type; a precision-typed column (decimal/
-/// timestamp decoded to a string) or a typed `NULL` may need explicit casts —
-/// tracked as a follow-up once column-type metadata is threaded through.
+///
+/// Every placeholder is cast to its column's type (see [`edit_column_types`]),
+/// because sqlx binds a string as `text` and Postgres will not compare or
+/// assign `text` to a `uuid`, numeric, json or timestamp column on its own.
 pub async fn apply_edits(
     pool: &PgPool,
     edits: &super::edit::TableEdits,
 ) -> DbResult<super::edit::AppliedEdits> {
-    let plan = super::edit::plan(super::engine::Wire::Postgres, edits)?;
+    let types = edit_column_types(pool, edits).await;
+    let plan = super::edit::plan_typed(super::engine::Wire::Postgres, edits, &types)?;
     let mut tx = pool
         .begin()
         .await
@@ -158,6 +160,31 @@ pub async fn apply_edits(
         .await
         .map_err(|e| DbError::edit(format!("commit failed: {e}")))?;
     Ok(applied)
+}
+
+/// The edited table's column types, for casting each placeholder.
+///
+/// Editing a row keyed by a `uuid` failed with "operator does not exist: uuid
+/// = text". The type is read without its modifier on purpose: an explicit cast
+/// to `varchar(10)` truncates silently, where assigning to the column still
+/// rejects a value that is too long. A server without `to_regclass` (or a
+/// table it cannot resolve) yields no types, and the placeholders stay bare as
+/// they were before.
+async fn edit_column_types(
+    pool: &PgPool,
+    edits: &super::edit::TableEdits,
+) -> super::edit::ColumnTypes {
+    let target = super::edit::target(super::engine::Wire::Postgres, edits);
+    sqlx::query_as::<_, (String, String)>(
+        "SELECT a.attname::text, format_type(a.atttypid, NULL) \
+         FROM pg_attribute a \
+         WHERE a.attrelid = to_regclass($1) AND a.attnum > 0 AND NOT a.attisdropped",
+    )
+    .bind(target)
+    .fetch_all(pool)
+    .await
+    .map(|rows| rows.into_iter().collect())
+    .unwrap_or_default()
 }
 
 fn bind(

@@ -1,4 +1,10 @@
-import { StateEffect, StateField, type Extension } from "@codemirror/state";
+import {
+  Prec,
+  StateEffect,
+  StateField,
+  type EditorState,
+  type Extension,
+} from "@codemirror/state";
 import {
   EditorView,
   hoverTooltip,
@@ -56,6 +62,11 @@ const quickDefinitionField: StateField<QuickDefinitionPopupState | null> =
       }),
   });
 
+/** Whether a quick-definition popup is showing, so its own keys apply. */
+export function quickDefinitionIsOpen(state: EditorState): boolean {
+  return Boolean(state.field(quickDefinitionField, false));
+}
+
 export function sqlMetadataInsightExtensions(
   metadata: DatabaseMetadata | undefined,
   onMetadataJump: ((target: SqlMetadataTarget) => void) | undefined,
@@ -102,58 +113,67 @@ export function sqlMetadataInsightExtensions(
       },
       { hideOnChange: true, hoverTime: 150 },
     ),
-    keymap.of([
-      {
-        key: "Ctrl-Shift-i",
-        run: (view) =>
-          openQuickDefinitionAtSelection(
-            view,
-            metadata,
-            onMetadataJump,
-            onMetadataToolWindow,
-          ),
-      },
-      {
-        key: "Mod-Shift-i",
-        run: (view) =>
-          openQuickDefinitionAtSelection(
-            view,
-            metadata,
-            onMetadataJump,
-            onMetadataToolWindow,
-          ),
-      },
-      {
-        key: "F12",
-        run: (view) =>
-          jumpToMetadataAtSelection(view, metadata, onMetadataJump),
-      },
-      {
-        key: "F4",
-        run: (view) =>
-          editQuickDefinitionSource(
-            view,
-            quickDefinitionField,
-            metadata,
-            onMetadataJump,
-          ),
-      },
-      {
-        key: "Ctrl-Enter",
-        run: (view) =>
-          openQuickDefinitionSource(view, quickDefinitionField, onMetadataJump),
-      },
-      {
-        key: "Alt-Shift-ArrowLeft",
-        run: (view) =>
-          navigateQuickDefinitionHistory(view, quickDefinitionField, -1),
-      },
-      {
-        key: "Alt-Shift-ArrowRight",
-        run: (view) =>
-          navigateQuickDefinitionHistory(view, quickDefinitionField, 1),
-      },
-    ]),
+    // Above basicSetup's keymap, whose Mod-Enter (insert a blank line) always
+    // claimed Ctrl+Enter first, so the popup's "Open Source (Ctrl+Enter)" never
+    // ran. These handlers return false when no popup is open.
+    Prec.high(
+      keymap.of([
+        {
+          key: "Ctrl-Shift-i",
+          run: (view) =>
+            openQuickDefinitionAtSelection(
+              view,
+              metadata,
+              onMetadataJump,
+              onMetadataToolWindow,
+            ),
+        },
+        {
+          key: "Mod-Shift-i",
+          run: (view) =>
+            openQuickDefinitionAtSelection(
+              view,
+              metadata,
+              onMetadataJump,
+              onMetadataToolWindow,
+            ),
+        },
+        {
+          key: "F12",
+          run: (view) =>
+            jumpToMetadataAtSelection(view, metadata, onMetadataJump),
+        },
+        {
+          key: "F4",
+          run: (view) =>
+            editQuickDefinitionSource(
+              view,
+              quickDefinitionField,
+              metadata,
+              onMetadataJump,
+            ),
+        },
+        {
+          key: "Ctrl-Enter",
+          run: (view) =>
+            openQuickDefinitionSource(
+              view,
+              quickDefinitionField,
+              onMetadataJump,
+            ),
+        },
+        {
+          key: "Alt-Shift-ArrowLeft",
+          run: (view) =>
+            navigateQuickDefinitionHistory(view, quickDefinitionField, -1),
+        },
+        {
+          key: "Alt-Shift-ArrowRight",
+          run: (view) =>
+            navigateQuickDefinitionHistory(view, quickDefinitionField, 1),
+        },
+      ]),
+    ),
     EditorView.domEventHandlers({
       mousedown(event, view) {
         // A press anywhere in the editor dismisses an open quick-definition

@@ -549,6 +549,10 @@ export function gitDeleteBranch(branch: string, force?: boolean, repoPath?: stri
   return invoke<GitCommandOutput>("git_delete_branch", { branch, force, repoPath });
 }
 
+export function gitInit(repoPath: string): Promise<GitCommandOutput> {
+  return invoke<GitCommandOutput>("git_init", { repoPath });
+}
+
 export function securityGetPrivacyMode(): Promise<PrivacyMode> {
   return invoke<PrivacyMode>("security_get_privacy_mode");
 }

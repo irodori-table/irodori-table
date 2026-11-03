@@ -262,25 +262,25 @@
   border-color: var(--cell-border);
 }
 
-.app-shell[data-theme="dark"] .grid-row:not(.header):nth-child(odd) {
-  background: var(--grid-row-alt);
-}
-
+/* Row tints go through --grid-row-bg so the edit-mode gutter can match them
+   (see results.css). Striping comes from the low-specificity rule there:
+   a themed copy here outranked the light state rules (e.g. focus-visible)
+   on odd rows. */
 .app-shell[data-theme="dark"] .grid-row.row-new {
-  background: color-mix(in srgb, var(--green) 17%, var(--editor-bg));
+  --grid-row-bg: color-mix(in srgb, var(--green) 17%, var(--editor-bg));
 }
 
 .app-shell[data-theme="dark"] .grid-row.row-edited {
-  background: var(--warning-bg);
+  --grid-row-bg: var(--warning-bg);
 }
 
 .app-shell[data-theme="dark"] .grid-row:not(.header):hover {
-  background: var(--hover);
+  --grid-row-bg: var(--hover);
 }
 
 .app-shell[data-theme="dark"] .grid-row.row-selected,
 .app-shell[data-theme="dark"] .grid-row.row-selected:hover {
-  background: var(--selected-strong);
+  --grid-row-bg: var(--selected-strong);
 }
 
 .app-shell[data-theme="dark"] .grid-row span.cell-selected {

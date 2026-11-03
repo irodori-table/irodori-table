@@ -3,6 +3,7 @@ import type { Completion } from "@codemirror/autocomplete";
 import {
   buildSqlCompletionIndex,
   completeSqlLightweight,
+  completionOpensNextLevel,
   defaultSqlSnippets,
   expandSqlSnippetVariables,
   mergeDefaultSqlSnippets,
@@ -279,6 +280,34 @@ function appliesForEngine(
 }
 
 describe("completeSqlLightweight", () => {
+  it("never commits a table when a dot is typed after a schema name", () => {
+    // Every table in "public" matches the prefix "public" through its
+    // qualified name. With "." as a commit character, typing "public." took
+    // whichever table was highlighted and turned the line into
+    // "from customers." instead of qualifying the schema.
+    const options = complete("select * from public|");
+
+    expect(options.some((option) => option.section)).toBe(true);
+    expect(
+      options.filter((option) => option.commitCharacters?.includes(".")),
+    ).toEqual([]);
+  });
+
+  it("offers the schema before its tables while its name is typed", () => {
+    expect(labels("select * from publ|")[0]).toBe("public");
+    expect(labels("select * from sal|")[0]).toBe("sales");
+  });
+
+  it("lists a schema's tables as soon as the schema is picked", () => {
+    const options = complete("select * from publ|");
+    const schema = options.find((option) => option.label === "public");
+    const table = options.find((option) => option.label === "customers");
+
+    expect(schema && completionOpensNextLevel(schema)).toBe(true);
+    expect(table && completionOpensNextLevel(table)).toBe(false);
+    expect(labels("select * from public.|")).toEqual(["customers", "orders"]);
+  });
+
   it("does not auto-open broad empty completions", () => {
     expect(labels("select ")).toEqual([]);
     expect(labels("select ", true)).toContain("customers");

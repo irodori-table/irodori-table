@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { createPortal } from "react-dom";
 import { useAnchoredMenu } from "@/components/popover";
+import { formatKeySequence, type Keymap } from "@/core";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator, type TranslationKey } from "@/i18n";
 import {
@@ -16,8 +17,8 @@ export type EditorContextMenuPosition = {
 export type EditorContextMenuProps = {
   position: EditorContextMenuPosition;
   runPrimaryLabel: string;
-  runShortcutLabel: string;
-  resultActionsAvailable: boolean;
+  /** The effective keymap (defaults + user overrides) the app dispatches on. */
+  keymap: Keymap;
   onCommand: (commandId: string) => void;
   onClose: () => void;
 };
@@ -25,8 +26,7 @@ export type EditorContextMenuProps = {
 export function EditorContextMenu({
   position,
   runPrimaryLabel,
-  runShortcutLabel,
-  resultActionsAvailable,
+  keymap,
   onCommand,
   onClose,
 }: EditorContextMenuProps) {
@@ -52,13 +52,17 @@ export function EditorContextMenu({
     return translated === key ? fallback : translated;
   };
 
+  // Read from the same keymap the keydown dispatcher resolves against, so a
+  // rebind in Settings shows up here instead of a hardcoded default.
+  const shortcutFor = (commandId: string) =>
+    formatKeySequence(keymap[commandId] ?? "") || null;
+
   const renderContextCommand = (command: EditorContextCommand) => {
     const label =
       command.commandId === "query.run"
         ? runPrimaryLabel
         : commandLabel(command.commandId, command.label);
-    const shortcut =
-      command.commandId === "query.run" ? runShortcutLabel : null;
+    const shortcut = shortcutFor(command.commandId);
     return (
       <button
         type="button"
@@ -84,6 +88,9 @@ export function EditorContextMenu({
       style={menu.style}
       onContextMenu={(event) => event.preventDefault()}
     >
+      {/* Editor-text actions only: result-grid actions such as the INSERT
+          copy/export belong to the results pane's Copy and Export menus and
+          the command palette, not to a right-click on SQL text. */}
       {editorContextCommandGroups.map((group, index) => (
         <Fragment key={index}>
           {index > 0 ? (
@@ -92,23 +99,6 @@ export function EditorContextMenu({
           {group.map(renderContextCommand)}
         </Fragment>
       ))}
-      <span className="menu-separator" aria-hidden="true" />
-      <button
-        type="button"
-        role="menuitem"
-        disabled={!resultActionsAvailable}
-        onClick={() => onCommand("result.copySqlInserts")}
-      >
-        <span>{t("commands.result.copySqlInserts.title")}</span>
-      </button>
-      <button
-        type="button"
-        role="menuitem"
-        disabled={!resultActionsAvailable}
-        onClick={() => onCommand("result.exportSqlInserts")}
-      >
-        <span>{t("commands.result.exportSqlInserts.title")}</span>
-      </button>
     </div>,
     document.body,
   );
