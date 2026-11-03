@@ -222,6 +222,10 @@ mod typegen {
             .decl(&decl::<git::GitCommandOutput>())
             .command(Command::new("workspace_snapshot", "WorkspaceSnapshot"))
             .command(Command::returning("open_developer_tools", TsType::void()))
+            .command(Command::returning(
+                "app_installed_from_nix_store",
+                TsType::boolean(),
+            ))
             .command(Command::new("crash_report_status", "CrashReportStatus"))
             .command(
                 Command::new("sql_format_snowflake", "string")

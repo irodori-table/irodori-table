@@ -873,6 +873,8 @@ export const en = {
   "notice.ai.providerSaved": "Provider updated",
   "notice.update.available": "Update available",
   "notice.update.availableDetail": "{current} -> {next}",
+  "notice.update.packageManagedDetail":
+    "{current} -> {next}. Installed with Nix, so update it with your package manager.",
   "notice.update.install": "Install",
   "notice.update.installing": "Installing update",
   "notice.update.installed": "Update installed",
