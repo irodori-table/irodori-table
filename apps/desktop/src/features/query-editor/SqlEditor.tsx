@@ -25,7 +25,11 @@ import {
   type Extension,
   type SelectionRange,
 } from "@codemirror/state";
-import { acceptCompletion, completionStatus } from "@codemirror/autocomplete";
+import {
+  acceptCompletion,
+  autocompletion,
+  completionStatus,
+} from "@codemirror/autocomplete";
 import {
   highlightSelectionMatches,
   search,
@@ -75,7 +79,10 @@ import {
   type EditorLanguage,
 } from "@/lib/editor-language";
 import type { DatabaseMetadata, DbEngine } from "@/generated/irodori-api";
-import type { SqlSnippetDefinition } from "@/sql/completion";
+import {
+  completionOpensNextLevel,
+  type SqlSnippetDefinition,
+} from "@/sql/completion";
 import { buildSqlExtensions } from "@/sql/dialect";
 import { formatSqlDocument, type SqlFormatterId } from "@/sql/formatter";
 import { sqlHighlightingExtensions } from "@/sql/highlighting";
@@ -240,6 +247,8 @@ function createSqlEditorState({
       compartments.clipboard.of(vimMode ? vimClipboardShortcuts() : []),
       compartments.vim.of(vimMode ? vim() : []),
       basicSetup,
+      // basicSetup already installs autocompletion; this only adds config.
+      autocompletion({ activateOnCompletion: completionOpensNextLevel }),
       indentOnInput(),
       indentationMarkers({
         highlightActiveBlock: true,
