@@ -891,6 +891,8 @@ export const ja = {
   "notice.ai.providerSaved": "プロバイダを更新しました",
   "notice.update.available": "更新があります",
   "notice.update.availableDetail": "{current} -> {next}",
+  "notice.update.packageManagedDetail":
+    "{current} -> {next}。Nix でインストールされているため、パッケージマネージャで更新してください。",
   "notice.update.install": "インストール",
   "notice.update.installing": "更新をインストール中",
   "notice.update.installed": "更新をインストールしました",

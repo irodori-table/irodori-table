@@ -385,6 +385,10 @@ export function openDeveloperTools(): Promise<void> {
   return invoke<void>("open_developer_tools");
 }
 
+export function appInstalledFromNixStore(): Promise<boolean> {
+  return invoke<boolean>("app_installed_from_nix_store");
+}
+
 export function crashReportStatus(): Promise<CrashReportStatus> {
   return invoke<CrashReportStatus>("crash_report_status");
 }

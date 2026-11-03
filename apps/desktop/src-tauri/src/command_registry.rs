@@ -77,6 +77,23 @@ fn open_developer_tools(window: tauri::WebviewWindow) -> Result<(), String> {
     }
 }
 
+/// Whether this binary runs out of the Nix store.
+///
+/// Such an install cannot update itself. The store is read-only, and the
+/// in-app updater picks its payload by the bundle the binary was built as: the
+/// Nix package repackages the release `.deb`, so the updater would fetch that
+/// and hand it to dpkg, which NixOS does not have. The frontend sends those
+/// users to their package manager instead of offering an install that can only
+/// fail.
+#[tauri::command]
+fn app_installed_from_nix_store() -> bool {
+    std::env::current_exe().is_ok_and(|exe| is_nix_store_path(&exe))
+}
+
+fn is_nix_store_path(path: &std::path::Path) -> bool {
+    path.starts_with("/nix/store")
+}
+
 #[tauri::command]
 fn sql_format_snowflake(
     sql: String,
@@ -96,6 +113,7 @@ pub(crate) fn invoke_handler() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
     Box::new(tauri::generate_handler![
         workspace_snapshot,
         open_developer_tools,
+        app_installed_from_nix_store,
         sql_format_snowflake,
         crash_report::crash_report_status,
         jobs::jobs_list,
@@ -160,4 +178,30 @@ pub(crate) fn invoke_handler() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         pty::pty_resize,
         pty::pty_kill
     ])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_nix_store_path;
+    use std::path::Path;
+
+    #[test]
+    fn nix_store_paths_are_recognised() {
+        assert!(is_nix_store_path(Path::new(
+            "/nix/store/abc-irodori-table-0.11.20/bin/.irodori-table-desktop-wrapped"
+        )));
+    }
+
+    #[test]
+    fn other_install_locations_are_not_nix() {
+        for path in [
+            "/usr/bin/irodori-table-desktop",
+            "/home/me/.local/opt/irodori-table/0.11.20/bin/irodori-table-desktop",
+            "/tmp/.mount_IrodoriXYZ/usr/bin/irodori-table-desktop",
+            // A component boundary, not a string prefix.
+            "/nix/storefront/bin/irodori-table-desktop",
+        ] {
+            assert!(!is_nix_store_path(Path::new(path)), "{path}");
+        }
+    }
 }
