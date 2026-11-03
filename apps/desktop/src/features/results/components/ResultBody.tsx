@@ -498,11 +498,15 @@ function StructureView({
               {object.columns.map((column) => (
                 <tr key={`${column.ordinal}:${column.name}`}>
                   <td>{column.name}</td>
-                  <td>{column.dataType}</td>
+                  <td className="structure-wrap-words">{column.dataType}</td>
                   <td>{column.nullable ? "YES" : "NO"}</td>
                   <td>{object.primaryKey.includes(column.name) ? "PK" : ""}</td>
-                  <td>{column.defaultValue || ""}</td>
-                  <td>{column.comment || ""}</td>
+                  <td className="structure-wrap-anywhere">
+                    {column.defaultValue || ""}
+                  </td>
+                  <td className="structure-wrap-anywhere">
+                    {column.comment || ""}
+                  </td>
                 </tr>
               ))}
             </tbody>
