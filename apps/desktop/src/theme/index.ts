@@ -871,6 +871,21 @@ export function cssVariables(theme: IrodoriTheme): Record<string, string> {
   };
 }
 
+// CodeMirror paints the active line on the line element, above the layer that
+// draws the selection, and marks the line holding the selection's head even
+// when the selection is not empty. Its own active-line colour is translucent
+// for that reason; theme colours are opaque, so the selection vanished on the
+// cursor's line and a drag up to the first line looked like it stopped short.
+// While anything is selected the editor carries this class and the active
+// line is left unpainted.
+const markNonEmptySelection = EditorView.editorAttributes.compute(
+  ["selection"],
+  (state): Record<string, string> =>
+    state.selection.ranges.some((range) => !range.empty)
+      ? { class: "cm-has-selection" }
+      : {},
+);
+
 /** CodeMirror chrome extension for the editor, from the theme model. */
 export function editorThemeExtensions(theme: IrodoriTheme): Extension {
   const { ui } = theme;
@@ -888,6 +903,7 @@ export function editorThemeExtensions(theme: IrodoriTheme): Extension {
       "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection":
         { backgroundColor: ui.selection },
       ".cm-activeLine": { backgroundColor: ui.activeLine },
+      "&.cm-has-selection .cm-activeLine": { backgroundColor: "transparent" },
       ".cm-gutters": {
         backgroundColor: ui.gutterBg,
         color: ui.gutterText,
@@ -926,7 +942,7 @@ export function editorThemeExtensions(theme: IrodoriTheme): Extension {
     { dark: theme.kind === "dark" },
   );
 
-  return [chrome];
+  return [chrome, markNonEmptySelection];
 }
 
 function applyVsCodeWorkbenchColors(
