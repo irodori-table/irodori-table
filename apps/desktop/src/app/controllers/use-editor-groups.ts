@@ -17,6 +17,7 @@ import {
   reviveEditorGroupState,
   selectEditorTabInGroup,
   selectionsForEditorGroup,
+  showTableTabInEditorGroup,
   type EditorGroupState,
 } from "@/app/editor-tabs";
 import type {
@@ -382,6 +383,26 @@ export function useEditorGroups({
     setActiveEditorGroup(group);
   }
 
+  /**
+   * Bring up a table's own tab (see showTableTabInEditorGroup) and return the
+   * SQL it holds afterwards: the tab's own text when it was already open,
+   * `tab.query` otherwise.
+   */
+  function showTableTab(
+    tab: { id: string; label: string; query: string },
+    group: EditorGroup = activeEditorGroup,
+  ): string {
+    const current = editorGroupStates[group];
+    const sql = current.openTabIds.includes(tab.id)
+      ? (current.queryByTabId[tab.id] ?? "")
+      : tab.query;
+    updateEditorGroupState(group, (state) =>
+      showTableTabInEditorGroup(state, tab),
+    );
+    setActiveEditorGroup(group);
+    return sql;
+  }
+
   async function renameSqlTab(group: EditorGroup, tabId: string) {
     const state = editorGroupStates[group];
     const tab = state.tabs.find((item) => item.id === tabId);
@@ -485,5 +506,6 @@ export function useEditorGroups({
     setEditorGroupSelection,
     setEditorTabMenu,
     setQuery,
+    showTableTab,
   };
 }
