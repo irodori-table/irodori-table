@@ -1239,18 +1239,23 @@
   color: var(--red);
 }
 
+/* Row states set --grid-row-bg rather than `background` so the sticky
+   edit-mode gutter can repaint the same tint over an opaque base (see
+   result-editing.css). */
 .grid-row {
+  --grid-row-bg: transparent;
   display: grid;
   height: 27px;
   box-sizing: border-box;
   min-width: 1px;
   border-bottom: 1px solid var(--cell-border);
   color: var(--text);
+  background: var(--grid-row-bg);
   font-size: var(--font-code);
 }
 
 .grid-row:not(.header):nth-child(odd) {
-  background: var(--grid-row-alt);
+  --grid-row-bg: var(--grid-row-alt);
 }
 
 /* Spacer standing in for rows the virtualized grid is not rendering, so the
@@ -1311,37 +1316,37 @@
 
 /* Staged-edit highlighting. */
 .grid-row.row-new {
-  background: color-mix(in srgb, var(--green) 13%, var(--editor-bg));
+  --grid-row-bg: color-mix(in srgb, var(--green) 13%, var(--editor-bg));
 }
 
 .grid-row.row-edited {
-  background: var(--warning-bg);
+  --grid-row-bg: var(--warning-bg);
 }
 
 .grid-row:not(.header):hover {
-  background: var(--hover);
+  --grid-row-bg: var(--hover);
 }
 
 .grid-row.row-new:not(.row-selected):hover {
-  background: color-mix(in srgb, var(--green) 19%, var(--hover));
+  --grid-row-bg: color-mix(in srgb, var(--green) 19%, var(--hover));
 }
 
 .grid-row.row-edited:not(.row-selected):hover {
-  background: color-mix(in srgb, var(--amber) 17%, var(--warning-bg));
+  --grid-row-bg: color-mix(in srgb, var(--amber) 17%, var(--warning-bg));
 }
 
 .grid-row:not(.header):focus-visible {
-  background: var(--hover);
+  --grid-row-bg: var(--hover);
 }
 
 .grid-row.row-selected,
 .grid-row.row-selected:hover {
-  background: var(--selected-strong);
+  --grid-row-bg: var(--selected-strong);
   box-shadow: inset 2px 0 0 var(--focus);
 }
 
 .grid-row.row-selected:focus-visible {
-  background: var(--selected-strong);
+  --grid-row-bg: var(--selected-strong);
 }
 
 .grid-row span.cell-edited {
@@ -1503,10 +1508,17 @@
   max-width: min(430px, calc(100% - 24px));
 }
 
+/* The columns table and the side cards share a wrapping row: side by side
+   while the table keeps at least --structure-table-min, otherwise the cards
+   drop below it. A fixed two-column grid squeezed the table into whatever the
+   cards left over, clipping it after the first two columns. */
 .structure-view {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 34%);
-  grid-template-rows: minmax(0, 1fr);
+  --structure-table-min: 640px;
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: flex-start;
   gap: 8px;
   min-height: 0;
   overflow: auto;
@@ -1520,6 +1532,12 @@
 }
 
 .structure-section {
+  /* The large grow factor hands all spare width to the table while the
+     cards sit beside it; alone on a line, each grows to the full width. */
+  flex: 999 1 var(--structure-table-min);
+  /* A long table scrolls inside its own box (keeping its sticky header)
+     rather than pushing the cards out of reach. */
+  max-height: 100%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 8px;
@@ -1556,9 +1574,11 @@
   background: var(--surface);
 }
 
+/* Fill the box so the wrapping columns use the room that is left; only once
+   the table's minimum width no longer fits does the box scroll sideways. The
+   box hugs the table's height, so that scrollbar sits right under the rows. */
 .structure-table {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
   border-collapse: collapse;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: var(--font-ui-md);
@@ -1566,14 +1586,29 @@
 
 .structure-table th,
 .structure-table td {
-  max-width: 260px;
   padding: 5px 8px;
   border-right: 1px solid var(--cell-border);
   border-bottom: 1px solid var(--cell-border);
-  overflow: hidden;
   text-align: left;
-  text-overflow: ellipsis;
+  vertical-align: top;
   white-space: nowrap;
+}
+
+/* Long values wrap instead of widening the table: table cells ignore
+   max-width, so an ellipsis cap never applied. Types break only between
+   words ("timestamp with / time zone") so they stay legible. */
+.structure-table td.structure-wrap-words {
+  white-space: normal;
+}
+
+/* Defaults and comments may be one long token (nextval('...'::regclass)), so
+   they may break anywhere, down to a floor that keeps a few words per line.
+   Border-box, because that is how Chromium already reads min-width here. */
+.structure-table td.structure-wrap-anywhere {
+  box-sizing: border-box;
+  min-width: 16ch;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .structure-table th {
@@ -1585,6 +1620,8 @@
 }
 
 .structure-side {
+  flex: 1 1 34%;
+  min-width: min(260px, 100%);
   display: grid;
   align-content: start;
   gap: 8px;
@@ -1608,6 +1645,8 @@
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: var(--font-ui-sm);
   line-height: 1.4;
+  /* Long index names would otherwise run out of the card. */
+  overflow-wrap: anywhere;
 }
 
 .structure-ddl {

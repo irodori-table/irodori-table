@@ -1,32 +1,43 @@
-/* Edit-mode per-row delete gutter. */
-.grid-gutter {
+/* Edit-mode per-row delete gutter. Cells scroll underneath it, so it paints
+   the row's tint over an opaque base: a missing or translucent tint let their
+   text show through. z-index 1 keeps it above the cells but under the sticky
+   header row (z-index 2), which body-row buttons used to slide over. The
+   `.grid-row` prefix outranks `.grid-row span` and the `.delete-row` reset,
+   which overrode the padding, border and background. */
+.grid-row .grid-gutter {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  overflow: hidden;
   position: sticky;
   left: 0;
-  z-index: 3;
-  background: inherit;
+  z-index: 1;
+  border: 0;
   border-right: 2px solid var(--cell-border);
+  background:
+    linear-gradient(var(--grid-row-bg), var(--grid-row-bg)), var(--editor-bg);
+  line-height: 1;
 }
 
 .grid-row.header .grid-gutter {
-  z-index: 4;
   background: var(--grid-header);
 }
 
+/* The gutter covers the row's left edge, so it carries the selection bar. */
+.grid-row.row-selected .grid-gutter {
+  box-shadow: inset 2px 0 0 var(--focus);
+}
+
 .delete-row {
-  border: none;
-  background: transparent;
   color: var(--muted);
   font-size: var(--font-ui-xl);
-  line-height: 1;
   cursor: pointer;
 }
 
-.delete-row:hover,
-.delete-row:focus-visible {
+.grid-row .delete-row:hover,
+.grid-row .delete-row:focus-visible {
   color: var(--red);
-  background: var(--danger-bg);
+  background:
+    linear-gradient(var(--danger-bg), var(--danger-bg)), var(--editor-bg);
 }
