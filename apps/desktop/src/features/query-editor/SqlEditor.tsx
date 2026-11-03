@@ -243,7 +243,9 @@ function createSqlEditorState({
       indentOnInput(),
       indentationMarkers({
         highlightActiveBlock: true,
-        hideFirstIndent: false,
+        // A guide in column 0 marks no indentation at all; it only drew a
+        // line down the left edge of every statement.
+        hideFirstIndent: true,
       }),
       search({ top: true }),
       highlightSelectionMatches(),
