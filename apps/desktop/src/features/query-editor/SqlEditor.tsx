@@ -49,6 +49,7 @@ import {
 } from "@codemirror/commands";
 import { vim } from "@replit/codemirror-vim";
 import { basicSetup } from "codemirror";
+import { deferAppKeybindings } from "./app-key-ownership";
 import { indentOnInput } from "@codemirror/language";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
 import { rainbowBrackets } from "./editor-rainbow-brackets";
@@ -88,6 +89,7 @@ import {
 import { editorThemeExtensions, type IrodoriTheme } from "@/theme";
 import {
   openQuickDefinitionAtSelection,
+  quickDefinitionIsOpen,
   sqlMetadataInsightExtensions,
 } from "./sql-editor-metadata";
 import { errorMessage } from "@/core";
@@ -239,6 +241,7 @@ function createSqlEditorState({
       editorSelectAllShortcut(),
       compartments.clipboard.of(vimMode ? vimClipboardShortcuts() : []),
       compartments.vim.of(vimMode ? vim() : []),
+      deferAppKeybindings((view) => quickDefinitionIsOpen(view.state)),
       basicSetup,
       indentOnInput(),
       indentationMarkers({
