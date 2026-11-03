@@ -1001,7 +1001,7 @@ body:has(.modal-overlay, .palette-overlay) .action-toast-stack {
   grid-template-columns: 9px minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
-  width: min(420px, calc(100vw - 28px));
+  width: min(560px, calc(100vw - 28px));
   min-height: 44px;
   padding: 8px 8px 8px 10px;
   border: 1px solid var(--border);
@@ -1054,6 +1054,21 @@ body:has(.modal-overlay, .palette-overlay) .action-toast-stack {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/*
+ * The detail carries the actual failure ("error returned from database:
+ * password authentication failed ..."). One ellipsized line cut it off right
+ * where it became useful, so let it wrap, and clamp it so a pathological
+ * message cannot cover the workbench.
+ */
+.action-toast small {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 8;
+  line-clamp: 8;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .action-toast strong {
