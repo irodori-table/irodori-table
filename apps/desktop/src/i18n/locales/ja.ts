@@ -278,6 +278,7 @@ export const ja = {
   "git.actions.push": "プッシュ",
   "git.actions.checkout": "チェックアウト",
   "git.actions.switch": "切り替え",
+  "git.actions.initialize": "初期化",
   "git.confirm.commitAll.title": "すべての変更をコミットしますか？",
   "git.confirm.commitAll.message": "表示中のすべての変更をコミットします。",
   "git.confirm.commitStaged.title": "ステージ済みの変更をコミットしますか？",
@@ -296,6 +297,14 @@ export const ja = {
   "git.confirm.deleteCurrent.message":
     "現在のブランチを削除する前に別のブランチへ切り替えてください。",
   "git.confirm.deleteBranch.title": "ブランチ {branch} を削除しますか？",
+  "git.confirm.init.title": "Git リポジトリを初期化しますか？",
+  "git.confirm.init.message": "{path} に新しい Git リポジトリを作成します。",
+  "git.setup.unconfigured":
+    "履歴と変更を表示する Git リポジトリを選択してください。",
+  "git.setup.missing": "このフォルダーは存在しません。",
+  "git.setup.notRepository": "このフォルダーは Git リポジトリではありません。",
+  "git.setup.openRepository": "リポジトリを開く…",
+  "git.setup.initRepository": "このフォルダーをリポジトリとして初期化",
   "git.branches": "ブランチ",
   "git.createBranchFrom": "{ref} からブランチ {branch} を作成",
   "git.localBranchExists": "ローカルブランチ {branch} は既に存在します",

@@ -13,19 +13,28 @@ impl Drop for TestRepo {
     }
 }
 
-fn test_repo(name: &str) -> TestRepo {
+fn test_dir_path(name: &str) -> PathBuf {
     let suffix = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("system clock should be after unix epoch")
         .as_nanos();
-    let path = std::env::temp_dir().join(format!(
+    std::env::temp_dir().join(format!(
         "irodori-git-{name}-{}-{suffix}",
         std::process::id()
-    ));
-    fs::create_dir_all(&path).expect("create test repo dir");
+    ))
+}
+
+fn test_dir(name: &str) -> TestRepo {
+    let path = test_dir_path(name);
+    fs::create_dir_all(&path).expect("create test dir");
+    TestRepo { path }
+}
+
+fn test_repo(name: &str) -> TestRepo {
+    let repo = test_dir(name);
     let output = Command::new("git")
         .arg("init")
-        .current_dir(&path)
+        .current_dir(&repo.path)
         .output()
         .expect("run git init");
     assert!(
@@ -33,7 +42,16 @@ fn test_repo(name: &str) -> TestRepo {
         "git init failed: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    TestRepo { path }
+    repo
+}
+
+// Resolves a path the user picked, with no dev fallbacks, as a release build does.
+fn resolve_chosen(path: &Path) -> IrodoriResult<PathBuf> {
+    resolve_repo_root_with_fallbacks(Some(path_to_string(path).as_str()), &[])
+}
+
+fn error_code(result: IrodoriResult<PathBuf>) -> Option<String> {
+    result.expect_err("expected an error").code
 }
 
 #[test]
@@ -130,4 +148,92 @@ fn discards_untracked_directories() {
         !repo.path.join("generated").exists(),
         "untracked directory should be removed"
     );
+}
+
+// A shipped binary has no fallbacks, so with no path chosen it must report
+// "unconfigured" rather than failing on some other machine's directory.
+#[test]
+fn reports_unconfigured_when_no_repository_is_chosen() {
+    assert_eq!(
+        error_code(resolve_repo_root_with_fallbacks(None, &[])).as_deref(),
+        Some(REPO_UNCONFIGURED_CODE)
+    );
+    assert_eq!(
+        error_code(resolve_repo_root_with_fallbacks(Some("  "), &[])).as_deref(),
+        Some(REPO_UNCONFIGURED_CODE)
+    );
+}
+
+// The released app showed "cannot change to '/home/runner/work/...'": a
+// fallback that does not exist on this machine must read as unconfigured.
+#[test]
+fn missing_fallback_reads_as_unconfigured() {
+    let gone = test_dir_path("gone-fallback");
+    assert_eq!(
+        error_code(resolve_repo_root_with_fallbacks(None, &[gone])).as_deref(),
+        Some(REPO_UNCONFIGURED_CODE)
+    );
+}
+
+#[test]
+fn compile_time_checkout_is_only_a_debug_fallback() {
+    let checkout = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    if cfg!(debug_assertions) {
+        assert!(dev_fallback_roots().contains(&checkout));
+    } else {
+        assert!(dev_fallback_roots().is_empty());
+    }
+}
+
+#[test]
+fn reports_missing_folder_for_a_chosen_path_that_does_not_exist() {
+    let gone = test_dir_path("gone-chosen");
+    assert_eq!(
+        error_code(resolve_chosen(&gone)).as_deref(),
+        Some(REPO_MISSING_CODE)
+    );
+}
+
+#[test]
+fn reports_not_a_repository_for_a_plain_folder() {
+    let dir = test_dir("plain-folder");
+    assert_eq!(
+        error_code(resolve_chosen(&dir.path)).as_deref(),
+        Some(REPO_NOT_REPOSITORY_CODE)
+    );
+}
+
+#[test]
+fn resolves_a_chosen_repository() {
+    let repo = test_repo("chosen");
+    let root = resolve_chosen(&repo.path).expect("chosen repository resolves");
+    assert_eq!(
+        root.canonicalize().unwrap(),
+        repo.path.canonicalize().unwrap()
+    );
+}
+
+#[test]
+fn initializes_a_repository_in_a_plain_folder() {
+    let dir = test_dir("init-plain");
+    git_init(path_to_string(&dir.path)).expect("git init succeeds");
+    resolve_chosen(&dir.path).expect("initialized folder resolves as a repository");
+}
+
+#[test]
+fn refuses_to_initialize_inside_an_existing_repository() {
+    let repo = test_repo("init-nested");
+    let nested = repo.path.join("nested");
+    fs::create_dir_all(&nested).expect("create nested dir");
+
+    git_init(path_to_string(&nested)).expect_err("nested init is refused");
+    assert!(!nested.join(".git").exists());
+}
+
+#[test]
+fn refuses_to_initialize_a_relative_or_missing_folder() {
+    git_init("relative/folder".into()).expect_err("relative path is refused");
+    let gone = test_dir_path("init-gone");
+    git_init(path_to_string(&gone)).expect_err("missing folder is refused");
+    assert!(!gone.exists(), "init must not create the folder");
 }

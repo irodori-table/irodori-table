@@ -426,6 +426,10 @@ mod typegen {
                     .arg(Arg::new("force", TsType::boolean()).optional())
                     .arg(Arg::rust("repo_path", TsType::string()).optional()),
             )
+            .command(
+                Command::new("git_init", "GitCommandOutput")
+                    .arg(Arg::rust("repo_path", TsType::string())),
+            )
             .command(Command::new("security_get_privacy_mode", "PrivacyMode"))
             .command(
                 Command::new("security_set_privacy_mode", "PrivacyMode")
