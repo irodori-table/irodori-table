@@ -15,6 +15,7 @@ import {
   type VimKeybindingConflictResolutions,
 } from "@/core";
 import type { ShowActionNotice } from "@/app/ActionToast";
+import { setAppKeyOwner } from "@/features/query-editor/app-key-ownership";
 import type { Translator } from "@/i18n";
 import {
   isCellEditorClipboardShortcut,
@@ -30,6 +31,35 @@ type KeybindingManagerDeps = {
   showActionNotice: ShowActionNotice;
   t: Translator["t"];
 };
+
+/**
+ * Whether the window listener below will take this keystroke when it comes
+ * from the SQL editor. Mirrors that listener's own resolution: editor scope,
+ * and no bare keys while typing. A pending chord sequence takes the next key
+ * whatever it is.
+ */
+export function appClaimsEditorKey(
+  event: KeyboardEvent,
+  keymap: Keymap,
+  pending: readonly string[],
+): boolean {
+  if (pending.length > 0) {
+    return true;
+  }
+  const chord = eventToChord(event);
+  if (!chord) {
+    return false;
+  }
+  const resolution = resolveKeybinding({
+    keymap,
+    scope: "editor",
+    chord,
+    pending,
+    commands: appCommandCatalog,
+    allowBare: false,
+  });
+  return resolution.kind === "command" || resolution.kind === "pending";
+}
 
 // Remappable keybindings: defaults merged with user overrides (localStorage),
 // chord-sequence resolution on a window-level listener, rebind recording for
@@ -176,6 +206,22 @@ export function useKeybindingManager({
     activeKeyScopeRef.current = scope;
     setActiveKeyScope(scope);
   }
+
+  // Tell the SQL editor which keys are the app's, so CodeMirror's own keymap
+  // does not act on them as well (see app-key-ownership).
+  useEffect(
+    () =>
+      setAppKeyOwner(
+        (event) =>
+          recordingRef.current !== null ||
+          appClaimsEditorKey(
+            event,
+            keymapRef.current,
+            pendingKeySequenceRef.current,
+          ),
+      ),
+    [],
+  );
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
