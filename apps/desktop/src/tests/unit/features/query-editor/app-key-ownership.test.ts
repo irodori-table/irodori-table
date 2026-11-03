@@ -85,7 +85,7 @@ describe("an app-owned key in the editor", () => {
   });
 
   it("still reaches CodeMirror when the app does not own it", () => {
-    const view = editor("select 1;", EditorSelection.cursor(0));
+    const view = editor("select 1;", EditorSelection.single(0));
 
     view.contentDOM.dispatchEvent(ctrl("Enter"));
 
