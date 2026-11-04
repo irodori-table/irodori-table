@@ -872,6 +872,110 @@ async fn postgres_client_certificate_authenticates_without_a_password() {
     eprintln!("connected by client certificate: {version}");
 }
 
+/// A transaction opened in one run is still open in the next.
+///
+/// Runs used to borrow any free pooled connection, so `begin`, `delete` and
+/// `rollback` run one at a time could land on different connections, and the
+/// delete could autocommit. Metadata reads in between (the object browser
+/// refreshes after a run) are what made it likely, so the test does one.
+#[test]
+fn postgres_transactions_span_runs() {
+    let Ok(url) = std::env::var("IRODORI_PG_URL") else {
+        eprintln!("skip: IRODORI_PG_URL not set");
+        return;
+    };
+    tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(postgres_session_runs(url));
+}
+
+async fn postgres_session_runs(url: String) {
+    use desktop_lib::db::{cancel_query_impl, run_query_managed_impl};
+    use serde_json::json;
+
+    let state = DbState::default();
+    connect_impl(
+        &state,
+        &SecurityState::default(),
+        None,
+        url_profile("pg-session", DbEngine::Postgres, url),
+    )
+    .await
+    .expect("connect");
+    let table = format!("irodori_it_session_{}", std::process::id());
+    let run = |sql: String| run_query_impl(&state, "pg-session".into(), sql, None);
+    run(format!("create table public.{table} (id int)"))
+        .await
+        .expect("create");
+    run(format!("insert into public.{table} values (1), (2), (3)"))
+        .await
+        .expect("seed");
+
+    run("begin".into()).await.expect("begin");
+    run(format!("delete from public.{table}"))
+        .await
+        .expect("delete");
+    // Metadata goes through the pool; it must neither block on the session
+    // nor see the uncommitted delete.
+    let objects = list_objects_impl(&state, "pg-session".into())
+        .await
+        .expect("metadata during the transaction");
+    assert!(!objects.schemas.is_empty());
+    let inside = run(format!("select count(*)::int from public.{table}"))
+        .await
+        .expect("count inside");
+    run("rollback".into()).await.expect("rollback");
+    let after = run(format!("select count(*)::int from public.{table}"))
+        .await
+        .expect("count after");
+
+    // A cancelled statement must not leave the session stuck behind it.
+    let cancel_state = &state;
+    let slow = run_query_managed_impl(
+        &state,
+        "pg-session".into(),
+        "select pg_sleep(30)".into(),
+        None,
+        None,
+        Some("slow".into()),
+    );
+    let cancel = async {
+        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+        cancel_query_impl(cancel_state, "slow".into()).await
+    };
+    let started = std::time::Instant::now();
+    let (slow, cancelled) = tokio::join!(slow, cancel);
+    let next = run("select 1".into()).await;
+    // The server-side statement is cancelled too, not left sleeping.
+    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+    let sleeping = run("select count(*)::int from pg_stat_activity \
+         where query = 'select pg_sleep(30)' and state = 'active'"
+        .into())
+    .await;
+    run(format!("drop table public.{table}"))
+        .await
+        .expect("drop");
+
+    assert_eq!(
+        inside.rows,
+        vec![vec![json!(0)]],
+        "the delete ran in the session"
+    );
+    assert_eq!(
+        after.rows,
+        vec![vec![json!(3)]],
+        "rollback undid the delete"
+    );
+    assert!(cancelled, "the slow run was registered");
+    assert!(slow.is_err(), "the slow run reports the cancel");
+    assert!(started.elapsed().as_secs() < 10, "cancel returned promptly");
+    assert!(
+        next.is_ok(),
+        "the next run gets a working session: {next:?}"
+    );
+    assert_eq!(sleeping.expect("activity").rows, vec![vec![json!(0)]]);
+}
+
 /// Grid edits against columns a bound `text` value cannot reach on its own.
 ///
 /// sqlx binds strings as `text`, and Postgres has no implicit conversion from

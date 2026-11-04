@@ -21,6 +21,34 @@ pub async fn connect(url: &str) -> DbResult<MySqlPool> {
         .map_err(|e| DbError::connection(format!("connect failed: {e}")))
 }
 
+/// The editor's session connection (see `session`): user statements run on
+/// one held connection, so a transaction opened with `begin` is still open for
+/// the next run.
+pub(crate) fn session(pool: MySqlPool) -> super::session::Session<sqlx::MySql> {
+    super::session::Session::new(pool, connection_id, kill_query)
+}
+
+fn connection_id(
+    conn: &mut sqlx::MySqlConnection,
+) -> futures_util::future::BoxFuture<'_, Option<i64>> {
+    Box::pin(async move {
+        sqlx::query_scalar::<_, u64>("select connection_id()")
+            .fetch_one(conn)
+            .await
+            .ok()
+            .and_then(|id| i64::try_from(id).ok())
+    })
+}
+
+/// Best effort, as for Postgres. The id is a number the server gave us, so it
+/// is safe to format into the statement, which takes no bind parameter.
+fn kill_query(pool: MySqlPool, id: i64) -> futures_util::future::BoxFuture<'static, ()> {
+    Box::pin(async move {
+        let kill = format!("KILL QUERY {id}");
+        let _ = sqlx::query(super::audited_sql(&kill)).execute(&pool).await;
+    })
+}
+
 pub async fn version(pool: &MySqlPool) -> Option<String> {
     sqlx::query_scalar::<_, String>("select version()")
         .fetch_one(pool)
@@ -28,9 +56,13 @@ pub async fn version(pool: &MySqlPool) -> Option<String> {
         .ok()
 }
 
-pub async fn run_query(pool: &MySqlPool, sql: &str, cap: usize) -> DbResult<RowSet> {
+pub async fn run_query(
+    conn: &mut sqlx::MySqlConnection,
+    sql: &str,
+    cap: usize,
+) -> DbResult<RowSet> {
     super::stream::collect_capped(
-        sqlx::query(super::audited_sql(sql)).fetch(pool),
+        sqlx::query(super::audited_sql(sql)).fetch(conn),
         cap,
         cell_to_json,
     )
@@ -38,20 +70,20 @@ pub async fn run_query(pool: &MySqlPool, sql: &str, cap: usize) -> DbResult<RowS
 }
 
 pub async fn run_prepared_query(
-    pool: &MySqlPool,
+    conn: &mut sqlx::MySqlConnection,
     query: &PreparedQuery,
     cap: usize,
 ) -> DbResult<RowSet> {
-    super::stream::collect_capped(bind_query(query).fetch(pool), cap, cell_to_json).await
+    super::stream::collect_capped(bind_query(query).fetch(conn), cap, cell_to_json).await
 }
 
 pub async fn stream_query(
-    pool: &MySqlPool,
+    conn: &mut sqlx::MySqlConnection,
     sql: &str,
     ctx: &super::stream::StreamCtx,
 ) -> DbResult<super::stream::StreamSummary> {
     super::stream::stream_capped(
-        sqlx::query(super::audited_sql(sql)).fetch(pool),
+        sqlx::query(super::audited_sql(sql)).fetch(conn),
         ctx,
         cell_to_json,
     )
@@ -59,11 +91,11 @@ pub async fn stream_query(
 }
 
 pub async fn stream_prepared_query(
-    pool: &MySqlPool,
+    conn: &mut sqlx::MySqlConnection,
     query: &PreparedQuery,
     ctx: &super::stream::StreamCtx,
 ) -> DbResult<super::stream::StreamSummary> {
-    super::stream::stream_capped(bind_query(query).fetch(pool), ctx, cell_to_json).await
+    super::stream::stream_capped(bind_query(query).fetch(conn), ctx, cell_to_json).await
 }
 
 pub async fn explain_query(
@@ -87,14 +119,18 @@ pub async fn explain_query(
         }
         Err(json_error) => {
             let table_sql = format!("EXPLAIN {statement}");
-            let (columns, rows, _) =
-                run_query(pool, &table_sql, 100)
+            let fallback = async {
+                let mut conn = pool
+                    .acquire()
                     .await
-                    .map_err(|table_error| {
-                        DbError::query(format!(
-                            "MySQL explain failed: {json_error}; fallback failed: {table_error}"
-                        ))
-                    })?;
+                    .map_err(|e| DbError::connection(format!("acquire failed: {e}")))?;
+                run_query(&mut conn, &table_sql, 100).await
+            };
+            let (columns, rows, _) = fallback.await.map_err(|table_error| {
+                DbError::query(format!(
+                    "MySQL explain failed: {json_error}; fallback failed: {table_error}"
+                ))
+            })?;
             Ok(explain::analysis_from_row_table(
                 wire,
                 &statement,
