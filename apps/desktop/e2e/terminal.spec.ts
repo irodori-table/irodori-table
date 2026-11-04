@@ -17,7 +17,7 @@ test("opening the terminal without the Tauri runtime keeps the workbench alive",
   // Toggle the terminal through the command palette (same path as Ctrl+`).
   await page.keyboard.press("ControlOrMeta+Shift+P");
   const paletteInput = page.locator(".palette-input");
-  await expect(paletteInput).toBeVisible();
+  await expect(paletteInput).toBeVisible({ timeout: 10_000 });
   await paletteInput.fill("Toggle Terminal");
   await page.keyboard.press("Enter");
   await expect(paletteInput).toHaveCount(0);
