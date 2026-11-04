@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   useResultGridEditing,
   type ResultGridEditingDeps,
@@ -8,12 +8,14 @@ import type {
   QueryResult,
   QueryResultSet,
 } from "@/generated/irodori-api";
+import type { ConfirmOptions } from "@/components/ConfirmDialog";
+import { queryService } from "@/features/workbench";
 import { createTranslator } from "@/i18n";
 
 /**
- * A double-click on a result cell starts editing it, switching the grid into
- * edit mode first; it used to do nothing until Edit data had been pressed.
- * Results that cannot be written back are left alone.
+ * Rows are written back only from a table's own tab, opened from the sidebar.
+ * There a double-click on a cell starts editing it. Results of SQL the user
+ * wrote stay read-only, and every save asks first with what will change.
  */
 
 const { t } = createTranslator("en");
@@ -40,6 +42,8 @@ const memories: DatabaseMetadata = {
   ],
 };
 
+const memoriesTable = memories.schemas[0].objects[0];
+
 const resultSet = {
   columns: ["id", "kind"],
   rows: [["a", "fact"]],
@@ -55,6 +59,7 @@ function editing(overrides: Partial<ResultGridEditingDeps>) {
     activeEngine: "postgres",
     lastRunSql: 'select * from "public"."memories" limit 200;',
     metadataByConnection: { local: memories },
+    tableViewObject: memoriesTable,
     editMode: false,
     editingCell: null,
     t,
@@ -79,6 +84,10 @@ function editing(overrides: Partial<ResultGridEditingDeps>) {
   };
 }
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("double-clicking a result cell", () => {
   it("enters edit mode and edits that cell", () => {
     const { actions, spy } = editing({});
@@ -90,15 +99,23 @@ describe("double-clicking a result cell", () => {
     expect(spy("setEditingCell")).toHaveBeenCalledWith({ key: "o0", col: 1 });
   });
 
-  it("leaves a result that cannot be written back alone", () => {
-    const { actions, spy } = editing({
-      lastRunSql: "select m.id, m.kind from memories m join users u on true",
-    });
+  it("leaves the result of hand-written SQL read-only", () => {
+    // The same single-table SELECT, but typed in a query tab: no table tab.
+    const { actions, spy } = editing({ tableViewObject: null });
 
     actions.beginCellEdit("o0", 1);
 
+    expect(actions.canEditActiveResult()).toBe(false);
     expect(spy("setEditMode")).not.toHaveBeenCalled();
     expect(spy("setEditingCell")).not.toHaveBeenCalled();
+  });
+
+  it("does not edit a table tab whose SQL now reads another table", () => {
+    const { actions } = editing({
+      lastRunSql: 'select * from "public"."users" limit 200;',
+    });
+
+    expect(actions.canEditActiveResult()).toBe(false);
   });
 
   it("does not edit on a read-only connection", () => {
@@ -108,5 +125,46 @@ describe("double-clicking a result cell", () => {
 
     expect(spy("setEditMode")).not.toHaveBeenCalled();
     expect(spy("setEditingCell")).not.toHaveBeenCalled();
+  });
+});
+
+describe("saving edits", () => {
+  it("asks before writing an update, and writes nothing when cancelled", async () => {
+    const apply = vi.spyOn(queryService, "applyEdits");
+    const confirm = vi.fn(async (_options: ConfirmOptions) => false);
+    const { actions } = editing({
+      editMode: true,
+      cellEdits: new Map([["o0:1", "opinion"]]),
+      newRows: [],
+      deletedRows: new Set(),
+      confirm,
+    });
+
+    await actions.commitEdits();
+
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(confirm.mock.calls[0][0]).toMatchObject({
+      title: "Apply 1 changes to public.memories?",
+      tone: "default",
+    });
+    expect(apply).not.toHaveBeenCalled();
+  });
+
+  it("warns that deletes cannot be restored", async () => {
+    const confirm = vi.fn(async (_options: ConfirmOptions) => false);
+    const { actions } = editing({
+      editMode: true,
+      cellEdits: new Map(),
+      newRows: [],
+      deletedRows: new Set([0]),
+      confirm,
+    });
+
+    await actions.commitEdits();
+
+    expect(confirm.mock.calls[0][0]).toMatchObject({ tone: "danger" });
+    expect(String(confirm.mock.calls[0][0].message)).toContain(
+      "cannot be restored",
+    );
   });
 });

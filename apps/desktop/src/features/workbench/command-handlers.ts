@@ -298,7 +298,7 @@ export function createWorkbenchCommandHandler({
           setCommitError(null);
         } else {
           setCommitError(
-            "result editing needs a single table query with a visible key",
+            "open the table from the sidebar to edit its rows; results of other queries are read-only",
           );
         }
         break;

@@ -27,6 +27,7 @@ import type {
   CellValue,
   DatabaseMetadata,
   DbEngine,
+  DbObjectMetadata,
   QueryResult,
   QueryResultSet,
   RowDelete,
@@ -70,6 +71,8 @@ export type ResultGridEditingDeps = {
   activeEngine: DbEngine;
   lastRunSql: string;
   metadataByConnection: Record<string, DatabaseMetadata>;
+  /** The table whose own tab produced the result; null for other SQL. */
+  tableViewObject: DbObjectMetadata | null;
   // Result-grid store edit state.
   editMode: boolean;
   editUndoDepth: number;
@@ -137,6 +140,7 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
     activeEngine,
     lastRunSql,
     metadataByConnection,
+    tableViewObject,
     editMode,
     editUndoDepth,
     cellEdits,
@@ -532,12 +536,24 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
     event.clipboardData.setData("text/plain", text);
   }
 
+  // Rows are written back only from a table's own tab, opened from the
+  // sidebar, where the table is known. Results of SQL the user wrote stay
+  // read-only. The target used to be inferred from any single-table SELECT, so
+  // a hand-written or filtered query could be edited by accident, and a
+  // double-click was all it took.
   function inferEditTarget(): ResultEditTarget | null {
-    return deriveResultEditTarget({
+    if (!tableViewObject) {
+      return null;
+    }
+    const target = deriveResultEditTarget({
       sql: lastRunSql,
       metadata: metadataByConnection[activeConnectionId],
       resultColumns,
     });
+    const sameTable =
+      target?.table === tableViewObject.name &&
+      (target.schema ?? tableViewObject.schema) === tableViewObject.schema;
+    return sameTable ? target : null;
   }
 
   function canEditActiveResult(): boolean {
@@ -635,21 +651,34 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
       deletes,
     };
 
-    // Deletes are irreversible once applied, so they get a final gate even
-    // though the staged diff is visible in the grid.
-    if (deletes.length > 0) {
-      const confirmed = await confirm({
-        title: t("results.confirmDeleteRows.title", {
-          count: toCount(deletes.length),
-          table: target.table,
-        }),
-        message: t("results.confirmDeleteRows.message"),
-        confirmLabel: t("results.confirmDeleteRows.confirm"),
-        tone: "danger",
-      });
-      if (!confirmed) {
-        return;
-      }
+    // Every save asks first, naming the table and what will change. It used
+    // to ask only for deletes, so updates went to the database on one click.
+    const changeCount = updates.length + inserts.length + deletes.length;
+    if (changeCount === 0) {
+      return;
+    }
+    const table = target.schema
+      ? `${target.schema}.${target.table}`
+      : target.table;
+    const summary = t("results.confirmApplyEdits.message", {
+      updates: toCount(updates.length),
+      inserts: toCount(inserts.length),
+      deletes: toCount(deletes.length),
+    });
+    const confirmed = await confirm({
+      title: t("results.confirmApplyEdits.title", {
+        count: toCount(changeCount),
+        table,
+      }),
+      message:
+        deletes.length > 0
+          ? `${summary} ${t("results.confirmApplyEdits.deleteWarning")}`
+          : summary,
+      confirmLabel: t("results.confirmApplyEdits.confirm"),
+      tone: deletes.length > 0 ? "danger" : "default",
+    });
+    if (!confirmed) {
+      return;
     }
 
     setCommitting(true);

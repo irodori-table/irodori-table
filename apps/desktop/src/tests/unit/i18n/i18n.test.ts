@@ -67,11 +67,11 @@ describe("i18n core", () => {
       "変更を破棄しますか？",
     );
     expect(
-      translator.t("results.confirmDeleteRows.title", {
+      translator.t("results.confirmApplyEdits.title", {
         count: 2,
-        table: "orders",
+        table: "public.orders",
       }),
-    ).toBe("orders から 2 行を削除しますか？");
+    ).toBe("public.orders に 2 件の変更を反映しますか？");
     expect(translator.t("rowDetail.mode.tree")).toBe("ツリー");
     expect(translator.t("settings.general.autoCommit.title")).toBe(
       "自動コミット",

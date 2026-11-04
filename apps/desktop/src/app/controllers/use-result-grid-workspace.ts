@@ -343,6 +343,7 @@ export function useResultGridWorkspace({
     activeEngine,
     lastRunSql,
     metadataByConnection,
+    tableViewObject,
     editMode,
     editUndoDepth,
     cellEdits,

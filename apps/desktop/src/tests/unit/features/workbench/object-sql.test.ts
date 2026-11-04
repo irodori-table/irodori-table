@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isTablePreviewSql,
   objectKindLabel,
   qualifiedObjectName,
   tablePreviewSql,
@@ -96,5 +97,35 @@ describe("workbench object SQL helpers", () => {
   it("formats object kind labels", () => {
     expect(objectKindLabel(object({ kind: "view" }))).toBe("view");
     expect(objectKindLabel(object({ kind: "procedure" }))).toBe("procedure");
+  });
+});
+
+describe("isTablePreviewSql", () => {
+  // A table tab's result stays editable only while it still runs its preview.
+  const customers = object({});
+  const preview = tablePreviewSql("postgres", customers);
+
+  it("accepts the preview, ignoring whitespace and trailing semicolons", () => {
+    expect(isTablePreviewSql("postgres", customers, preview)).toBe(true);
+    expect(
+      isTablePreviewSql(
+        "postgres",
+        customers,
+        `  ${preview.replace(/;$/, "").replace(/ /g, "\n  ")}  `,
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects edited SQL and other tables", () => {
+    expect(
+      isTablePreviewSql(
+        "postgres",
+        customers,
+        preview.replace("limit 200", "where id = 1 limit 200"),
+      ),
+    ).toBe(false);
+    expect(
+      isTablePreviewSql("postgres", object({ name: "orders" }), preview),
+    ).toBe(false);
   });
 });

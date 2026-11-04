@@ -38,6 +38,7 @@ export {
   objectKindLabel,
   qualifiedObjectName,
   quoteSqlIdentifier,
+  isTablePreviewSql,
   tablePreviewSql,
 } from "./object-sql";
 export {

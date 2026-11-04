@@ -45,6 +45,20 @@ const PREVIEW_ROWS = 200;
  *
  * Each branch below is measured against a live server, not inferred.
  */
+/**
+ * Whether `sql` is still the untouched preview of `object`, the SQL its table
+ * tab opens with. Whitespace and trailing semicolons do not count as edits.
+ */
+export function isTablePreviewSql(
+  engine: DbEngine,
+  object: DbObjectMetadata,
+  sql: string,
+): boolean {
+  const normalize = (text: string) =>
+    text.trim().replace(/;+$/, "").replace(/\s+/g, " ").trim();
+  return normalize(sql) === normalize(tablePreviewSql(engine, object));
+}
+
 export function tablePreviewSql(engine: DbEngine, object: DbObjectMetadata) {
   switch (engine) {
     // PartiQL: the table stands alone and the cap is not part of the statement.
