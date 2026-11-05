@@ -200,6 +200,64 @@ fn postgres_samples() {
         .block_on(exercise(DbEngine::Postgres, url));
 }
 
+/// The server's own message, without sqlx's " at line N": that is the line of
+/// PostgreSQL's C source that raised the error, not anything of the user's.
+/// The name keeps it under CI's `postgres_samples` filter.
+#[test]
+fn postgres_samples_errors_name_no_server_source_line() {
+    let Ok(url) = std::env::var("IRODORI_PG_URL") else {
+        eprintln!("skip: IRODORI_PG_URL not set");
+        return;
+    };
+    tokio::runtime::Runtime::new().unwrap().block_on(async {
+        let (scheme, rest) = url.split_once("://").expect("url scheme");
+        let (auth, server) = rest.rsplit_once('@').expect("url credentials");
+        let user = auth.split(':').next().expect("url user");
+        let refused = connect_impl(
+            &DbState::default(),
+            &SecurityState::default(),
+            None,
+            url_profile(
+                "it-refused",
+                DbEngine::Postgres,
+                format!("{scheme}://{user}:not-the-password@{server}"),
+            ),
+        )
+        .await
+        .err()
+        .expect("the server must refuse a wrong password")
+        .to_string();
+        assert!(
+            refused.contains("password authentication failed"),
+            "{refused}"
+        );
+        assert!(!refused.contains(" at line "), "{refused}");
+        assert!(!refused.contains("returned from database"), "{refused}");
+
+        let state = DbState::default();
+        connect_impl(
+            &state,
+            &SecurityState::default(),
+            None,
+            url_profile("it", DbEngine::Postgres, url.clone()),
+        )
+        .await
+        .expect("connect");
+        let missing = run_query_impl(
+            &state,
+            "it".into(),
+            "select * from no_such_table_anywhere".into(),
+            None,
+        )
+        .await
+        .err()
+        .expect("a missing table must fail")
+        .to_string();
+        assert!(missing.contains("does not exist"), "{missing}");
+        assert!(!missing.contains(" at line "), "{missing}");
+    });
+}
+
 #[test]
 fn mysql_samples() {
     let Ok(url) = std::env::var("IRODORI_MYSQL_URL") else {

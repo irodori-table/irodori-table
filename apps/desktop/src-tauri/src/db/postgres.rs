@@ -5,7 +5,7 @@ use sqlx::types::chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 use sqlx::types::{BigDecimal, Uuid};
 use sqlx::{Column, Row, TypeInfo, ValueRef};
 
-use super::error::{DbError, DbResult};
+use super::error::{describe_sqlx_error, DbError, DbResult};
 use super::meta::MetaBuilder;
 use super::{engine::Wire, explain};
 use super::{
@@ -18,7 +18,7 @@ pub async fn connect(url: &str) -> DbResult<PgPool> {
         .max_connections(5)
         .connect(url)
         .await
-        .map_err(|e| DbError::connection(format!("connect failed: {e}")))
+        .map_err(|e| DbError::connection(format!("connect failed: {}", describe_sqlx_error(&e))))
 }
 
 /// The editor's session connection (see `session`): user statements run on
@@ -112,7 +112,12 @@ pub async fn explain_query(
     let json = sqlx::query_scalar::<_, serde_json::Value>(super::audited_sql(&explain_sql))
         .fetch_one(pool)
         .await
-        .map_err(|e| DbError::query(format!("PostgreSQL explain failed: {e}")))?;
+        .map_err(|e| {
+            DbError::query(format!(
+                "PostgreSQL explain failed: {}",
+                describe_sqlx_error(&e)
+            ))
+        })?;
     let raw = serde_json::to_string_pretty(&json).unwrap_or_else(|_| json.to_string());
     Ok(explain::analysis_from_postgres_json(
         wire, &statement, mode, json, raw,
@@ -133,32 +138,32 @@ pub async fn apply_edits(
     let mut tx = pool
         .begin()
         .await
-        .map_err(|e| DbError::edit(format!("begin failed: {e}")))?;
+        .map_err(|e| DbError::edit(format!("begin failed: {}", describe_sqlx_error(&e))))?;
     let mut applied = super::edit::AppliedEdits::default();
     for stmt in &plan.deletes {
         applied.deleted += bind(stmt)
             .execute(&mut *tx)
             .await
-            .map_err(|e| DbError::edit(format!("delete failed: {e}")))?
+            .map_err(|e| DbError::edit(format!("delete failed: {}", describe_sqlx_error(&e))))?
             .rows_affected();
     }
     for stmt in &plan.updates {
         applied.updated += bind(stmt)
             .execute(&mut *tx)
             .await
-            .map_err(|e| DbError::edit(format!("update failed: {e}")))?
+            .map_err(|e| DbError::edit(format!("update failed: {}", describe_sqlx_error(&e))))?
             .rows_affected();
     }
     for stmt in &plan.inserts {
         applied.inserted += bind(stmt)
             .execute(&mut *tx)
             .await
-            .map_err(|e| DbError::edit(format!("insert failed: {e}")))?
+            .map_err(|e| DbError::edit(format!("insert failed: {}", describe_sqlx_error(&e))))?
             .rows_affected();
     }
     tx.commit()
         .await
-        .map_err(|e| DbError::edit(format!("commit failed: {e}")))?;
+        .map_err(|e| DbError::edit(format!("commit failed: {}", describe_sqlx_error(&e))))?;
     Ok(applied)
 }
 
@@ -255,7 +260,7 @@ pub async fn metadata(pool: &PgPool, engine: DbEngine) -> DbResult<DatabaseMetad
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| DbError::metadata(format!("metadata failed: {e}")))?;
+    .map_err(|e| DbError::metadata(format!("metadata failed: {}", describe_sqlx_error(&e))))?;
 
     let mut builder = MetaBuilder::default();
     for row in object_rows {
@@ -319,7 +324,12 @@ pub async fn metadata(pool: &PgPool, engine: DbEngine) -> DbResult<DatabaseMetad
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| DbError::metadata(format!("metadata columns failed: {e}")))?;
+    .map_err(|e| {
+        DbError::metadata(format!(
+            "metadata columns failed: {}",
+            describe_sqlx_error(&e)
+        ))
+    })?;
 
     for row in column_rows {
         let schema: String = row.try_get("table_schema").unwrap_or_default();
@@ -399,7 +409,12 @@ pub async fn metadata(pool: &PgPool, engine: DbEngine) -> DbResult<DatabaseMetad
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| DbError::metadata(format!("metadata indexes failed: {e}")))?;
+    .map_err(|e| {
+        DbError::metadata(format!(
+            "metadata indexes failed: {}",
+            describe_sqlx_error(&e)
+        ))
+    })?;
 
     for row in index_rows {
         let schema: String = row.try_get("schema_name").unwrap_or_default();
@@ -428,7 +443,12 @@ pub async fn metadata(pool: &PgPool, engine: DbEngine) -> DbResult<DatabaseMetad
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| DbError::metadata(format!("metadata primary keys failed: {e}")))?;
+    .map_err(|e| {
+        DbError::metadata(format!(
+            "metadata primary keys failed: {}",
+            describe_sqlx_error(&e)
+        ))
+    })?;
     for row in pk_rows {
         let schema: String = row.try_get("schema_name").unwrap_or_default();
         let table: String = row.try_get("table_name").unwrap_or_default();
@@ -458,7 +478,7 @@ pub async fn metadata(pool: &PgPool, engine: DbEngine) -> DbResult<DatabaseMetad
     )
     .fetch_all(pool)
     .await
-    .map_err(|e| DbError::metadata(format!("metadata foreign keys failed: {e}")))?;
+    .map_err(|e| DbError::metadata(format!("metadata foreign keys failed: {}", describe_sqlx_error(&e))))?;
     for row in fk_rows {
         let schema: String = row.try_get("schema_name").unwrap_or_default();
         let table: String = row.try_get("table_name").unwrap_or_default();
