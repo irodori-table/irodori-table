@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { ActionToastStack } from "@/app/ActionToast";
+import { HoverTooltips } from "@/components/HoverTooltips";
 import { ConnectionsRail } from "@/app/ConnectionsRail";
 import {
   APP_NAME,
@@ -140,6 +141,7 @@ export function WorkbenchRoot() {
       {promptElement}
 
       <ActionToastStack notices={notices.list} onDismiss={notices.dismiss} />
+      <HoverTooltips />
     </div>
   );
 }

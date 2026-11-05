@@ -905,27 +905,78 @@
 .row-detail-controls {
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 6px;
   padding: 6px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
 
+.row-detail-tabs-host {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
 .row-detail-tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 1 1 auto;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  min-width: 0;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 5px;
   background: var(--surface-raised);
 }
 
+/* Laid out like the real tabs but never seen: its width is what they need. */
+.row-detail-tabs-full-width {
+  position: absolute;
+  display: inline-flex;
+  flex: none;
+  width: max-content;
+  border-color: transparent;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.row-detail-tabs-full-width span {
+  padding: 0 8px;
+  border-right: 1px solid transparent;
+  font-size: var(--font-ui-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.row-detail-more {
+  display: inline-flex;
+  flex: 0 0 26px;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.row-detail-more:hover,
+.row-detail-more:focus-visible {
+  background: var(--hover);
+}
+
 .row-detail-tabs button {
   min-width: 0;
   height: 26px;
+  overflow: hidden;
   padding: 0 8px;
   border: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   border-right: 1px solid var(--border);
   background: transparent;
   color: var(--muted);
@@ -953,15 +1004,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  width: 28px;
   height: 28px;
-  padding: 0 8px;
+  padding: 0;
   border: 1px solid var(--border);
   border-radius: 5px;
   background: var(--surface-raised);
   color: var(--text);
-  font-size: var(--font-ui-sm);
-  font-weight: 600;
   cursor: pointer;
 }
 
@@ -1049,31 +1098,41 @@
   background: var(--surface-muted);
 }
 
+/* One line each, name over type, so a narrow panel shortens them rather than
+   stacking a name one letter per line. */
 .detail-key {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 6px;
   min-width: 0;
+}
+
+.detail-col,
+.detail-type {
+  grid-column: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detail-col {
   font-size: var(--font-ui-sm);
   font-weight: 600;
   color: var(--text);
-  word-break: break-word;
 }
 
 .detail-type {
   font-size: var(--font-ui-xs);
   color: var(--muted);
-  white-space: nowrap;
 }
 
 /* Same subtle icon button as .row-detail-close. Always shown: the panel has no
    hover-reveal controls, and the negative margins keep the 16px box inside the
    key line so cards are no taller than before. */
 .detail-copy {
-  flex: 0 0 auto;
+  grid-column: 2;
+  grid-row: 1 / span 2;
   align-self: center;
   display: inline-flex;
   align-items: center;

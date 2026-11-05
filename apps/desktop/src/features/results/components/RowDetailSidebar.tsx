@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Check, Copy, Search } from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { ArrowRight, Check, Copy, MoreHorizontal, Search } from "lucide-react";
 import { CloseButton } from "@/components/CloseButton";
+import {
+  popoverSurfaceStyle,
+  useAnchoredMenu,
+  type PopoverRect,
+} from "@/components/popover";
 import { errorMessage } from "@/core";
 
 import { writeTextToClipboard } from "@/features/erd";
@@ -70,6 +76,18 @@ export function RowDetailSidebar(props: RowDetailSidebarProps) {
   );
   const rowSelected = props.values !== null;
   const values = props.values ?? emptyRowValues;
+  // A tree of flat values adds nothing to the field list, so it is only offered
+  // when a value has structure to walk.
+  const hasStructuredValue = useMemo(
+    () => values.some((value) => formatDetailValue(value).json),
+    [values],
+  );
+  const modes = useMemo(
+    () =>
+      DETAIL_MODES.filter((item) => item.id !== "tree" || hasStructuredValue),
+    [hasStructuredValue],
+  );
+  const activeMode = mode === "tree" && !hasStructuredValue ? "fields" : mode;
   const rowJson = useMemo(
     () => (rowSelected ? formatRowAsJson(props.columns, values) : ""),
     [props.columns, rowSelected, values],
@@ -78,6 +96,24 @@ export function RowDetailSidebar(props: RowDetailSidebarProps) {
     () => (rowSelected ? rowToJsonObject(props.columns, values) : null),
     [props.columns, rowSelected, values],
   );
+
+  useEffect(() => {
+    if (copyStatus === "idle") {
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setCopyStatus("idle"),
+      FIELD_COPY_STATUS_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [copyStatus]);
+
+  const copyLabel =
+    copyStatus === "copied"
+      ? t("rowDetail.copied")
+      : copyStatus === "failed"
+        ? t("rowDetail.failed")
+        : t("rowDetail.copyJson");
 
   async function copyJson() {
     if (!rowSelected) {
@@ -112,39 +148,25 @@ export function RowDetailSidebar(props: RowDetailSidebarProps) {
         />
       </div>
       <div className="row-detail-controls">
-        <div
-          className="row-detail-tabs"
-          role="tablist"
-          aria-label={t("rowDetail.view")}
-        >
-          {DETAIL_MODES.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={mode === item.id}
-              className={mode === item.id ? "is-active" : undefined}
-              onClick={() => setMode(item.id)}
-            >
-              {t(detailModeLabelKeys[item.id])}
-            </button>
-          ))}
-        </div>
+        <RowDetailModeTabs
+          modes={modes.map((item) => item.id)}
+          active={activeMode}
+          onSelect={setMode}
+          t={t}
+        />
         <button
           type="button"
           className={`row-detail-copy${copyStatus !== "idle" ? " is-status" : ""}`}
           onClick={copyJson}
-          title={t("rowDetail.copyJson")}
+          title={copyLabel}
+          aria-label={copyLabel}
           disabled={!rowSelected}
         >
-          <Copy size={12} aria-hidden="true" />
-          <span>
-            {copyStatus === "copied"
-              ? t("rowDetail.copied")
-              : copyStatus === "failed"
-                ? t("rowDetail.failed")
-                : t("common.copy")}
-          </span>
+          {copyStatus === "copied" ? (
+            <Check size={14} aria-hidden="true" />
+          ) : (
+            <Copy size={14} aria-hidden="true" />
+          )}
         </button>
         <label className="row-detail-search">
           <Search size={12} aria-hidden="true" />
@@ -164,7 +186,7 @@ export function RowDetailSidebar(props: RowDetailSidebarProps) {
       <div className="row-detail-body">
         {!rowSelected ? (
           <div className="row-detail-empty">{t("rowDetail.noRowSelected")}</div>
-        ) : mode === "fields" ? (
+        ) : activeMode === "fields" ? (
           <RowDetailFields
             columns={props.columns}
             values={values}
@@ -176,13 +198,139 @@ export function RowDetailSidebar(props: RowDetailSidebarProps) {
             filter={query}
             t={t}
           />
-        ) : mode === "json" ? (
+        ) : activeMode === "json" ? (
           <RowJsonDocument text={rowJson} filter={query} t={t} />
         ) : (
           <JsonTreeView value={rowObject} filter={query} t={t} />
         )}
       </div>
     </aside>
+  );
+}
+
+/**
+ * The view switcher. When the labels do not fit the panel, only the active view
+ * keeps a tab and the others move into a menu, rather than the text overlapping.
+ */
+function RowDetailModeTabs({
+  modes,
+  active,
+  onSelect,
+  t,
+}: {
+  modes: DetailMode[];
+  active: DetailMode;
+  onSelect: (mode: DetailMode) => void;
+  t: Translator["t"];
+}) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const fullWidthRef = useRef<HTMLDivElement | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<PopoverRect | null>(null);
+  const closeMenu = () => setMenuAnchor(null);
+  const menu = useAnchoredMenu<HTMLDivElement>(
+    menuAnchor
+      ? { at: "element", rect: menuAnchor, side: "below", align: "end" }
+      : null,
+    closeMenu,
+  );
+  const labels = modes.map((mode) => t(detailModeLabelKeys[mode]));
+  const labelsKey = labels.join("|");
+
+  // Measured from a hidden copy of the full row, so it holds in every locale.
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    const fullWidth = fullWidthRef.current;
+    if (!host || !fullWidth) {
+      return;
+    }
+    const measure = () =>
+      setCollapsed(
+        host.clientWidth > 0 && fullWidth.offsetWidth > host.clientWidth,
+      );
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [labelsKey]);
+
+  const tabs = collapsed ? modes.filter((mode) => mode === active) : modes;
+  const others = modes.filter((mode) => mode !== active);
+  return (
+    <div className="row-detail-tabs-host" ref={hostRef}>
+      <div
+        className="row-detail-tabs row-detail-tabs-full-width"
+        ref={fullWidthRef}
+        aria-hidden="true"
+      >
+        {labels.map((label) => (
+          <span key={label}>{label}</span>
+        ))}
+      </div>
+      <div
+        className="row-detail-tabs"
+        role="tablist"
+        aria-label={t("rowDetail.view")}
+      >
+        {tabs.map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            role="tab"
+            aria-selected={mode === active}
+            className={mode === active ? "is-active" : undefined}
+            onClick={() => onSelect(mode)}
+          >
+            {t(detailModeLabelKeys[mode])}
+          </button>
+        ))}
+      </div>
+      {collapsed ? (
+        <button
+          type="button"
+          className="row-detail-more"
+          title={t("rowDetail.moreViews")}
+          aria-label={t("rowDetail.moreViews")}
+          aria-haspopup="menu"
+          aria-expanded={menuAnchor !== null}
+          onClick={(event) => {
+            setMenuAnchor(
+              menuAnchor ? null : event.currentTarget.getBoundingClientRect(),
+            );
+          }}
+        >
+          <MoreHorizontal size={14} aria-hidden="true" />
+        </button>
+      ) : null}
+      {menuAnchor
+        ? createPortal(
+            <div
+              ref={menu.ref}
+              className="object-action-menu"
+              role="menu"
+              style={{ ...popoverSurfaceStyle, ...menu.style }}
+            >
+              {others.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    onSelect(mode);
+                    closeMenu();
+                  }}
+                >
+                  {t(detailModeLabelKeys[mode])}
+                </button>
+              ))}
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
   );
 }
 
@@ -341,9 +489,13 @@ function RowDetailFields(props: RowDetailFieldsProps) {
         return (
           <div className="detail-row" key={`${column}-${index}`}>
             <dt className="detail-key">
-              <span className="detail-col">{column}</span>
+              <span className="detail-col" title={column}>
+                {column}
+              </span>
               {dataType ? (
-                <span className="detail-type">{dataType}</span>
+                <span className="detail-type" title={dataType}>
+                  {dataType}
+                </span>
               ) : null}
               <button
                 type="button"

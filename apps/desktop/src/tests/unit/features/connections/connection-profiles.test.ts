@@ -20,6 +20,7 @@ import {
   validateDraft,
   withUniqueProfileIds,
   type ConnectionDraft,
+  shortServerVersion,
 } from "@/features/connections/connection-profiles";
 import {
   extensionRequiredEngines,
@@ -663,5 +664,29 @@ describe("connector options", () => {
     expect(keys).toContain("sslKey");
     expect(keys).not.toContain("sslPassword");
     expect(keys).not.toContain("sslKeyPassphrase");
+  });
+});
+
+describe("shortServerVersion", () => {
+  it.each([
+    [
+      "PostgreSQL",
+      "PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by Debian clang",
+      "PostgreSQL 18.6",
+    ],
+    ["PostgreSQL", "PostgreSQL 16.2 (Debian 16.2-1) on x86_64", "PostgreSQL 16.2"],
+    ["MySQL", "8.0.35-0ubuntu0.22.04.1", "MySQL 8.0.35"],
+    ["MariaDB", "10.11.6-MariaDB-0+deb12u1", "MariaDB 10.11.6"],
+    [
+      "SQL Server",
+      "Microsoft SQL Server 2022 (RTM-CU27) - 16.0.4305.5",
+      "Microsoft SQL Server 2022",
+    ],
+    ["Supabase", "PostgreSQL 15.1 on aarch64", "Supabase PostgreSQL 15.1"],
+    ["SQLite", "3.45.1", "SQLite 3.45.1"],
+    ["PostgreSQL", "unknown", "PostgreSQL"],
+    ["PostgreSQL", "", "PostgreSQL"],
+  ])("%s: %s", (label, banner, expected) => {
+    expect(shortServerVersion(label, banner)).toBe(expected);
   });
 });
