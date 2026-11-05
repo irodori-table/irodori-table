@@ -707,6 +707,21 @@ fn sample_cell(value: serde_json::Value) -> String {
     }
 }
 
+/// pgvector's binary form to its text form (`[0.5,1]`). Binary is big-endian: the
+/// dimension count as `u16`, an unused `u16`, then that many `f32`s.
+fn vector_text(bytes: &[u8]) -> Option<String> {
+    let dimensions = u16::from_be_bytes(bytes.get(..2)?.try_into().ok()?) as usize;
+    let floats = bytes.get(4..)?;
+    if floats.len() != dimensions * 4 {
+        return None;
+    }
+    let values: Vec<String> = floats
+        .chunks_exact(4)
+        .map(|c| f32::from_be_bytes([c[0], c[1], c[2], c[3]]).to_string())
+        .collect();
+    Some(format!("[{}]", values.join(",")))
+}
+
 /// Decode a PostgreSQL cell by column type. Exact numerics/temporals become
 /// strings to preserve precision and timezone (DBeaver's `setBigDecimal` rule).
 fn cell_to_json(row: &PgRow, i: usize) -> serde_json::Value {
@@ -773,6 +788,12 @@ fn cell_to_json(row: &PgRow, i: usize) -> serde_json::Value {
             .try_get::<String, _>(i)
             .map(Value::String)
             .unwrap_or(Value::Null),
+        // pgvector has no sqlx type, so the raw value is decoded here.
+        "vector" => row
+            .try_get_raw(i)
+            .ok()
+            .and_then(|v| v.as_bytes().ok().and_then(vector_text))
+            .map_or_else(|| Value::String(format!("<{ty}>")), Value::String),
         // Arrays and less-common types: best-effort text, else a tagged placeholder.
         _ => row
             .try_get::<String, _>(i)
@@ -780,5 +801,34 @@ fn cell_to_json(row: &PgRow, i: usize) -> serde_json::Value {
             .or_else(|_| row.try_get::<i64, _>(i).map(Value::from))
             .or_else(|_| row.try_get::<f64, _>(i).map(Value::from))
             .unwrap_or_else(|_| Value::String(format!("<{ty}>"))),
+    }
+}
+
+#[cfg(test)]
+mod vector_text_tests {
+    use super::vector_text;
+
+    fn encoded(values: &[f32]) -> Vec<u8> {
+        let mut bytes = (values.len() as u16).to_be_bytes().to_vec();
+        bytes.extend([0, 0]);
+        bytes.extend(values.iter().flat_map(|v| v.to_be_bytes()));
+        bytes
+    }
+
+    #[test]
+    fn reads_the_binary_form_as_text() {
+        assert_eq!(
+            vector_text(&encoded(&[0.5, 1.0, -2.25])).as_deref(),
+            Some("[0.5,1,-2.25]")
+        );
+        assert_eq!(vector_text(&encoded(&[0.1])).as_deref(), Some("[0.1]"));
+    }
+
+    #[test]
+    fn rejects_a_length_that_does_not_match_the_header() {
+        let mut bytes = encoded(&[1.0, 2.0]);
+        bytes.pop();
+        assert_eq!(vector_text(&bytes), None);
+        assert_eq!(vector_text(&[0]), None);
     }
 }

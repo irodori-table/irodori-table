@@ -976,6 +976,51 @@ async fn postgres_session_runs(url: String) {
     assert_eq!(sleeping.expect("activity").rows, vec![vec![json!(0)]]);
 }
 
+#[test]
+fn postgres_vector_cells_read_as_text() {
+    let Ok(url) = std::env::var("IRODORI_PG_URL") else {
+        eprintln!("skip: IRODORI_PG_URL not set");
+        return;
+    };
+    tokio::runtime::Runtime::new()
+        .unwrap()
+        .block_on(postgres_vector_cells(url));
+}
+
+async fn postgres_vector_cells(url: String) {
+    let state = DbState::default();
+    connect_impl(
+        &state,
+        &SecurityState::default(),
+        None,
+        url_profile("vector", DbEngine::Postgres, url),
+    )
+    .await
+    .expect("connect");
+    // The extension is optional: the plain sample image does not ship it.
+    let installed = run_query_impl(
+        &state,
+        "vector".into(),
+        "create extension if not exists vector".into(),
+        None,
+    )
+    .await;
+    if installed.is_err() {
+        eprintln!("skip: pgvector is not available on this server");
+        return;
+    }
+    let rows = run_query_impl(
+        &state,
+        "vector".into(),
+        "select '[0.5,1,-2.25]'::vector as v, null::vector as missing".into(),
+        None,
+    )
+    .await
+    .expect("select a vector");
+    assert_eq!(rows.rows[0][0], serde_json::json!("[0.5,1,-2.25]"));
+    assert_eq!(rows.rows[0][1], serde_json::Value::Null);
+}
+
 /// Grid edits against columns a bound `text` value cannot reach on its own.
 ///
 /// sqlx binds strings as `text`, and Postgres has no implicit conversion from
