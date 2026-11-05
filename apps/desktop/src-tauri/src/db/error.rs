@@ -83,6 +83,22 @@ impl DbError {
     }
 }
 
+/// The text to show for a driver error.
+///
+/// sqlx writes a Postgres error as `<message> at line <n>`, where `n` is the
+/// line of PostgreSQL's own C source that raised it. That means nothing to
+/// someone using the app, and in a SQL editor it reads as a line of their query.
+/// Other databases keep sqlx's text: it carries their error codes, and a MySQL
+/// "at line 1" really is a line of the query.
+pub(crate) fn describe_sqlx_error(error: &sqlx::Error) -> String {
+    if let sqlx::Error::Database(database) = error {
+        if let Some(postgres) = database.try_downcast_ref::<sqlx::postgres::PgDatabaseError>() {
+            return postgres.message().to_string();
+        }
+    }
+    error.to_string()
+}
+
 impl std::fmt::Display for DbError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.message)
@@ -109,5 +125,64 @@ impl From<IrodoriError> for DbError {
             code: value.code,
             retryable: value.retryable,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::describe_sqlx_error;
+    use sqlx::error::{DatabaseError, ErrorKind};
+    use std::error::Error;
+
+    #[derive(Debug)]
+    struct MysqlLikeError;
+
+    impl std::fmt::Display for MysqlLikeError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str("1064 (42000): syntax error at line 1")
+        }
+    }
+
+    impl Error for MysqlLikeError {}
+
+    impl DatabaseError for MysqlLikeError {
+        fn message(&self) -> &str {
+            "syntax error at line 1"
+        }
+
+        fn as_error(&self) -> &(dyn Error + Send + Sync + 'static) {
+            self
+        }
+
+        fn as_error_mut(&mut self) -> &mut (dyn Error + Send + Sync + 'static) {
+            self
+        }
+
+        fn into_error(self: Box<Self>) -> Box<dyn Error + Send + Sync + 'static> {
+            self
+        }
+
+        fn kind(&self) -> ErrorKind {
+            ErrorKind::Other
+        }
+    }
+
+    #[test]
+    fn other_databases_keep_their_error_codes_and_query_lines() {
+        // The Postgres branch is exercised against a real server in
+        // tests/integration_db.rs: sqlx does not let a test build its error type.
+        let error = sqlx::Error::Database(Box::new(MysqlLikeError));
+        assert_eq!(
+            describe_sqlx_error(&error),
+            "error returned from database: 1064 (42000): syntax error at line 1"
+        );
+    }
+
+    #[test]
+    fn errors_from_outside_the_database_keep_their_text() {
+        assert_eq!(
+            describe_sqlx_error(&sqlx::Error::PoolTimedOut),
+            sqlx::Error::PoolTimedOut.to_string()
+        );
     }
 }
