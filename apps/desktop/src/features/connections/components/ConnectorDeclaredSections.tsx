@@ -1,5 +1,6 @@
 import type { Translator } from "@/i18n";
 import {
+  authMethodUsesProfileField,
   connectorAuthMethodPatch,
   connectorControlOptionKeys,
 } from "../connector-connection-values";
@@ -123,6 +124,20 @@ export function ConnectorDeclaredSections({
             <div className="connection-form-grid connector-auth-fields">
               {form.authFields.map(fieldInput)}
             </div>
+          ) : null}
+          {authMethodUsesProfileField(form.selectedAuthMethod, "password") ? (
+            <label className="connector-declared-checkbox connection-remember-password">
+              <input
+                type="checkbox"
+                checked={draft.rememberPassword !== false}
+                onChange={(event) =>
+                  onUpdateDraft({
+                    rememberPassword: event.currentTarget.checked,
+                  })
+                }
+              />
+              <span>{t("connection.rememberPassword")}</span>
+            </label>
           ) : null}
         </fieldset>
       ) : null}

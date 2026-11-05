@@ -61,6 +61,10 @@ Examples of the relabelling, all from the shipped config:
 | Oracle | Host | Service name / SID |
 | Snowflake | Account / host | Database / schema |
 
+For Oracle, enter the service name, or `sid:ORCL` for a database known by its
+SID. See the [connector's README](https://github.com/irodori-table/irodori-extension-oracle#connecting)
+for the connection-string spellings it accepts and how transactions work.
+
 A **Transport** row at the bottom of the form states how the connection is made.
 Built-ins use their configured label; extensions use the first declared
 transport (or their wire identifier when no transport is declared). It is a

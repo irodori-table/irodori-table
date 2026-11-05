@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   connectorChoiceLabel,
+  connectorDatabaseLabel,
   resolveConnectorFormModel,
 } from "@/features/connections/connector-form-model";
 import {
@@ -152,6 +153,32 @@ describe("resolveConnectorFormModel", () => {
     expect(form.authFields.map((field) => field.id)).toEqual(["apiKey"]);
     expect(form.tlsMode).toBe("prefer");
     expect(form.tlsFields.map((field) => field.id)).toEqual(["caCertificate"]);
+  });
+
+  it("words the database field for the engine unless the connector says more", () => {
+    const declared = (label: string) => ({
+      id: "database",
+      label,
+      type: "string",
+      required: false,
+      profileField: "database" as const,
+    });
+
+    expect(connectorDatabaseLabel(undefined, "サービス名 / SID")).toBe(
+      "サービス名 / SID",
+    );
+    expect(
+      connectorDatabaseLabel(declared("Database"), "サービス名 / SID"),
+    ).toBe("サービス名 / SID");
+    expect(
+      connectorDatabaseLabel(
+        declared("Service name / SID"),
+        "サービス名 / SID",
+      ),
+    ).toBe("サービス名 / SID");
+    expect(
+      connectorDatabaseLabel(declared("Bigtable instance"), "テーブル"),
+    ).toBe("Bigtable instance");
   });
 
   it("filters endpoint modes and auth methods by the draft's input mode", () => {

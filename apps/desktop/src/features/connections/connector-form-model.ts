@@ -177,6 +177,25 @@ export function resolveConnectorFormModel(
   };
 }
 
+/**
+ * Connector labels the app has its own wording for. Connector manifests are
+ * English only, and most say "Database" whatever the engine calls it.
+ */
+const labelsWithEngineWording = new Set(["Database", "Service name / SID"]);
+
+/**
+ * The database field's label: the connector's when it says something specific
+ * ("Bigtable instance"), otherwise the engine's translated one ("サービス名 / SID").
+ */
+export function connectorDatabaseLabel(
+  field: ConnectorConnectionField | undefined,
+  engineLabel: string,
+) {
+  return field && !labelsWithEngineWording.has(field.label)
+    ? field.label
+    : engineLabel;
+}
+
 /** "connectionString" → "Connection string", "verify-full" → "Verify full". */
 export function connectorChoiceLabel(value: string) {
   return value

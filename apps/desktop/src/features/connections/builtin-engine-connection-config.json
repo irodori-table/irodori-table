@@ -60,7 +60,7 @@
       "settings": {
         "urlPlaceholder": "oracle://user:password@host:1521/service",
         "databaseLabelKey": "connection.field.serviceNameSid",
-        "databasePlaceholder": "ORCLPDB1"
+        "databasePlaceholder": "FREEPDB1 or sid:ORCL"
       }
     },
     {
