@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
-## [Unreleased]
+## [0.12.0] - 2026-11-06
 
 ### Changed
 
@@ -30,6 +30,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in its manifest, which the app renders, and answer from a module that runs in a
   separate process. No extension code runs in the app's webview, and a crash in
   the module is an error in the dialog rather than a closed app.
+
+### Fixed
+
+- **Postgres errors no longer name a line of PostgreSQL's source.** A refused login
+  read `... for user "x" at line 350`, and in the SQL editor that looked like a line
+  of your query.
+- **The object tree stays readable when narrow.** A column's name now keeps the row
+  and its type gives way, tables and schemas show whether they are open, one button
+  expands or collapses every table, and the panel has a visible scrollbar.
+- **Row detail no longer stacks names one letter per line.** A field shows its name
+  over its type on one line each. View tabs that don't fit move into a menu, Tree is
+  only offered for values with structure, and Copy is an icon.
+- **Controls explain themselves on hover on Linux,** where the webview does not
+  reliably show native tooltips.
+- **The connection bar reads `PostgreSQL 18.6`** instead of repeating the engine and
+  the server's whole build banner.
+- **Connection form placeholders no longer look like entered values,** and a
+  remembered password says so instead of "Session only".
+- **Editor tabs show more of their title.**
 
 ## [0.11.0] - 2026-09-22
 
