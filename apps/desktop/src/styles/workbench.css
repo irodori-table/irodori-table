@@ -1273,6 +1273,13 @@
   }
 }
 
+/* Six actions at 18px just fit the sidebar's 120px floor. */
+@container (max-width: 128px) {
+  .section-heading-actions button {
+    width: 18px;
+  }
+}
+
 .schema-create-menu-wrap {
   position: relative;
   display: inline-flex;
