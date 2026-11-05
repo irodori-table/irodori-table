@@ -17,6 +17,7 @@ import {
   type ChartSort,
 } from "../chart-result";
 import { normalizeHexColor } from "@/lib/color";
+import { truncate } from "@/lib/text";
 
 const svgWidth = 920;
 const svgHeight = 380;
@@ -677,12 +678,6 @@ function formatCompact(value: number) {
     return `${round(value / 1_000)}k`;
   }
   return String(round(value));
-}
-
-function truncate(value: string, maxLength: number) {
-  return value.length > maxLength
-    ? `${value.slice(0, maxLength - 3)}...`
-    : value;
 }
 
 function round(value: number) {

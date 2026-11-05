@@ -1,8 +1,10 @@
 import type { ConnectionDraft } from "@/lib/workspace-connection";
 import {
+  blockedIdentifiers,
   connectorControlOptionKeys,
   connectorFieldOptionKey,
   isConnectorSecretField,
+  safeIdentifier,
   type ConnectorAuthMethod,
   type ConnectorConnectionField,
   type ConnectorConnectionModel,
@@ -11,11 +13,9 @@ import {
 
 export { connectorControlOptionKeys };
 
-const customOptionKey = /^[A-Za-z][A-Za-z0-9._-]{0,127}$/;
+const customOptionKey = safeIdentifier;
 const blockedCustomOptionKeys = new Set([
-  "constructor",
-  "prototype",
-  "__proto__",
+  ...blockedIdentifiers,
   ...Object.values(connectorControlOptionKeys).map((key) => key.toLowerCase()),
 ]);
 const maxCustomOptionsLength = 32_768;

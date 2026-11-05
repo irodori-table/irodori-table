@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { clampInt, isRecord, parseStoredNumber } from "@/core";
+import { browserStorage } from "@/lib/browser-storage";
 
 export const queryHistoryMaxItemsDefault = 200;
 export const queryHistoryMaxItemsHardLimit = 500;
@@ -73,16 +74,6 @@ type QueryHistoryState = {
   clearItems: (ids: Iterable<string>) => void;
 };
 
-function storage(): Storage | null {
-  try {
-    return typeof window !== "undefined" && window.localStorage
-      ? window.localStorage
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 export function clampQueryHistoryMaxItems(value: number) {
   return clampInt(value, 0, queryHistoryMaxItemsHardLimit);
 }
@@ -118,7 +109,7 @@ function rowArray(value: unknown): unknown[][] {
 // until the user happened to change the setting. preferences-store.ts already
 // guards nullish separately; match it.
 function storedNumber(key: string) {
-  return parseStoredNumber(storage()?.getItem(key));
+  return parseStoredNumber(browserStorage()?.getItem(key));
 }
 
 function loadQueryHistoryMaxItems() {
@@ -304,7 +295,7 @@ function loadQueryHistory(
   rowLimit: number,
 ): QueryHistoryItem[] {
   try {
-    const raw = storage()?.getItem(queryHistoryStorageKey);
+    const raw = browserStorage()?.getItem(queryHistoryStorageKey);
     if (!raw) {
       return [];
     }
@@ -404,7 +395,7 @@ let lastPersistedMaxItems = useQueryHistoryStore.getState().maxItems;
 let lastPersistedResultRowLimit =
   useQueryHistoryStore.getState().resultRowLimit;
 useQueryHistoryStore.subscribe((state) => {
-  const localStorage = storage();
+  const localStorage = browserStorage();
   if (!localStorage) {
     return;
   }

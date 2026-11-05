@@ -61,14 +61,12 @@ type RowDetailSidebarProps = {
   engine: DbEngine;
   connectionId: string;
   onClose: () => void;
-  t?: Translator["t"];
 };
 
 /** A right-side drawer showing one result row's columns, JSON values, and FK links. */
 export function RowDetailSidebar(props: RowDetailSidebarProps) {
   const locale = usePreferencesStore((state) => state.locale);
-  const { t: fallbackT } = createTranslator(locale);
-  const t = props.t ?? fallbackT;
+  const { t } = createTranslator(locale);
   const [mode, setMode] = useState<DetailMode>("fields");
   const [query, setQuery] = useState("");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(

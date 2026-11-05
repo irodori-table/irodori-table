@@ -1,6 +1,7 @@
 import { StateEffect, StateField, type EditorState } from "@codemirror/state";
 import { Decoration, EditorView, type DecorationSet } from "@codemirror/view";
 import { isRecord } from "@/core";
+import { browserStorage } from "@/lib/browser-storage";
 
 /**
  * Line marking for `.log` buffers (issue #177, tier 3).
@@ -99,23 +100,13 @@ export function pruneLogMarks(marks: LogMarks, lineCount: number): LogMarks {
 const storagePrefix = "irodori.logMarks.";
 const storageVersion = ".v1";
 
-function storage(): Storage | null {
-  try {
-    return typeof window !== "undefined" && window.localStorage
-      ? window.localStorage
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 /** Storage key for a buffer, identified by its file-style tab label. */
 export function logMarksStorageKey(fileKey: string): string {
   return `${storagePrefix}${fileKey}${storageVersion}`;
 }
 
 export function loadLogMarks(fileKey: string): LogMarks {
-  const store = storage();
+  const store = browserStorage();
   if (!store || !fileKey) {
     return emptyLogMarks;
   }
@@ -142,7 +133,7 @@ export function loadLogMarks(fileKey: string): LogMarks {
 }
 
 export function saveLogMarks(fileKey: string, marks: LogMarks): void {
-  const store = storage();
+  const store = browserStorage();
   if (!store || !fileKey) {
     return;
   }

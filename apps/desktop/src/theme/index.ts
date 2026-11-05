@@ -302,10 +302,6 @@ export function defaultThemeById(
   return id ? (defaultThemeEntryMap.get(id) ?? null) : null;
 }
 
-export function isDefaultThemeId(value: unknown): value is string {
-  return typeof value === "string" && defaultThemeEntryMap.has(value);
-}
-
 export function defaultThemeEntryForKind(
   kind: ThemeKind,
   preferredId?: string | null,

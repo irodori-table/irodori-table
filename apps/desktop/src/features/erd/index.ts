@@ -5,7 +5,6 @@ export {
   layoutErdModel,
   toMermaidErd,
   type ErdLayout,
-  type ErdModel,
 } from "./erd";
 export {
   downloadBlob,
@@ -15,4 +14,4 @@ export {
   writePngBlobToClipboard,
   writeTextToClipboard,
 } from "./erd-export";
-export { ErdSvg, erdSvgStyle } from "./erd-svg";
+export { erdSvgStyle } from "./erd-svg";
