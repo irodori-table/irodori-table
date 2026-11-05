@@ -1057,8 +1057,8 @@ body:has(.modal-overlay, .palette-overlay) .action-toast-stack {
 }
 
 /*
- * The detail carries the actual failure ("error returned from database:
- * password authentication failed ..."). One ellipsized line cut it off right
+ * The detail carries the actual failure ("connect failed: password
+ * authentication failed ..."). One ellipsized line cut it off right
  * where it became useful, so let it wrap, and clamp it so a pathological
  * message cannot cover the workbench.
  */
