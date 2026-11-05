@@ -219,7 +219,7 @@ describe("row detail view switcher (real layout)", () => {
   });
 
   it("folds the other views into a menu instead of overflowing", async () => {
-    const element = renderSwitcher(120, [{ a: 1 }]);
+    const element = renderSwitcher(150, [{ a: 1 }]);
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
     expect(tabs(element)).toEqual(["Fields"]);
