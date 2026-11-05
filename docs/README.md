@@ -64,7 +64,7 @@ for a first look.
 | [Schema designer](schema-designer.md) | Form-driven CREATE/ALTER SQL generation |
 | [Schema diagram designer](schema-diagram.md) | Free-form canvas modelling, JSON round-trip |
 | [Import](import.md) | CSV/TSV/JSON/JSONL to generated INSERT SQL |
-| [Migration Studio](migration-studio.md) | Cross-engine migration planning and diff SQL |
+| [Migration Studio](migration-studio.md) | Cross-engine migration planning and diff SQL (extension) |
 | [AI chat and SQL generation](ai-chat.md) | Providers, agent mode, what the model can and cannot see |
 | [Knowledge panel](knowledge.md) | The bundled fact pack and what it is for |
 | [Git](git.md) | Commit graph, changes, branches — **and the repo-path gap** |

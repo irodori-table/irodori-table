@@ -15,6 +15,7 @@ function extension(
     enabled: true,
     installedAt: "0",
     supportedCalls: [],
+    tools: [],
     ...patch,
   };
 }

@@ -15,6 +15,10 @@ import { ConnectionManagerDialog } from "@/features/connections";
 import { ErdDialog, hasDiagram } from "@/features/erd";
 import { commandsAvailableForHostFeatures } from "@/features/extensions/host-feature-commands";
 import { useExtensionRuntimeStore } from "@/features/extensions/runtime-store";
+import {
+  toolCommands,
+  useInstalledTools,
+} from "@/features/extensions/tools/extension-tools";
 import { ImportDialog } from "@/features/import";
 import { usePreferencesStore } from "@/features/preferences";
 import { QueryParameterDialog } from "@/features/query-editor";
@@ -34,9 +38,9 @@ import { AiGenerateDialog } from "@/features/ai/AiGenerateDialog";
 import { TerminalPanel } from "@/features/terminal/TerminalPanel";
 import { useWorkbenchStore } from "@/features/workbench";
 
-const MigrationStudioDialog = lazy(() =>
-  import("@/features/migration").then((module) => ({
-    default: module.MigrationStudioDialog,
+const ExtensionToolDialog = lazy(() =>
+  import("@/features/extensions/tools/ExtensionToolDialog").then((module) => ({
+    default: module.ExtensionToolDialog,
   })),
 );
 const QueryHistoryDialog = lazy(() =>
@@ -148,6 +152,7 @@ export function WorkbenchDialogs() {
   const enabledHostFeatures = useExtensionRuntimeStore(
     (state) => state.enabledHostFeatures,
   );
+  const tools = useInstalledTools();
   const queryHistoryDialogOpen = useQueryHistoryStore((state) => state.open);
   const schemaDesignerOpen = useSchemaDesignerStore((state) => state.open);
   const setSchemaDesignerOpen = useSchemaDesignerStore(
@@ -160,12 +165,17 @@ export function WorkbenchDialogs() {
     [t],
   );
   const availableAppCommandCatalog = useMemo(
-    () =>
-      commandsAvailableForHostFeatures(
+    () => [
+      ...commandsAvailableForHostFeatures(
         localizedAppCommandCatalog,
         enabledHostFeatures,
       ),
-    [enabledHostFeatures, localizedAppCommandCatalog],
+      ...toolCommands(tools, locale),
+    ],
+    [enabledHostFeatures, locale, localizedAppCommandCatalog, tools],
+  );
+  const activeTool = tools.find(
+    (tool) => tool.commandId === overlays.activeToolCommandId,
   );
   const paletteResults = availableAppCommandCatalog.filter((command) =>
     `${command.title} ${command.category}`
@@ -179,16 +189,18 @@ export function WorkbenchDialogs() {
         <ConnectionManagerDialog {...connectionController} />
       ) : null}
 
-      {overlays.migrationStudioOpen ? (
+      {activeTool ? (
         <Suspense
           fallback={<DialogLoadingFallback label={t("common.loading")} />}
         >
-          <MigrationStudioDialog
-            onClose={overlays.closeMigrationStudio}
+          <ExtensionToolDialog
+            key={activeTool.commandId}
+            tool={activeTool}
+            onClose={overlays.closeTool}
             onCopyText={(text, label) =>
-              void workspace.copyMigrationText(text, label)
+              void workspace.copyToolText(text, label)
             }
-            onPutTextInEditor={workspace.putMigrationTextInEditor}
+            onPutTextInEditor={workspace.putToolTextInEditor}
           />
         </Suspense>
       ) : null}

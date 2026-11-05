@@ -196,11 +196,6 @@ mod typegen {
             .decl(&decl::<db::RowDelete>())
             .decl(&decl::<db::TableEdits>())
             .decl(&decl::<db::AppliedEdits>())
-            .decl(&decl::<db::MigrationPlanExportFormat>())
-            .decl(&decl::<db::MigrationPlanInput>())
-            .decl(&decl::<db::MigrationPlanTaskLevel>())
-            .decl(&decl::<db::MigrationPlanTask>())
-            .decl(&decl::<db::MigrationPlanOutput>())
             .decl(&decl::<db::DbCompletionItem>())
             .decl(&decl::<db::DbCompletionItemKind>())
             .decl(&decl::<db::DbInspectionCard>())
@@ -303,10 +298,6 @@ mod typegen {
                     .arg(Arg::new("edits", TsType::named("TableEdits"))),
             )
             .command(
-                Command::new("migration_build_plan", "MigrationPlanOutput")
-                    .arg(Arg::new("input", TsType::named("MigrationPlanInput"))),
-            )
-            .command(
                 Command::new("db_list_objects", "DatabaseMetadata")
                     .arg(Arg::rust("connection_id", TsType::string())),
             )
@@ -360,6 +351,13 @@ mod typegen {
                 Command::new("ext_set_enabled", "InstalledExtension")
                     .arg(Arg::new("id", TsType::string()))
                     .arg(Arg::new("enabled", TsType::boolean())),
+            )
+            .command(
+                Command::returning("ext_tool_run", TsType::unknown())
+                    .arg(Arg::rust("extension_id", TsType::string()))
+                    .arg(Arg::rust("tool_id", TsType::string()))
+                    .arg(Arg::new("input", TsType::unknown()))
+                    .arg(Arg::new("locale", TsType::string())),
             )
             .command(
                 Command::new("git_status", "GitStatusSummary")

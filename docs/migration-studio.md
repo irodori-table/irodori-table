@@ -7,13 +7,17 @@ and a runbook to carry it out.
 and executes nothing. Every input is typed by hand and every output is text. The
 planner is a pure transform: strings in, strings out.
 
-## Opening it
+## Installing and opening it
 
-- **Tools ▸ Open Migration Studio**
-- Command palette ▸ **Open Migration Studio**
+Migration Studio is an extension, not part of the app. Install **Migration Studio**
+from **Tools ▸ Extensions**. Its source is
+[`irodori-extension-migration`](https://github.com/irodori-table/irodori-extension-migration).
 
-No default keyboard shortcut. The dialog is lazily loaded, so **Loading…** may
-flash the first time.
+Once installed, open it from:
+
+- **Tools ▸ Migration Studio**
+- Command palette ▸ **Migration Studio**
+- `Mod+Shift+M`, unless that key is already in use
 
 ## Inputs
 

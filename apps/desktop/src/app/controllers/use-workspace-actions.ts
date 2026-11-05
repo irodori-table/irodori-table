@@ -62,7 +62,7 @@ export type WorkspaceActionsDeps = {
   openSqlInNewTab: (sql: string) => void;
   showTableTab: (tab: { id: string; label: string; query: string }) => string;
   queryRunning: boolean;
-  setMigrationStudioOpen: (value: boolean) => void;
+  closeTool: () => void;
   setSchemaDesignerOpen: (value: boolean) => void;
   setObjectActionMenu: (value: ValueUpdater<string | null>) => void;
   setTableViewObject: (value: DbObjectMetadata | null) => void;
@@ -92,7 +92,7 @@ export function useWorkspaceActions({
   openSqlInNewTab,
   showTableTab,
   queryRunning,
-  setMigrationStudioOpen,
+  closeTool,
   setSchemaDesignerOpen,
   setObjectActionMenu,
   setTableViewObject,
@@ -242,13 +242,13 @@ export function useWorkspaceActions({
     );
   }
 
-  function putMigrationTextInEditor(text: string) {
+  function putToolTextInEditor(text: string) {
     setQuery(text);
-    setMigrationStudioOpen(false);
-    showActionNotice("success", t("notice.workbench.migrationOutputLoaded"));
+    closeTool();
+    showActionNotice("success", t("notice.workbench.toolOutputLoaded"));
   }
 
-  async function copyMigrationText(text: string, label: string) {
+  async function copyToolText(text: string, label: string) {
     try {
       await writeTextToClipboard(text);
       showActionNotice("success", t("notice.workbench.labelCopied", { label }));
@@ -445,8 +445,8 @@ export function useWorkspaceActions({
     handleImportFile,
     handleLogProfileImport,
     putImportSqlInEditor,
-    putMigrationTextInEditor,
-    copyMigrationText,
+    putToolTextInEditor,
+    copyToolText,
     openTableData,
     openSnapshotObject,
     showObjectInDiagram,

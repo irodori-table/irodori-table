@@ -257,16 +257,6 @@ export type TableEdits = { schema?: string, table: string, updates: Array<RowUpd
 
 export type AppliedEdits = { updated: bigint, inserted: bigint, deleted: bigint, };
 
-export type MigrationPlanExportFormat = "parquet" | "csv" | "tsv";
-
-export type MigrationPlanInput = { sourceEngine: DbEngine, targetEngine: DbEngine, sourceVersion: string, targetVersion: string, sourceTable: string, targetTable: string, keyColumnsText: string, compareColumnsText: string, partitionColumn: string, partitionPredicate: string, exportFormat: MigrationPlanExportFormat, batchSize: number, diffLimit: number, nullToken: string, delimiter: string, normalizeWhitespace: boolean, normalizeCase: boolean, };
-
-export type MigrationPlanTaskLevel = "ready" | "manual" | "risk";
-
-export type MigrationPlanTask = { title: string, detail: string, level: MigrationPlanTaskLevel, };
-
-export type MigrationPlanOutput = { title: string, sourceLabel: string, targetLabel: string, hashAlgorithm: string, hashAlgorithmLabel: string, keys: Array<string>, compareColumns: Array<string>, hashColumns: Array<string>, warnings: Array<string>, tasks: Array<MigrationPlanTask>, pairNotes: Array<string>, sourceSql: string, targetSql: string, diffSql: string, runbook: string, };
-
 export type DbCompletionItem = { label: string, insertText: string, kind: DbCompletionItemKind, detail: string, };
 
 export type DbCompletionItemKind = "schema" | "table" | "view" | "column" | "function" | "procedure" | "keyword";
@@ -307,7 +297,12 @@ supportedCalls: Array<string>,
  * it does not know about failed to deserialize; the frontend and the
  * consistency checks read what they understand and ignore the rest.
  */
-connectionModel?: unknown, };
+connectionModel?: unknown,
+/**
+ * The tools a native module contributes, verbatim from its manifest. Held
+ * as `Value` for the same reason as `connection_model`.
+ */
+tools: Array<unknown>, };
 
 export type ExtensionInstallKind = "githubRelease" | "git";
 
@@ -449,10 +444,6 @@ export function dbApplyEdits(connectionId: string, edits: TableEdits): Promise<A
   return invoke<AppliedEdits>("db_apply_edits", { connectionId, edits });
 }
 
-export function migrationBuildPlan(input: MigrationPlanInput): Promise<MigrationPlanOutput> {
-  return invoke<MigrationPlanOutput>("migration_build_plan", { input });
-}
-
 export function dbListObjects(connectionId: string): Promise<DatabaseMetadata> {
   return invoke<DatabaseMetadata>("db_list_objects", { connectionId });
 }
@@ -495,6 +486,10 @@ export function extUninstall(id: string): Promise<boolean> {
 
 export function extSetEnabled(id: string, enabled: boolean): Promise<InstalledExtension> {
   return invoke<InstalledExtension>("ext_set_enabled", { id, enabled });
+}
+
+export function extToolRun(extensionId: string, toolId: string, input: unknown, locale: string): Promise<unknown> {
+  return invoke<unknown>("ext_tool_run", { extensionId, toolId, input, locale });
 }
 
 export function gitStatus(repoPath?: string): Promise<GitStatusSummary> {

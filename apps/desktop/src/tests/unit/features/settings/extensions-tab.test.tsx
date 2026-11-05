@@ -89,6 +89,7 @@ function installedExtension(id: string, version: string) {
     installedAt: "1786091256",
     abiVersion: 1,
     supportedCalls: ["connect"],
+    tools: [],
   };
 }
 

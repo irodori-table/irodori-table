@@ -79,12 +79,6 @@ export const commandCatalog: CommandMeta[] = [
     scope: "global",
   },
   {
-    id: "migration.studio",
-    title: "Open Migration Studio",
-    category: "General",
-    scope: "global",
-  },
-  {
     id: "tab.new",
     title: "New SQL tab",
     category: "Workspace",
@@ -272,7 +266,6 @@ export const defaultKeymap: Keymap = {
   "editor.searchInAllTabs": "Mod+Shift+F",
   "view.search.toggle": "Mod+Shift+H",
   "view.aiChat.toggle": "Mod+Shift+I",
-  "migration.studio": "Mod+Shift+M",
   "query.run": "Mod+Enter",
   "query.runCurrent": "Mod+Shift+Enter",
   "query.runFromStart": "Mod+Alt+Shift+Enter",

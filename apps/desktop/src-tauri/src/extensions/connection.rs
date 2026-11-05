@@ -697,6 +697,7 @@ mod tests {
             abi_version: Some(1),
             supported_calls: vec!["connect".to_string()],
             connection_model: Some(connection_model),
+            tools: vec![],
         }
     }
 

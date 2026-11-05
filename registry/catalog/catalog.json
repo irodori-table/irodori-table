@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-05T21:09:39Z",
+  "updatedAt": "2026-11-05T21:38:03Z",
   "source": "prebuilt-extension-catalog",
   "extensions": [
     {
@@ -635,6 +635,22 @@
       "runtime": "declarative",
       "verified": true,
       "publishedAt": "2026-07-21T20:51:44Z"
+    },
+    {
+      "id": "irodori.migration",
+      "name": "Migration Studio",
+      "publisher": "irodori",
+      "version": "0.1.0",
+      "apiVersion": "0.1",
+      "summary": "Plans a table migration between database engines.",
+      "license": "MIT OR 0BSD",
+      "repository": "https://github.com/irodori-table/irodori-extension-migration",
+      "categories": ["feature", "productivity"],
+      "topics": ["migration", "data-diff", "tool-extension"],
+      "engines": [],
+      "runtime": "native",
+      "verified": true,
+      "publishedAt": "2026-11-05T21:38:03Z"
     }
   ]
 }

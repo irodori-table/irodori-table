@@ -93,6 +93,7 @@ function installed(
     installedAt: "0",
     supportedCalls: ["connect"],
     connectionModel: model,
+    tools: [],
     ...patch,
   };
 }

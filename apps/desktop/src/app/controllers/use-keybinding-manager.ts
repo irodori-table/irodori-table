@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { appCommandCatalog, resultCopyDefaultKeymap } from "@/app/app-config";
 import {
   KEY_SEQUENCE_TIMEOUT_MS,
+  canonicalKeySequence,
   applyVimKeybindingResolutions as applyVimKeybindingResolutionOverrides,
   effectiveKeymap,
   eventToChord,
@@ -12,8 +13,14 @@ import {
   saveOverrides,
   type KeybindingScope,
   type Keymap,
+  type CommandMeta,
   type VimKeybindingConflictResolutions,
 } from "@/core";
+import {
+  toolCommands,
+  useInstalledTools,
+  withToolShortcuts,
+} from "@/features/extensions/tools/extension-tools";
 import type { ShowActionNotice } from "@/app/ActionToast";
 import { setAppKeyOwner } from "@/features/query-editor/app-key-ownership";
 import type { Translator } from "@/i18n";
@@ -42,6 +49,7 @@ export function appClaimsEditorKey(
   event: KeyboardEvent,
   keymap: Keymap,
   pending: readonly string[],
+  commands: readonly CommandMeta[] = appCommandCatalog,
 ): boolean {
   if (pending.length > 0) {
     return true;
@@ -55,7 +63,7 @@ export function appClaimsEditorKey(
     scope: "editor",
     chord,
     pending,
-    commands: appCommandCatalog,
+    commands,
     allowBare: false,
   });
   return resolution.kind === "command" || resolution.kind === "pending";
@@ -71,10 +79,22 @@ export function useKeybindingManager({
   t,
 }: KeybindingManagerDeps) {
   const [keymapOverrides, setKeymapOverrides] = useState<Keymap>(loadOverrides);
-  const keymap = {
-    ...resultCopyDefaultKeymap,
-    ...effectiveKeymap(keymapOverrides),
-  };
+  const tools = useInstalledTools();
+  const keymap = withToolShortcuts(
+    {
+      ...resultCopyDefaultKeymap,
+      ...effectiveKeymap(keymapOverrides),
+    },
+    tools,
+    canonicalKeySequence,
+  );
+  // Tool titles are not shown from here, only their ids and scope are used.
+  const commands = useMemo(
+    () => [...appCommandCatalog, ...toolCommands(tools, "en")],
+    [tools],
+  );
+  const commandsRef = useRef(commands);
+  commandsRef.current = commands;
   const [activeKeyScope, setActiveKeyScope] =
     useState<KeybindingScope>("global");
   const [recordingCommand, setRecordingCommand] = useState<string | null>(null);
@@ -218,6 +238,7 @@ export function useKeybindingManager({
             event,
             keymapRef.current,
             pendingKeySequenceRef.current,
+            commandsRef.current,
           ),
       ),
     [],
@@ -282,7 +303,7 @@ export function useKeybindingManager({
         scope,
         chord,
         pending: pendingKeySequenceRef.current,
-        commands: appCommandCatalog,
+        commands: commandsRef.current,
         allowBare: !typing,
       });
       if (resolution.kind === "pending") {

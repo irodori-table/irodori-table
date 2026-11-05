@@ -103,7 +103,7 @@ window.IRODORI_SEARCH_INDEX = [
       "postgres",
     ],
     body:
-      "Migration Studio generates plan, source SQL, target SQL, diff SQL, and runbook. Default Hive to Snowflake. Supports PostgreSQL, Oracle, MySQL, MariaDB, Redshift, Databricks Spark SQL, Trino Presto, DuckDB DuckDB-Wasm, Apache Iceberg REST, AWS S3 Tables. Uses row hash manifests, count, key count, fingerprint, partition or hash bucket, failed bucket row diff. Live /v1/diff and bucket heatmap are design-stage.",
+      "Migration Studio is an extension you install from the extension store. It generates plan, source SQL, target SQL, diff SQL, and runbook. Default Hive to Snowflake. Supports PostgreSQL, Oracle, MySQL, MariaDB, Redshift, Databricks Spark SQL, Trino Presto, DuckDB DuckDB-Wasm, Apache Iceberg REST, AWS S3 Tables. Uses row hash manifests, count, key count, fingerprint, partition or hash bucket, failed bucket row diff. Live /v1/diff and bucket heatmap are design-stage.",
   },
   {
     title: "BI and movable sidebar",

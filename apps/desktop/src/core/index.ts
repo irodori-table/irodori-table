@@ -7,6 +7,7 @@ export {
   defaultVimKeybindingResolutions,
   effectiveKeymap,
   eventToChord,
+  canonicalKeySequence,
   findConflicts,
   findVimKeybindingConflicts,
   formatKeySequence,

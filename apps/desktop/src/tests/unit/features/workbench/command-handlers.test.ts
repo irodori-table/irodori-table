@@ -16,7 +16,7 @@ function createHandler(calls: string[]) {
     openAbout: () => calls.push("about"),
     openDeveloperTools: () => calls.push("devtools"),
     openConnectionManager: () => calls.push("connections"),
-    openMigrationStudio: () => calls.push("migration"),
+    openTool: (commandId) => calls.push(`tool:${commandId}`),
     openDiagram: () => calls.push("diagram"),
     toggleTheme: () => calls.push("theme"),
     toggleSidebar: () => calls.push("sidebar"),
@@ -118,7 +118,7 @@ describe("createWorkbenchCommandHandler", () => {
     runCommand("file.saveAs");
     runCommand("app.exit");
     runCommand("developer.openDevtools");
-    runCommand("migration.studio");
+    runCommand("tool.irodori.migration/migration.studio");
     runCommand("query.cancel");
 
     expect(calls).toEqual([
@@ -139,7 +139,7 @@ describe("createWorkbenchCommandHandler", () => {
       "save-as",
       "exit",
       "devtools",
-      "migration",
+      "tool:tool.irodori.migration/migration.studio",
       "query-cancel",
     ]);
   });
