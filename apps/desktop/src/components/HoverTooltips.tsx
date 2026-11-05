@@ -22,7 +22,9 @@ export function HoverTooltips() {
     null,
   );
   const { ref, style } = usePopoverPosition<HTMLDivElement>(
-    tip ? { at: "element", rect: tip.rect, side: "below", align: "start" } : null,
+    tip
+      ? { at: "element", rect: tip.rect, side: "below", align: "start" }
+      : null,
   );
 
   useEffect(() => {

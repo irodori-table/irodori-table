@@ -62,7 +62,11 @@ describe("column rows in the object tree (real layout)", () => {
   });
 
   it("hides the type rather than shortening the name when they collide", () => {
-    const { row, name, type } = columnRow(150, "embedding_vector", "USER-DEFINED");
+    const { row, name, type } = columnRow(
+      150,
+      "embedding_vector",
+      "USER-DEFINED",
+    );
 
     expect(isClippedBelow(type, row)).toBe(true);
     expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);

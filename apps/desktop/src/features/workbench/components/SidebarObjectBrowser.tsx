@@ -356,7 +356,9 @@ export function SidebarObjectBrowser({
           </button>
           <button
             type="button"
-            title={t(anyObjectOpen ? "sidebar.collapseAll" : "sidebar.expandAll")}
+            title={t(
+              anyObjectOpen ? "sidebar.collapseAll" : "sidebar.expandAll",
+            )}
             aria-label={t(
               anyObjectOpen ? "sidebar.collapseAll" : "sidebar.expandAll",
             )}

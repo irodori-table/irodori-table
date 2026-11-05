@@ -200,7 +200,8 @@ describe("Sidebar object browser container vocabulary", () => {
 
     it("expands and collapses every table from one button", async () => {
       const { container } = renderTable();
-      const table = container.querySelector<HTMLDetailsElement>(".object-tree")!;
+      const table =
+        container.querySelector<HTMLDetailsElement>(".object-tree")!;
       expect(table.open).toBe(false);
 
       fireEvent.click(screen.getByRole("button", { name: "Expand all" }));

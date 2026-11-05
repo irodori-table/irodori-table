@@ -674,7 +674,11 @@ describe("shortServerVersion", () => {
       "PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by Debian clang",
       "PostgreSQL 18.6",
     ],
-    ["PostgreSQL", "PostgreSQL 16.2 (Debian 16.2-1) on x86_64", "PostgreSQL 16.2"],
+    [
+      "PostgreSQL",
+      "PostgreSQL 16.2 (Debian 16.2-1) on x86_64",
+      "PostgreSQL 16.2",
+    ],
     ["MySQL", "8.0.35-0ubuntu0.22.04.1", "MySQL 8.0.35"],
     ["MariaDB", "10.11.6-MariaDB-0+deb12u1", "MariaDB 10.11.6"],
     [
