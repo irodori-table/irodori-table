@@ -1,7 +1,10 @@
 import type { DbEngine } from "@/generated/irodori-api";
 import type { Translator } from "@/i18n";
 import { resolvedConnectorProfileValue } from "../connector-connection-values";
-import type { ConnectorFormModel } from "../connector-form-model";
+import {
+  connectorDatabaseLabel,
+  type ConnectorFormModel,
+} from "../connector-form-model";
 import type { ConnectionDraft } from "../connection-profiles";
 import {
   socketPathLabelKey,
@@ -176,7 +179,10 @@ export function ConnectionEndpointFields({
         {showDatabase ? (
           <label className="full-row">
             <span>
-              {form.databaseField?.label ?? engineSettings.databaseLabel}
+              {connectorDatabaseLabel(
+                form.databaseField,
+                engineSettings.databaseLabel,
+              )}
             </span>
             <input
               value={profileValue("database", draft.database)}

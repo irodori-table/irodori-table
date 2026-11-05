@@ -199,14 +199,21 @@ export function selectedConnectorAuthMethod(
     }
   }
   // The SDK preserves declaration order and provides no separate default-auth
-  // property. Use the first method compatible with this form mode; connectors
-  // conventionally declare `none` first when anonymous/default-chain access is
-  // available, which avoids selecting a credential type the user never chose.
-  return (
-    model.authMethods.find(
-      (method) => draft.mode !== "fields" || method.kind !== "connectionString",
-    ) ?? null
+  // property, and connectors declare `none` first even when the engine has no
+  // anonymous login. Opening on that hides the fields a database like Oracle
+  // cannot connect without, so when a connector's main credential is a user and
+  // password, open on those: left empty they send the same request `none` does.
+  // Any other first credential (a token, an AWS chain) stays opt-in, so this
+  // doesn't select a credential type the user never chose.
+  const compatibleMethods = model.authMethods.filter(
+    (method) => draft.mode !== "fields" || method.kind !== "connectionString",
   );
+  const firstCredential = compatibleMethods.find(
+    (method) => method.kind !== "none" && method.kind !== "connectionString",
+  );
+  return firstCredential?.kind === "userPassword"
+    ? firstCredential
+    : (compatibleMethods[0] ?? null);
 }
 
 export function selectedConnectorEndpointMode(

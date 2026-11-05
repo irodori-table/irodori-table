@@ -1829,6 +1829,9 @@ function profileFields(engine, engineMeta) {
 }
 
 function databaseLabel(engine) {
+  if (engine === "oracle") {
+    return "Service name / SID";
+  }
   if (["mongodb", "couchbase"].includes(engine)) {
     return "Database or bucket";
   }
@@ -1845,7 +1848,8 @@ function databaseLabel(engine) {
 }
 
 function authMethodsForEngine(engine, engineMeta) {
-  const methods = [authNone(), authConnectionString()];
+  // Oracle has no anonymous login, and the form opens on the first credential.
+  const methods = engine === "oracle" ? [authOracleUserPassword(), authConnectionString()] : [authNone(), authConnectionString()];
   const add = (...items) => methods.push(...items);
   const wire = engineMeta.wire;
 
@@ -1900,7 +1904,7 @@ function authMethodsForEngine(engine, engineMeta) {
   } else if (engine === "sqlserver") {
     add(authUserPassword("sqlPassword", "SQL Server user/password"), authKerberos("windowsIntegrated", "Windows integrated / Kerberos"), authAzureAd(), authServicePrincipal(), authManagedIdentity(), authToken("accessToken", "Access token"));
   } else if (engine === "oracle") {
-    add(authUserPassword(), authClientCertificate("oracleWallet", "Oracle wallet / mTLS"), authKerberos(), authToken("cloudIamToken", "Cloud IAM token"));
+    add(authOracleWallet(), authKerberos(), authToken("cloudIamToken", "Cloud IAM token"));
   } else if (engine === "clickhouse") {
     add(authUserPassword(), authToken("bearerToken", "Bearer token"), authClientCertificate());
   } else if (["neo4j", "memgraph"].includes(engine)) {
@@ -1935,6 +1939,22 @@ function authMethodsForEngine(engine, engineMeta) {
 
   add(authCustom());
   return uniqueBy(methods, (method) => method.id);
+}
+
+function authOracleUserPassword() {
+  const method = authUserPassword();
+  const [user, password] = method.fields;
+  return { ...method, fields: [{ ...user, required: true }, password] };
+}
+
+function authOracleWallet() {
+  return authMethod("oracleWallet", "Oracle wallet / mTLS", "certificate", ["password", "privateKeyPassphrase"], [
+    ...authOracleUserPassword().fields,
+    field("walletPath", "Wallet directory", "path", { required: true }),
+    field("walletPassword", "Wallet password", "secret", {
+      secretPurpose: "privateKeyPassphrase",
+    }),
+  ]);
 }
 
 function authNone() {
@@ -2128,6 +2148,24 @@ function authMethod(id, label, kind, secretPurposes = [], fields = []) {
 }
 
 function tlsModel(engine, engineMeta) {
+  if (engine === "oracle") {
+    // The driver turns TCPS on or off. Off comes first so the form opens on it.
+    return {
+      supported: true,
+      requiredByDefault: false,
+      modes: ["disable", "require"],
+      fields: [
+        field("caCertificate", "CA certificate", "pem"),
+        field("clientCertificate", "Client certificate", "pem"),
+        field("clientPrivateKey", "Client private key", "pem", {
+          secretPurpose: "privateKey",
+        }),
+        field("clientPrivateKeyPassphrase", "Private key passphrase", "secret", {
+          secretPurpose: "privateKeyPassphrase",
+        }),
+      ],
+    };
+  }
   const localOnly = ["duckdb"].includes(engine);
   return {
     supported: !localOnly,

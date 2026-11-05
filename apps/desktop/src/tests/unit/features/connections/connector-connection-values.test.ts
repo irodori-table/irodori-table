@@ -125,7 +125,93 @@ function draft(patch: Partial<ConnectionDraft> = {}): ConnectionDraft {
   };
 }
 
+/** Oracle as the connector declared it through 0.1.7: `none` first. */
+const noneFirstModel = parseConnectorConnectionModel({
+  schemaVersion: 1,
+  endpoint: {
+    modes: ["hostPort", "connectionString"],
+    defaultPort: 1521,
+    fields: [
+      {
+        id: "database",
+        label: "Database",
+        type: "string",
+        profileField: "database",
+      },
+    ],
+  },
+  authMethods: [
+    { id: "none", label: "No authentication", kind: "none", fields: [] },
+    {
+      id: "connectionString",
+      label: "Connection string / DSN",
+      kind: "connectionString",
+      fields: [{ id: "url", label: "URL", type: "uri", profileField: "url" }],
+    },
+    {
+      id: "userPassword",
+      label: "User/password",
+      kind: "userPassword",
+      fields: [
+        { id: "user", label: "User", type: "string", profileField: "user" },
+        {
+          id: "password",
+          label: "Password",
+          type: "secret",
+          secretPurpose: "password",
+          profileField: "password",
+        },
+      ],
+    },
+    {
+      id: "token",
+      label: "Token",
+      kind: "token",
+      fields: [{ id: "token", label: "Token", type: "secret" }],
+    },
+  ],
+})!;
+
 describe("connector connection values", () => {
+  it("opens on a connector's user and password, whatever it declares first", () => {
+    const blank = draft({ user: "", password: "" });
+
+    expect(selectedConnectorAuthMethod(noneFirstModel, blank)?.id).toBe(
+      "userPassword",
+    );
+    expect(connectorRequestOptions(noneFirstModel, blank)).toMatchObject({
+      authMethod: "userPassword",
+    });
+    // Connecting without any credentials is still a choice the user can make.
+    expect(
+      selectedConnectorAuthMethod(noneFirstModel, {
+        ...blank,
+        options: { authMethod: "none" },
+      })?.id,
+    ).toBe("none");
+    expect(
+      selectedConnectorAuthMethod(noneFirstModel, { ...blank, mode: "url" })
+        ?.id,
+    ).toBe("connectionString");
+  });
+
+  it("does not open on a credential other than a user and password", () => {
+    // `model` declares an API key; a local server may well need nothing.
+    const blank = draft({ user: "", password: "" });
+    expect(selectedConnectorAuthMethod(model, blank)?.id).toBe("none");
+
+    // Nor on a user and password declared after the connector's main credential.
+    const tokenFirst = parseConnectorConnectionModel({
+      schemaVersion: 1,
+      authMethods: [
+        { id: "none", label: "None", kind: "none", fields: [] },
+        { id: "apiKey", label: "API key", kind: "apiKey", fields: [] },
+        { id: "basic", label: "Basic", kind: "userPassword", fields: [] },
+      ],
+    })!;
+    expect(selectedConnectorAuthMethod(tokenFirst, blank)?.id).toBe("none");
+  });
+
   it("derives compatible endpoint, auth, and TLS defaults", () => {
     const current = draft({ user: "", password: "" });
 

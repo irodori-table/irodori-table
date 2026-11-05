@@ -23,6 +23,10 @@ export function ConnectorFieldInput({
 }) {
   const value = connectorFieldValue(draft, field);
   const secret = isConnectorSecretField(field);
+  // The password goes to the OS keychain like any other engine's, under the
+  // remember-password box the auth section renders beside it. Only the other
+  // secrets live in `secretOptions`, which is never saved.
+  const sessionOnly = secret && field.profileField !== "password";
   const wide = ["json", "map", "pem"].includes(field.type);
   const label = (
     <span className="connector-field-label">
@@ -30,7 +34,9 @@ export function ConnectorFieldInput({
         {field.label}
         {field.required ? <i aria-hidden="true"> *</i> : null}
       </span>
-      {secret ? <small>{t("connection.extension.sessionOnly")}</small> : null}
+      {sessionOnly ? (
+        <small>{t("connection.extension.sessionOnly")}</small>
+      ) : null}
     </span>
   );
   const update = (nextValue: string) =>

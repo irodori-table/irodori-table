@@ -67,6 +67,74 @@ beforeEach(() => {
   installLocalStorage();
 });
 
+describe("Oracle through a connector that declares none first", () => {
+  const model = parseConnectorConnectionModel({
+    schemaVersion: 1,
+    endpoint: {
+      modes: ["hostPort", "connectionString"],
+      defaultPort: 1521,
+      fields: [
+        { id: "host", label: "Host", type: "string", profileField: "host" },
+        { id: "port", label: "Port", type: "number", profileField: "port" },
+        {
+          id: "database",
+          label: "Database",
+          type: "string",
+          profileField: "database",
+        },
+      ],
+    },
+    authMethods: [
+      { id: "none", label: "No authentication", kind: "none", fields: [] },
+      {
+        id: "userPassword",
+        label: "User/password",
+        kind: "userPassword",
+        fields: [
+          { id: "user", label: "User", type: "string", profileField: "user" },
+          {
+            id: "password",
+            label: "Password",
+            type: "secret",
+            profileField: "password",
+          },
+        ],
+      },
+    ],
+  })!;
+
+  it("sends what the form collected to the connector", () => {
+    const profile = profileFromDraft(
+      {
+        id: "orcl",
+        name: "Orcl",
+        color: defaultConnectionColor,
+        engine: "oracle",
+        mode: "fields",
+        url: "",
+        connectionTransport: "tcp",
+        host: "db.example.test",
+        port: "",
+        user: "scott",
+        password: "tiger",
+        database: "FREEPDB1",
+        socketPath: "",
+        readOnly: false,
+      },
+      model,
+    );
+
+    expect(profile).toMatchObject({
+      host: "db.example.test",
+      port: 1521,
+      user: "scott",
+      password: "tiger",
+      database: "FREEPDB1",
+      options: { authMethod: "userPassword" },
+    });
+  });
+});
+
 describe("connection profiles", () => {
   it("normalizes custom color tags", () => {
     expect(normalizeConnectionColor("#ABCDEF")).toBe("#abcdef");

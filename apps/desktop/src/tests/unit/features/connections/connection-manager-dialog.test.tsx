@@ -616,6 +616,132 @@ describe("ConnectionManagerDialog", () => {
       expect(screen.queryByLabelText("TLS mode")).toBeNull();
     });
 
+    describe("Oracle through its connector", () => {
+      const oracleConnectionModel = parseConnectorConnectionModel({
+        schemaVersion: 1,
+        defaults: { engine: "oracle", port: 1521 },
+        endpoint: {
+          modes: ["hostPort", "connectionString"],
+          defaultPort: 1521,
+          fields: [
+            {
+              id: "host",
+              label: "Host",
+              type: "string",
+              profileField: "host",
+              required: true,
+            },
+            { id: "port", label: "Port", type: "number", profileField: "port" },
+            {
+              id: "database",
+              label: "Database",
+              type: "string",
+              profileField: "database",
+            },
+          ],
+        },
+        // As the connector declared it through 0.1.7, which is what stays
+        // installed until someone updates it.
+        authMethods: [
+          { id: "none", label: "No authentication", kind: "none", fields: [] },
+          {
+            id: "userPassword",
+            label: "User/password",
+            kind: "userPassword",
+            fields: [
+              {
+                id: "user",
+                label: "User",
+                type: "string",
+                profileField: "user",
+              },
+              {
+                id: "password",
+                label: "Password",
+                type: "secret",
+                secretPurpose: "password",
+                profileField: "password",
+              },
+            ],
+          },
+        ],
+      });
+      const oracleDraft = () =>
+        draft({
+          engine: "oracle",
+          host: "db.example.test",
+          port: "1521",
+          user: "",
+          password: "",
+          database: "",
+        });
+
+      it("asks for a user, a password and a service name", () => {
+        const { props } = renderDialog({
+          draft: oracleDraft(),
+          connectionModel: oracleConnectionModel,
+        });
+
+        expect(screen.getByLabelText("Authentication method")).toHaveValue(
+          "userPassword",
+        );
+        fireEvent.change(screen.getByLabelText("Service name / SID"), {
+          target: { value: "FREEPDB1" },
+        });
+        expect(props.onUpdateDraft).toHaveBeenLastCalledWith({
+          database: "FREEPDB1",
+        });
+        fireEvent.change(screen.getByLabelText("User"), {
+          target: { value: "scott" },
+        });
+        expect(props.onUpdateDraft).toHaveBeenLastCalledWith({ user: "scott" });
+        fireEvent.change(screen.getByLabelText("Password"), {
+          target: { value: "tiger" },
+        });
+        expect(props.onUpdateDraft).toHaveBeenLastCalledWith({
+          password: "tiger",
+        });
+      });
+
+      it("says the password is remembered, because it is", () => {
+        const { props } = renderDialog({
+          draft: oracleDraft(),
+          connectionModel: oracleConnectionModel,
+        });
+
+        expect(screen.queryByText("Session only · not saved")).toBeNull();
+        const remember = screen.getByRole("checkbox", {
+          name: /Remember password/,
+        });
+        expect(remember).toBeChecked();
+        fireEvent.click(remember);
+        expect(props.onUpdateDraft).toHaveBeenLastCalledWith({
+          rememberPassword: false,
+        });
+      });
+
+      it("has no password to remember once no credentials are chosen", () => {
+        renderDialog({
+          draft: { ...oracleDraft(), options: { authMethod: "none" } },
+          connectionModel: oracleConnectionModel,
+        });
+
+        expect(
+          screen.queryByRole("checkbox", { name: /Remember password/ }),
+        ).toBeNull();
+      });
+
+      it("translates the service name label", () => {
+        usePreferencesStore.setState({ locale: "ja" });
+        renderDialog({
+          draft: oracleDraft(),
+          connectionModel: oracleConnectionModel,
+        });
+
+        expect(screen.getByLabelText("サービス名 / SID")).toBeVisible();
+      });
+    });
+
     it("writes extension secrets to the transient draft map", () => {
       const selectedDraft = draft({
         engine: "qdrant",
