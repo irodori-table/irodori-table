@@ -92,7 +92,6 @@ export function WorkbenchRoot() {
         sidebarWidth={layout.sidebarWidth}
         inspectorWidth={layout.inspectorWidth}
         resultsHeight={layout.resultsHeight}
-        editorSplitPercent={layout.editorSplitPercent}
         menuBarSections={localizedMenuBarSections}
         commandCatalog={localizedMenuCommandCatalog}
         keymap={keybindings.keymap}

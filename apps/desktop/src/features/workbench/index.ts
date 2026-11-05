@@ -25,14 +25,12 @@ export {
   type WorkbenchRuntimeService,
 } from "./workbench-runtime-service";
 export {
-  createPanelResizeController,
   INSPECTOR_WIDTH_MAX,
   INSPECTOR_WIDTH_MIN,
   RESULTS_HEIGHT_MAX,
   RESULTS_HEIGHT_MIN,
   SIDEBAR_WIDTH_MAX,
   SIDEBAR_WIDTH_MIN,
-  type PanelResizeKind,
 } from "./panel-resize";
 export {
   objectKindLabel,
@@ -41,11 +39,7 @@ export {
   isTablePreviewSql,
   tablePreviewSql,
 } from "./object-sql";
-export {
-  useWorkbenchStore,
-  type EditorSplitMode,
-  type SidebarSide,
-} from "./store/workbench-store";
+export { useWorkbenchStore, type SidebarSide } from "./store/workbench-store";
 export {
   activeWorkbenchView,
   activeWorkbenchViewForSide,

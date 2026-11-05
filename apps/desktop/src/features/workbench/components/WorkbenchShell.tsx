@@ -39,7 +39,6 @@ type WorkbenchShellProps = {
   sidebarWidth: number;
   inspectorWidth: number;
   resultsHeight: number;
-  editorSplitPercent: number;
   menuBarSections: readonly AppMenuSection[];
   commandCatalog: readonly CommandMeta[];
   keymap: Keymap;
@@ -122,7 +121,6 @@ export function WorkbenchShell({
   sidebarWidth,
   inspectorWidth,
   resultsHeight,
-  editorSplitPercent,
   menuBarSections,
   commandCatalog,
   keymap,
@@ -170,7 +168,6 @@ export function WorkbenchShell({
           "--right-sidebar-width": inspectorWidth + "px",
           "--inspector-width": inspectorWidth + "px",
           "--results-height": resultsHeight + "px",
-          "--editor-split-primary": editorSplitPercent + "%",
         } as CSSProperties
       }
       data-theme={themeKind}

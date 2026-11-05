@@ -16,7 +16,6 @@ const renderShell = componentRenderer(WorkbenchShell, () => ({
   sidebarWidth: 260,
   inspectorWidth: 360,
   resultsHeight: 280,
-  editorSplitPercent: 50,
   menuBarSections: [],
   commandCatalog: [],
   keymap: { "palette.open": "Mod+Shift+P" },

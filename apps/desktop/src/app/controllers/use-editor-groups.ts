@@ -27,7 +27,6 @@ import type {
 } from "@/features/query-editor";
 import { useConnectionStore } from "@/features/connections";
 import type { SearchTab } from "@/features/search/SearchReplacePanel";
-import type { EditorSplitMode } from "@/features/workbench";
 import type { Translator } from "@/i18n";
 import type { TextMatch } from "@/sql/text-search";
 
@@ -146,9 +145,7 @@ export type EditorTabMenuState = {
 
 export type UseEditorGroupsDeps = {
   loadInitialQuery: () => string;
-  editorSplitMode: EditorSplitMode;
   editorApiRef: RefObject<SqlEditorHandle | null>;
-  secondaryEditorApiRef: RefObject<SqlEditorHandle | null>;
   showActionNotice: (
     kind: ActionNotice["kind"],
     title: string,
@@ -160,9 +157,7 @@ export type UseEditorGroupsDeps = {
 
 export function useEditorGroups({
   loadInitialQuery,
-  editorSplitMode,
   editorApiRef,
-  secondaryEditorApiRef,
   showActionNotice,
   prompt,
   t,
@@ -220,10 +215,7 @@ export function useEditorGroups({
   }
 
   const editorGroupStates = workspaceStates(workspaces, workspaceId);
-  const [preferredEditorGroup, setActiveEditorGroup] =
-    useState<EditorGroup>("primary");
-  const activeEditorGroup: EditorGroup =
-    editorSplitMode === "single" ? "primary" : preferredEditorGroup;
+  const activeEditorGroup: EditorGroup = "primary";
   const activeEditorGroupState = editorGroupStates[activeEditorGroup];
   const query = queryForEditorGroup(activeEditorGroupState);
   const editorSelections = selectionsForEditorGroup(activeEditorGroupState);
@@ -325,27 +317,21 @@ export function useEditorGroups({
   }
 
   function selectEditorTab(group: EditorGroup, tabId: string) {
-    setActiveEditorGroup(group);
     updateEditorGroupState(group, (state) =>
       selectEditorTabInGroup(state, tabId),
     );
   }
 
   const searchTabs = useMemo<SearchTab[]>(() => {
-    const groups: EditorGroup[] =
-      editorSplitMode === "single" ? ["primary"] : ["primary", "secondary"];
-    return groups.flatMap((group) => {
-      const state = editorGroupStates[group];
-      return openTabsForEditorGroup(state).map((tab) => ({
-        key: `${group}:${tab.id}`,
-        group,
-        tabId: tab.id,
-        label:
-          editorSplitMode === "single" ? tab.label : `${tab.label} · ${group}`,
-        text: state.queryByTabId[tab.id] ?? "",
-      }));
-    });
-  }, [editorGroupStates, editorSplitMode]);
+    const state = editorGroupStates.primary;
+    return openTabsForEditorGroup(state).map((tab) => ({
+      key: `primary:${tab.id}`,
+      group: "primary",
+      tabId: tab.id,
+      label: tab.label,
+      text: state.queryByTabId[tab.id] ?? "",
+    }));
+  }, [editorGroupStates]);
 
   function replaceSearchTab(tab: SearchTab, nextText: string) {
     updateEditorGroupState(tab.group as EditorGroup, (state) => ({
@@ -358,10 +344,7 @@ export function useEditorGroups({
     const group = tab.group as EditorGroup;
     selectEditorTab(group, tab.tabId);
     window.setTimeout(() => {
-      const api =
-        group === "secondary"
-          ? secondaryEditorApiRef.current
-          : editorApiRef.current;
+      const api = editorApiRef.current;
       api?.revealRange({ from: match.start, to: match.end });
       api?.focus();
     }, 0);
@@ -369,7 +352,6 @@ export function useEditorGroups({
 
   function newSqlTab(group: EditorGroup = activeEditorGroup) {
     updateEditorGroupState(group, addSqlTabToEditorGroup);
-    setActiveEditorGroup(group);
   }
 
   /** Open generated SQL without replacing the source tab that produced it. */
@@ -380,7 +362,6 @@ export function useEditorGroups({
     updateEditorGroupState(group, (state) =>
       addSqlTabToEditorGroup(state, { query: sql }),
     );
-    setActiveEditorGroup(group);
   }
 
   /**
@@ -399,7 +380,6 @@ export function useEditorGroups({
     updateEditorGroupState(group, (state) =>
       showTableTabInEditorGroup(state, tab),
     );
-    setActiveEditorGroup(group);
     return sql;
   }
 
@@ -418,7 +398,6 @@ export function useEditorGroups({
     updateEditorGroupState(group, (current) =>
       renameSqlTabInEditorGroup(current, tabId, next),
     );
-    setActiveEditorGroup(group);
     showActionNotice("success", t("notice.editor.tabRenamed"), next);
   }
 
@@ -429,7 +408,6 @@ export function useEditorGroups({
     updateEditorGroupState(group, (current) =>
       duplicateSqlTabInEditorGroup(current, tabId),
     );
-    setActiveEditorGroup(group);
     showActionNotice("success", t("notice.editor.tabDuplicated"), source.label);
   }
 
@@ -459,7 +437,6 @@ export function useEditorGroups({
     updateEditorGroupState(group, (current) =>
       closeOtherSqlTabsInEditorGroup(current, tabId),
     );
-    setActiveEditorGroup(group);
     showActionNotice("info", t("notice.editor.otherTabsClosed"), tab.label);
   }
 
@@ -470,7 +447,6 @@ export function useEditorGroups({
       showActionNotice("info", t("notice.editor.tabsAlreadyOpen"));
       return;
     }
-    setActiveEditorGroup(group);
     updateEditorGroupState(group, () => result.state);
     showActionNotice(
       "success",
@@ -499,9 +475,7 @@ export function useEditorGroups({
     replaceSearchTab,
     revealSearchMatch,
     searchTabs,
-    secondaryQuery: queryForEditorGroup(editorGroupStates.secondary),
     selectEditorTab,
-    setActiveEditorGroup,
     setEditorGroupQuery,
     setEditorGroupSelection,
     setEditorTabMenu,

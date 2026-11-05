@@ -21,9 +21,7 @@ function editorGroups() {
   return renderHook(() =>
     useEditorGroups({
       loadInitialQuery: () => "select 1;",
-      editorSplitMode: "single",
       editorApiRef: { current: null },
-      secondaryEditorApiRef: { current: null },
       showActionNotice: vi.fn(),
       prompt: vi.fn().mockResolvedValue(null),
       t: ((key: string) => key) as never,

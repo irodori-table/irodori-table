@@ -21,9 +21,7 @@ import {
   type WorkbenchViewPlacements,
   type WorkbenchViewVisibility,
 } from "../types";
-import type { EditorSplitMode } from "@/lib/editor-split-mode";
 
-export type { EditorSplitMode } from "@/lib/editor-split-mode";
 export type SidebarSide = WorkbenchSide;
 
 type WorkbenchState = {
@@ -37,8 +35,6 @@ type WorkbenchState = {
   sidebarWidth: number;
   inspectorWidth: number;
   resultsHeight: number;
-  editorSplitMode: EditorSplitMode;
-  editorSplitPercent: number;
   setSidebarOpen: (value: ValueUpdater<boolean>) => void;
   setRightSidebarOpen: (value: ValueUpdater<boolean>) => void;
   setSidebarSide: (value: ValueUpdater<SidebarSide>) => void;
@@ -54,8 +50,6 @@ type WorkbenchState = {
   setSidebarWidth: (value: ValueUpdater<number>) => void;
   setInspectorWidth: (value: ValueUpdater<number>) => void;
   setResultsHeight: (value: ValueUpdater<number>) => void;
-  setEditorSplitMode: (value: ValueUpdater<EditorSplitMode>) => void;
-  setEditorSplitPercent: (value: ValueUpdater<number>) => void;
   resetLayout: () => void;
 };
 
@@ -69,8 +63,6 @@ const viewHiddenStorageKey = "irodori.workbench.viewHidden.v1";
 const sidebarWidthStorageKey = "irodori.sidebar.width.v2";
 const inspectorWidthStorageKey = "irodori.inspector.width.v1";
 const resultsHeightStorageKey = "irodori.results.height.v2";
-const editorSplitModeStorageKey = "irodori.editor.splitMode.v1";
-const editorSplitSizeStorageKey = "irodori.editor.splitSize.v1";
 
 const sidebarWidthDefault = 200;
 // These are the widths a sidebar reopens at, so the floors are the sidebars'
@@ -84,9 +76,6 @@ const inspectorWidthMax = 640;
 const resultsHeightDefault = 340;
 const resultsHeightMin = 96;
 const resultsHeightMax = 560;
-const editorSplitPercentDefault = 50;
-const editorSplitPercentMin = 28;
-const editorSplitPercentMax = 72;
 
 function loadStoredNumber(
   key: string,
@@ -245,8 +234,6 @@ function defaultLayoutState() {
     sidebarWidth: sidebarWidthDefault,
     inspectorWidth: inspectorWidthDefault,
     resultsHeight: resultsHeightDefault,
-    editorSplitMode: "single" as EditorSplitMode,
-    editorSplitPercent: editorSplitPercentDefault,
   };
 }
 
@@ -279,13 +266,6 @@ export const useWorkbenchStore = create<WorkbenchState>((set) => ({
     resultsHeightDefault,
     resultsHeightMin,
     resultsHeightMax,
-  ),
-  editorSplitMode: "single",
-  editorSplitPercent: loadStoredNumber(
-    editorSplitSizeStorageKey,
-    editorSplitPercentDefault,
-    editorSplitPercentMin,
-    editorSplitPercentMax,
   ),
   setSidebarOpen: (value) =>
     set((state) => ({ sidebarOpen: resolveValue(state.sidebarOpen, value) })),
@@ -364,17 +344,6 @@ export const useWorkbenchStore = create<WorkbenchState>((set) => ({
   // The store's subscriber writes every layout key on any change, so setting
   // the defaults here also overwrites the persisted values.
   resetLayout: () => set(() => defaultLayoutState()),
-  // Splitting is disabled; keep the setter as a no-op so existing callers
-  // continue to type-check while the editor stays a single pane.
-  setEditorSplitMode: () => set(() => ({ editorSplitMode: "single" })),
-  setEditorSplitPercent: (value) =>
-    set((state) => ({
-      editorSplitPercent: clampNumber(
-        resolveValue(state.editorSplitPercent, value),
-        editorSplitPercentMin,
-        editorSplitPercentMax,
-      ),
-    })),
 }));
 
 useWorkbenchStore.subscribe((state) => {
@@ -411,10 +380,5 @@ useWorkbenchStore.subscribe((state) => {
   window.localStorage.setItem(
     resultsHeightStorageKey,
     String(state.resultsHeight),
-  );
-  window.localStorage.setItem(editorSplitModeStorageKey, state.editorSplitMode);
-  window.localStorage.setItem(
-    editorSplitSizeStorageKey,
-    String(state.editorSplitPercent),
   );
 });

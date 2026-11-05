@@ -13,15 +13,11 @@ import type {
   EditorSelection,
   SqlEditorHandle,
 } from "@/features/query-editor";
-import { useWorkbenchStore } from "@/features/workbench";
 import { formatKeySequence, type Keymap } from "@/core";
 import type { DatabaseMetadata, DbEngine } from "@/generated/irodori-api";
 import type { IrodoriTheme } from "@/theme";
 import type { useQueryRunner } from "@/app/controllers/use-query-runner";
 import type { useWorkspaceActions } from "@/app/controllers/use-workspace-actions";
-import type { createPanelResizeController } from "@/features/workbench";
-
-type PanelResize = ReturnType<typeof createPanelResizeController>;
 
 type EditorWorkspaceDeps = {
   keymap: Keymap;
@@ -41,11 +37,7 @@ export function useEditorWorkspace({
   t,
 }: EditorWorkspaceDeps) {
   const editorApiRef = useRef<SqlEditorHandle>(null);
-  const secondaryEditorApiRef = useRef<SqlEditorHandle>(null);
-  const editorSplitRef = useRef<HTMLDivElement | null>(null);
   const [runMenuOpen, setRunMenuOpen] = useState(false);
-  const editorSplitMode = useWorkbenchStore((state) => state.editorSplitMode);
-  const editorSplitOpen = editorSplitMode !== "single";
   const formatter = usePreferencesStore((state) => state.formatter);
   const vimMode = usePreferencesStore((state) => state.vimMode);
   const sqlLinter = usePreferencesStore((state) => state.sqlLinter);
@@ -59,9 +51,7 @@ export function useEditorWorkspace({
 
   const editorGroups = useEditorGroups({
     loadInitialQuery: loadSavedQuery,
-    editorSplitMode,
     editorApiRef,
-    secondaryEditorApiRef,
     showActionNotice,
     prompt,
     t,
@@ -82,9 +72,7 @@ export function useEditorWorkspace({
     query,
     renameSqlTab,
     reopenSqlTab,
-    secondaryQuery,
     selectEditorTab,
-    setActiveEditorGroup,
     setEditorGroupQuery,
     setEditorGroupSelection,
     setEditorTabMenu,
@@ -92,9 +80,6 @@ export function useEditorWorkspace({
   } = editorGroups;
 
   function activeEditorApi() {
-    if (editorSplitOpen && activeEditorGroup === "secondary") {
-      return secondaryEditorApiRef.current ?? editorApiRef.current;
-    }
     return editorApiRef.current;
   }
 
@@ -173,23 +158,15 @@ export function useEditorWorkspace({
       "handleImportFile" | "handleLogProfileImport" | "jumpToSqlMetadata"
     >;
     cancelQuery: ReturnType<typeof useQueryRunner>["cancelQuery"];
-    beginPanelResize: PanelResize["beginPanelResize"];
-    onPanelResizeKey: PanelResize["onPanelResizeKey"];
   }): QueryEditorController {
     return {
       activeTabLabel,
       primaryTabKey: editorGroupStates.primary.activeTabId,
-      secondaryTabKey: editorGroupStates.secondary.activeTabId,
       primaryTabLabel: activeTabLabelForEditorGroup(editorGroupStates.primary),
-      secondaryTabLabel: activeTabLabelForEditorGroup(
-        editorGroupStates.secondary,
-      ),
       running: extra.running,
       formatter,
       primaryQuery,
-      secondaryQuery,
       onPrimaryQueryChange: (next) => setEditorGroupQuery("primary", next),
-      onSecondaryQueryChange: (next) => setEditorGroupQuery("secondary", next),
       renderEditorTabStrip,
       onNewTab: newSqlTab,
       editorEngine: extra.editorEngine,
@@ -201,12 +178,7 @@ export function useEditorWorkspace({
       vimMode,
       sqlLinter,
       editorApiRef,
-      secondaryEditorApiRef,
-      editorSplitRef,
-      editorSplitOpen,
-      editorSplitMode,
       activeEditorGroup,
-      setActiveEditorGroup,
       setEditorSelection: setEditorGroupSelection,
       runPrimaryLabel,
       runShortcutLabel,
@@ -222,10 +194,6 @@ export function useEditorWorkspace({
       runAllQuery: extra.editorCommands.runAllQuery,
       cancelQuery: extra.cancelQuery,
       setRunMenuOpen,
-      beginEditorSplitResize: (event) =>
-        extra.beginPanelResize("editorSplit", event),
-      onEditorSplitResizeKey: (event) =>
-        extra.onPanelResizeKey("editorSplit", event),
       onSqlFileDrop: (file) => void extra.workspace.handleImportFile(file),
       onUnsupportedFileDrop: () =>
         showActionNotice(
@@ -247,8 +215,6 @@ export function useEditorWorkspace({
     showTableTab,
     activeTabLabel,
     editorSelections,
-    editorSplitMode,
-    editorSplitRef,
     runMenuOpen,
     setRunMenuOpen,
     activeEditorApi,

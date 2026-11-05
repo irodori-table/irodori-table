@@ -8,7 +8,6 @@ import type { SidebarViews } from "@/app/controllers/use-sidebar-views";
 import type { ThemeManager } from "@/app/controllers/use-theme-manager";
 import { useWorkbenchCommands } from "@/app/controllers/use-workbench-commands";
 import type { WorkbenchConnections } from "@/app/controllers/use-workbench-connections";
-import type { WorkbenchLayout } from "@/app/controllers/use-workbench-layout";
 import type { WorkbenchOverlays } from "@/app/controllers/use-workbench-overlays";
 import { useWorkspaceActions } from "@/app/controllers/use-workspace-actions";
 import { useQueryHistoryStore } from "@/features/query-history/query-history-store";
@@ -25,7 +24,6 @@ type WorkbenchActionsDeps = {
   settings: SettingsController;
   erd: ReturnType<typeof useErdDiagram>;
   queryWorkspace: QueryWorkspace;
-  layout: WorkbenchLayout;
   showActionNotice: ShowActionNotice;
   t: Translator["t"];
 };
@@ -43,7 +41,6 @@ export function useWorkbenchActions({
   settings,
   erd,
   queryWorkspace,
-  layout,
   showActionNotice,
   t,
 }: WorkbenchActionsDeps) {
@@ -152,8 +149,6 @@ export function useWorkbenchActions({
     editorCommands,
     workspace,
     cancelQuery: queryRunner.cancelQuery,
-    beginPanelResize: layout.beginPanelResize,
-    onPanelResizeKey: layout.onPanelResizeKey,
   });
   const resultGridController = grid.buildResultGridController({
     running: queryRunner.running,
