@@ -976,12 +976,6 @@ async fn postgres_session_runs(url: String) {
     assert_eq!(sleeping.expect("activity").rows, vec![vec![json!(0)]]);
 }
 
-/// Grid edits against columns a bound `text` value cannot reach on its own.
-///
-/// sqlx binds strings as `text`, and Postgres has no implicit conversion from
-/// `text` to uuid, double precision, jsonb or timestamptz: editing a row keyed
-/// by a uuid failed with "operator does not exist: uuid = text", for updates
-/// and deletes alike. Every placeholder is now cast to its column's type.
 #[test]
 fn postgres_vector_cells_read_as_text() {
     let Ok(url) = std::env::var("IRODORI_PG_URL") else {
@@ -1027,6 +1021,12 @@ async fn postgres_vector_cells(url: String) {
     assert_eq!(rows.rows[0][1], serde_json::Value::Null);
 }
 
+/// Grid edits against columns a bound `text` value cannot reach on its own.
+///
+/// sqlx binds strings as `text`, and Postgres has no implicit conversion from
+/// `text` to uuid, double precision, jsonb or timestamptz: editing a row keyed
+/// by a uuid failed with "operator does not exist: uuid = text", for updates
+/// and deletes alike. Every placeholder is now cast to its column's type.
 #[test]
 fn postgres_edits_reach_typed_columns() {
     let Ok(url) = std::env::var("IRODORI_PG_URL") else {
