@@ -15,7 +15,7 @@ use sqlx::pool::PoolConnection;
 use sqlx::{Connection as _, Database, Pool};
 use tokio::sync::{Mutex, MutexGuard};
 
-use super::error::{DbError, DbResult};
+use super::error::{describe_sqlx_error, DbError, DbResult};
 
 /// Reads the server's id for a connection's session, for cancelling it.
 pub(crate) type Identify<DB> =
@@ -53,7 +53,10 @@ impl<DB: Database> Session<DB> {
         let mut slot = self.held.lock().await;
         if slot.is_none() {
             let mut conn = self.pool.acquire().await.map_err(|e| {
-                DbError::connection(format!("could not open a session connection: {e}"))
+                DbError::connection(format!(
+                    "could not open a session connection: {}",
+                    describe_sqlx_error(&e)
+                ))
             })?;
             let server_id = (self.identify)(&mut conn).await;
             *slot = Some(Held { conn, server_id });

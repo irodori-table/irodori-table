@@ -13,6 +13,7 @@ use sqlx::{Column, Row};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
+use super::error::describe_sqlx_error;
 use super::{DbError, DbResult, RowSet};
 
 /// One row's decoded cells.
@@ -127,7 +128,7 @@ where
         let Some(row) = stream
             .try_next()
             .await
-            .map_err(|e| DbError::query(format!("query failed: {e}")))?
+            .map_err(|e| DbError::query(format!("query failed: {}", describe_sqlx_error(&e))))?
         else {
             break;
         };
@@ -186,7 +187,7 @@ where
     while let Some(row) = stream
         .try_next()
         .await
-        .map_err(|e| DbError::query(format!("query failed: {e}")))?
+        .map_err(|e| DbError::query(format!("query failed: {}", describe_sqlx_error(&e))))?
     {
         if columns.is_empty() {
             columns = row.columns().iter().map(|c| c.name().to_string()).collect();
