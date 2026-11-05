@@ -114,14 +114,12 @@ export function useWorkbenchActions({
   // Escape closes whichever transient menu/popup is open; the ref keeps the
   // stable keybinding listener reading current values without re-binding.
   const transientOverlayStateRef = useRef({
-    workspaceMenuOpen: false,
     runMenuOpen: false,
     exportMenuOpen: false,
     filtersOpen: false,
     objectActionMenu: null as string | null,
   });
   transientOverlayStateRef.current = {
-    workspaceMenuOpen: overlays.workspaceMenuOpen,
     runMenuOpen: editor.runMenuOpen,
     exportMenuOpen: grid.exportMenuOpen,
     filtersOpen: grid.filtersOpen,
@@ -130,7 +128,6 @@ export function useWorkbenchActions({
   function closeTransientOverlaysFromEscape() {
     const open = transientOverlayStateRef.current;
     if (
-      !open.workspaceMenuOpen &&
       !open.runMenuOpen &&
       !open.exportMenuOpen &&
       !open.filtersOpen &&
@@ -138,7 +135,6 @@ export function useWorkbenchActions({
     ) {
       return false;
     }
-    overlays.setWorkspaceMenuOpen(false);
     editor.setRunMenuOpen(false);
     grid.setExportMenuOpen(false);
     grid.setFiltersOpen(false);

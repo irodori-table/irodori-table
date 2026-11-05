@@ -1,6 +1,5 @@
 import { useWorkbenchContext } from "@/app/workbench-context";
 import { AiChatPanel } from "@/features/ai/chat/AiChatPanel";
-import { defaultConnectionColor } from "@/features/connections";
 import { GitPanel } from "@/features/git";
 import { KnowledgePanel } from "@/features/knowledge/KnowledgePanel";
 import { BiPanel, RowDetailSidebar } from "@/features/results";
@@ -25,7 +24,6 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
     erd,
     grid,
     importFileRef,
-    layout,
     notices,
     plan,
     prompt,
@@ -41,7 +39,6 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
     activeMetadataError,
     activeMetadataLoading,
     completionHints,
-    connectedIds,
     connectionActions,
     connectionById,
     editorEngine,
@@ -120,7 +117,6 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
       onMoveView={sidebars.moveView}
       onSetViewHidden={sidebars.setViewHidden}
       onReorderView={sidebars.reorderView}
-      showConnectionRail={false}
       completionPanel={inspectorPanel("completion")}
       historyPanel={inspectorPanel("history")}
       planPanel={
@@ -195,16 +191,12 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
           />
         ) : null
       }
-      connections={connections.connections}
       profileById={profileById}
-      connectionColorFallback={defaultConnectionColor}
-      activeConnectionId={activeConnectionId}
       activeConnection={activeConnection}
       activeConnectionOpen={activeConnectionOpen}
       activeMetadata={activeMetadata}
       activeMetadataLoading={activeMetadataLoading}
       activeMetadataError={activeMetadataError}
-      connectedIds={connectedIds}
       objectActionMenu={objectActionMenu}
       objectKindLabel={objectKindLabel}
       formatObjectName={(object) => qualifiedObjectName(editorEngine, object)}
@@ -213,7 +205,6 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
         setConnectionManagerOpen(true);
       }}
       onOpenConnectionManager={() => setConnectionManagerOpen(true)}
-      onSelectConnection={connectionActions.selectSidebarConnection}
       onOpenBlankSchemaDesigner={openBlankSchemaDesigner}
       onNewTableFromFile={() => importFileRef.current?.click()}
       onCreateDatabase={createDatabase}
@@ -232,13 +223,6 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
         right
           ? sidebars.setRightSidebarOpen(false)
           : sidebars.setSidebarOpen(false)
-      }
-      dockResize
-      onBeginResize={(event) =>
-        layout.beginPanelResize(right ? "rightSidebar" : "sidebar", event)
-      }
-      onResizeKey={(event) =>
-        layout.onPanelResizeKey(right ? "rightSidebar" : "sidebar", event)
       }
     />
   );

@@ -32,7 +32,6 @@ const renderShell = componentRenderer(WorkbenchShell, () => ({
   running: false,
   selectionStatus: null,
   shellStyle: {},
-  leftSidebar: <aside />,
   children: <section className="test-workspace-body">Body</section>,
   onScopeFocus: vi.fn(),
   onScopeMouseDown: vi.fn(),
@@ -40,7 +39,6 @@ const renderShell = componentRenderer(WorkbenchShell, () => ({
   onToggleRightSidebar: vi.fn(),
   onOpenConnectionManager: vi.fn(),
   onRunCommand: vi.fn(),
-  onCloseWorkspaceMenu: vi.fn(),
 }));
 
 /** The shell's context menu anchors at the pointer, so it needs coordinates. */
@@ -165,7 +163,6 @@ describe("WorkbenchShell", () => {
     await user.click(screen.getByRole("menuitem", { name: /Command palette/ }));
 
     expect(props.onRunCommand).toHaveBeenCalledWith("palette.open");
-    expect(props.onCloseWorkspaceMenu).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("menu", { name: "File" })).toBeNull();
   });
 

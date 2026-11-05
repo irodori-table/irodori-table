@@ -36,7 +36,6 @@ export function WorkbenchRoot() {
     keybindings,
     layout,
     notices,
-    overlays,
     queryEditorController,
     queryRunner,
     resultGridController,
@@ -119,11 +118,7 @@ export function WorkbenchRoot() {
           connections.setConnectionManagerOpen(true)
         }
         onRunCommand={runCommand}
-        onCloseWorkspaceMenu={() => overlays.setWorkspaceMenuOpen(false)}
-        dockLayout
         rail={<ConnectionsRail />}
-        leftSidebar={null}
-        rightSidebar={null}
       >
         <WorkbenchDockLayout
           leftSidebarOpen={sidebars.sidebarOpen}

@@ -29,7 +29,6 @@ export type { WorkbenchStatusBarItem } from "./WorkbenchStatusBar";
 
 type WorkbenchShellProps = {
   appName: string;
-  appVersion?: string;
   themeKind: ThemeKind;
   activeKeyScope: KeybindingScope;
   leftSidebarOpen: boolean;
@@ -41,7 +40,6 @@ type WorkbenchShellProps = {
   inspectorWidth: number;
   resultsHeight: number;
   editorSplitPercent: number;
-  workspaceMenuOpen?: boolean;
   menuBarSections: readonly AppMenuSection[];
   commandCatalog: readonly CommandMeta[];
   keymap: Keymap;
@@ -58,23 +56,15 @@ type WorkbenchShellProps = {
   selectionStatus: string | null;
   statusBarItems?: readonly WorkbenchStatusBarItem[];
   shellStyle: CSSProperties;
-  dockLayout?: boolean;
   /** Far-left connections rail, rendered outside the dock layout. */
   rail?: ReactNode;
-  leftSidebar: ReactNode;
-  rightSidebar?: ReactNode;
   children: ReactNode;
   onScopeFocus: (event: FocusEvent<HTMLElement>) => void;
   onScopeMouseDown: (event: MouseEvent<HTMLElement>) => void;
   onToggleLeftSidebar: () => void;
   onToggleRightSidebar: () => void;
-  onToggleTheme?: () => void;
-  onToggleWorkspaceMenu?: () => void;
-  onOpenSettings?: () => void;
   onOpenConnectionManager: () => void;
-  onOpenHelp?: () => void;
   onRunCommand: (commandId: string) => void;
-  onCloseWorkspaceMenu: () => void;
 };
 
 // VS Code-style layout toggle: an outlined window frame whose sidebar half
@@ -149,10 +139,7 @@ export function WorkbenchShell({
   selectionStatus,
   statusBarItems = [],
   shellStyle,
-  dockLayout = false,
   rail,
-  leftSidebar,
-  rightSidebar,
   children,
   onScopeFocus,
   onScopeMouseDown,
@@ -160,7 +147,6 @@ export function WorkbenchShell({
   onToggleRightSidebar,
   onOpenConnectionManager,
   onRunCommand,
-  onCloseWorkspaceMenu,
 }: WorkbenchShellProps) {
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = createTranslator(locale);
@@ -168,7 +154,6 @@ export function WorkbenchShell({
   const contextMenuRef = useRef<WorkbenchContextMenuHandle>(null);
   const dismissWorkspaceMenus = () => {
     menubarRef.current?.close();
-    onCloseWorkspaceMenu();
   };
   const runMenubarCommand = (commandId: string) => {
     contextMenuRef.current?.close();
@@ -210,7 +195,6 @@ export function WorkbenchShell({
             commandCatalog={commandCatalog}
             keymap={keymap}
             onRunCommand={runMenubarCommand}
-            onCloseWorkspaceMenu={onCloseWorkspaceMenu}
           />
         </div>
         <button
@@ -284,26 +268,9 @@ export function WorkbenchShell({
         </div>
       </header>
 
-      <div
-        className={[
-          "workspace",
-          dockLayout ? "workspace-dock" : null,
-          dockLayout || leftSidebarOpen ? null : "left-sidebar-collapsed",
-          dockLayout || rightSidebarOpen ? null : "right-sidebar-collapsed",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
+      <div className="workspace workspace-dock">
         {rail}
-        {dockLayout ? (
-          children
-        ) : (
-          <>
-            {leftSidebar}
-            {children}
-            {rightSidebar}
-          </>
-        )}
+        {children}
       </div>
 
       <WorkbenchStatusBar

@@ -1,20 +1,13 @@
-import type {
-  KeyboardEvent as ReactKeyboardEvent,
-  PointerEvent as ReactPointerEvent,
-  ReactNode,
-} from "react";
-import { usePreferencesStore } from "@/features/preferences";
+import type { ReactNode } from "react";
 import type {
   DatabaseMetadata,
   DbObjectMetadata,
 } from "@/generated/irodori-api";
-import { createTranslator } from "@/i18n";
 import type {
   ConnectionDraft,
   WorkspaceConnection,
 } from "@/lib/workspace-connection";
 import type { WorkbenchSide, WorkbenchViewId } from "../types";
-import { SidebarConnectionRail } from "./SidebarConnectionRail";
 import { SidebarObjectBrowser } from "./SidebarObjectBrowser";
 import { SidebarViewSwitcher } from "./SidebarViewSwitcher";
 
@@ -35,7 +28,6 @@ type SidebarProps = {
     targetId: WorkbenchViewId,
     position: "before" | "after",
   ) => void;
-  showConnectionRail?: boolean;
   completionPanel: ReactNode;
   historyPanel: ReactNode;
   planPanel: ReactNode;
@@ -45,25 +37,17 @@ type SidebarProps = {
   searchReplacePanel: ReactNode;
   rowDetailPanel: ReactNode;
   knowledgePanel: ReactNode;
-  connections: WorkspaceConnection[];
   profileById: ReadonlyMap<string, ConnectionDraft>;
-  connectionColorFallback: string;
-  activeConnectionId: string;
   activeConnection: WorkspaceConnection;
   activeConnectionOpen: boolean;
   activeMetadata: DatabaseMetadata | undefined;
   activeMetadataLoading: boolean;
   activeMetadataError: string | undefined;
-  connectedIds: ReadonlySet<string>;
   objectActionMenu: string | null;
   objectKindLabel: (object: DbObjectMetadata) => string;
   formatObjectName: (object: DbObjectMetadata) => string;
   onAddProfile: () => void;
   onOpenConnectionManager: () => void;
-  onSelectConnection: (
-    connection: WorkspaceConnection,
-    profile: ConnectionDraft | undefined,
-  ) => void;
   onOpenBlankSchemaDesigner: () => void;
   onNewTableFromFile: () => void;
   onCreateDatabase: () => void;
@@ -79,9 +63,6 @@ type SidebarProps = {
   ) => void;
   onSelectView: (viewId: WorkbenchViewId) => void;
   onCloseSidebar: () => void;
-  dockResize?: boolean;
-  onBeginResize: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onResizeKey: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
 
 export function Sidebar({
@@ -94,7 +75,6 @@ export function Sidebar({
   onMoveView,
   onSetViewHidden,
   onReorderView,
-  showConnectionRail,
   completionPanel,
   historyPanel,
   planPanel,
@@ -104,22 +84,17 @@ export function Sidebar({
   searchReplacePanel,
   rowDetailPanel,
   knowledgePanel,
-  connections,
   profileById,
-  connectionColorFallback,
-  activeConnectionId,
   activeConnection,
   activeConnectionOpen,
   activeMetadata,
   activeMetadataLoading,
   activeMetadataError,
-  connectedIds,
   objectActionMenu,
   objectKindLabel,
   formatObjectName,
   onAddProfile,
   onOpenConnectionManager,
-  onSelectConnection,
   onOpenBlankSchemaDesigner,
   onNewTableFromFile,
   onCreateDatabase,
@@ -133,13 +108,7 @@ export function Sidebar({
   onSetObjectActionMenu,
   onSelectView,
   onCloseSidebar,
-  dockResize = false,
-  onBeginResize,
-  onResizeKey,
 }: SidebarProps) {
-  const locale = usePreferencesStore((state) => state.locale);
-  const { t } = createTranslator(locale);
-
   function renderActivePanel() {
     switch (activeView) {
       case "completion":
@@ -167,19 +136,6 @@ export function Sidebar({
 
   return (
     <>
-      <SidebarConnectionRail
-        show={showConnectionRail !== false}
-        connections={connections}
-        profileById={profileById}
-        connectionColorFallback={connectionColorFallback}
-        activeConnectionId={activeConnectionId}
-        activeConnectionOpen={activeConnectionOpen}
-        connectedIds={connectedIds}
-        onAddProfile={onAddProfile}
-        onOpenConnectionManager={onOpenConnectionManager}
-        onSelectConnection={onSelectConnection}
-        onRefreshObjects={onRefreshObjects}
-      />
       {sidebarOpen ? (
         <aside className={`sidebar sidebar-${side}`}>
           <SidebarViewSwitcher
@@ -222,17 +178,6 @@ export function Sidebar({
           ) : (
             <div className="sidebar-panel">{renderActivePanel()}</div>
           )}
-          {!dockResize ? (
-            <div
-              className="panel-resizer sidebar-resizer"
-              role="separator"
-              aria-label={t("sidebar.resize")}
-              aria-orientation="vertical"
-              tabIndex={0}
-              onPointerDown={onBeginResize}
-              onKeyDown={onResizeKey}
-            />
-          ) : null}
         </aside>
       ) : null}
     </>
