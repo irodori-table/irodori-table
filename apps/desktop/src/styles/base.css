@@ -64,8 +64,11 @@ textarea:disabled {
  * legible in both themes. */
 input::placeholder,
 textarea::placeholder {
+  /* Fields are set in a heavy weight, so a placeholder in the same weight read
+     as a value the user had entered. */
   color: var(--muted);
-  opacity: 1;
+  font-weight: 400;
+  opacity: 0.85;
 }
 
 /*
@@ -436,6 +439,20 @@ textarea::placeholder {
 .workspace-menu-host {
   position: relative;
   display: inline-flex;
+}
+
+.hover-tooltip {
+  position: fixed;
+  max-width: 320px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-raised);
+  box-shadow: var(--elevation-3);
+  color: var(--text);
+  font-size: var(--font-ui-sm);
+  overflow-wrap: anywhere;
+  pointer-events: none;
 }
 
 .shortcut-tips {

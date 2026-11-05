@@ -13,7 +13,9 @@ import {
 import {
   AlertTriangle,
   Boxes,
-  Columns3,
+  ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Folder,
   List,
   MoreHorizontal,
@@ -192,6 +194,8 @@ export function SidebarObjectBrowser({
   const [objectActionMenuPosition, setObjectActionMenuPosition] =
     useState<ObjectActionMenuPosition>(null);
   const createMenuAnchorRef = useRef<HTMLDivElement | null>(null);
+  const objectTreeRef = useRef<HTMLDivElement | null>(null);
+  const [anyObjectOpen, setAnyObjectOpen] = useState(false);
   const [createMenu, setCreateMenu] = useState<PopoverRect | null>(null);
   const objectMenu = usePopoverPosition<HTMLDivElement>(
     objectActionMenuPosition?.anchor ?? null,
@@ -304,6 +308,33 @@ export function SidebarObjectBrowser({
     });
   }
 
+  // The tree's `<details>` own their open state, so this reads it back from them.
+  // `toggle` does not bubble, which is why the listener is on the capture phase.
+  useEffect(() => {
+    const tree = objectTreeRef.current;
+    if (!tree) {
+      return;
+    }
+    const sync = () =>
+      setAnyObjectOpen(tree.querySelector(".object-tree[open]") !== null);
+    sync();
+    tree.addEventListener("toggle", sync, true);
+    return () => tree.removeEventListener("toggle", sync, true);
+  }, [activeMetadata]);
+
+  /** Tables only: collapsing the schemas too would leave nothing to pick from. */
+  function setAllObjectsOpen(open: boolean) {
+    const tree = objectTreeRef.current;
+    if (!tree) {
+      return;
+    }
+    const targets = open ? ".schema-tree, .object-tree" : ".object-tree";
+    for (const details of tree.querySelectorAll<HTMLDetailsElement>(targets)) {
+      details.open = open;
+    }
+    setAnyObjectOpen(open);
+  }
+
   return (
     <section className="sidebar-section browser-section">
       <div className="section-heading">
@@ -322,6 +353,23 @@ export function SidebarObjectBrowser({
             onClick={onOpenConnectionManager}
           >
             <List size={14} />
+          </button>
+          <button
+            type="button"
+            title={t(
+              anyObjectOpen ? "sidebar.collapseAll" : "sidebar.expandAll",
+            )}
+            aria-label={t(
+              anyObjectOpen ? "sidebar.collapseAll" : "sidebar.expandAll",
+            )}
+            disabled={!activeMetadata?.schemas.length}
+            onClick={() => setAllObjectsOpen(!anyObjectOpen)}
+          >
+            {anyObjectOpen ? (
+              <ChevronsDownUp size={14} />
+            ) : (
+              <ChevronsUpDown size={14} />
+            )}
           </button>
           <div className="schema-create-menu-wrap" ref={createMenuAnchorRef}>
             <button
@@ -421,6 +469,7 @@ export function SidebarObjectBrowser({
         </div>
       </div>
       <div
+        ref={objectTreeRef}
         className="object-browser"
         aria-label={t("sidebar.databaseObjects")}
         onKeyDown={handleTreeKeyDown}
@@ -445,6 +494,7 @@ export function SidebarObjectBrowser({
             activeMetadata.schemas.map((schema) => (
               <details className="schema-tree" key={schema.name} open>
                 <summary>
+                  <ChevronRight className="tree-chevron" size={12} />
                   {namespaceBrowserEngines.has(activeConnection.engine) ? (
                     <Boxes size={14} />
                   ) : (
@@ -464,6 +514,7 @@ export function SidebarObjectBrowser({
                           openObjectContextMenu(event, objectKey)
                         }
                       >
+                        <ChevronRight className="tree-chevron" size={12} />
                         {object.kind === "procedure" ||
                         object.kind === "function" ? (
                           <TerminalSquare size={15} />
@@ -580,9 +631,12 @@ export function SidebarObjectBrowser({
                               type="button"
                               title={columnTypeDetail(column)}
                             >
-                              <Columns3 size={13} />
-                              <span>{column.name}</span>
-                              <small>{shortColumnType(column.dataType)}</small>
+                              <span className="field-row-text">
+                                <span>{column.name}</span>
+                                <small>
+                                  {shortColumnType(column.dataType)}
+                                </small>
+                              </span>
                             </button>
                           ))
                         ) : (

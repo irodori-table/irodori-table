@@ -127,6 +127,24 @@ export function engineLabel(engine: DbEngine) {
   return engineOptions.find((item) => item.value === engine)?.label ?? engine;
 }
 
+/**
+ * "PostgreSQL 18.6", not the server's whole banner, which repeats the engine and
+ * goes on about its build: `PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by…`.
+ */
+export function shortServerVersion(label: string, serverVersion: string) {
+  const head = serverVersion.split(/ on | \(|,| - /)[0]?.trim() ?? "";
+  if (!head || head === "unknown") {
+    return label;
+  }
+  const number = /^\d+(?:\.\d+)*/.exec(head)?.[0];
+  if (number) {
+    return `${label} ${number}`;
+  }
+  return head.toLowerCase().includes(label.toLowerCase())
+    ? head
+    : `${label} ${head}`;
+}
+
 export function describeConnection(
   info: ConnectionInfo,
   elapsedMs: number,
@@ -136,7 +154,7 @@ export function describeConnection(
   return {
     id: info.id,
     name: displayName,
-    engine: `${label} ${info.serverVersion}`,
+    engine: shortServerVersion(label, info.serverVersion),
     status: "connected",
     latencyMs: elapsedMs,
     proxy: "direct",

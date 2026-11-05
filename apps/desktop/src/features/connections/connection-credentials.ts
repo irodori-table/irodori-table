@@ -24,8 +24,9 @@ export type CredentialIo = {
 };
 
 export const defaultCredentialIo: CredentialIo = {
-  storeSecret: securityStoreSecret,
-  deleteSecret: securityDeleteSecret,
+  storeSecret: (connectionId, purpose, value) =>
+    securityStoreSecret(connectionId, purpose, value),
+  deleteSecret: (secret) => securityDeleteSecret(secret),
 };
 
 function readStoredRef(
@@ -57,6 +58,11 @@ function readStoredRef(
  * Returns the profile to connect with, and the draft options to persist so the
  * handle survives a restart.
  */
+/** Whether the profile holds a keychain handle for a remembered password. */
+export function hasStoredPassword(options: Record<string, string> | undefined) {
+  return readStoredRef(options) !== null;
+}
+
 export async function prepareStoredPassword(
   draft: ConnectionDraft,
   profile: ConnectionProfile<DbEngine>,

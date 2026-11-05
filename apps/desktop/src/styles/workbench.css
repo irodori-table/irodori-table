@@ -506,6 +506,25 @@
   overflow: auto;
 }
 
+/* WebKit's overlay scrollbars show nothing until scrolling starts, so a tree cut
+   off at the bottom of the panel looked like the end of the list. */
+.sidebar-panel::-webkit-scrollbar,
+.object-browser::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.sidebar-panel::-webkit-scrollbar-track,
+.object-browser::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-panel::-webkit-scrollbar-thumb,
+.object-browser::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: var(--border-strong);
+}
+
 .sidebar-panel > section {
   min-height: 0;
   border-bottom: 1px solid var(--border);
@@ -1254,6 +1273,13 @@
   }
 }
 
+/* Six actions at 18px just fit the sidebar's 120px floor. */
+@container (max-width: 128px) {
+  .section-heading-actions button {
+    width: 18px;
+  }
+}
+
 .schema-create-menu-wrap {
   position: relative;
   display: inline-flex;
@@ -1618,8 +1644,18 @@
   display: none;
 }
 
+.tree-chevron {
+  color: var(--muted);
+  transition: transform 90ms ease;
+}
+
+.schema-tree[open] > summary > .tree-chevron,
+.object-tree[open] > summary > .tree-chevron {
+  transform: rotate(90deg);
+}
+
 .schema-tree summary {
-  grid-template-columns: 17px minmax(0, 1fr) auto;
+  grid-template-columns: 12px 17px minmax(0, 1fr) auto;
   gap: 4px;
   min-height: 23px;
   padding: 0 4px;
@@ -1639,7 +1675,7 @@
 
 .object-tree summary {
   position: relative;
-  grid-template-columns: 16px minmax(0, 1fr) auto 21px;
+  grid-template-columns: 12px 16px minmax(0, 1fr) auto 21px;
   gap: 4px;
   min-height: 23px;
   padding: 0 4px;
@@ -1706,7 +1742,7 @@
 .metadata-children {
   display: grid;
   gap: 1px;
-  margin: 0 0 4px 15px;
+  margin: 0 0 4px 17px;
 }
 
 .metadata-row {
@@ -1720,8 +1756,29 @@
 }
 
 .metadata-row.field-row {
-  grid-template-columns: 14px minmax(0, 1fr) minmax(68px, auto);
+  grid-template-columns: minmax(0, 1fr);
   padding-left: 3px;
+}
+
+/* The name has the row first. When name and type cannot share it, the type wraps
+   onto a second line that this height clips; the row's tooltip still has it. */
+.field-row-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  justify-content: space-between;
+  column-gap: 8px;
+  height: 21px;
+  line-height: 21px;
+}
+
+.field-row-text > span {
+  max-width: 100%;
+}
+
+.field-row-text > small {
+  flex: none;
 }
 
 .metadata-empty {
@@ -1867,7 +1924,8 @@
 /* Editor tabs wrap a select button plus a hover-revealed close button, so the
  * .tab itself is a container and the inner buttons carry the interactions. */
 .editor-tab-strip .tab {
-  padding: 0 5px 0 0;
+  gap: 2px;
+  padding: 0 3px 0 0;
   cursor: default;
 }
 
@@ -1875,7 +1933,7 @@
   flex: 1 1 auto;
   min-width: 0;
   height: 100%;
-  padding: 0 4px 0 13px;
+  padding: 0 2px 0 8px;
   overflow: hidden;
   color: inherit;
   background: transparent;
@@ -1900,6 +1958,11 @@
   background: transparent;
   cursor: pointer;
   opacity: 0;
+}
+
+/* The close button's space goes to the title until the tab can show it. */
+.editor-tab-strip .tab:not(:hover, :focus-within, .active) .tab-close {
+  width: 0;
 }
 
 .editor-tab-strip .tab:hover .tab-close,

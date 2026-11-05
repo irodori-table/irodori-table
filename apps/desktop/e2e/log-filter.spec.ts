@@ -134,10 +134,9 @@ test("filters stay with their tab instead of leaking or resetting", async ({
   await page.getByRole("menuitem", { name: "Rename tab" }).click();
   await renameSqlTab(page, "worker.log");
 
-  await expect(page.getByRole("button", { name: "All" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(
+    page.getByRole("button", { name: "All", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("combobox", { name: "Profile" })).toHaveValue(
     "auto",
   );
