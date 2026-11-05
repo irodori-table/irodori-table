@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePreferencesStore } from "@/features/preferences";
 import { Sidebar } from "@/features/workbench/components/Sidebar";
@@ -95,7 +95,7 @@ function headingText(container: HTMLElement) {
 
 function containerIconClass(container: HTMLElement) {
   return container
-    .querySelector(".schema-tree > summary > svg")
+    .querySelector(".schema-tree > summary > svg:not(.tree-chevron)")
     ?.getAttribute("class");
 }
 
@@ -161,6 +161,73 @@ describe("Sidebar object browser container vocabulary", () => {
 
   // textContent alone would also pass on a tree collapsed to zero height; this
   // at least holds the schema rows to being rendered and not hidden.
+  describe("tree rows", () => {
+    function renderTable() {
+      return renderForEngine("postgres", {
+        activeMetadata: {
+          schemas: [
+            {
+              name: "public",
+              objects: [
+                {
+                  schema: "public",
+                  name: "users",
+                  kind: "table",
+                  columns: [
+                    {
+                      name: "email",
+                      dataType: "character varying",
+                      nullable: false,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        } as Parameters<typeof Sidebar>[0]["activeMetadata"],
+      });
+    }
+
+    it("marks every collapsible row with a chevron", () => {
+      const { container } = renderTable();
+
+      for (const selector of [".schema-tree", ".object-tree"]) {
+        expect(
+          container.querySelector(`${selector} > summary > .tree-chevron`),
+        ).not.toBeNull();
+      }
+    });
+
+    it("expands and collapses every table from one button", async () => {
+      const { container } = renderTable();
+      const table =
+        container.querySelector<HTMLDetailsElement>(".object-tree")!;
+      expect(table.open).toBe(false);
+
+      fireEvent.click(screen.getByRole("button", { name: "Expand all" }));
+      expect(table.open).toBe(true);
+
+      fireEvent.click(screen.getByRole("button", { name: "Collapse all" }));
+      expect(table.open).toBe(false);
+      // Tables only: the schema stays open so there is still something to pick.
+      expect(
+        container.querySelector<HTMLDetailsElement>(".schema-tree")!.open,
+      ).toBe(true);
+    });
+
+    it("shows a column as text alone and keeps its type in the tooltip", () => {
+      const { container } = renderTable();
+      const row = container.querySelector<HTMLElement>(".field-row")!;
+
+      expect(row.querySelector("svg")).toBeNull();
+      expect(row.querySelector(".field-row-text > span")?.textContent).toBe(
+        "email",
+      );
+      expect(row.querySelector(".field-row-text > small")).not.toBeNull();
+      expect(row.title).toContain("character varying");
+    });
+  });
+
   it("shows a row for every schema", () => {
     renderForEngine("postgres");
 

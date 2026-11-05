@@ -1,4 +1,5 @@
 import type { DbEngine } from "@/generated/irodori-api";
+import { hasStoredPassword } from "../connection-credentials";
 import type { Translator } from "@/i18n";
 import { resolvedConnectorProfileValue } from "../connector-connection-values";
 import {
@@ -156,7 +157,13 @@ export function ConnectionEndpointFields({
               <input
                 type="password"
                 value={draft.password}
-                placeholder={engineSettings.passwordPlaceholder}
+                placeholder={
+                  draft.rememberPassword === false
+                    ? engineSettings.passwordPlaceholder
+                    : hasStoredPassword(draft.options)
+                      ? t("connection.placeholder.passwordSaved")
+                      : undefined
+                }
                 onChange={(event) =>
                   onUpdateDraft({ password: event.currentTarget.value })
                 }
