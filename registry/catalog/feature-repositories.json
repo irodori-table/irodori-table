@@ -9,6 +9,11 @@
       "hostFeatures": [
         "knowledge"
       ]
+    },
+    {
+      "name": "irodori-extension-migration",
+      "extensionId": "irodori.migration",
+      "hostFeatures": []
     }
   ]
 }
