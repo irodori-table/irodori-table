@@ -70,11 +70,11 @@
       "owner": "migration-diff",
       "paths": [
         "../irodori-kit/irodori-io/**",
-        "apps/desktop/src/features/migration/**",
+        "apps/desktop/src/features/extensions/tools/**",
         "apps/desktop/src-tauri/src/db/**"
       ],
       "checks": [
-        "npm --prefix apps/desktop run test -- --run src/tests/unit/features/migration/migration-studio.test.ts",
+        "npm --prefix apps/desktop run test -- --run src/tests/unit/features/extensions/extension-tools.test.ts",
         "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml db"
       ]
     }
@@ -160,9 +160,8 @@
       "owner": "migration-agent",
       "repeatable": false,
       "exclusiveWriteGlobs": [
-        "apps/desktop/src/features/migration/**",
+        "apps/desktop/src/features/extensions/tools/**",
         "apps/desktop/src-tauri/src/db/diff*.rs",
-        "apps/desktop/src-tauri/src/db/migration*.rs",
         "../irodori-kit/irodori-io/**"
       ],
       "coordinatorWriteGlobs": [
@@ -171,7 +170,7 @@
       ],
       "sharedContracts": ["data-diff-contract", "desktop-command-api", "connector-registry"],
       "checks": [
-        "npm --prefix apps/desktop run test -- --run src/tests/unit/features/migration/migration-studio.test.ts",
+        "npm --prefix apps/desktop run test -- --run src/tests/unit/features/extensions/extension-tools.test.ts",
         "npm --prefix apps/desktop run build"
       ],
       "mergeRule": "Keep diff algorithms behind stable specs so connector agents can implement engine-specific extraction independently."

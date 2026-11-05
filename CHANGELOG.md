@@ -16,6 +16,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [Unreleased]
+
+### Changed
+
+- **Migration Studio is now an extension.** It is no longer built into the app.
+  Install **Migration Studio** from **Tools ▸ Extensions** to keep using it; it
+  behaves the same and keeps `Mod+Shift+M`.
+
+### Added
+
+- **Extensions can contribute tools.** A native extension can describe a dialog
+  in its manifest, which the app renders, and answer from a module that runs in a
+  separate process. No extension code runs in the app's webview, and a crash in
+  the module is an error in the dialog rather than a closed app.
+
 ## [0.11.0] - 2026-09-22
 
 Connections can reach a database through an SSH tunnel from inside the app, and

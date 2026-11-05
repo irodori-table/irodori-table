@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 // Open/close state for every workbench-level overlay that is not owned by a
-// feature store: the command palette, the About dialog, Migration Studio, the
+// feature store: the command palette, the About dialog, extension tools, the
 // AI generate dialog, the terminal dock, and the workspace menu. Overlays
 // owned by feature stores (settings, schema designer, query history, the
 // connection manager) keep their state in those stores; this hook only covers
@@ -11,7 +11,9 @@ export function useWorkbenchOverlays() {
   const [paletteQuery, setPaletteQuery] = useState("");
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [migrationStudioOpen, setMigrationStudioOpen] = useState(false);
+  const [activeToolCommandId, setActiveToolCommandId] = useState<string | null>(
+    null,
+  );
   const [aiGenerateOpen, setAiGenerateOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
 
@@ -29,10 +31,9 @@ export function useWorkbenchOverlays() {
     aboutOpen,
     openAbout: () => setAboutOpen(true),
     closeAbout: () => setAboutOpen(false),
-    migrationStudioOpen,
-    setMigrationStudioOpen,
-    openMigrationStudio: () => setMigrationStudioOpen(true),
-    closeMigrationStudio: () => setMigrationStudioOpen(false),
+    activeToolCommandId,
+    openTool: (commandId: string) => setActiveToolCommandId(commandId),
+    closeTool: () => setActiveToolCommandId(null),
     aiGenerateOpen,
     openAiGenerate: () => setAiGenerateOpen(true),
     closeAiGenerate: () => setAiGenerateOpen(false),

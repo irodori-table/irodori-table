@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fs;
 use std::io::{self, Cursor, Write};
 use std::path::{Component, Path, PathBuf};
@@ -69,6 +70,8 @@ struct ManifestContributions {
     host_features: Vec<String>,
     #[serde(default)]
     connectors: Vec<ManifestConnector>,
+    #[serde(default)]
+    tools: Vec<Value>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -357,10 +360,16 @@ fn install_archive(
                 .to_path_buf();
             let probe =
                 process::probe_connector(&library_path).map_err(IrodoriError::validation)?;
-            if probe.engine != manifest.contributes.connectors[0].engine {
+            // A tool has no database, so its module reports the extension id.
+            let expected_engine = manifest
+                .contributes
+                .connectors
+                .first()
+                .map_or(manifest.id.as_str(), |connector| connector.engine.as_str());
+            if probe.engine != expected_engine {
                 return Err(IrodoriError::validation(format!(
-                    "connector engine mismatch: manifest={}, abi={}",
-                    manifest.contributes.connectors[0].engine, probe.engine
+                    "connector engine mismatch: manifest={expected_engine}, abi={}",
+                    probe.engine
                 )));
             }
             if probe.manifest_json.trim() != manifest_json.trim() {
@@ -399,7 +408,11 @@ fn install_archive(
         fs::rename(&staging, &final_dir).map_err(to_error)?;
         let (engine, library_path, abi_version, supported_calls, connection_model) = match native {
             Some((library_rel, probe)) => (
-                Some(manifest.contributes.connectors[0].engine.clone()),
+                manifest
+                    .contributes
+                    .connectors
+                    .first()
+                    .map(|connector| connector.engine.clone()),
                 Some(final_dir.join(library_rel).to_string_lossy().to_string()),
                 Some(ABI_VERSION),
                 supported_calls(&probe.describe),
@@ -422,6 +435,7 @@ fn install_archive(
             abi_version,
             supported_calls,
             connection_model,
+            tools: manifest.contributes.tools,
         };
         upsert_installed(app, state, installed.clone())?;
         Ok(installed)
@@ -463,18 +477,7 @@ fn validate_manifest(
         ));
     }
     match manifest.runtime.as_str() {
-        "native" => {
-            if manifest.contributes.connectors.len() != 1 {
-                return Err(IrodoriError::validation(
-                    "native connector extensions must contribute exactly one connector",
-                ));
-            }
-            if !manifest.contributes.host_features.is_empty() {
-                return Err(IrodoriError::validation(
-                    "native connector extensions cannot contribute host features",
-                ));
-            }
-        }
+        "native" => validate_native_manifest(manifest)?,
         "declarative" => validate_declarative_manifest(manifest)?,
         runtime => {
             return Err(IrodoriError::validation(format!(
@@ -483,6 +486,91 @@ fn validate_manifest(
         }
     }
     Ok(())
+}
+
+fn validate_native_manifest(manifest: &ManifestFile) -> IrodoriResult<()> {
+    if !manifest.contributes.host_features.is_empty() {
+        return Err(IrodoriError::validation(
+            "native extensions cannot contribute host features",
+        ));
+    }
+    let tools = &manifest.contributes.tools;
+    if tools.is_empty() {
+        if manifest.contributes.connectors.len() != 1 {
+            return Err(IrodoriError::validation(
+                "native connector extensions must contribute exactly one connector",
+            ));
+        }
+        return Ok(());
+    }
+    if !manifest.contributes.connectors.is_empty() {
+        return Err(IrodoriError::validation(
+            "a native extension contributes either a connector or tools, not both",
+        ));
+    }
+    if !manifest.permissions.iter().any(|scope| scope == "tools") {
+        return Err(IrodoriError::validation(
+            "extensions that contribute tools require the tools permission",
+        ));
+    }
+    let mut ids = HashSet::new();
+    for tool in tools {
+        let id = tool_id(tool).ok_or_else(|| {
+            IrodoriError::validation("every contributed tool needs a non-empty id")
+        })?;
+        if !ids.insert(id) {
+            return Err(IrodoriError::validation(format!("duplicate tool id: {id}")));
+        }
+    }
+    Ok(())
+}
+
+fn tool_id(tool: &Value) -> Option<&str> {
+    tool.get("id")
+        .and_then(Value::as_str)
+        .filter(|id| !id.trim().is_empty())
+}
+
+/// The library to call for a tool, once the request is known to be one the user
+/// can reach: an installed, enabled extension that declares that tool.
+pub(crate) fn tool_library(
+    app: &AppHandle,
+    state: &ExtensionsState,
+    extension_id: &str,
+    tool: &str,
+) -> IrodoriResult<PathBuf> {
+    let extensions = list(app, state)?;
+    let extension = extensions
+        .iter()
+        .find(|extension| extension.id == extension_id)
+        .ok_or_else(|| {
+            IrodoriError::validation(format!("extension is not installed: {extension_id}"))
+        })?;
+    library_for_tool(extension, tool)
+}
+
+fn library_for_tool(extension: &InstalledExtension, tool: &str) -> IrodoriResult<PathBuf> {
+    if !extension.enabled {
+        return Err(IrodoriError::validation(format!(
+            "extension is disabled: {}",
+            extension.id
+        )));
+    }
+    if !extension
+        .tools
+        .iter()
+        .any(|declared| tool_id(declared) == Some(tool))
+    {
+        return Err(IrodoriError::validation(format!(
+            "{} does not provide the tool {tool}",
+            extension.id
+        )));
+    }
+    extension
+        .library_path
+        .as_deref()
+        .map(PathBuf::from)
+        .ok_or_else(|| IrodoriError::validation(format!("{} has no native module", extension.id)))
 }
 
 fn validate_declarative_manifest(manifest: &ManifestFile) -> IrodoriResult<()> {
@@ -970,6 +1058,7 @@ fn to_error(error: impl std::fmt::Display) -> IrodoriError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     fn manifest(runtime: &str) -> ManifestFile {
         ManifestFile {
@@ -982,8 +1071,87 @@ mod tests {
             contributes: ManifestContributions {
                 host_features: vec!["knowledge".into()],
                 connectors: vec![],
+                tools: vec![],
             },
         }
+    }
+
+    fn tool_manifest(tools: Vec<Value>, permissions: &[&str]) -> ManifestFile {
+        ManifestFile {
+            id: "irodori.migration".into(),
+            name: "Migration Studio".into(),
+            version: "0.1.0".into(),
+            runtime: "native".into(),
+            entry: "dist/native".into(),
+            permissions: permissions.iter().map(|scope| scope.to_string()).collect(),
+            contributes: ManifestContributions {
+                host_features: vec![],
+                connectors: vec![],
+                tools,
+            },
+        }
+    }
+
+    #[test]
+    fn a_native_extension_can_contribute_tools_instead_of_a_connector() {
+        let manifest = tool_manifest(vec![json!({ "id": "a" })], &["native", "tools"]);
+        assert!(validate_native_manifest(&manifest).is_ok());
+    }
+
+    #[test]
+    fn tools_need_their_permission() {
+        let manifest = tool_manifest(vec![json!({ "id": "a" })], &["native"]);
+        let error = validate_native_manifest(&manifest).unwrap_err();
+        assert!(
+            error.message.contains("tools permission"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn tools_and_a_connector_cannot_share_a_module() {
+        let mut manifest = tool_manifest(vec![json!({ "id": "a" })], &["native", "tools"]);
+        manifest.contributes.connectors = vec![ManifestConnector { engine: "x".into() }];
+        let error = validate_native_manifest(&manifest).unwrap_err();
+        assert!(error.message.contains("not both"), "{}", error.message);
+    }
+
+    #[test]
+    fn a_native_extension_with_neither_is_refused() {
+        let manifest = tool_manifest(vec![], &["native"]);
+        assert!(validate_native_manifest(&manifest).is_err());
+    }
+
+    #[test]
+    fn tool_ids_must_be_present_and_unique() {
+        for tools in [
+            vec![json!({ "title": {} })],
+            vec![json!({ "id": " " })],
+            vec![json!({ "id": "a" }), json!({ "id": "a" })],
+        ] {
+            let manifest = tool_manifest(tools, &["native", "tools"]);
+            assert!(validate_native_manifest(&manifest).is_err());
+        }
+    }
+
+    #[test]
+    fn only_a_declared_tool_of_an_enabled_extension_can_be_called() {
+        let mut extension = installed("irodori.migration", Some("/lib/tool.so"));
+        extension.tools = vec![json!({ "id": "a" })];
+
+        assert_eq!(
+            library_for_tool(&extension, "a").unwrap(),
+            PathBuf::from("/lib/tool.so")
+        );
+        assert!(library_for_tool(&extension, "b").is_err());
+
+        extension.enabled = false;
+        assert!(library_for_tool(&extension, "a").is_err());
+
+        extension.enabled = true;
+        extension.library_path = None;
+        assert!(library_for_tool(&extension, "a").is_err());
     }
 
     fn installed(id: &str, library_path: Option<&str>) -> InstalledExtension {
@@ -1001,6 +1169,7 @@ mod tests {
             abi_version: Some(ABI_VERSION),
             supported_calls: vec!["connect".into()],
             connection_model: None,
+            tools: vec![],
         }
     }
 

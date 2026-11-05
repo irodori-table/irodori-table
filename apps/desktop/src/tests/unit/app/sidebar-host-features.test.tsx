@@ -39,6 +39,7 @@ const knowledgeExtension: InstalledExtension = {
   enabled: true,
   installedAt: "0",
   supportedCalls: [],
+  tools: [],
 };
 
 // Seeding through the setter also flips `loaded`, which is what stops the hook

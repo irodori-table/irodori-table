@@ -88,7 +88,7 @@ often.
 **Lowercase SQL** · **Add Leading Commas** · **Convert double quotes to single
 quotes** · **Copy SQL INSERTs** · **Export SQL INSERTs** · **Toggle Search
 panel** · **Open Query History** · **Toggle History Panel** · **Open Git
-Panel** · **Toggle Knowledge Panel** · **Open Migration Studio** · **Open
+Panel** · **Toggle Knowledge Panel** · **Open
 Connection Manager** · **Generate SQL with AI** · **Explain Plan** · **Explain
 Analyse** · **Toggle Sidebar** · **Toggle Completion Panel** · **Toggle Plan
 Panel** · **Toggle BI Panel** · **Open Keyboard Shortcuts** · **Open

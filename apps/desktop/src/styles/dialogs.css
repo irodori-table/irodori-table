@@ -799,21 +799,21 @@
   white-space: pre;
 }
 
-.migration-dialog {
+.tool-dialog {
   width: min(1240px, 96vw);
   height: min(86vh, 820px);
   max-height: min(86vh, 820px);
 }
 
-.migration-body {
+.tool-body {
   grid-template-columns: minmax(330px, 0.82fr) minmax(440px, 1.18fr);
   flex: 1;
   min-height: 0;
 }
 
-.migration-form,
-.migration-preview,
-.migration-overview {
+.tool-form,
+.tool-preview,
+.tool-overview {
   display: grid;
   align-content: start;
   gap: 10px;
@@ -821,31 +821,17 @@
   min-height: 0;
 }
 
-.migration-form {
+.tool-form {
   overflow: auto;
   padding-right: 2px;
 }
 
-.migration-form-grid,
-.migration-textareas {
+.tool-form-grid {
   display: grid;
   gap: 8px;
 }
 
-.migration-form-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.migration-form-grid.compact {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.migration-textareas {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.migration-form label,
-.migration-textareas label {
+.tool-form label {
   display: grid;
   gap: 5px;
   min-width: 0;
@@ -855,9 +841,9 @@
   text-transform: uppercase;
 }
 
-.migration-form input,
-.migration-form select,
-.migration-form textarea {
+.tool-form input,
+.tool-form select,
+.tool-form textarea {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--border);
@@ -868,13 +854,13 @@
   font-size: var(--font-ui-md);
 }
 
-.migration-form input,
-.migration-form select {
+.tool-form input,
+.tool-form select {
   height: var(--control-md);
   padding: 0 8px;
 }
 
-.migration-form textarea {
+.tool-form textarea {
   min-height: 112px;
   resize: vertical;
   padding: 8px;
@@ -883,15 +869,15 @@
   text-transform: none;
 }
 
-.migration-form input:focus,
-.migration-form select:focus,
-.migration-form textarea:focus {
+.tool-form input:focus,
+.tool-form select:focus,
+.tool-form textarea:focus {
   border-color: var(--focus);
   box-shadow: var(--focus-ring);
   outline: 0;
 }
 
-.migration-options {
+.tool-options {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
@@ -901,7 +887,7 @@
   background: var(--surface-muted);
 }
 
-.migration-options label {
+.tool-options label {
   display: inline-flex;
   grid-template-columns: none;
   align-items: center;
@@ -912,36 +898,49 @@
   text-transform: none;
 }
 
-.migration-options input {
+.tool-options input {
   width: 14px;
   height: 14px;
 }
 
-.migration-tabs {
+.tool-tabs {
   justify-self: start;
 }
 
-.migration-output {
+.tool-output {
   max-height: none;
   min-height: 0;
   height: 100%;
 }
 
-.migration-preview {
+.tool-preview {
   grid-template-rows: auto minmax(0, 1fr);
 }
 
-.migration-overview {
+.tool-result {
+  display: grid;
+  grid-auto-rows: minmax(0, auto);
+  gap: 10px;
+  min-height: 0;
   overflow: auto;
 }
 
-.migration-summary-grid {
+.tool-notes p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.tool-overview {
+  overflow: auto;
+}
+
+.tool-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
-.migration-summary-grid > div {
+.tool-summary-grid > div {
   display: grid;
   gap: 5px;
   min-width: 0;
@@ -951,14 +950,14 @@
   background: var(--surface-raised);
 }
 
-.migration-summary-grid small {
+.tool-summary-grid small {
   color: var(--muted);
   font-size: var(--font-ui-sm);
   font-weight: 800;
   text-transform: uppercase;
 }
 
-.migration-summary-grid strong {
+.tool-summary-grid strong {
   min-width: 0;
   overflow: hidden;
   color: var(--text);
@@ -967,12 +966,12 @@
   white-space: nowrap;
 }
 
-.migration-task-list {
+.tool-task-list {
   display: grid;
   gap: 6px;
 }
 
-.migration-task {
+.tool-task {
   display: grid;
   grid-template-columns: 92px minmax(0, 1fr);
   gap: 10px;
@@ -984,30 +983,30 @@
   background: var(--surface-raised);
 }
 
-.migration-task.ready {
+.tool-task.ready {
   border-left-color: var(--green);
 }
 
-.migration-task.manual {
+.tool-task.manual {
   border-left-color: var(--blue);
 }
 
-.migration-task.risk {
+.tool-task.risk {
   border-left-color: var(--red);
 }
 
-.migration-task strong {
+.tool-task strong {
   color: var(--text);
   font-size: var(--font-ui-md);
 }
 
-.migration-task span,
-.migration-notes {
+.tool-task span,
+.tool-notes {
   color: var(--muted);
   font-size: var(--font-ui-md);
 }
 
-.migration-notes {
+.tool-notes {
   display: grid;
   gap: 6px;
   padding: 10px;
@@ -1016,16 +1015,16 @@
   background: var(--surface-muted);
 }
 
-.migration-notes.warning {
+.tool-notes.warning {
   border-color: color-mix(in srgb, var(--amber) 45%, var(--border));
   background: color-mix(in srgb, var(--amber) 12%, var(--surface-raised));
 }
 
-.migration-notes strong {
+.tool-notes strong {
   color: var(--text);
 }
 
-.migration-notes ul {
+.tool-notes ul {
   display: grid;
   gap: 4px;
   margin: 0;
@@ -1033,16 +1032,16 @@
 }
 
 @media (max-width: 920px) {
-  .migration-dialog {
+  .tool-dialog {
     height: min(90vh, 860px);
     max-height: min(90vh, 860px);
   }
 
-  .migration-body,
-  .migration-form-grid,
-  .migration-form-grid.compact,
-  .migration-textareas,
-  .migration-summary-grid {
+  .tool-body,
+  .tool-form-grid,
+  .tool-form-grid.compact,
+  .tool-textareas,
+  .tool-summary-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -42,7 +42,6 @@ mod influx;
 mod meta;
 mod metadata_manager;
 mod metadata_types;
-mod migration;
 #[cfg(feature = "mongo")]
 mod mongo;
 #[cfg(feature = "sqlserver")]
@@ -87,7 +86,6 @@ pub use metadata_types::{
     ColumnMetadata, DatabaseMetadata, DbObjectMetadata, DbObjectMetadataKind, DbQuickSample,
     ForeignKey, IndexMetadata, SchemaMetadata,
 };
-pub use migration::*;
 pub use profile::ConnectionProfile;
 use profile::{normalize_profile, redact_secret_text};
 pub use query::{

@@ -1,9 +1,11 @@
-//! Verified connector and declarative feature-extension host.
+//! Verified extension host for connectors, tools and declarative features.
 //!
 //! Extensions are published by the `irodori-extension-*` repos and described
-//! by `registry/catalog/index.json`. Native connector extensions are cdylibs;
-//! declarative feature extensions activate trusted features compiled into the
-//! desktop host and never execute downloaded code in the application webview.
+//! by `registry/catalog/index.json`. Native extensions are cdylibs that provide
+//! a connector or tools; declarative feature extensions activate trusted
+//! features compiled into the desktop host. No downloaded code ever runs in the
+//! application webview: a tool's dialog is rendered by the host from its
+//! manifest, and its module runs in a separate process.
 
 mod abi;
 mod catalog;
@@ -14,8 +16,9 @@ mod store;
 pub(crate) use connection::NativeExtensionConnection;
 pub use store::ExtensionsState;
 
-use irodori_error::Result as IrodoriResult;
+use irodori_error::{IrodoriError, Result as IrodoriResult};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use tauri::{AppHandle, Manager, State};
 use ts_rs::TS;
 
@@ -63,6 +66,11 @@ pub struct InstalledExtension {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional, type = "unknown")]
     pub connection_model: Option<serde_json::Value>,
+    /// The tools a native module contributes, verbatim from its manifest. Held
+    /// as `Value` for the same reason as `connection_model`.
+    #[serde(default)]
+    #[ts(type = "Array<unknown>")]
+    pub tools: Vec<serde_json::Value>,
 }
 
 fn default_extension_runtime() -> String {
@@ -111,6 +119,32 @@ pub struct ExtensionInstallRequest {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub manifest_path: Option<String>,
+}
+
+/// Run a contributed tool once with the values in its form.
+///
+/// The module answers with the output to show, or with an error for input it
+/// cannot use. Either way it runs out of process, so a crash is an error here.
+#[tauri::command]
+pub async fn ext_tool_run(
+    app: AppHandle,
+    state: State<'_, ExtensionsState>,
+    extension_id: String,
+    tool_id: String,
+    input: Value,
+    locale: String,
+) -> IrodoriResult<Value> {
+    let library = store::tool_library(&app, &state, &extension_id, &tool_id)?;
+    let request = json!({
+        "method": "tool.run",
+        "tool": tool_id,
+        "input": input,
+        "locale": locale,
+    });
+    tauri::async_runtime::spawn_blocking(move || process::call_tool(&library, &request))
+        .await
+        .map_err(|error| IrodoriError::transport(format!("tool call did not finish: {error}")))?
+        .map_err(IrodoriError::validation)
 }
 
 #[tauri::command]

@@ -73,7 +73,7 @@ export function useWorkbenchActions({
     openSqlInNewTab: editor.openSqlInNewTab,
     showTableTab: editor.showTableTab,
     queryRunning: queryRunner.running,
-    setMigrationStudioOpen: overlays.setMigrationStudioOpen,
+    closeTool: overlays.closeTool,
     setSchemaDesignerOpen,
     setObjectActionMenu: connections.setObjectActionMenu,
     setTableViewObject: grid.setTableViewObject,
@@ -103,7 +103,7 @@ export function useWorkbenchActions({
     ui: {
       openPalette: overlays.openPalette,
       openAbout: overlays.openAbout,
-      openMigrationStudio: overlays.openMigrationStudio,
+      openTool: overlays.openTool,
       openAiGenerate: overlays.openAiGenerate,
       toggleTerminal: overlays.toggleTerminal,
     },

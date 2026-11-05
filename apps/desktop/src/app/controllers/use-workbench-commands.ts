@@ -85,7 +85,7 @@ type WorkbenchCommandsDeps = {
   ui: {
     openPalette: () => void;
     openAbout: () => void;
-    openMigrationStudio: () => void;
+    openTool: (commandId: string) => void;
     openAiGenerate: () => void;
     toggleTerminal: () => void;
   };
@@ -141,7 +141,7 @@ export function useWorkbenchCommands({
     openAbout: ui.openAbout,
     openDeveloperTools: () => void workspace.openAppDeveloperTools(),
     openConnectionManager: () => connections.setConnectionManagerOpen(true),
-    openMigrationStudio: ui.openMigrationStudio,
+    openTool: ui.openTool,
     openDiagram: () => erd.setDiagramOpen(true),
     toggleTheme: () =>
       themes.activateBuiltInTheme((kind) =>

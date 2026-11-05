@@ -339,10 +339,6 @@ const commandTranslationKeys: Partial<Record<string, CommandTranslationKeys>> =
       title: "commands.history.open.title",
       category: "commands.category.view",
     },
-    "migration.studio": {
-      title: "commands.migration.studio.title",
-      category: "commands.category.general",
-    },
     "palette.open": {
       title: "commands.palette.open.title",
       category: "commands.category.general",
@@ -529,6 +525,24 @@ export function localizeMenuSections(
   });
 }
 
+/** Tools an extension contributes go at the top of the Tools menu. */
+export function withToolMenuItems(
+  sections: readonly AppMenuSection[],
+  commandIds: readonly string[],
+): AppMenuSection[] {
+  return sections.map((section) =>
+    section.label === "Tools"
+      ? {
+          ...section,
+          items: [
+            ...commandIds.map((commandId) => ({ commandId })),
+            ...section.items,
+          ],
+        }
+      : section,
+  );
+}
+
 export const menuBarSections: AppMenuSection[] = [
   {
     label: "File",
@@ -586,7 +600,6 @@ export const menuBarSections: AppMenuSection[] = [
   {
     label: "Tools",
     items: [
-      { commandId: "migration.studio" },
       { commandId: "editor.cleanup" },
       { commandId: "settings.keymap" },
       { commandId: "settings.extensions" },

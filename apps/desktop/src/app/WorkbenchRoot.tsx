@@ -7,10 +7,15 @@ import {
   localizeCommandCatalog,
   localizeMenuSections,
   menuBarSections,
+  withToolMenuItems,
 } from "@/app/app-config";
 import { WorkbenchDialogs } from "@/app/WorkbenchDialogs";
 import { WorkbenchSidebar } from "@/app/WorkbenchSidebar";
 import { useWorkbenchContext } from "@/app/workbench-context";
+import {
+  toolCommands,
+  useInstalledTools,
+} from "@/features/extensions/tools/extension-tools";
 import { usePreferencesStore } from "@/features/preferences";
 import { QueryEditorPane } from "@/features/query-editor";
 import { ResultsPane } from "@/features/results";
@@ -46,13 +51,25 @@ export function WorkbenchRoot() {
   const animationsEnabled = usePreferencesStore(
     (state) => state.animationsEnabled,
   );
+  const locale = usePreferencesStore((state) => state.locale);
+  const tools = useInstalledTools();
   const localizedMenuBarSections = useMemo(
-    () => localizeMenuSections(menuBarSections, t),
-    [t],
+    () =>
+      localizeMenuSections(
+        withToolMenuItems(
+          menuBarSections,
+          tools.map((tool) => tool.commandId),
+        ),
+        t,
+      ),
+    [t, tools],
   );
   const localizedMenuCommandCatalog = useMemo(
-    () => localizeCommandCatalog(appMenuCommandCatalog, t),
-    [t],
+    () => [
+      ...localizeCommandCatalog(appMenuCommandCatalog, t),
+      ...toolCommands(tools, locale),
+    ],
+    [locale, t, tools],
   );
 
   return (

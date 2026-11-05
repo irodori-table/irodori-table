@@ -5,5 +5,6 @@
 //! implementation instead of two that can drift.
 
 pub(crate) use irodori_connector_host::{
-    connector_request, probe_library, NativeConnector, NativeConnectorProbe, ABI_VERSION,
+    connector_error_message, connector_request, probe_library, NativeConnector,
+    NativeConnectorProbe, ABI_VERSION,
 };

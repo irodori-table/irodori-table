@@ -1,3 +1,5 @@
+import { isToolCommandId } from "@/features/extensions/tools/extension-tools";
+
 import type { SqlEditorTransformAction } from "@/sql/editor-transforms";
 
 type WorkbenchCommandHandlerDeps = {
@@ -13,7 +15,7 @@ type WorkbenchCommandHandlerDeps = {
   openAbout: () => void;
   openDeveloperTools: () => void;
   openConnectionManager: () => void;
-  openMigrationStudio: () => void;
+  openTool: (commandId: string) => void;
   openDiagram: () => void;
   toggleTheme: () => void;
   toggleSidebar: () => void;
@@ -78,7 +80,7 @@ export function createWorkbenchCommandHandler({
   openAbout,
   openDeveloperTools,
   openConnectionManager,
-  openMigrationStudio,
+  openTool,
   openDiagram,
   toggleTheme,
   toggleSidebar,
@@ -130,6 +132,10 @@ export function createWorkbenchCommandHandler({
   searchInAllTabs,
 }: WorkbenchCommandHandlerDeps) {
   return (id: string) => {
+    if (isToolCommandId(id)) {
+      openTool(id);
+      return;
+    }
     switch (id) {
       case "palette.open":
         openPalette();
@@ -190,9 +196,6 @@ export function createWorkbenchCommandHandler({
         break;
       case "connection.manager":
         openConnectionManager();
-        break;
-      case "migration.studio":
-        openMigrationStudio();
         break;
       case "diagram.show":
         openDiagram();

@@ -62,7 +62,7 @@
 | [Schema designer](schema-designer.md) | フォームによるCREATE／ALTER SQL生成 |
 | [Schema diagram designer](schema-diagram.md) | 自由配置キャンバスでのモデリング、JSON往復 |
 | [Import](import.md) | CSV／TSV／JSON／JSONLからINSERT SQLを生成 |
-| [Migration Studio](migration-studio.md) | エンジン間マイグレーションの計画と差分SQL |
+| [Migration Studio](migration-studio.md) | エンジン間マイグレーションの計画と差分SQL(拡張機能) |
 | [AI chat and SQL generation](ai-chat.md) | プロバイダー、エージェントモード、モデルが見えるもの・見えないもの |
 | [Knowledge panel](knowledge.md) | 同梱ファクトパックとその用途 |
 | [Git](git.md) | コミットグラフ、変更、ブランチ — **およびリポジトリパスの問題** |

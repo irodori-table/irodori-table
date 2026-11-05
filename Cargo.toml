@@ -24,7 +24,6 @@ irodori-proxy = { git = "https://github.com/irodori-table/irodori-kit", tag = "v
 irodori-secure-store = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.9.3" }
 irodori-completion = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.9.3" }
 irodori-generate = { git = "https://github.com/irodori-table/irodori-kit", tag = "v0.9.3" }
-irodori-migration = "0.4"
 
 [patch.crates-io]
 # GTK3 GLib soundness fix; retain the upstream version and complete provenance.
