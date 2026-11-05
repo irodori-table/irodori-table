@@ -224,8 +224,7 @@ fn postgres_samples_errors_name_no_server_source_line() {
             ),
         )
         .await
-        .err()
-        .expect("the server must refuse a wrong password")
+        .expect_err("the server must refuse a wrong password")
         .to_string();
         assert!(
             refused.contains("password authentication failed"),
@@ -250,8 +249,7 @@ fn postgres_samples_errors_name_no_server_source_line() {
             None,
         )
         .await
-        .err()
-        .expect("a missing table must fail")
+        .expect_err("a missing table must fail")
         .to_string();
         assert!(missing.contains("does not exist"), "{missing}");
         assert!(!missing.contains(" at line "), "{missing}");
