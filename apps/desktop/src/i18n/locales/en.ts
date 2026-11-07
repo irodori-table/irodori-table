@@ -412,7 +412,8 @@ export const en = {
   "results.queryResult": "Query result",
   "results.sortTitle": "Sort by {column}",
   "results.resizeColumn": "Resize {column} column",
-  "results.resizeColumnHint": "Drag to resize; double-click to fit content. Use Left/Right arrows to resize, Enter to fit.",
+  "results.resizeColumnHint":
+    "Drag to resize; double-click to fit content. Use Left/Right arrows to resize, Enter to fit.",
   "results.runningQuery": "Running query...",
   "results.noRowsMatchFilters": "No rows match filters",
   "results.noRowsReturned": "No rows returned",
@@ -521,34 +522,43 @@ export const en = {
   "settings.general.editorMode.default": "Default",
   "settings.general.editorMode.vim": "Vim",
   "settings.general.editorBackground.title": "Editor background image",
-  "settings.general.editorBackground.description": "Optional SQL editor background.",
+  "settings.general.editorBackground.description":
+    "Optional SQL editor background.",
   "settings.general.editorBackground.placeholder": "Image URL or data URL",
   "settings.general.editorBackground.choose": "Choose",
   "settings.general.editorBackground.opacity": "Background image opacity",
   "settings.general.sidebarLabels.title": "Sidebar tab labels",
-  "settings.general.sidebarLabels.description": "Show text beside sidebar icons.",
+  "settings.general.sidebarLabels.description":
+    "Show text beside sidebar icons.",
   "settings.general.animations.title": "Animations",
-  "settings.general.animations.description": "Short transitions; respects reduced motion.",
+  "settings.general.animations.description":
+    "Short transitions; respects reduced motion.",
   "settings.general.autoCommit.title": "Auto Commit",
   "settings.general.autoCommit.description": "Commit after each statement.",
   "settings.general.updateCheckOnStartup.title": "Check for updates on startup",
-  "settings.general.updateCheckOnStartup.description": "Check for updates when the app starts.",
+  "settings.general.updateCheckOnStartup.description":
+    "Check for updates when the app starts.",
   "settings.general.formatter.title": "SQL formatter",
   "settings.general.formatter.description": "SQL formatting engine.",
   "settings.general.linter.title": "SQL linter",
-  "settings.general.linter.description": "SQL syntax and risky statement checks.",
+  "settings.general.linter.description":
+    "SQL syntax and risky statement checks.",
   "settings.general.resultOffload.title": "Result offload",
   "settings.general.resultOffload.description": "Load large results from disk.",
   "settings.general.residentRows.title": "Resident rows",
-  "settings.general.residentRows.description": "Rows held in RAM before offloading.",
+  "settings.general.residentRows.description":
+    "Rows held in RAM before offloading.",
   "settings.general.queryHistory.title": "Query history",
-  "settings.general.queryHistory.description": "Saved query count. 0 disables history.",
+  "settings.general.queryHistory.description":
+    "Saved query count. 0 disables history.",
   "settings.general.historyRows.title": "History result rows",
-  "settings.general.historyRows.description": "Saved rows per query. 0 saves SQL only.",
+  "settings.general.historyRows.description":
+    "Saved rows per query. 0 saves SQL only.",
   "settings.general.sidebar.title": "Sidebar",
   "settings.general.sidebar.description": "Tables and connections.",
   "settings.general.resetLayout.title": "Panel layout",
-  "settings.general.resetLayout.description": "Restore the default panel layout.",
+  "settings.general.resetLayout.description":
+    "Restore the default panel layout.",
   "settings.general.resetLayout.action": "Reset layout",
   "settings.general.sidebarSide.title": "Sidebar position",
   "settings.general.sidebarSide.description":

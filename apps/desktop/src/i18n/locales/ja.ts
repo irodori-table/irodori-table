@@ -417,7 +417,8 @@ export const ja = {
   "results.queryResult": "クエリ結果",
   "results.sortTitle": "{column} で並び替え",
   "results.resizeColumn": "{column} 列の幅を調整",
-  "results.resizeColumnHint": "ドラッグで幅を調整、ダブルクリックで内容に合わせます。左右キーで調整、Enter で自動調整できます。",
+  "results.resizeColumnHint":
+    "ドラッグで幅を調整、ダブルクリックで内容に合わせます。左右キーで調整、Enter で自動調整できます。",
   "results.runningQuery": "クエリを実行中...",
   "results.noRowsMatchFilters": "フィルタに一致する行はありません",
   "results.noRowsReturned": "返された行はありません",
@@ -533,25 +534,31 @@ export const ja = {
   "settings.general.editorBackground.choose": "選択",
   "settings.general.editorBackground.opacity": "背景画像の濃さ",
   "settings.general.sidebarLabels.title": "サイドバータブのラベル",
-  "settings.general.sidebarLabels.description": "サイドバーのアイコンに名前を表示。",
+  "settings.general.sidebarLabels.description":
+    "サイドバーのアイコンに名前を表示。",
   "settings.general.animations.title": "アニメーション",
-  "settings.general.animations.description": "短い画面効果。OS の動き軽減設定に従います。",
+  "settings.general.animations.description":
+    "短い画面効果。OS の動き軽減設定に従います。",
   "settings.general.autoCommit.title": "自動コミット",
   "settings.general.autoCommit.description": "文の実行ごとに確定。",
   "settings.general.updateCheckOnStartup.title": "起動時に更新を確認",
-  "settings.general.updateCheckOnStartup.description": "起動時に更新を確認します。",
+  "settings.general.updateCheckOnStartup.description":
+    "起動時に更新を確認します。",
   "settings.general.formatter.title": "SQL フォーマッタ",
   "settings.general.formatter.description": "SQL の整形エンジン。",
   "settings.general.linter.title": "SQL リンター",
   "settings.general.linter.description": "SQL の構文・危険な操作を確認。",
   "settings.general.resultOffload.title": "結果のオフロード",
-  "settings.general.resultOffload.description": "大きな結果をディスクから読み込み。",
+  "settings.general.resultOffload.description":
+    "大きな結果をディスクから読み込み。",
   "settings.general.residentRows.title": "常駐行数",
-  "settings.general.residentRows.description": "ディスク退避前にメモリに保持する行数。",
+  "settings.general.residentRows.description":
+    "ディスク退避前にメモリに保持する行数。",
   "settings.general.queryHistory.title": "クエリ履歴",
   "settings.general.queryHistory.description": "保存する履歴数。0 で無効。",
   "settings.general.historyRows.title": "履歴の結果行",
-  "settings.general.historyRows.description": "クエリごとの保存行数。0 なら SQL のみ。",
+  "settings.general.historyRows.description":
+    "クエリごとの保存行数。0 なら SQL のみ。",
   "settings.general.sidebar.title": "サイドバー",
   "settings.general.sidebar.description": "テーブルと接続の一覧。",
   "settings.general.resetLayout.title": "パネルレイアウト",
