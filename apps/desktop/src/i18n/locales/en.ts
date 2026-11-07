@@ -1195,6 +1195,7 @@ export const en = {
   "sidebar.refreshObjects": "Refresh objects",
   "sidebar.collapseAll": "Collapse all",
   "sidebar.expandAll": "Expand all",
+  "sidebar.toggleSchema": "Expand or collapse {name}",
   "sidebar.savedConnections": "Saved connections",
   "sidebar.close": "Close sidebar",
   "sidebar.views": "Sidebar views",

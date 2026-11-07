@@ -84,9 +84,13 @@ function headingText(container: HTMLElement) {
 }
 
 function containerIconClass(container: HTMLElement) {
-  return container
-    .querySelector(".schema-tree > summary > svg:not(.tree-chevron)")
-    ?.getAttribute("class");
+  return (
+    container
+      .querySelector(
+        ".schema-tree > summary > svg:not(.tree-chevron), .schema-tree > summary .schema-folder-icon svg",
+      )
+      ?.getAttribute("class") ?? undefined
+  );
 }
 
 beforeEach(() => {
@@ -186,6 +190,15 @@ describe("Sidebar object browser container vocabulary", () => {
           container.querySelector(`${selector} > summary > .tree-chevron`),
         ).not.toBeNull();
       }
+    });
+
+    it("renders open and closed folder icons with a disclosure tooltip", () => {
+      const { container } = renderTable();
+      const summary = container.querySelector(".schema-tree > summary")!;
+
+      expect(summary.getAttribute("title")).toBe("Expand or collapse public");
+      expect(summary.querySelector(".schema-folder-closed")).not.toBeNull();
+      expect(summary.querySelector(".schema-folder-open")).not.toBeNull();
     });
 
     it("expands and collapses every table from one button", async () => {

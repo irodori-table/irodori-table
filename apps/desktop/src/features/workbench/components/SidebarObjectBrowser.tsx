@@ -17,6 +17,7 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   Folder,
+  FolderOpen,
   List,
   MoreHorizontal,
   Network,
@@ -493,12 +494,17 @@ export function SidebarObjectBrowser({
           activeMetadata.schemas.length > 0 ? (
             activeMetadata.schemas.map((schema) => (
               <details className="schema-tree" key={schema.name} open>
-                <summary>
+                <summary
+                  title={t("sidebar.toggleSchema", { name: schema.name })}
+                >
                   <ChevronRight className="tree-chevron" size={12} />
                   {namespaceBrowserEngines.has(activeConnection.engine) ? (
                     <Boxes size={14} />
                   ) : (
-                    <Folder size={14} />
+                    <span className="schema-folder-icon">
+                      <Folder className="schema-folder-closed" size={14} />
+                      <FolderOpen className="schema-folder-open" size={14} />
+                    </span>
                   )}
                   <span>{schema.name}</span>
                   <small>{schema.objects.length}</small>

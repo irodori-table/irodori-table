@@ -1640,6 +1640,18 @@
   transform: rotate(90deg);
 }
 
+/* Both icons are rendered so the native <details> state can drive them without
+ * React state; Collapse all / Expand all also flip the same attribute. */
+.schema-folder-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.schema-tree[open] > summary .schema-folder-closed,
+.schema-tree:not([open]) > summary .schema-folder-open {
+  display: none;
+}
+
 .schema-tree summary {
   grid-template-columns: 12px 17px minmax(0, 1fr) auto;
   gap: 4px;

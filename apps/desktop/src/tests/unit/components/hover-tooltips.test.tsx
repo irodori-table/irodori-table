@@ -68,4 +68,37 @@ describe("HoverTooltips", () => {
     expect(screen.queryByRole("tooltip")).toBeNull();
     expect(titled).toHaveAttribute("title", "New table");
   });
+
+  it("shows the title when a control receives keyboard focus", () => {
+    const [titled] = renderButton();
+
+    fireEvent.keyDown(document, { key: "Tab" });
+    act(() => titled!.focus());
+    waitForDelay();
+
+    expect(screen.getByRole("tooltip")).toHaveTextContent("New table");
+    expect(titled).not.toHaveAttribute("title");
+  });
+
+  it("restores the title when keyboard focus leaves", () => {
+    const [titled] = renderButton();
+
+    fireEvent.keyDown(document, { key: "Tab" });
+    act(() => titled!.focus());
+    waitForDelay();
+    act(() => titled!.blur());
+
+    expect(screen.queryByRole("tooltip")).toBeNull();
+    expect(titled).toHaveAttribute("title", "New table");
+  });
+
+  it("stays quiet when focus came from the pointer", () => {
+    const [titled] = renderButton();
+
+    fireEvent.pointerDown(document.body);
+    act(() => titled!.focus());
+    waitForDelay();
+
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
 });
