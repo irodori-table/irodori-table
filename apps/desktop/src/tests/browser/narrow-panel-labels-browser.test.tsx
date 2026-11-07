@@ -232,6 +232,29 @@ describe("row detail view switcher (real layout)", () => {
     expect(tab.scrollWidth).toBeLessThanOrEqual(tab.clientWidth);
   });
 
+  it("sizes unequal labels to their content instead of equal columns", async () => {
+    // Between "the whole set fits" and "the widest label fits its equal
+    // share" the old 1fr columns truncated Fields. Every width where all three
+    // tabs stay visible must keep every label inside its own tab.
+    for (const width of [150, 160, 170, 180, 200]) {
+      const element = renderSwitcher(width, [{ a: 1 }]);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      const visibleTabs = [
+        ...element.querySelectorAll<HTMLElement>('[role="tab"]'),
+      ];
+      if (visibleTabs.length !== 3) {
+        continue;
+      }
+      for (const tab of visibleTabs) {
+        expect(
+          tab.scrollWidth,
+          `${width}px: ${tab.textContent}`,
+        ).toBeLessThanOrEqual(tab.clientWidth + 1);
+      }
+    }
+  });
+
   it("shows Copy as an icon that still has a name", () => {
     const element = renderSwitcher(400, ["flat"]);
     const copy = element.querySelector<HTMLElement>(".row-detail-copy")!;

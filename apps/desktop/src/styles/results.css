@@ -921,14 +921,21 @@
 
 .row-detail-tabs {
   display: grid;
-  flex: 1 1 auto;
-  grid-auto-columns: minmax(0, 1fr);
+  /* Content-sized labels: equal `1fr` columns clipped the longer label even
+   * when the whole set fit. Collapsing is decided from the measured full width. */
+  grid-auto-columns: max-content;
   grid-auto-flow: column;
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 5px;
   background: var(--surface-raised);
+}
+
+/* With only the active label left, let it use the whole strip. */
+.row-detail-tabs.is-collapsed {
+  flex: 1 1 auto;
+  grid-auto-columns: minmax(0, 1fr);
 }
 
 /* Laid out like the real tabs but never seen: its width is what they need. */
