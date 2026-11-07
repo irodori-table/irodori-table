@@ -794,6 +794,7 @@ export function ResultsPane({
         structureObject={structureObject}
         resultMode={resultMode}
         chartModel={chartModel}
+        result={activeResult}
         graphModel={graphModel}
         formatObjectName={formatObjectName}
         formatCount={formatCount}

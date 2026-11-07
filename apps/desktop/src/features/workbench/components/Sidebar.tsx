@@ -31,7 +31,6 @@ type SidebarProps = {
   completionPanel: ReactNode;
   historyPanel: ReactNode;
   planPanel: ReactNode;
-  biPanel: ReactNode;
   gitPanel: ReactNode;
   aiChatPanel: ReactNode;
   searchReplacePanel: ReactNode;
@@ -78,7 +77,6 @@ export function Sidebar({
   completionPanel,
   historyPanel,
   planPanel,
-  biPanel,
   gitPanel,
   aiChatPanel,
   searchReplacePanel,
@@ -117,8 +115,6 @@ export function Sidebar({
         return historyPanel;
       case "plan":
         return planPanel;
-      case "bi":
-        return biPanel;
       case "git":
         return gitPanel;
       case "aiChat":

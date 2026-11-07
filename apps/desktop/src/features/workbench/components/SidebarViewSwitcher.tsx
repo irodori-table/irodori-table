@@ -10,7 +10,6 @@ import {
   type PopoverAnchor,
 } from "@/components/popover";
 import {
-  BarChart3,
   BookOpen,
   Bot,
   Check,
@@ -51,7 +50,6 @@ const viewTabMeta: Record<WorkbenchViewId, ViewTabMeta> = {
     label: "sidebar.view.history",
   },
   plan: { icon: Flame, title: "sidebar.view.plan", label: "sidebar.view.plan" },
-  bi: { icon: BarChart3, title: "sidebar.view.bi", label: "sidebar.view.bi" },
   git: {
     icon: GitBranch,
     title: "sidebar.view.git",

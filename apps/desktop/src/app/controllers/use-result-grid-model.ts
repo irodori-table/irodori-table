@@ -50,7 +50,6 @@ export type ResultGridModelDeps = {
   query: string;
   editorEngine: DbEngine;
   activeMetadata: DatabaseMetadata | undefined;
-  biOpen: boolean;
   spillInfo: { handle: string; total: number } | null;
   gridWindowVersion: number;
   editMode: boolean;
@@ -81,7 +80,6 @@ export function useResultGridModel({
   query,
   editorEngine,
   activeMetadata,
-  biOpen,
   spillInfo,
   gridWindowVersion,
   editMode,
@@ -315,7 +313,7 @@ export function useResultGridModel({
     if (!chartCandidateAvailable || !activeResult || spillInfo) {
       return null;
     }
-    if (resultGridView.windowed && resultMode !== "chart" && !biOpen) {
+    if (resultGridView.windowed && resultMode !== "chart") {
       return null;
     }
     const rows = resultGridView
@@ -328,7 +326,6 @@ export function useResultGridModel({
     return model.defaultSelection ? model : null;
   }, [
     activeResult,
-    biOpen,
     chartCandidateAvailable,
     resultColumns,
     resultGridView,

@@ -1,6 +1,5 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { BiPanel } from "@/features/results/components/BiPanel";
 import { PlanPanel } from "@/features/workbench/components/PlanPanel";
 import { buildBiResultSummary } from "@/features/results/bi-result";
 import { usePreferencesStore } from "@/features/preferences";
@@ -8,9 +7,9 @@ import type { QueryResultSet } from "@/generated/irodori-api";
 import { renderUi } from "@/tests/helpers/render";
 
 /**
- * #170: BiPanel, LakehousePanel and PlanPanel contained no `t()` call at all,
- * so they rendered in English under any language setting. The sibling scan
- * (`untranslated-surfaces.test.ts`) proves each file now reaches i18n; this
+ * #170: the workbench panels contained no `t()` call at all, so they
+ * rendered in English under any language setting. The sibling scan
+ * (`untranslated-surfaces.test.ts`) proves each file reaches i18n; this
  * proves the strings actually follow the locale, which a scan cannot.
  */
 
@@ -29,26 +28,6 @@ const result: QueryResultSet = {
 };
 
 describe("panels render in the active locale", () => {
-  it("BiPanel translates its chrome and empty state", () => {
-    renderUi(
-      <BiPanel
-        result={null}
-        chartModel={null}
-        chartAvailable={false}
-        onOpenChartMode={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
-
-    expect(
-      screen.getByRole("button", { name: "BI を閉じる" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getAllByText("有効な結果がありません").length,
-    ).toBeGreaterThan(0);
-    expect(screen.queryByText("No active result")).not.toBeInTheDocument();
-  });
-
   it("PlanPanel translates its actions and empty state", () => {
     renderUi(
       <PlanPanel

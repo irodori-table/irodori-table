@@ -7,7 +7,7 @@ import type {
   RefObject,
   UIEvent,
 } from "react";
-import type { DbObjectMetadata } from "@/generated/irodori-api";
+import type { DbObjectMetadata, QueryResultSet } from "@/generated/irodori-api";
 import type { ResultSortRule } from "../result-grid";
 import {
   type ResultGridDisplayRow,
@@ -41,6 +41,7 @@ export function ResultBody({
   structureObject,
   resultMode,
   chartModel,
+  result,
   graphModel,
   formatObjectName,
   formatCount,
@@ -91,6 +92,7 @@ export function ResultBody({
   structureObject: DbObjectMetadata | null;
   resultMode: ResultMode;
   chartModel: ChartResultModel | null;
+  result: QueryResultSet | null;
   graphModel: GraphResultModel | null;
   formatObjectName: (object: DbObjectMetadata) => string;
   formatCount: (value: bigint | number) => string;
@@ -166,7 +168,7 @@ export function ResultBody({
   }
 
   if (resultMode === "chart" && chartModel) {
-    return <ChartResultView model={chartModel} />;
+    return <ChartResultView model={chartModel} result={result} />;
   }
 
   if (resultMode === "webgl") {

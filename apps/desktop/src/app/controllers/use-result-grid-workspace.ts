@@ -44,7 +44,6 @@ export type ResultGridWorkspaceDeps = {
   metadataByConnection: Record<string, DatabaseMetadata>;
   activeConnectionId: string;
   activeConnectionReadOnly: boolean;
-  biOpen: boolean;
   activeEditorApi: () => SqlEditorHandle | null;
   // Selecting a grid row surfaces its detail in the right sidebar
   // (VS Code-style: the detail view follows the selection).
@@ -70,7 +69,6 @@ export function useResultGridWorkspace({
   metadataByConnection,
   activeConnectionId,
   activeConnectionReadOnly,
-  biOpen,
   activeEditorApi,
   onRowSelected,
   runQuery,
@@ -249,7 +247,6 @@ export function useResultGridWorkspace({
     query,
     editorEngine,
     activeMetadata,
-    biOpen,
     spillInfo,
     gridWindowVersion,
     editMode,

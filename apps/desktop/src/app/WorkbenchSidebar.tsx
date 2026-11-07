@@ -2,7 +2,7 @@ import { useWorkbenchContext } from "@/app/workbench-context";
 import { AiChatPanel } from "@/features/ai/chat/AiChatPanel";
 import { GitPanel } from "@/features/git";
 import { KnowledgePanel } from "@/features/knowledge/KnowledgePanel";
-import { BiPanel, RowDetailSidebar } from "@/features/results";
+import { RowDetailSidebar } from "@/features/results";
 import { useSchemaDesignerStore } from "@/features/schema-designer";
 import { SearchReplacePanel } from "@/features/search/SearchReplacePanel";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/features/workbench";
 
 // One side of the workbench: the view rail plus every dockable panel
-// (completion, history, plan, BI, git, AI chat, search) wired to
+// (completion, history, plan, git, AI chat, search) wired to
 // the workbench controllers from context.
 export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
   const {
@@ -132,15 +132,6 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
           }
           onCopyFormat={(format) => void editorCommands.copyPlanFormat(format)}
           onClose={() => sidebars.closeSidebarView("plan")}
-        />
-      }
-      biPanel={
-        <BiPanel
-          result={grid.activeResult}
-          chartModel={grid.chartResultModel}
-          chartAvailable={grid.chartAvailable}
-          onOpenChartMode={() => grid.setResultMode("chart")}
-          onClose={() => sidebars.closeSidebarView("bi")}
         />
       }
       gitPanel={
