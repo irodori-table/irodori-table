@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useWorkbenchContext } from "@/app/workbench-context";
 import { AiChatPanel } from "@/features/ai/chat/AiChatPanel";
 import { GitPanel } from "@/features/git";
@@ -68,17 +68,29 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
     (state) => state.problemsBadgeVisible,
   );
   // No tab renders the count while the view is hidden, so do not scan every
-  // buffer on every keystroke for a badge nobody can see.
-  const problemsEnabled = !sidebars.viewHidden.problems;
-  const deferredTabs = useDeferredValue(
-    problemsEnabled ? editorGroups.searchTabs : [],
-  );
+  // buffer on every keystroke for a badge nobody can see. While it is visible,
+  // a short debounce keeps typing responsive without leaving the list stale.
+  const problemsEnabled =
+    !sidebars.viewHidden.problems ||
+    sidebars.activeRightSidebarView === "problems";
+  const [problemTabs, setProblemTabs] = useState(editorGroups.searchTabs);
+  useEffect(() => {
+    if (!problemsEnabled) {
+      setProblemTabs([]);
+      return;
+    }
+    const handle = window.setTimeout(
+      () => setProblemTabs(editorGroups.searchTabs),
+      150,
+    );
+    return () => window.clearTimeout(handle);
+  }, [editorGroups.searchTabs, problemsEnabled]);
   const problems = useMemo(
     () =>
       problemsEnabled
-        ? collectSqlProblems(deferredTabs, editorEngine, sqlLinter)
+        ? collectSqlProblems(problemTabs, editorEngine, sqlLinter)
         : [],
-    [deferredTabs, editorEngine, problemsEnabled, sqlLinter],
+    [editorEngine, problemTabs, problemsEnabled, sqlLinter],
   );
   const problemSummary = problemCounts(problems);
   const problemsBadge = problemsBadgeVisible
