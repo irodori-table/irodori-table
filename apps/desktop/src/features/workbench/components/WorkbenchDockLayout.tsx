@@ -113,6 +113,14 @@ export function WorkbenchDockLayout({
   const apiRef = useRef<DockviewApi | null>(null);
   const readyRef = useRef(false);
   const layoutDisposableRef = useRef<Disposable | null>(null);
+  // A sash drag owns the width until pointerup; a store update must not relay
+  // the dock back to a stale/default width in the middle of it.
+  const sashDraggingRef = useRef(false);
+  // A pin scheduled by a panel insert runs on the next frame, which can be
+  // after a command has already asked for a different width (opening AI Chat
+  // widens the same panel). Read the latest sizes at execution time.
+  const sizesRef = useRef({ sidebarWidth, inspectorWidth });
+  sizesRef.current = { sidebarWidth, inspectorWidth };
   // Read when a sash drag ends, which can be after a re-render.
   const sidebarCallbacksRef = useRef({
     onSidebarWidthChange,
@@ -184,7 +192,6 @@ export function WorkbenchDockLayout({
       }
       addEditorPanel(api);
       const otherSidebar = api.getPanel("rightSidebar");
-      const otherWidth = otherSidebar?.api.width;
       const panel = api.addPanel({
         id: "leftSidebar",
         component: "workbenchPanel",
@@ -203,10 +210,8 @@ export function WorkbenchDockLayout({
       // sidebar; pin both widths explicitly (the editor absorbs the change).
       // The rescale lands after this tick, so pin again on the next frame.
       const pinWidths = () => {
-        panel.api.setSize({ width: sidebarWidth });
-        if (otherSidebar && otherWidth) {
-          otherSidebar.api.setSize({ width: otherWidth });
-        }
+        panel.api.setSize({ width: sizesRef.current.sidebarWidth });
+        otherSidebar?.api.setSize({ width: sizesRef.current.inspectorWidth });
       };
       pinWidths();
       requestAnimationFrame(pinWidths);
@@ -221,7 +226,6 @@ export function WorkbenchDockLayout({
       }
       addEditorPanel(api);
       const otherSidebar = api.getPanel("leftSidebar");
-      const otherWidth = otherSidebar?.api.width;
       const panel = api.addPanel({
         id: "rightSidebar",
         component: "workbenchPanel",
@@ -238,10 +242,8 @@ export function WorkbenchDockLayout({
       // sidebar's width, which the root-edge insertion rescales. The rescale
       // lands after this tick, so pin again on the next frame.
       const pinWidths = () => {
-        panel.api.setSize({ width: inspectorWidth });
-        if (otherSidebar && otherWidth) {
-          otherSidebar.api.setSize({ width: otherWidth });
-        }
+        panel.api.setSize({ width: sizesRef.current.inspectorWidth });
+        otherSidebar?.api.setSize({ width: sizesRef.current.sidebarWidth });
       };
       pinWidths();
       requestAnimationFrame(pinWidths);
@@ -374,6 +376,28 @@ export function WorkbenchDockLayout({
     saveLayout(api);
   }, [saveLayout, syncPanels]);
 
+  // Programmatic width changes (Reset layout, a command opening AI Chat wider)
+  // must reach an already-mounted panel. Drags are excluded: dockview owns the
+  // pointer and writes the final width to the store on pointerup.
+  useEffect(() => {
+    const api = apiRef.current;
+    if (!api || !readyRef.current || sashDraggingRef.current) {
+      return;
+    }
+    const apply = (id: WorkbenchDockPanelId, width: number) => {
+      const panel = api.getPanel(id);
+      if (panel && Math.abs(panel.api.width - width) > 1) {
+        panel.api.setSize({ width });
+      }
+    };
+    if (leftSidebarOpen) {
+      apply("leftSidebar", sidebarWidth);
+    }
+    if (rightSidebarOpen) {
+      apply("rightSidebar", inspectorWidth);
+    }
+  }, [inspectorWidth, leftSidebarOpen, rightSidebarOpen, sidebarWidth]);
+
   useEffect(() => {
     const api = apiRef.current;
     if (api && readyRef.current) {
@@ -405,6 +429,7 @@ export function WorkbenchDockLayout({
       if (!api || !sash) {
         return;
       }
+      sashDraggingRef.current = true;
       const dock = event.currentTarget;
       const sashBox = sash.getBoundingClientRect();
       const verticalSash = sashBox.height > sashBox.width;
@@ -489,6 +514,9 @@ export function WorkbenchDockLayout({
               onSidebarSnapClose?.(outcome.side);
             }
           }
+          // Release only after the store has the final widths, so the sync
+          // effect above never sees a stale value from before the drag.
+          sashDraggingRef.current = false;
         }, 0);
       };
       doc.addEventListener("pointermove", preview);
