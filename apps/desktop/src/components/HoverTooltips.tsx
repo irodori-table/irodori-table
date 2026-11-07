@@ -7,7 +7,7 @@ import {
 } from "@/components/popover";
 
 const SHOW_DELAY_MS = 350;
-const TARGET = "button[title], a[title]";
+const TARGET = "button[title], a[title], summary[title]";
 
 /**
  * Shows a control's `title` as the app's own tooltip.
@@ -31,6 +31,8 @@ export function HoverTooltips() {
     let active: Element | null = null;
     let lifted: string | null = null;
     let timer: number | undefined;
+    // Mouse focus should not pop a tooltip on click; only keyboard focus should.
+    let keyboardFocus = false;
 
     const release = () => {
       window.clearTimeout(timer);
@@ -42,15 +44,9 @@ export function HoverTooltips() {
       setTip(null);
     };
 
-    const onMouseOver = (event: MouseEvent) => {
-      const element = event.target instanceof Element ? event.target : null;
-      if (element && active?.contains(element)) {
-        return;
-      }
-      release();
-      const target = element?.closest(TARGET);
-      const text = target?.getAttribute("title");
-      if (!target || !text) {
+    const show = (target: Element, delay: number) => {
+      const text = target.getAttribute("title");
+      if (!text) {
         return;
       }
       active = target;
@@ -60,7 +56,19 @@ export function HoverTooltips() {
         if (target.isConnected) {
           setTip({ text, rect: target.getBoundingClientRect() });
         }
-      }, SHOW_DELAY_MS);
+      }, delay);
+    };
+
+    const onMouseOver = (event: MouseEvent) => {
+      const element = event.target instanceof Element ? event.target : null;
+      if (element && active?.contains(element)) {
+        return;
+      }
+      release();
+      const target = element?.closest(TARGET);
+      if (target) {
+        show(target, SHOW_DELAY_MS);
+      }
     };
 
     const onMouseOut = (event: MouseEvent) => {
@@ -69,18 +77,48 @@ export function HoverTooltips() {
       }
     };
 
+    const onFocusIn = (event: FocusEvent) => {
+      if (!keyboardFocus) {
+        return;
+      }
+      const target =
+        event.target instanceof Element ? event.target.closest(TARGET) : null;
+      if (target && target !== active) {
+        release();
+        show(target, 0);
+      }
+    };
+
+    const onFocusOut = () => release();
+
+    const onPointerDown = () => {
+      keyboardFocus = false;
+      release();
+    };
+
+    const onKeyDown = () => {
+      keyboardFocus = true;
+      release();
+    };
+
     document.addEventListener("mouseover", onMouseOver);
     document.addEventListener("mouseout", onMouseOut);
-    document.addEventListener("mousedown", release, true);
-    document.addEventListener("keydown", release, true);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    document.addEventListener("mousedown", onPointerDown, true);
+    document.addEventListener("pointerdown", onPointerDown, true);
+    document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("scroll", release, true);
     window.addEventListener("blur", release);
     return () => {
       release();
       document.removeEventListener("mouseover", onMouseOver);
       document.removeEventListener("mouseout", onMouseOut);
-      document.removeEventListener("mousedown", release, true);
-      document.removeEventListener("keydown", release, true);
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+      document.removeEventListener("mousedown", onPointerDown, true);
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("scroll", release, true);
       window.removeEventListener("blur", release);
     };

@@ -1222,6 +1222,7 @@ export const ja = {
   "sidebar.refreshObjects": "オブジェクトを更新",
   "sidebar.collapseAll": "すべて折りたたむ",
   "sidebar.expandAll": "すべて展開",
+  "sidebar.toggleSchema": "{name} を展開または折りたたむ",
   "sidebar.savedConnections": "保存済みの接続",
   "sidebar.close": "サイドバーを閉じる",
   "sidebar.views": "サイドバービュー",
