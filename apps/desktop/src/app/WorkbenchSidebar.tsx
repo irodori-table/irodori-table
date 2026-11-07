@@ -67,10 +67,18 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
   const problemsBadgeVisible = usePreferencesStore(
     (state) => state.problemsBadgeVisible,
   );
-  const deferredTabs = useDeferredValue(editorGroups.searchTabs);
+  // No tab renders the count while the view is hidden, so do not scan every
+  // buffer on every keystroke for a badge nobody can see.
+  const problemsEnabled = !sidebars.viewHidden.problems;
+  const deferredTabs = useDeferredValue(
+    problemsEnabled ? editorGroups.searchTabs : [],
+  );
   const problems = useMemo(
-    () => collectSqlProblems(deferredTabs, editorEngine, sqlLinter),
-    [deferredTabs, editorEngine, sqlLinter],
+    () =>
+      problemsEnabled
+        ? collectSqlProblems(deferredTabs, editorEngine, sqlLinter)
+        : [],
+    [deferredTabs, editorEngine, problemsEnabled, sqlLinter],
   );
   const problemSummary = problemCounts(problems);
   const problemsBadge = problemsBadgeVisible

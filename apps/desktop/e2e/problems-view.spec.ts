@@ -12,6 +12,9 @@ test("Problems lists a lint error and opens its line", async ({ page }) => {
   await content.click();
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.type("select (1");
+  const editorText = async () =>
+    (await page.locator(".cm-line").allTextContents()).join("\n");
+  await expect.poll(editorText).toBe("select (1");
 
   await page.getByRole("menuitem", { name: "View", exact: true }).click();
   await page.getByRole("menuitem", { name: /Toggle Problems Panel/ }).click();
