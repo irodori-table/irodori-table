@@ -106,7 +106,7 @@ export function SecurityTab({
 
   return (
     <div className="settings-stack">
-      <div className="settings-row">
+      <div className="settings-row" data-setting-id="security.passkey.status">
         <span>
           <strong>{t("settings.security.passkey.status.title")}</strong>
           <small>
@@ -132,7 +132,7 @@ export function SecurityTab({
             : t("settings.security.passkey.status.notReady")}
         </span>
       </div>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="security.passkey.lock">
         <span>
           <strong>{t("settings.security.passkey.lock.title")}</strong>
           <small>{t("settings.security.passkey.lock.description")}</small>
@@ -146,7 +146,10 @@ export function SecurityTab({
           }
         />
       </label>
-      <div className="settings-row settings-row-wide">
+      <div
+        className="settings-row settings-row-wide"
+        data-setting-id="security.passkey.credential"
+      >
         <span>
           <strong>{t("settings.security.passkey.credential.title")}</strong>
           <small>

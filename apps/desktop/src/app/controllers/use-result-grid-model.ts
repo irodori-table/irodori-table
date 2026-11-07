@@ -1,9 +1,8 @@
-import { type CSSProperties, useDeferredValue, useMemo } from "react";
+import { type CSSProperties, useDeferredValue, useMemo, useState } from "react";
 import {
   buildChartResultModel,
   buildGraphResultModel,
   buildResultGridViewModel,
-  calculateResultGridVirtualColumnWindow,
   calculateResultGridVirtualRowWindow,
   findTableMetadata,
   parseSourceTable,
@@ -26,12 +25,18 @@ import type {
 import type { ResultMode } from "@/features/results/types";
 import type { Translator } from "@/i18n";
 import {
+  measureResultColumnWidths,
+  resultColumnOffsets,
+  resultColumnWindow,
+} from "@/features/results/result-column-widths";
+import {
   EMPTY_CELL_EDITS,
   EMPTY_DELETED_ROWS,
   EMPTY_FILTER_RULES,
   EMPTY_NEW_ROWS,
   EMPTY_SORT_RULES,
   GRID_COLUMN_OVERSCAN,
+  GRID_COLUMN_WIDTH,
   GRID_OVERSCAN,
   GRID_WINDOWED_CELL_THRESHOLD,
   GRID_WINDOWED_ROW_THRESHOLD,
@@ -164,26 +169,74 @@ export function useResultGridModel({
         : null,
     [activeResult, selectedRowKey],
   );
-  const gridTotalWidth = useMemo(
-    () => Math.max(1, gridGutterWidth + resultColumns.length * gridColumnWidth),
-    [gridColumnWidth, gridGutterWidth, resultColumns.length],
+  const columnScale = gridColumnWidth / GRID_COLUMN_WIDTH;
+  const autoColumnWidths = useMemo(() => {
+    const context = document.createElement("canvas").getContext("2d");
+    return measureResultColumnWidths(
+      resultColumns,
+      activeResult?.rows ?? [],
+      (text, header) => {
+        if (!context) return Array.from(text).length * 13 * columnScale;
+        context.font = `${header ? 800 : 400} ${Math.round(13 * columnScale)}px "SFMono-Regular", Consolas, "Liberation Mono", monospace`;
+        return context.measureText(text.replace(/\s+/g, " ")).width;
+      },
+      columnScale,
+    );
+  }, [resultColumns, activeResult?.rows, columnScale, gridWindowVersion]);
+  const [columnSizes, setColumnSizes] = useState<{
+    result: QueryResult | null;
+    sets: Record<number, Record<number, number>>;
+  }>({ result: null, sets: {} });
+  const gridColumnWidths = useMemo(() => {
+    // The canvas renderer retains its fixed-width geometry.
+    if (resultMode === "webgl" && !editMode)
+      return resultColumns.map(() => gridColumnWidth);
+    const overrides =
+      columnSizes.result === result
+        ? columnSizes.sets[activeResultIndexView]
+        : undefined;
+    return autoColumnWidths.map((width, index) =>
+      overrides?.[index] === undefined
+        ? width
+        : overrides[index]! * columnScale,
+    );
+  }, [
+    resultMode,
+    editMode,
+    resultColumns,
+    gridColumnWidth,
+    columnSizes,
+    result,
+    activeResultIndexView,
+    autoColumnWidths,
+    columnScale,
+  ]);
+  function resizeColumn(index: number, width: number | null) {
+    setColumnSizes((previous) => {
+      const sets = previous.result === result ? previous.sets : {};
+      const widths = { ...sets[activeResultIndexView] };
+      if (width === null) delete widths[index];
+      else widths[index] = width / columnScale;
+      return { result, sets: { ...sets, [activeResultIndexView]: widths } };
+    });
+  }
+  const gridColumnOffsets = useMemo(
+    () => resultColumnOffsets(gridColumnWidths),
+    [gridColumnWidths],
+  );
+  const gridTotalWidth = Math.max(
+    1,
+    gridGutterWidth + gridColumnOffsets[gridColumnOffsets.length - 1]!,
   );
   const columnWindow = useMemo(
     () =>
-      calculateResultGridVirtualColumnWindow({
-        columnCount: resultColumns.length,
-        scrollLeft: Math.max(0, gridScrollLeft - gridGutterWidth),
-        viewportWidth: Math.max(0, gridViewportWidth - gridGutterWidth),
-        columnWidth: gridColumnWidth,
-        overscan: GRID_COLUMN_OVERSCAN,
-      }),
-    [
-      gridColumnWidth,
-      gridGutterWidth,
-      gridScrollLeft,
-      gridViewportWidth,
-      resultColumns.length,
-    ],
+      resultColumnWindow(
+        gridColumnOffsets,
+        Math.max(0, gridScrollLeft - gridGutterWidth),
+        Math.max(0, gridViewportWidth - gridGutterWidth),
+        GRID_COLUMN_OVERSCAN,
+      ),
+    [gridColumnOffsets, gridGutterWidth, gridScrollLeft, gridViewportWidth],
   );
   const firstVisibleColumn = columnWindow.firstColumnIndex;
   const lastVisibleColumn = columnWindow.lastColumnIndex;
@@ -202,14 +255,14 @@ export function useResultGridModel({
       [
         editMode ? `${gridGutterColumnWidth}px` : null,
         leftColumnPad > 0 ? `${leftColumnPad}px` : null,
-        ...visibleColumnIndexes.map(() => `${gridColumnWidth}px`),
+        ...visibleColumnIndexes.map((index) => `${gridColumnWidths[index]}px`),
         rightColumnPad > 0 ? `${rightColumnPad}px` : null,
       ]
         .filter(Boolean)
         .join(" "),
     [
       editMode,
-      gridColumnWidth,
+      gridColumnWidths,
       gridGutterColumnWidth,
       leftColumnPad,
       rightColumnPad,
@@ -359,6 +412,9 @@ export function useResultGridModel({
     graphResultModel,
     gridRowStyle,
     gridTotalWidth,
+    gridColumnWidths,
+    gridColumnOffsets,
+    resizeColumn,
     lastVisible,
     leftColumnPad,
     rightColumnPad,

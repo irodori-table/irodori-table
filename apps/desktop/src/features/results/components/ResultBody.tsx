@@ -29,6 +29,7 @@ import { GraphResultView } from "./GraphResultView";
 import { WebGlResultGrid } from "./WebGlResultGrid";
 import { ShortcutTips, type ShortcutTip } from "@/components/ShortcutTips";
 import type { Translator } from "@/i18n";
+import { ColumnResizeHandle } from "./ColumnResizeHandle";
 
 function isGridCellTarget(event: ReactFocusEvent | ReactMouseEvent) {
   return (
@@ -55,6 +56,8 @@ export function ResultBody({
   gridTotalWidth,
   gridRowHeight,
   gridColumnWidth,
+  gridColumnWidths,
+  onResizeColumn,
   leftColumnPad,
   rightColumnPad,
   topPad,
@@ -103,6 +106,8 @@ export function ResultBody({
   gridTotalWidth: number;
   gridRowHeight: number;
   gridColumnWidth: number;
+  gridColumnWidths: readonly number[];
+  onResizeColumn: (index: number, width: number | null) => void;
   leftColumnPad: number;
   rightColumnPad: number;
   topPad: number;
@@ -241,6 +246,13 @@ export function ResultBody({
                     ) : null}
                   </em>
                 ) : null}
+                <ColumnResizeHandle
+                  column={column!}
+                  width={gridColumnWidths[colIndex] ?? gridColumnWidth}
+                  scale={gridRowHeight / 27}
+                  onResize={(width) => onResizeColumn(colIndex, width)}
+                  t={t}
+                />
               </span>
             );
           })}

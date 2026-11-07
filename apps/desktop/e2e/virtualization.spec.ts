@@ -6,10 +6,8 @@ import type {
   QueryParameterPromptSet,
   WorkspaceSnapshot,
 } from "../src/generated/irodori-api";
-import {
-  calculateResultGridVirtualColumnWindow,
-  calculateResultGridVirtualRowWindow,
-} from "../src/features/results/result-grid";
+import { calculateResultGridVirtualRowWindow } from "../src/features/results/result-grid";
+import { RESULT_COLUMN_MIN_WIDTH } from "../src/features/results/result-column-widths";
 
 const GRID_ROW_HEIGHT_PX = 27;
 const GRID_OVERSCAN_ROWS = 8;
@@ -155,25 +153,20 @@ function virtualRowBudget(
   }).maxRenderedRowCount;
 }
 
-function virtualColumnBudget(
-  viewportWidth: number,
-  columnCount: number,
-  scrollLeft = 0,
-  gutterWidth = 0,
-) {
-  // The app initializes with a 900px grid viewport before ResizeObserver reports.
-  // Budget against that fallback as well as the measured width so the first paint
-  // remains bounded without depending on a precise layout tick.
-  return calculateResultGridVirtualColumnWindow({
-    columnCount,
-    scrollLeft: Math.max(0, scrollLeft - gutterWidth),
-    viewportWidth: Math.max(
-      0,
-      Math.max(viewportWidth, GRID_INITIAL_VIEWPORT_WIDTH_PX) - gutterWidth,
-    ),
-    columnWidth: GRID_COLUMN_WIDTH_PX,
-    overscan: GRID_COLUMN_OVERSCAN,
-  });
+// Column widths are fitted to content, so the strictest bound is every column
+// at the minimum width. The app also initializes with a 900px viewport before
+// ResizeObserver reports, so budget against that fallback too.
+const AUTO_COLUMN_WIDTH_LIMIT_PX = 720;
+
+function variableColumnBudget(viewportWidth: number) {
+  return (
+    Math.ceil(
+      Math.max(viewportWidth, GRID_INITIAL_VIEWPORT_WIDTH_PX) /
+        RESULT_COLUMN_MIN_WIDTH,
+    ) +
+    GRID_COLUMN_OVERSCAN * 2 +
+    1
+  );
 }
 
 function expectedFirstRowText(
@@ -502,28 +495,21 @@ async function expectRenderedRowsWithinBudget(
 async function expectRenderedColumnsWithinBudget(
   grid: Locator,
   headers: Locator,
-  columnCount: number,
+  _columnCount: number,
 ) {
-  const viewport = await grid.evaluate((element) => ({
-    width: element.clientWidth,
-    left: element.scrollLeft,
-  }));
-  const budget = virtualColumnBudget(
-    viewport.width,
-    columnCount,
-    viewport.left,
-  );
+  const viewport = await grid.evaluate((element) => element.clientWidth);
+  const budget = variableColumnBudget(viewport);
 
   await expect
     .poll(() => headers.count(), {
-      message: `rendered columns stay within virtualized budget (${budget.maxRenderedColumnCount})`,
+      message: `rendered columns stay within virtualized budget (${budget})`,
     })
     .toBeGreaterThan(0);
 
   expect(
     await headers.count(),
-    `rendered columns should stay within virtualized budget (${budget.maxRenderedColumnCount})`,
-  ).toBeLessThanOrEqual(budget.maxRenderedColumnCount);
+    `rendered columns should stay within virtualized budget (${budget})`,
+  ).toBeLessThanOrEqual(budget);
 }
 
 async function expectRenderedCellsWithinBudget(
@@ -544,17 +530,23 @@ async function expectRenderedCellsWithinBudget(
   ).toBeLessThanOrEqual(visibleRowCount * visibleColumnCount);
 }
 
-async function expectedFirstColumnText(grid: Locator, columnCount: number) {
-  const viewport = await grid.evaluate((element) => ({
-    width: element.clientWidth,
-    left: element.scrollLeft,
-  }));
-  const window = virtualColumnBudget(
-    viewport.width,
-    columnCount,
-    viewport.left,
+// Widths are content-fitted, so the exact first column cannot be predicted
+// from a fixed width. Check instead that the rendered window tracks the scroll
+// position within the possible min/max width bounds.
+async function expectFirstRenderedColumnFollowsScroll(
+  grid: Locator,
+  headers: Locator,
+) {
+  const info = await grid.evaluate((element) => element.scrollLeft);
+  const firstText = (await headers.first().textContent()) ?? "";
+  const index = Number(firstText.match(/col_(\d+)/)?.[1] ?? NaN);
+  expect(Number.isFinite(index)).toBe(true);
+  expect(index).toBeGreaterThanOrEqual(
+    Math.floor(info / AUTO_COLUMN_WIDTH_LIMIT_PX) - GRID_COLUMN_OVERSCAN - 1,
   );
-  return `col_${window.firstColumnIndex}`;
+  expect(index).toBeLessThanOrEqual(
+    Math.ceil(info / RESULT_COLUMN_MIN_WIDTH) + GRID_COLUMN_OVERSCAN + 1,
+  );
 }
 
 async function expectStickyGutterPinned(grid: Locator) {
@@ -824,12 +816,7 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
         ) + 2,
       ),
     );
-    await expect(renderedHeaders.first()).toContainText(
-      await expectedFirstColumnText(
-        grid,
-        millionRowTableFixture.columns.length,
-      ),
-    );
+    await expectFirstRenderedColumnFollowsScroll(grid, renderedHeaders);
     await expectRenderedColumnsWithinBudget(
       grid,
       renderedHeaders,
@@ -910,9 +897,7 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
         expectedFirstRowIndex(deepScrollTop, wideTableFixture.rowCount) + 2,
       ),
     );
-    await expect(renderedHeaders.first()).toContainText(
-      await expectedFirstColumnText(grid, wideTableFixture.columns.length),
-    );
+    await expectFirstRenderedColumnFollowsScroll(grid, renderedHeaders);
     await expectRenderedRowsWithinBudget(grid, renderedRows);
     await expectRenderedColumnsWithinBudget(
       grid,

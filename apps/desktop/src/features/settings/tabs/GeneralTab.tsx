@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Image as ImageIcon,
   RotateCcw,
@@ -29,6 +30,7 @@ import {
 import { localeLabels, supportedLocales, type Locale } from "../../../i18n";
 import type { TranslateFn } from "./shared";
 import { clampNumber, type BooleanUpdater, type ValueUpdater } from "@/core";
+import { sliderToUiZoom, uiZoomToSlider } from "../ui-zoom-slider";
 
 export interface GeneralTabProps {
   t: TranslateFn;
@@ -104,6 +106,7 @@ export function GeneralTab({
   resetLayout,
 }: GeneralTabProps) {
   const uiZoomPercent = `${Math.round(uiZoom * 100)}%`;
+  const [zoomDraft, setZoomDraft] = useState<string | null>(null);
 
   function chooseEditorBackgroundImage(file: File | undefined) {
     if (!file || !file.type.startsWith("image/")) {
@@ -120,7 +123,10 @@ export function GeneralTab({
 
   return (
     <div className="settings-stack">
-      <label className="settings-row">
+      <label
+        className="settings-row"
+        data-setting-id="general.updateCheckOnStartup"
+      >
         <span>
           <strong>{t("settings.general.updateCheckOnStartup.title")}</strong>
           <small>
@@ -131,6 +137,7 @@ export function GeneralTab({
           <button
             type="button"
             className={updateCheckOnStartup ? "active" : undefined}
+            aria-pressed={updateCheckOnStartup}
             onClick={() => setUpdateCheckOnStartup(true)}
           >
             {t("common.on")}
@@ -138,13 +145,14 @@ export function GeneralTab({
           <button
             type="button"
             className={!updateCheckOnStartup ? "active" : undefined}
+            aria-pressed={!updateCheckOnStartup}
             onClick={() => setUpdateCheckOnStartup(false)}
           >
             {t("common.off")}
           </button>
         </div>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.language">
         <span>
           <strong>{t("settings.general.language.title")}</strong>
           <small>{t("settings.general.language.description")}</small>
@@ -160,7 +168,7 @@ export function GeneralTab({
           ))}
         </select>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.uiZoom">
         <span>
           <strong>{t("settings.general.uiZoom.title")}</strong>
           <small>{t("settings.general.uiZoom.description")}</small>
@@ -178,16 +186,40 @@ export function GeneralTab({
           </button>
           <input
             type="range"
-            min={UI_ZOOM_MIN}
-            max={UI_ZOOM_MAX}
-            step={UI_ZOOM_STEP}
-            value={uiZoom}
+            min={0}
+            max={100}
+            step={1}
+            value={uiZoomToSlider(uiZoom)}
             aria-label={t("settings.general.uiZoom.title")}
+            aria-valuetext={uiZoomPercent}
             onChange={(event) =>
-              setUiZoom(normalizeUiZoom(event.currentTarget.value))
+              setUiZoom(sliderToUiZoom(Number(event.currentTarget.value)))
             }
           />
-          <output>{uiZoomPercent}</output>
+          <span className="ui-zoom-percent">
+            <input
+              type="number"
+              min={UI_ZOOM_MIN * 100}
+              max={UI_ZOOM_MAX * 100}
+              step={1}
+              aria-label={t("settings.general.uiZoom.percent")}
+              value={zoomDraft ?? Math.round(uiZoom * 100)}
+              onChange={(event) => setZoomDraft(event.currentTarget.value)}
+              onBlur={(event) => {
+                const value = event.currentTarget.value;
+                if (value.trim() && Number.isFinite(Number(value)))
+                  setUiZoom(normalizeUiZoom(Number(value) / 100));
+                setZoomDraft(null);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  event.currentTarget.blur();
+                }
+              }}
+            />
+            <span aria-hidden="true">%</span>
+          </span>
           <button
             className="icon-button"
             type="button"
@@ -209,7 +241,7 @@ export function GeneralTab({
           </button>
         </div>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.editorMode">
         <span>
           <strong>{t("settings.general.editorMode.title")}</strong>
           <small>{t("settings.general.editorMode.description")}</small>
@@ -218,6 +250,7 @@ export function GeneralTab({
           <button
             type="button"
             className={!vimMode ? "active" : undefined}
+            aria-pressed={!vimMode}
             onClick={() => setVimMode(false)}
           >
             {t("settings.general.editorMode.default")}
@@ -225,13 +258,17 @@ export function GeneralTab({
           <button
             type="button"
             className={vimMode ? "active" : undefined}
+            aria-pressed={vimMode}
             onClick={() => setVimMode(true)}
           >
             {t("settings.general.editorMode.vim")}
           </button>
         </div>
       </label>
-      <label className="settings-row settings-row-wide">
+      <label
+        className="settings-row settings-row-wide"
+        data-setting-id="general.editorBackground"
+      >
         <span>
           <strong>{t("settings.general.editorBackground.title")}</strong>
           <small>{t("settings.general.editorBackground.description")}</small>
@@ -269,23 +306,25 @@ export function GeneralTab({
             <RotateCcw size={14} />
             <span>{t("common.reset")}</span>
           </button>
-          <input
-            type="range"
-            min={EDITOR_BACKGROUND_OPACITY_MIN}
-            max={EDITOR_BACKGROUND_OPACITY_MAX}
-            step={EDITOR_BACKGROUND_OPACITY_STEP}
-            value={editorBackgroundOpacity}
-            aria-label={t("settings.general.editorBackground.opacity")}
-            onChange={(event) =>
-              setEditorBackgroundOpacity(
-                normalizeEditorBackgroundOpacity(event.currentTarget.value),
-              )
-            }
-          />
-          <output>{Math.round(editorBackgroundOpacity * 100)}%</output>
+          <div className="editor-background-opacity">
+            <input
+              type="range"
+              min={EDITOR_BACKGROUND_OPACITY_MIN}
+              max={EDITOR_BACKGROUND_OPACITY_MAX}
+              step={EDITOR_BACKGROUND_OPACITY_STEP}
+              value={editorBackgroundOpacity}
+              aria-label={t("settings.general.editorBackground.opacity")}
+              onChange={(event) =>
+                setEditorBackgroundOpacity(
+                  normalizeEditorBackgroundOpacity(event.currentTarget.value),
+                )
+              }
+            />
+            <output>{Math.round(editorBackgroundOpacity * 100)}%</output>
+          </div>
         </div>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.sidebarLabels">
         <span>
           <strong>{t("settings.general.sidebarLabels.title")}</strong>
           <small>{t("settings.general.sidebarLabels.description")}</small>
@@ -294,6 +333,7 @@ export function GeneralTab({
           <button
             type="button"
             className={sidebarViewLabels ? "active" : undefined}
+            aria-pressed={sidebarViewLabels}
             onClick={() => setSidebarViewLabels(true)}
           >
             {t("common.on")}
@@ -301,13 +341,14 @@ export function GeneralTab({
           <button
             type="button"
             className={!sidebarViewLabels ? "active" : undefined}
+            aria-pressed={!sidebarViewLabels}
             onClick={() => setSidebarViewLabels(false)}
           >
             {t("common.off")}
           </button>
         </div>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.animations">
         <span>
           <strong>{t("settings.general.animations.title")}</strong>
           <small>{t("settings.general.animations.description")}</small>
@@ -316,6 +357,7 @@ export function GeneralTab({
           <button
             type="button"
             className={animationsEnabled ? "active" : undefined}
+            aria-pressed={animationsEnabled}
             onClick={() => setAnimationsEnabled(true)}
           >
             {t("common.on")}
@@ -323,13 +365,14 @@ export function GeneralTab({
           <button
             type="button"
             className={!animationsEnabled ? "active" : undefined}
+            aria-pressed={!animationsEnabled}
             onClick={() => setAnimationsEnabled(false)}
           >
             {t("common.off")}
           </button>
         </div>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.autoCommit">
         <span>
           <strong>{t("settings.general.autoCommit.title")}</strong>
           <small>{t("settings.general.autoCommit.description")}</small>
@@ -338,6 +381,7 @@ export function GeneralTab({
           <button
             type="button"
             className={autoCommit ? "active" : undefined}
+            aria-pressed={autoCommit}
             onClick={() => setAutoCommit(true)}
           >
             {t("common.on")}
@@ -345,13 +389,14 @@ export function GeneralTab({
           <button
             type="button"
             className={!autoCommit ? "active" : undefined}
+            aria-pressed={!autoCommit}
             onClick={() => setAutoCommit(false)}
           >
             {t("common.off")}
           </button>
         </div>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.formatter">
         <span>
           <strong>{t("settings.general.formatter.title")}</strong>
           <small>{t("settings.general.formatter.description")}</small>
@@ -372,7 +417,7 @@ export function GeneralTab({
           ))}
         </select>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.linter">
         <span>
           <strong>{t("settings.general.linter.title")}</strong>
           <small>{t("settings.general.linter.description")}</small>
@@ -393,7 +438,7 @@ export function GeneralTab({
           ))}
         </select>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.resultOffload">
         <span>
           <strong>{t("settings.general.resultOffload.title")}</strong>
           <small>{t("settings.general.resultOffload.description")}</small>
@@ -402,6 +447,7 @@ export function GeneralTab({
           <button
             type="button"
             className={resultOffloadEnabled ? "active" : undefined}
+            aria-pressed={resultOffloadEnabled}
             onClick={() => setResultOffloadEnabled(true)}
           >
             {t("common.on")}
@@ -409,13 +455,14 @@ export function GeneralTab({
           <button
             type="button"
             className={!resultOffloadEnabled ? "active" : undefined}
+            aria-pressed={!resultOffloadEnabled}
             onClick={() => setResultOffloadEnabled(false)}
           >
             {t("common.off")}
           </button>
         </div>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.residentRows">
         <span>
           <strong>{t("settings.general.residentRows.title")}</strong>
           <small>{t("settings.general.residentRows.description")}</small>
@@ -433,7 +480,7 @@ export function GeneralTab({
           }
         />
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.queryHistory">
         <span>
           <strong>{t("settings.general.queryHistory.title")}</strong>
           <small>{t("settings.general.queryHistory.description")}</small>
@@ -451,7 +498,7 @@ export function GeneralTab({
           }
         />
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.historyRows">
         <span>
           <strong>{t("settings.general.historyRows.title")}</strong>
           <small>{t("settings.general.historyRows.description")}</small>
@@ -469,7 +516,7 @@ export function GeneralTab({
           }
         />
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.sidebar">
         <span>
           <strong>{t("settings.general.sidebar.title")}</strong>
           <small>{t("settings.general.sidebar.description")}</small>
@@ -485,7 +532,7 @@ export function GeneralTab({
       {/* Panel order, widths, sides and hidden views are all reorderable and
           all persisted, with no way back once scrambled. They read as one
           "layout" to the user, so one button restores the whole set. */}
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="general.resetLayout">
         <span>
           <strong>{t("settings.general.resetLayout.title")}</strong>
           <small>{t("settings.general.resetLayout.description")}</small>

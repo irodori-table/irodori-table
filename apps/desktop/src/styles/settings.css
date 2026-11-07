@@ -11,6 +11,81 @@
   min-height: 0;
 }
 
+.settings-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin: 10px 18px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--muted);
+}
+
+.settings-search:focus-within {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+.settings-search input {
+  flex: 1;
+  min-width: 0;
+  height: var(--bar-md);
+  border: 0;
+  outline: none;
+  color: var(--text);
+  background: transparent;
+  font: inherit;
+}
+
+.settings-search-results {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-search-results > p {
+  margin: 0 0 4px;
+  color: var(--muted);
+}
+
+.settings-search-result {
+  display: grid;
+  gap: 4px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-search-result:hover,
+.settings-search-result:focus-visible {
+  background: var(--selected);
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.settings-search-result small,
+.settings-search-result span {
+  color: var(--muted);
+}
+
+.settings-panel [data-setting-id]:focus {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.settings-dialog .segmented-control button.active {
+  color: var(--editor-bg);
+  background: var(--blue);
+  box-shadow: inset 0 0 0 1px var(--blue);
+}
+
 .settings-nav {
   display: grid;
   align-content: start;
@@ -51,7 +126,7 @@
 
 .settings-stack {
   display: grid;
-  gap: 10px;
+  gap: 7px;
 }
 
 .settings-row {
@@ -60,9 +135,9 @@
      squeezed to a couple of words by whatever control shares the row. */
   grid-template-columns: minmax(260px, 1fr) minmax(0, auto);
   align-items: center;
-  gap: 24px;
-  min-height: 48px;
-  padding: 12px 14px;
+  gap: 16px;
+  min-height: 40px;
+  padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--surface);
@@ -116,10 +191,9 @@
   text-align: right;
 }
 
-/* The native number spinner sits inside the field's right edge; without extra
- * right padding the value collides with it. */
+/* Native spinners reserve their own space. Extra padding leaves a blank tail. */
 .settings-row input[type="number"] {
-  padding-right: 22px;
+  padding-right: 4px;
 }
 
 .settings-row select {
@@ -219,7 +293,7 @@
 .ui-zoom-control {
   display: grid;
   grid-template-columns:
-    var(--control-md) minmax(120px, 180px) 48px var(--control-md)
+    var(--control-md) minmax(120px, 180px) 80px var(--control-md)
     auto;
   align-items: center;
   gap: 7px;
@@ -233,11 +307,37 @@
   accent-color: var(--blue);
 }
 
-.ui-zoom-control output {
+.ui-zoom-percent {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
   color: var(--text);
   font-size: var(--font-ui-md);
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+.ui-zoom-percent input[type="number"] {
+  width: 62px;
+  min-width: 0;
+}
+
+.settings-search.keymap-search {
+  margin: 0;
+}
+
+.keymap-search-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--font-ui-sm);
+}
+
+.editor-background-opacity {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
 }
 
 /* Five controls on one line only while they all fit. Under pressure the URL
@@ -1045,7 +1145,7 @@ button.snippet-tag.active {
   }
 
   .ui-zoom-control {
-    grid-template-columns: var(--control-md) minmax(0, 1fr) 48px var(
+    grid-template-columns: var(--control-md) minmax(0, 1fr) 80px var(
         --control-md
       );
   }

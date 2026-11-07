@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   Clock3,
   Code2,
@@ -7,6 +8,8 @@ import {
   ShieldCheck,
   Settings,
   TerminalSquare,
+  Search,
+  X,
 } from "lucide-react";
 import type { JobList } from "../../generated/irodori-api";
 import type { PasskeyCredentialRecord } from "@/features/security";
@@ -33,6 +36,7 @@ import { ExtensionsTab } from "./tabs/ExtensionsTab";
 import { JobsTab } from "./tabs/JobsTab";
 import { JsonTab } from "./tabs/JsonTab";
 import { SecurityTab } from "./tabs/SecurityTab";
+import { searchSettings, type SettingsSearchResult } from "./settings-search";
 
 export type SettingsTab =
   | "general"
@@ -204,6 +208,35 @@ export function SettingsDialog({
   applySettingsJson,
 }: SettingsDialogProps) {
   const { t } = createTranslator(locale);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTarget, setSearchTarget] = useState<SettingsSearchResult | null>(
+    null,
+  );
+  const searchRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const searching = searchQuery.trim().length > 0;
+  const searchResults = searchSettings(searchQuery, locale, commandCatalog);
+
+  function openSection(tab: SettingsTab) {
+    setSearchQuery("");
+    setSearchTarget(null);
+    onOpenSection(tab);
+  }
+
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    panel.scrollTop = 0;
+    if (!searching && searchTarget?.section === settingsTab) {
+      const target = Array.from(
+        panel.querySelectorAll<HTMLElement>("[data-setting-id]"),
+      ).find((node) => node.dataset.settingId === searchTarget.id);
+      const destination = target ?? panel;
+      destination.tabIndex = -1;
+      destination.focus({ preventScroll: true });
+      target?.scrollIntoView({ block: "center" });
+    }
+  }, [searchQuery, searching, searchTarget, settingsTab]);
 
   return (
     <DialogShell
@@ -219,12 +252,40 @@ export function SettingsDialog({
           {t("common.close")}
         </button>
       </div>
+      <div className="settings-search">
+        <Search size={16} aria-hidden="true" />
+        <input
+          ref={searchRef}
+          type="search"
+          aria-label={t("settings.search.placeholder")}
+          placeholder={t("settings.search.placeholder")}
+          value={searchQuery}
+          onChange={(event) => {
+            setSearchTarget(null);
+            setSearchQuery(event.currentTarget.value);
+          }}
+        />
+        {searchQuery ? (
+          <button
+            type="button"
+            className="icon-button"
+            aria-label={t("settings.search.clear")}
+            title={t("settings.search.clear")}
+            onClick={() => {
+              setSearchQuery("");
+              searchRef.current?.focus();
+            }}
+          >
+            <X size={15} />
+          </button>
+        ) : null}
+      </div>
       <div className="settings-body">
         <nav className="settings-nav" aria-label={t("settings.sections")}>
           <button
             type="button"
             className={settingsTab === "general" ? "active" : undefined}
-            onClick={() => onOpenSection("general")}
+            onClick={() => openSection("general")}
           >
             <Settings size={15} />
             {t("settings.nav.general")}
@@ -232,7 +293,7 @@ export function SettingsDialog({
           <button
             type="button"
             className={settingsTab === "theme" ? "active" : undefined}
-            onClick={() => onOpenSection("theme")}
+            onClick={() => openSection("theme")}
           >
             <Palette size={15} />
             {t("settings.nav.theme")}
@@ -240,7 +301,7 @@ export function SettingsDialog({
           <button
             type="button"
             className={settingsTab === "keymap" ? "active" : undefined}
-            onClick={() => onOpenSection("keymap")}
+            onClick={() => openSection("keymap")}
           >
             <Keyboard size={15} />
             {t("settings.nav.keymap")}
@@ -248,7 +309,7 @@ export function SettingsDialog({
           <button
             type="button"
             className={settingsTab === "snippets" ? "active" : undefined}
-            onClick={() => onOpenSection("snippets")}
+            onClick={() => openSection("snippets")}
           >
             <Code2 size={15} />
             {t("settings.nav.snippets")}
@@ -256,7 +317,7 @@ export function SettingsDialog({
           <button
             type="button"
             className={settingsTab === "security" ? "active" : undefined}
-            onClick={() => onOpenSection("security")}
+            onClick={() => openSection("security")}
           >
             <ShieldCheck size={15} />
             {t("settings.nav.security")}
@@ -264,7 +325,7 @@ export function SettingsDialog({
           <button
             type="button"
             className={settingsTab === "extensions" ? "active" : undefined}
-            onClick={() => onOpenSection("extensions")}
+            onClick={() => openSection("extensions")}
           >
             <Package size={15} />
             {t("settings.nav.extensions")}
@@ -272,7 +333,7 @@ export function SettingsDialog({
           <button
             type="button"
             className={settingsTab === "jobs" ? "active" : undefined}
-            onClick={() => onOpenSection("jobs")}
+            onClick={() => openSection("jobs")}
           >
             <Clock3 size={15} />
             {t("settings.nav.jobs")}
@@ -280,119 +341,150 @@ export function SettingsDialog({
           <button
             type="button"
             className={settingsTab === "json" ? "active" : undefined}
-            onClick={() => onOpenSection("json")}
+            onClick={() => openSection("json")}
           >
             <TerminalSquare size={15} />
             {t("settings.nav.json")}
           </button>
         </nav>
-        <section className="settings-panel">
-          {settingsTab === "general" ? (
-            <GeneralTab
-              t={t}
-              locale={locale}
-              setLocale={setLocale}
-              uiZoom={uiZoom}
-              setUiZoom={setUiZoom}
-              vimMode={vimMode}
-              setVimMode={setVimMode}
-              editorBackgroundImage={editorBackgroundImage}
-              setEditorBackgroundImage={setEditorBackgroundImage}
-              editorBackgroundOpacity={editorBackgroundOpacity}
-              setEditorBackgroundOpacity={setEditorBackgroundOpacity}
-              sidebarViewLabels={sidebarViewLabels}
-              setSidebarViewLabels={setSidebarViewLabels}
-              animationsEnabled={animationsEnabled}
-              setAnimationsEnabled={setAnimationsEnabled}
-              autoCommit={autoCommit}
-              setAutoCommit={setAutoCommit}
-              updateCheckOnStartup={updateCheckOnStartup}
-              setUpdateCheckOnStartup={setUpdateCheckOnStartup}
-              formatter={formatter}
-              setFormatter={setFormatter}
-              sqlLinter={sqlLinter}
-              setSqlLinter={setSqlLinter}
-              resultOffloadEnabled={resultOffloadEnabled}
-              setResultOffloadEnabled={setResultOffloadEnabled}
-              resultMemoryBudget={resultMemoryBudget}
-              setResultMemoryBudget={setResultMemoryBudget}
-              queryHistoryMaxItems={queryHistoryMaxItems}
-              setQueryHistoryMaxItems={setQueryHistoryMaxItems}
-              queryHistoryResultRows={queryHistoryResultRows}
-              setQueryHistoryResultRows={setQueryHistoryResultRows}
-              sidebarOpen={sidebarOpen}
-              setSidebarOpen={setSidebarOpen}
-              resetLayout={resetLayout}
-            />
-          ) : settingsTab === "theme" ? (
-            <ThemeTab
-              t={t}
-              onOpenSection={onOpenSection}
-              themePreference={themePreference}
-              themeKind={themeKind}
-              setThemePreference={setThemePreference}
-              setThemeKind={setThemeKind}
-              activeDefaultThemeId={activeDefaultThemeId}
-              activeDefaultThemeName={activeDefaultThemeName}
-              setActiveDefaultThemeId={setActiveDefaultThemeId}
-              customThemes={customThemes}
-              activeCustomThemeId={activeCustomThemeId}
-              activeCustomThemeName={activeCustomThemeName}
-              setActiveCustomThemeId={setActiveCustomThemeId}
-              clearCustomTheme={clearCustomTheme}
-            />
-          ) : settingsTab === "keymap" ? (
-            <KeymapTab
-              t={t}
-              commandCatalog={commandCatalog}
-              keymap={keymap}
-              keymapOverrides={keymapOverrides}
-              keymapConflicts={keymapConflicts}
-              vimMode={vimMode}
-              vimKeymapConflicts={vimKeymapConflicts}
-              recordingCommand={recordingCommand}
-              recordingSequence={recordingSequence}
-              runCommand={runCommand}
-              beginRecording={beginRecording}
-              resetKeybinding={resetKeybinding}
-              applyVimKeybindingResolutions={applyVimKeybindingResolutions}
-            />
-          ) : settingsTab === "snippets" ? (
-            <SnippetsTab
-              t={t}
-              sqlSnippets={sqlSnippets}
-              setSqlSnippets={setSqlSnippets}
-            />
-          ) : settingsTab === "security" ? (
-            <SecurityTab
-              t={t}
-              passkeyLockEnabled={passkeyLockEnabled}
-              setPasskeyLockEnabled={setPasskeyLockEnabled}
-              passkeyCredential={passkeyCredential}
-              setPasskeyCredential={setPasskeyCredential}
-            />
-          ) : settingsTab === "extensions" ? (
-            <ExtensionsTab t={t} active={settingsTab === "extensions"} />
-          ) : settingsTab === "jobs" ? (
-            <JobsTab
-              t={t}
-              jobs={jobs}
-              jobsLoading={jobsLoading}
-              jobsError={jobsError}
-              refreshJobs={refreshJobs}
-              cancelJob={cancelJob}
-            />
-          ) : (
-            <JsonTab
-              t={t}
-              settingsJsonDraft={settingsJsonDraft}
-              setSettingsJsonDraft={setSettingsJsonDraft}
-              settingsJsonError={settingsJsonError}
-              setSettingsJsonError={setSettingsJsonError}
-              resetSettingsJsonDraft={resetSettingsJsonDraft}
-              applySettingsJson={applySettingsJson}
-            />
-          )}
+        <section className="settings-panel" ref={panelRef}>
+          {searching ? (
+            <div className="settings-search-results">
+              <p role="status">
+                {t(
+                  searchResults.length
+                    ? "settings.search.count"
+                    : "settings.search.empty",
+                  { count: searchResults.length },
+                )}
+              </p>
+              {searchResults.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  className="settings-search-result"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchTarget(entry);
+                    onOpenSection(entry.section);
+                  }}
+                >
+                  <small>{entry.sectionLabel}</small>
+                  <strong>{entry.title}</strong>
+                  {entry.description ? <span>{entry.description}</span> : null}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <div hidden={searching}>
+            {settingsTab === "general" ? (
+              <GeneralTab
+                t={t}
+                locale={locale}
+                setLocale={setLocale}
+                uiZoom={uiZoom}
+                setUiZoom={setUiZoom}
+                vimMode={vimMode}
+                setVimMode={setVimMode}
+                editorBackgroundImage={editorBackgroundImage}
+                setEditorBackgroundImage={setEditorBackgroundImage}
+                editorBackgroundOpacity={editorBackgroundOpacity}
+                setEditorBackgroundOpacity={setEditorBackgroundOpacity}
+                sidebarViewLabels={sidebarViewLabels}
+                setSidebarViewLabels={setSidebarViewLabels}
+                animationsEnabled={animationsEnabled}
+                setAnimationsEnabled={setAnimationsEnabled}
+                autoCommit={autoCommit}
+                setAutoCommit={setAutoCommit}
+                updateCheckOnStartup={updateCheckOnStartup}
+                setUpdateCheckOnStartup={setUpdateCheckOnStartup}
+                formatter={formatter}
+                setFormatter={setFormatter}
+                sqlLinter={sqlLinter}
+                setSqlLinter={setSqlLinter}
+                resultOffloadEnabled={resultOffloadEnabled}
+                setResultOffloadEnabled={setResultOffloadEnabled}
+                resultMemoryBudget={resultMemoryBudget}
+                setResultMemoryBudget={setResultMemoryBudget}
+                queryHistoryMaxItems={queryHistoryMaxItems}
+                setQueryHistoryMaxItems={setQueryHistoryMaxItems}
+                queryHistoryResultRows={queryHistoryResultRows}
+                setQueryHistoryResultRows={setQueryHistoryResultRows}
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                resetLayout={resetLayout}
+              />
+            ) : settingsTab === "theme" ? (
+              <ThemeTab
+                t={t}
+                onOpenSection={openSection}
+                themePreference={themePreference}
+                themeKind={themeKind}
+                setThemePreference={setThemePreference}
+                setThemeKind={setThemeKind}
+                activeDefaultThemeId={activeDefaultThemeId}
+                activeDefaultThemeName={activeDefaultThemeName}
+                setActiveDefaultThemeId={setActiveDefaultThemeId}
+                customThemes={customThemes}
+                activeCustomThemeId={activeCustomThemeId}
+                activeCustomThemeName={activeCustomThemeName}
+                setActiveCustomThemeId={setActiveCustomThemeId}
+                clearCustomTheme={clearCustomTheme}
+              />
+            ) : settingsTab === "keymap" ? (
+              <KeymapTab
+                key={searchTarget?.id ?? "keymap"}
+                t={t}
+                commandCatalog={commandCatalog}
+                keymap={keymap}
+                keymapOverrides={keymapOverrides}
+                keymapConflicts={keymapConflicts}
+                vimMode={vimMode}
+                vimKeymapConflicts={vimKeymapConflicts}
+                recordingCommand={recordingCommand}
+                recordingSequence={recordingSequence}
+                runCommand={runCommand}
+                beginRecording={beginRecording}
+                resetKeybinding={resetKeybinding}
+                applyVimKeybindingResolutions={applyVimKeybindingResolutions}
+              />
+            ) : settingsTab === "snippets" ? (
+              <SnippetsTab
+                t={t}
+                sqlSnippets={sqlSnippets}
+                setSqlSnippets={setSqlSnippets}
+              />
+            ) : settingsTab === "security" ? (
+              <SecurityTab
+                t={t}
+                passkeyLockEnabled={passkeyLockEnabled}
+                setPasskeyLockEnabled={setPasskeyLockEnabled}
+                passkeyCredential={passkeyCredential}
+                setPasskeyCredential={setPasskeyCredential}
+              />
+            ) : settingsTab === "extensions" ? (
+              <ExtensionsTab t={t} active={settingsTab === "extensions"} />
+            ) : settingsTab === "jobs" ? (
+              <JobsTab
+                t={t}
+                jobs={jobs}
+                jobsLoading={jobsLoading}
+                jobsError={jobsError}
+                refreshJobs={refreshJobs}
+                cancelJob={cancelJob}
+              />
+            ) : (
+              <JsonTab
+                t={t}
+                settingsJsonDraft={settingsJsonDraft}
+                setSettingsJsonDraft={setSettingsJsonDraft}
+                settingsJsonError={settingsJsonError}
+                setSettingsJsonError={setSettingsJsonError}
+                resetSettingsJsonDraft={resetSettingsJsonDraft}
+                applySettingsJson={applySettingsJson}
+              />
+            )}
+          </div>
         </section>
       </div>
     </DialogShell>

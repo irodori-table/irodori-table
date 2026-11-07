@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Keyboard, Pencil } from "lucide-react";
+import { Keyboard, Pencil, Search, X } from "lucide-react";
 import {
   commandHasConflict,
   defaultVimKeybindingResolutions,
@@ -47,8 +47,51 @@ export function KeymapTab({
   resetKeybinding,
   applyVimKeybindingResolutions,
 }: KeymapTabProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const tokens = searchQuery
+    .normalize("NFKC")
+    .toLowerCase()
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  const visibleCommands = commandCatalog.filter((command) => {
+    const chord = keymap[command.id] ?? "";
+    const text =
+      `${command.title} ${command.id} ${command.category} ${command.scope} ${chord} ${formatKeySequence(chord)}`
+        .normalize("NFKC")
+        .toLowerCase();
+    return tokens.every((token) => text.includes(token));
+  });
   return (
     <div className="settings-stack">
+      <div className="settings-search keymap-search">
+        <Search size={16} aria-hidden="true" />
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.currentTarget.value)}
+          placeholder={t("settings.keymap.searchPlaceholder")}
+          aria-label={t("settings.keymap.search")}
+        />
+        {searchQuery ? (
+          <button
+            type="button"
+            className="icon-button"
+            aria-label={t("settings.keymap.clearSearch")}
+            onClick={() => setSearchQuery("")}
+          >
+            <X size={15} />
+          </button>
+        ) : null}
+      </div>
+      <p className="keymap-search-status" role="status">
+        {visibleCommands.length
+          ? t("settings.keymap.searchCount", {
+              visible: visibleCommands.length,
+              total: commandCatalog.length,
+            })
+          : t("settings.keymap.noMatches")}
+      </p>
       {/* Rebinding always worked, but the chord read as a value in a table
           rather than a control, so nothing said the list was editable. */}
       <p className="keymap-hint">
@@ -66,7 +109,7 @@ export function KeymapTab({
       ) : null}
 
       <div className="command-list settings-command-list">
-        {commandCatalog.map((command) => {
+        {visibleCommands.map((command) => {
           const chord = keymap[command.id];
           const conflicted = commandHasConflict(keymapConflicts, command.id);
           const recording = recordingCommand === command.id;
@@ -79,7 +122,11 @@ export function KeymapTab({
             command.id,
           );
           return (
-            <div className="command-item" key={command.id}>
+            <div
+              className="command-item"
+              key={command.id}
+              data-setting-id={`keymap.${command.id}`}
+            >
               <button
                 className="command-run"
                 type="button"
