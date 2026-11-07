@@ -17,6 +17,11 @@ describe("searchSettings", () => {
     expect(results.map((entry) => entry.id)).toContain("general.uiZoom");
   });
 
+  it("finds the Problems badge setting", () => {
+    const results = searchSettings("problems badge", "en");
+    expect(results.map((entry) => entry.id)).toContain("general.problemsBadge");
+  });
+
   it("matches Japanese titles in the Japanese locale", () => {
     const results = searchSettings("ズーム", "ja");
     expect(results.map((entry) => entry.id)).toContain("general.uiZoom");

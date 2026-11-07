@@ -21,6 +21,7 @@ type SidebarProps = {
   /** Every view assigned to this side (hidden ones included), in tab order. */
   sideViews?: readonly WorkbenchViewId[];
   hiddenViews?: Readonly<Partial<Record<WorkbenchViewId, boolean>>>;
+  viewBadges?: Readonly<Partial<Record<WorkbenchViewId, number>>>;
   onMoveView?: (viewId: WorkbenchViewId, side: WorkbenchSide) => void;
   onSetViewHidden?: (viewId: WorkbenchViewId, hidden: boolean) => void;
   onReorderView?: (
@@ -33,6 +34,7 @@ type SidebarProps = {
   planPanel: ReactNode;
   gitPanel: ReactNode;
   aiChatPanel: ReactNode;
+  problemsPanel: ReactNode;
   searchReplacePanel: ReactNode;
   rowDetailPanel: ReactNode;
   knowledgePanel: ReactNode;
@@ -71,6 +73,7 @@ export function Sidebar({
   availableViews,
   sideViews,
   hiddenViews,
+  viewBadges,
   onMoveView,
   onSetViewHidden,
   onReorderView,
@@ -79,6 +82,7 @@ export function Sidebar({
   planPanel,
   gitPanel,
   aiChatPanel,
+  problemsPanel,
   searchReplacePanel,
   rowDetailPanel,
   knowledgePanel,
@@ -119,6 +123,8 @@ export function Sidebar({
         return gitPanel;
       case "aiChat":
         return aiChatPanel;
+      case "problems":
+        return problemsPanel;
       case "searchReplace":
         return searchReplacePanel;
       case "rowDetail":
@@ -140,6 +146,7 @@ export function Sidebar({
             availableViews={availableViews}
             sideViews={sideViews}
             hiddenViews={hiddenViews}
+            viewBadges={viewBadges}
             onMoveView={onMoveView}
             onSetViewHidden={onSetViewHidden}
             onReorderView={onReorderView}

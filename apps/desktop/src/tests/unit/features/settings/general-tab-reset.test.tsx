@@ -25,6 +25,8 @@ const renderTab = componentRenderer(
       setAnimationsEnabled: vi.fn(),
       sidebarViewLabels: false,
       setSidebarViewLabels: vi.fn(),
+      problemsBadgeVisible: true,
+      setProblemsBadgeVisible: vi.fn(),
       autoCommit: true,
       setAutoCommit: vi.fn(),
       updateCheckOnStartup: true,

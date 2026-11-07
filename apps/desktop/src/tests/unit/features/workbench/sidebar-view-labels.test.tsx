@@ -21,6 +21,12 @@ describe("sidebar view tab labels preference", () => {
     expect(initial.sidebarViewLabels).toBe(false);
   });
 
+  it("shows the Problems badge by default and can hide it", () => {
+    expect(initial.problemsBadgeVisible).toBe(true);
+    usePreferencesStore.getState().setProblemsBadgeVisible(false);
+    expect(usePreferencesStore.getState().problemsBadgeVisible).toBe(false);
+  });
+
   it("round-trips the opt-in through the setter", () => {
     usePreferencesStore.getState().setSidebarViewLabels(true);
     expect(usePreferencesStore.getState().sidebarViewLabels).toBe(true);
@@ -30,7 +36,9 @@ describe("sidebar view tab labels preference", () => {
 });
 
 describe("switcher rendering", () => {
-  function renderSwitcher() {
+  function renderSwitcher(
+    overrides: Partial<Parameters<typeof Sidebar>[0]> = {},
+  ) {
     const connection = {
       id: "c1",
       name: "Analytics",
@@ -49,6 +57,7 @@ describe("switcher rendering", () => {
       planPanel: null,
       gitPanel: null,
       aiChatPanel: null,
+      problemsPanel: null,
       searchReplacePanel: null,
       rowDetailPanel: null,
       knowledgePanel: null,
@@ -81,7 +90,7 @@ describe("switcher rendering", () => {
       onBeginResize: vi.fn(),
       onResizeKey: vi.fn(),
     } as unknown as Parameters<typeof Sidebar>[0];
-    return renderUi(<Sidebar {...props} />);
+    return renderUi(<Sidebar {...props} {...overrides} />);
   }
 
   it("renders tabs with an accessible name but no visible label by default", () => {
@@ -99,5 +108,21 @@ describe("switcher rendering", () => {
 
     const tab = screen.getAllByRole("tab")[0];
     expect(tab.querySelector("span")?.textContent).toBeTruthy();
+  });
+
+  it("shows a count badge on the Problems tab", () => {
+    usePreferencesStore.setState({ sidebarViewLabels: false });
+    renderSwitcher({ viewBadges: { problems: 3 } });
+
+    const tab = screen.getByRole("tab", { name: "Problems" });
+    expect(tab.querySelector(".sidebar-view-badge")).toHaveTextContent("3");
+  });
+
+  it("drops the badge at zero", () => {
+    usePreferencesStore.setState({ sidebarViewLabels: false });
+    renderSwitcher({ viewBadges: { problems: 0 } });
+
+    const tab = screen.getByRole("tab", { name: "Problems" });
+    expect(tab.querySelector(".sidebar-view-badge")).toBeNull();
   });
 });

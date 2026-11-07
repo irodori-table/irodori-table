@@ -39,6 +39,7 @@ const editorBackgroundImageStorageKey = "irodori.editor.backgroundImage.v1";
 const editorBackgroundOpacityStorageKey = "irodori.editor.backgroundOpacity.v1";
 const animationsEnabledStorageKey = "irodori.ui.animationsEnabled.v1";
 const sidebarViewLabelsStorageKey = "irodori.ui.sidebarViewLabels.v1";
+const problemsBadgeVisibleStorageKey = "irodori.ui.problemsBadgeVisible.v1";
 const customPaletteStorageKey = "irodori.ui.customPalette.v1";
 const autoCommitStorageKey = "irodori.query.autoCommit.v1";
 const updateCheckOnStartupStorageKey = "irodori.updates.checkOnStartup.v1";
@@ -71,6 +72,7 @@ type PreferencesState = {
   editorBackgroundOpacity: number;
   animationsEnabled: boolean;
   sidebarViewLabels: boolean;
+  problemsBadgeVisible: boolean;
   customPalette: string[];
   autoCommit: boolean;
   updateCheckOnStartup: boolean;
@@ -91,6 +93,7 @@ type PreferencesState = {
   setEditorBackgroundOpacity: (value: ValueUpdater<number>) => void;
   setAnimationsEnabled: (value: ValueUpdater<boolean>) => void;
   setSidebarViewLabels: (value: ValueUpdater<boolean>) => void;
+  setProblemsBadgeVisible: (value: ValueUpdater<boolean>) => void;
   setCustomPalette: (value: ValueUpdater<string[]>) => void;
   addCustomPaletteColor: (color: string) => void;
   removeCustomPaletteColor: (color: string) => void;
@@ -270,6 +273,11 @@ function loadSidebarViewLabels() {
   return readStorage(sidebarViewLabelsStorageKey) === "true";
 }
 
+function loadProblemsBadgeVisible() {
+  // Show the count unless the user turned it off.
+  return readStorage(problemsBadgeVisibleStorageKey) !== "false";
+}
+
 function loadCustomPalette(): string[] {
   const stored = readStorage(customPaletteStorageKey);
   if (!stored) {
@@ -361,6 +369,7 @@ export const usePreferencesStore = create<PreferencesState>((set) => ({
   editorBackgroundOpacity: loadEditorBackgroundOpacity(),
   animationsEnabled: loadAnimationsEnabled(),
   sidebarViewLabels: loadSidebarViewLabels(),
+  problemsBadgeVisible: loadProblemsBadgeVisible(),
   customPalette: loadCustomPalette(),
   autoCommit: loadAutoCommit(),
   updateCheckOnStartup: loadUpdateCheckOnStartup(),
@@ -449,6 +458,10 @@ export const usePreferencesStore = create<PreferencesState>((set) => ({
     set((state) => ({
       sidebarViewLabels: resolveValue(state.sidebarViewLabels, value),
     })),
+  setProblemsBadgeVisible: (value) =>
+    set((state) => ({
+      problemsBadgeVisible: resolveValue(state.problemsBadgeVisible, value),
+    })),
   setCustomPalette: (value) =>
     set((state) => ({
       customPalette: normalizeCustomPalette(
@@ -523,6 +536,10 @@ usePreferencesStore.subscribe((state) => {
   );
   writeStorage(animationsEnabledStorageKey, String(state.animationsEnabled));
   writeStorage(sidebarViewLabelsStorageKey, String(state.sidebarViewLabels));
+  writeStorage(
+    problemsBadgeVisibleStorageKey,
+    String(state.problemsBadgeVisible),
+  );
   if (state.customPalette.length > 0) {
     writeStorage(customPaletteStorageKey, JSON.stringify(state.customPalette));
   } else {

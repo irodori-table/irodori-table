@@ -258,6 +258,8 @@ describe("workbench store view placements", () => {
         state.viewHidden,
       ),
     ).toEqual(["rowDetail", "aiChat"]);
+    expect(state.viewPlacements.problems).toBe("right");
+    expect(state.viewHidden.problems).toBe(true);
     // The strip is visible by default, but only Tables is open.
     expect(state.viewVisibility.objectBrowser).toBe(true);
     expect(state.viewVisibility.searchReplace).toBe(false);

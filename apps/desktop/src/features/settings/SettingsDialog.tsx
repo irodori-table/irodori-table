@@ -92,6 +92,8 @@ export interface SettingsDialogProps {
   setAnimationsEnabled: (value: BooleanUpdater) => void;
   sidebarViewLabels: boolean;
   setSidebarViewLabels: (value: BooleanUpdater) => void;
+  problemsBadgeVisible: boolean;
+  setProblemsBadgeVisible: (value: BooleanUpdater) => void;
   resultOffloadEnabled: boolean;
   setResultOffloadEnabled: (value: boolean) => void;
   resultMemoryBudget: number;
@@ -173,6 +175,8 @@ export function SettingsDialog({
   setAnimationsEnabled,
   sidebarViewLabels,
   setSidebarViewLabels,
+  problemsBadgeVisible,
+  setProblemsBadgeVisible,
   resultOffloadEnabled,
   setResultOffloadEnabled,
   resultMemoryBudget,
@@ -392,6 +396,8 @@ export function SettingsDialog({
                 setEditorBackgroundOpacity={setEditorBackgroundOpacity}
                 sidebarViewLabels={sidebarViewLabels}
                 setSidebarViewLabels={setSidebarViewLabels}
+                problemsBadgeVisible={problemsBadgeVisible}
+                setProblemsBadgeVisible={setProblemsBadgeVisible}
                 animationsEnabled={animationsEnabled}
                 setAnimationsEnabled={setAnimationsEnabled}
                 autoCommit={autoCommit}

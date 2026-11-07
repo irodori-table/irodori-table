@@ -48,6 +48,8 @@ export interface GeneralTabProps {
   setAnimationsEnabled: (value: BooleanUpdater) => void;
   sidebarViewLabels: boolean;
   setSidebarViewLabels: (value: BooleanUpdater) => void;
+  problemsBadgeVisible: boolean;
+  setProblemsBadgeVisible: (value: BooleanUpdater) => void;
   autoCommit: boolean;
   setAutoCommit: (value: BooleanUpdater) => void;
   updateCheckOnStartup: boolean;
@@ -85,6 +87,8 @@ export function GeneralTab({
   setAnimationsEnabled,
   sidebarViewLabels,
   setSidebarViewLabels,
+  problemsBadgeVisible,
+  setProblemsBadgeVisible,
   autoCommit,
   setAutoCommit,
   updateCheckOnStartup,
@@ -343,6 +347,30 @@ export function GeneralTab({
             className={!sidebarViewLabels ? "active" : undefined}
             aria-pressed={!sidebarViewLabels}
             onClick={() => setSidebarViewLabels(false)}
+          >
+            {t("common.off")}
+          </button>
+        </div>
+      </label>
+      <label className="settings-row" data-setting-id="general.problemsBadge">
+        <span>
+          <strong>{t("settings.general.problemsBadge.title")}</strong>
+          <small>{t("settings.general.problemsBadge.description")}</small>
+        </span>
+        <div className="segmented-control">
+          <button
+            type="button"
+            className={problemsBadgeVisible ? "active" : undefined}
+            aria-pressed={problemsBadgeVisible}
+            onClick={() => setProblemsBadgeVisible(true)}
+          >
+            {t("common.on")}
+          </button>
+          <button
+            type="button"
+            className={!problemsBadgeVisible ? "active" : undefined}
+            aria-pressed={!problemsBadgeVisible}
+            onClick={() => setProblemsBadgeVisible(false)}
           >
             {t("common.off")}
           </button>

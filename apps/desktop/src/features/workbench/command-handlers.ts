@@ -22,6 +22,7 @@ type WorkbenchCommandHandlerDeps = {
   toggleCompletion: () => void;
   toggleHistory: () => void;
   togglePlan: () => void;
+  toggleProblems: () => void;
   zoomIn: () => void;
   zoomOut: () => void;
   zoomReset: () => void;
@@ -86,6 +87,7 @@ export function createWorkbenchCommandHandler({
   toggleCompletion,
   toggleHistory,
   togglePlan,
+  toggleProblems,
   zoomIn,
   zoomOut,
   zoomReset,
@@ -164,6 +166,9 @@ export function createWorkbenchCommandHandler({
         break;
       case "view.plan.toggle":
         togglePlan();
+        break;
+      case "view.problems.toggle":
+        toggleProblems();
         break;
       case "view.zoomIn":
         zoomIn();

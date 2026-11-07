@@ -1,9 +1,16 @@
+import { useDeferredValue, useMemo } from "react";
 import { useWorkbenchContext } from "@/app/workbench-context";
 import { AiChatPanel } from "@/features/ai/chat/AiChatPanel";
 import { GitPanel } from "@/features/git";
 import { KnowledgePanel } from "@/features/knowledge/KnowledgePanel";
+import { ProblemsPanel } from "@/features/problems/ProblemsPanel";
+import {
+  collectSqlProblems,
+  problemCounts,
+} from "@/features/problems/sql-problems";
 import { RowDetailSidebar } from "@/features/results";
 import { useSchemaDesignerStore } from "@/features/schema-designer";
+import { usePreferencesStore } from "@/features/preferences";
 import { SearchReplacePanel } from "@/features/search/SearchReplacePanel";
 import {
   InspectorContent,
@@ -56,6 +63,19 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
     (state) => state.openForObject,
   );
   const right = side === "right";
+  const sqlLinter = usePreferencesStore((state) => state.sqlLinter);
+  const problemsBadgeVisible = usePreferencesStore(
+    (state) => state.problemsBadgeVisible,
+  );
+  const deferredTabs = useDeferredValue(editorGroups.searchTabs);
+  const problems = useMemo(
+    () => collectSqlProblems(deferredTabs, editorEngine, sqlLinter),
+    [deferredTabs, editorEngine, sqlLinter],
+  );
+  const problemSummary = problemCounts(problems);
+  const problemsBadge = problemsBadgeVisible
+    ? problemSummary.errors + problemSummary.warnings
+    : 0;
 
   // "New Database" from the schema header menu: name it, then run the DDL
   // through the same runner the editor uses so it lands in the results pane
@@ -114,6 +134,7 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
         right ? sidebars.rightSidebarAllViews : sidebars.leftSidebarAllViews
       }
       hiddenViews={sidebars.viewHidden}
+      viewBadges={{ problems: problemsBadge }}
       onMoveView={sidebars.moveView}
       onSetViewHidden={sidebars.setViewHidden}
       onReorderView={sidebars.reorderView}
@@ -149,6 +170,20 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
           onInsertSql={(sql) => activeEditorApi()?.insertText(sql)}
           onClose={() => sidebars.closeSidebarView("aiChat")}
           notify={notices.show}
+        />
+      }
+      problemsPanel={
+        <ProblemsPanel
+          problems={problems}
+          onOpen={(problem) =>
+            editorGroups.revealEditorRange(
+              { group: problem.group, tabId: problem.tabId },
+              problem.from,
+              problem.to,
+            )
+          }
+          onClose={() => sidebars.closeSidebarView("problems")}
+          t={t}
         />
       }
       searchReplacePanel={

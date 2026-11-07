@@ -18,6 +18,7 @@ export const searchableSettings: readonly SettingDefinition[] = [
       "editorMode",
       "editorBackground",
       "sidebarLabels",
+      "problemsBadge",
       "animations",
       "autoCommit",
       "formatter",

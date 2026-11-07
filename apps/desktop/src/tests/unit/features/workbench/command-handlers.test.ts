@@ -23,6 +23,7 @@ function createHandler(calls: string[]) {
     toggleCompletion: () => calls.push("completion"),
     toggleHistory: () => calls.push("history-toggle"),
     togglePlan: () => calls.push("plan-toggle"),
+    toggleProblems: () => calls.push("problems-toggle"),
     zoomIn: () => calls.push("zoom-in"),
     zoomOut: () => calls.push("zoom-out"),
     zoomReset: () => calls.push("zoom-reset"),

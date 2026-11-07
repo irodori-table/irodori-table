@@ -340,14 +340,22 @@ export function useEditorGroups({
     }));
   }
 
-  function revealSearchMatch(tab: SearchTab, match: TextMatch) {
+  function revealEditorRange(
+    tab: Pick<SearchTab, "group" | "tabId">,
+    from: number,
+    to: number,
+  ) {
     const group = tab.group as EditorGroup;
     selectEditorTab(group, tab.tabId);
     window.setTimeout(() => {
       const api = editorApiRef.current;
-      api?.revealRange({ from: match.start, to: match.end });
+      api?.revealRange({ from, to });
       api?.focus();
     }, 0);
+  }
+
+  function revealSearchMatch(tab: SearchTab, match: TextMatch) {
+    revealEditorRange(tab, match.start, match.end);
   }
 
   function newSqlTab(group: EditorGroup = activeEditorGroup) {
@@ -473,6 +481,7 @@ export function useEditorGroups({
     renameSqlTab,
     reopenSqlTab,
     replaceSearchTab,
+    revealEditorRange,
     revealSearchMatch,
     searchTabs,
     selectEditorTab,

@@ -20,6 +20,7 @@ import {
   Search,
   Table2,
   TableProperties,
+  TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
 import { usePreferencesStore } from "@/features/preferences";
@@ -56,6 +57,11 @@ const viewTabMeta: Record<WorkbenchViewId, ViewTabMeta> = {
     label: "sidebar.view.git",
   },
   aiChat: { icon: Bot, title: "ai.chat.title", label: "sidebar.view.chat" },
+  problems: {
+    icon: TriangleAlert,
+    title: "sidebar.view.problems",
+    label: "sidebar.view.problems",
+  },
   searchReplace: {
     icon: Search,
     title: "sidebar.view.searchReplace",
@@ -83,6 +89,8 @@ type SidebarViewSwitcherProps = {
   availableViews?: readonly WorkbenchViewId[];
   sideViews?: readonly WorkbenchViewId[];
   hiddenViews?: Readonly<Partial<Record<WorkbenchViewId, boolean>>>;
+  /** Optional count bubble on a view tab (currently the Problems view). */
+  viewBadges?: Readonly<Partial<Record<WorkbenchViewId, number>>>;
   onMoveView?: (viewId: WorkbenchViewId, side: WorkbenchSide) => void;
   onSetViewHidden?: (viewId: WorkbenchViewId, hidden: boolean) => void;
   onReorderView?: (
@@ -99,6 +107,7 @@ export function SidebarViewSwitcher({
   availableViews,
   sideViews,
   hiddenViews,
+  viewBadges,
   onMoveView,
   onSetViewHidden,
   onReorderView,
@@ -304,6 +313,11 @@ export function SidebarViewSwitcher({
             >
               <TabIcon size={14} />
               {sidebarViewLabels ? <span>{t(meta.label)}</span> : null}
+              {viewBadges?.[viewId] ? (
+                <span className="sidebar-view-badge" aria-hidden="true">
+                  {viewBadges[viewId]! > 99 ? "99+" : viewBadges[viewId]}
+                </span>
+              ) : null}
             </button>
           );
         })}
