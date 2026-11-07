@@ -8,15 +8,15 @@ import type {
 import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
+  ArrowDownToLine,
+  ArrowUpFromLine,
   ChevronDown,
   Columns3,
   Copy,
-  Download,
   ListFilter,
   Search,
   Table2,
   Undo2,
-  Upload,
   X,
 } from "lucide-react";
 import type { DbObjectMetadata, QueryResultSet } from "@/generated/irodori-api";
@@ -554,7 +554,7 @@ export function ResultsPane({
               disabled={!copyExportAvailable}
               onClick={() => onExportActiveResult(exportFormat)}
             >
-              <Download size={13} />
+              <ArrowUpFromLine size={13} />
               <span>{exportFormatLabel}</span>
             </button>
             <button
@@ -647,7 +647,7 @@ export function ResultsPane({
             title={readOnly ? t("results.readOnlyConnection") : undefined}
             onClick={() => importFileRef.current?.click()}
           >
-            <Upload size={13} />
+            <ArrowDownToLine size={13} />
             <span>{t("results.import")}</span>
           </button>
           <input
