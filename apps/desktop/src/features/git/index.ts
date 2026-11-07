@@ -1,2 +1,2 @@
-export { GitDrawer, GitPanel } from "./GitDrawer";
+export { GitPanel } from "./GitDrawer";
 export { useGitStore } from "./git-store";

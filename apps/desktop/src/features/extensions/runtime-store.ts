@@ -57,9 +57,3 @@ export const useExtensionRuntimeStore = create<ExtensionRuntimeState>(
     },
   }),
 );
-
-export function isHostFeatureEnabled(feature: HostFeatureId): boolean {
-  return useExtensionRuntimeStore
-    .getState()
-    .enabledHostFeatures.includes(feature);
-}

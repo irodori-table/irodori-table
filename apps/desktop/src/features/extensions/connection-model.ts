@@ -1,8 +1,12 @@
 import { isRecord } from "@/core";
 import type { DbEngine, InstalledExtension } from "@/generated/irodori-api";
 
-const safeIdentifier = /^[A-Za-z][A-Za-z0-9._-]{0,127}$/;
-const blockedIdentifiers = new Set(["constructor", "prototype", "__proto__"]);
+export const safeIdentifier = /^[A-Za-z][A-Za-z0-9._-]{0,127}$/;
+export const blockedIdentifiers: ReadonlySet<string> = new Set([
+  "constructor",
+  "prototype",
+  "__proto__",
+]);
 const maxFields = 64;
 const maxMethods = 64;
 const maxModes = 32;

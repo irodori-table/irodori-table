@@ -1,4 +1,5 @@
 import bundledCatalogJson from "./bundled-catalog.json";
+import { optionalString, stringOr } from "@/lib/text";
 
 export const defaultPluginStoreCatalogUrl =
   "https://raw.githubusercontent.com/irodori-table/irodori-table/main/registry/catalog/index.json";
@@ -360,12 +361,4 @@ function requiredString(value: unknown, label: string): string {
     throw new Error(`${label} is required`);
   }
   return value;
-}
-
-function stringOr(value: unknown, fallback: string): string {
-  return typeof value === "string" && value.trim() ? value : fallback;
-}
-
-function optionalString(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim() ? value : undefined;
 }

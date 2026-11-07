@@ -1,29 +1,12 @@
-export {
-  WorkbenchShell,
-  type WorkbenchStatusBarItem,
-} from "./components/WorkbenchShell";
+export { WorkbenchShell } from "./components/WorkbenchShell";
 export { Sidebar } from "./components/Sidebar";
-export {
-  WorkbenchDockLayout,
-  type WorkbenchDockLayoutProps,
-} from "./components/WorkbenchDockLayout";
+export { WorkbenchDockLayout } from "./components/WorkbenchDockLayout";
 export { PlanPanel } from "./components/PlanPanel";
-export { Inspector, InspectorContent } from "./components/Inspector";
+export { InspectorContent } from "./components/Inspector";
 export { completionHintsFromMetadata } from "./completion-hints";
 export { createWorkbenchCommandHandler } from "./command-handlers";
-export {
-  queryService,
-  tauriQueryService,
-  type QueryExecuteArgs,
-  type QueryService,
-  type QuerySpillArgs,
-  type QueryStreamArgs,
-} from "./query-service";
-export {
-  workbenchRuntimeService,
-  tauriWorkbenchRuntimeService,
-  type WorkbenchRuntimeService,
-} from "./workbench-runtime-service";
+export { queryService, type QueryService } from "./query-service";
+export { workbenchRuntimeService } from "./workbench-runtime-service";
 export {
   INSPECTOR_WIDTH_MAX,
   INSPECTOR_WIDTH_MIN,
@@ -41,20 +24,13 @@ export {
 } from "./object-sql";
 export { useWorkbenchStore, type SidebarSide } from "./store/workbench-store";
 export {
-  activeWorkbenchView,
   activeWorkbenchViewForSide,
-  defaultWorkbenchViewHidden,
-  defaultWorkbenchViewPlacements,
-  defaultWorkbenchViewVisibility,
-  normalizeWorkbenchViewOrder,
   workbenchViewsForSide,
   workbenchViewIds,
 } from "./types";
 export type {
   CompletionHint,
-  WorkbenchKeyScope,
   WorkbenchSide,
-  WorkbenchViewHidden,
   WorkbenchViewId,
   WorkbenchViewPlacements,
   WorkbenchViewVisibility,

@@ -3,6 +3,7 @@ import type { GraphResultModel } from "../graph-result";
 import { layoutGraphResultModel } from "../graph-result";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator } from "@/i18n";
+import { truncate } from "@/lib/text";
 
 export function GraphResultView({ model }: { model: GraphResultModel }) {
   const locale = usePreferencesStore((state) => state.locale);
@@ -76,10 +77,4 @@ export function GraphResultView({ model }: { model: GraphResultModel }) {
       </div>
     </div>
   );
-}
-
-function truncate(value: string, maxLength: number) {
-  return value.length > maxLength
-    ? `${value.slice(0, maxLength - 3)}...`
-    : value;
 }

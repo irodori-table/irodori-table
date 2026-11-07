@@ -152,10 +152,6 @@ export function openTabsForEditorGroup(state: EditorGroupState) {
   return state.tabs.filter((tab) => state.openTabIds.includes(tab.id));
 }
 
-export function hasOpenTabsInEditorGroup(state: EditorGroupState) {
-  return openTabsForEditorGroup(state).length > 0;
-}
-
 export function activeTabLabelForEditorGroup(state: EditorGroupState) {
   return (
     openTabsForEditorGroup(state).find((tab) => tab.id === state.activeTabId)

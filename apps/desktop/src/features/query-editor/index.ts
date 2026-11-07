@@ -1,4 +1,4 @@
-export { default as SqlEditor, type SqlEditorHandle } from "./SqlEditor";
+export { type SqlEditorHandle } from "./SqlEditor";
 export {
   QueryEditorPane,
   type EditorGroup,
@@ -17,10 +17,7 @@ export {
 } from "./query-parameters";
 export { parseQueryMagic, type QueryMagicAction } from "./query-magics";
 export {
-  logProfileIds,
   parseLogWithProfile,
-  type LogProfileId,
   type LogProfileImportRequest,
-  type ParsedLogProfile,
   type ResolvedLogProfileId,
 } from "./editor-log-profile";

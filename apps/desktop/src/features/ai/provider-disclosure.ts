@@ -1,4 +1,5 @@
 import type { AiProviderConfig } from "@/generated/irodori-api";
+import { browserStorage } from "@/lib/browser-storage";
 
 export const cloudProviderConsentStorageKey =
   "irodori.ai.cloudProviderConsent.v1";
@@ -8,23 +9,14 @@ export const cloudProviderPrivacyUrl =
 const consentValue = "accepted";
 const localHosts = new Set(["localhost", "127.0.0.1", "::1", "0.0.0.0"]);
 
-function storage(): Storage | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  try {
-    return window.localStorage ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export function hasCloudProviderConsent(): boolean {
-  return storage()?.getItem(cloudProviderConsentStorageKey) === consentValue;
+  return (
+    browserStorage()?.getItem(cloudProviderConsentStorageKey) === consentValue
+  );
 }
 
 export function rememberCloudProviderConsent(): void {
-  storage()?.setItem(cloudProviderConsentStorageKey, consentValue);
+  browserStorage()?.setItem(cloudProviderConsentStorageKey, consentValue);
 }
 
 function endpointHost(endpoint: string | undefined): string | null {

@@ -1,5 +1,6 @@
 import { localizedError } from "@/core";
 import bundledKnowledgePackJson from "./bundled-knowledge-pack.json";
+import { optionalString, stringOr } from "@/lib/text";
 
 export const defaultKnowledgePackUrl =
   "https://raw.githubusercontent.com/irodori-table/irodori-table/main/registry/knowledge-pack.json";
@@ -161,12 +162,4 @@ function requiredString(value: unknown, label: string): string {
     throw localizedError("knowledge.pack.error.fieldRequired", { label });
   }
   return value;
-}
-
-function stringOr(value: unknown, fallback: string): string {
-  return typeof value === "string" && value.trim() ? value : fallback;
-}
-
-function optionalString(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim() ? value : undefined;
 }

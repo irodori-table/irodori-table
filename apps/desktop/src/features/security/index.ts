@@ -1,6 +1,5 @@
 export { PasskeyGate } from "./PasskeyGate";
 export type {
-  PasskeyAlgorithm,
   PasskeyAvailability,
   PasskeyCredentialRecord,
 } from "./passkey-lock";

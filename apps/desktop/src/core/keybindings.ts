@@ -471,13 +471,6 @@ export function eventToChord(event: KeyboardEvent): string | null {
   return canonicalChord(eventToParsed(event));
 }
 
-/** Does the event match this single-chord binding (platform Mod handled)? */
-export function matchesChord(event: KeyboardEvent, chord: string): boolean {
-  const eventChord = eventToChord(event);
-  const parts = sequenceParts(chord);
-  return eventChord !== null && parts.length === 1 && eventChord === parts[0];
-}
-
 /** Whether the chord has no platform modifier (so it must not hijack typing). */
 export function isBareChord(chord: string): boolean {
   const parsed = parse(chord);
