@@ -229,6 +229,38 @@ describe("workbench store view placements", () => {
     ).not.toContain("git");
   });
 
+  it("starts with the requested sidebar views in order", async () => {
+    const store = await loadWorkbenchStore();
+    const state = store.getState();
+
+    expect(
+      workbenchViewsForSide(
+        state.viewPlacements,
+        "left",
+        state.viewOrder,
+        state.viewHidden,
+      ),
+    ).toEqual([
+      "objectBrowser",
+      "completion",
+      "queryHistory",
+      "git",
+      "searchReplace",
+    ]);
+    expect(
+      workbenchViewsForSide(
+        state.viewPlacements,
+        "right",
+        state.viewOrder,
+        state.viewHidden,
+      ),
+    ).toEqual(["rowDetail", "aiChat"]);
+    // The strip is visible by default, but only Tables is open.
+    expect(state.viewVisibility.objectBrowser).toBe(true);
+    expect(state.viewVisibility.searchReplace).toBe(false);
+    expect(state.viewVisibility.rowDetail).toBe(false);
+  });
+
   it("defaults the sidebar to a compact working width", async () => {
     const store = await loadWorkbenchStore();
 
