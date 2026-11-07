@@ -269,7 +269,9 @@ function RowDetailModeTabs({
         ))}
       </div>
       <div
-        className="row-detail-tabs"
+        className={
+          collapsed ? "row-detail-tabs is-collapsed" : "row-detail-tabs"
+        }
         role="tablist"
         aria-label={t("rowDetail.view")}
       >
