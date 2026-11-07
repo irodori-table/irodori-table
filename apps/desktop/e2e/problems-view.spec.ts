@@ -11,7 +11,19 @@ test("Problems lists a lint error and opens its line", async ({ page }) => {
   const content = page.locator(".cm-content");
   await content.click();
   await page.keyboard.press("ControlOrMeta+a");
-  await page.keyboard.type("select (1");
+  // Typing would let CodeMirror auto-close the parenthesis; paste the exact
+  // unbalanced text the linter is meant to report.
+  await content.evaluate((node, text) => {
+    const data = new DataTransfer();
+    data.setData("text/plain", text);
+    node.dispatchEvent(
+      new ClipboardEvent("paste", {
+        clipboardData: data,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  }, "select (1");
   const editorText = async () =>
     (await page.locator(".cm-line").allTextContents()).join("\n");
   await expect.poll(editorText).toBe("select (1");
