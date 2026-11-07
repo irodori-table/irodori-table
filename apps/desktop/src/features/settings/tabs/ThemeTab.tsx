@@ -38,7 +38,7 @@ export function ThemeTab({
 }: ThemeTabProps) {
   return (
     <div className="settings-stack">
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="theme.colorMode">
         <span>
           <strong>{t("settings.theme.colorMode.title")}</strong>
           <small>
@@ -85,7 +85,7 @@ export function ThemeTab({
           </button>
         </div>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="theme.defaultThemes">
         <span>
           <strong>{t("settings.theme.defaultThemes.title")}</strong>
           <small>{t("settings.theme.defaultThemes.description")}</small>
@@ -104,7 +104,7 @@ export function ThemeTab({
           ))}
         </select>
       </label>
-      <label className="settings-row">
+      <label className="settings-row" data-setting-id="theme.savedThemes">
         <span>
           <strong>{t("settings.theme.savedThemes.title")}</strong>
           <small>{t("settings.theme.savedThemes.description")}</small>
@@ -123,7 +123,10 @@ export function ThemeTab({
           ))}
         </select>
       </label>
-      <div className="settings-row settings-row-alert">
+      <div
+        className="settings-row settings-row-alert"
+        data-setting-id="theme.activeTheme"
+      >
         <span>
           <strong>{t("settings.theme.activeTheme.title")}</strong>
           <small>
@@ -150,7 +153,7 @@ export function ThemeTab({
           </button>
         ) : null}
       </div>
-      <div className="settings-row">
+      <div className="settings-row" data-setting-id="theme.importThemes">
         <span>
           <strong>{t("settings.theme.importThemes.title")}</strong>
           <small>{t("settings.theme.importThemes.description")}</small>

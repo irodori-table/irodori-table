@@ -218,6 +218,9 @@ export function useResultGridWorkspace({
     graphResultModel,
     gridRowStyle,
     gridTotalWidth,
+    gridColumnWidths,
+    gridColumnOffsets,
+    resizeColumn,
     lastVisible,
     leftColumnPad,
     pendingCount,
@@ -301,7 +304,11 @@ export function useResultGridWorkspace({
     setSelectedCell,
     setSelectedRange,
     setSelectedRowKey,
-    scrollGridCellIntoView,
+    scrollGridCellIntoView: (rowIndex, col) =>
+      scrollGridCellIntoView(rowIndex, col, {
+        left: gridColumnOffsets[col] ?? 0,
+        width: gridColumnWidths[col] ?? gridColumnWidth,
+      }),
     copyCellsForRow,
   });
   const selectionStatus = selectionSummary
@@ -536,6 +543,8 @@ export function useResultGridWorkspace({
         gridTotalWidth,
         gridRowHeight,
         gridColumnWidth,
+        gridColumnWidths,
+        onResizeColumn: resizeColumn,
         leftColumnPad,
         rightColumnPad,
         topPad,

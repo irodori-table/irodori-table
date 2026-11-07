@@ -119,6 +119,8 @@ export type ResultsPaneGridGeometry = {
   gridTotalWidth: number;
   gridRowHeight: number;
   gridColumnWidth: number;
+  gridColumnWidths: readonly number[];
+  onResizeColumn: (index: number, width: number | null) => void;
   leftColumnPad: number;
   rightColumnPad: number;
   topPad: number;
@@ -295,6 +297,8 @@ export function ResultsPane({
     gridTotalWidth,
     gridRowHeight,
     gridColumnWidth,
+    gridColumnWidths,
+    onResizeColumn,
     leftColumnPad,
     rightColumnPad,
     topPad,
@@ -805,6 +809,8 @@ export function ResultsPane({
         gridTotalWidth={gridTotalWidth}
         gridRowHeight={gridRowHeight}
         gridColumnWidth={gridColumnWidth}
+        gridColumnWidths={gridColumnWidths}
+        onResizeColumn={onResizeColumn}
         leftColumnPad={leftColumnPad}
         rightColumnPad={rightColumnPad}
         topPad={topPad}

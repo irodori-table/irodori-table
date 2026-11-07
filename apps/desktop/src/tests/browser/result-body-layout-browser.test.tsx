@@ -85,6 +85,8 @@ function resultBodyProps(
     gridTotalWidth: 1,
     gridRowHeight: ROW_HEIGHT,
     gridColumnWidth: COLUMN_WIDTH,
+    gridColumnWidths: [],
+    onResizeColumn: noop,
     leftColumnPad: 0,
     rightColumnPad: 0,
     topPad: 0,

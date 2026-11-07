@@ -79,4 +79,48 @@ describe("KeymapTab discoverability", () => {
     );
     expect(props.beginRecording).toHaveBeenCalledWith("query.run");
   });
+
+  it("filters by command name and reports the match count", async () => {
+    const { user } = renderTab();
+    await user.type(
+      screen.getByRole("searchbox", { name: "Search shortcuts" }),
+      "Run All",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Change shortcut for Run Query" }),
+    ).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Change shortcut for Run All" }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent("1 of 2 shortcuts");
+  });
+
+  it("filters by key combination and restores the list when cleared", async () => {
+    const { user } = renderTab();
+    const search = screen.getByRole("searchbox", { name: "Search shortcuts" });
+    await user.type(search, "Ctrl+Enter");
+    expect(
+      screen.getByRole("button", { name: "Change shortcut for Run Query" }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Change shortcut for Run All" }),
+    ).toBeNull();
+    await user.click(
+      screen.getByRole("button", { name: "Clear shortcut search" }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Change shortcut for Run All" }),
+    ).toBeVisible();
+  });
+
+  it("shows an empty state when nothing matches", async () => {
+    const { user } = renderTab();
+    await user.type(
+      screen.getByRole("searchbox", { name: "Search shortcuts" }),
+      "nope",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "No shortcuts match your search.",
+    );
+  });
 });

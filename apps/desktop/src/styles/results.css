@@ -1361,11 +1361,32 @@
 }
 
 .grid-row.header .sortable {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
   user-select: none;
+}
+
+.grid-row.header .column-resize-handle {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 7px;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.grid-row.header .column-resize-handle:hover,
+.grid-row.header .column-resize-handle:focus-visible,
+.grid-row.header .column-resize-handle:active {
+  background: var(--blue);
 }
 
 .grid-row.header .sortable:hover {

@@ -102,7 +102,11 @@ export function useResultGridScroll({
     }
   }
 
-  function scrollGridCellIntoView(rowIndex: number, col: number) {
+  function scrollGridCellIntoView(
+    rowIndex: number,
+    col: number,
+    bounds?: { left: number; width: number },
+  ) {
     const element = gridRef.current;
     if (!element) {
       return;
@@ -116,8 +120,9 @@ export function useResultGridScroll({
       nextTop = targetBottom - element.clientHeight;
     }
 
-    const targetLeft = gridGutterWidth + col * gridColumnWidth;
-    const targetRight = targetLeft + gridColumnWidth;
+    const targetLeft =
+      gridGutterWidth + (bounds?.left ?? col * gridColumnWidth);
+    const targetRight = targetLeft + (bounds?.width ?? gridColumnWidth);
     let nextLeft = element.scrollLeft;
     if (targetLeft < element.scrollLeft) {
       nextLeft = targetLeft;
