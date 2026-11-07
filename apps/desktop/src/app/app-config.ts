@@ -108,6 +108,12 @@ const shellCommands: CommandMeta[] = [
     scope: "global",
   },
   {
+    id: "view.problems.toggle",
+    title: "Toggle Problems Panel",
+    category: "View",
+    scope: "global",
+  },
+  {
     id: "view.knowledge.toggle",
     title: "Toggle Knowledge Panel",
     category: "View",
@@ -441,6 +447,10 @@ const commandTranslationKeys: Partial<Record<string, CommandTranslationKeys>> =
       title: "commands.view.plan.toggle.title",
       category: "commands.category.view",
     },
+    "view.problems.toggle": {
+      title: "commands.view.problems.toggle.title",
+      category: "commands.category.view",
+    },
     "view.search.toggle": {
       title: "commands.view.search.toggle.title",
       category: "commands.category.view",
@@ -569,6 +579,7 @@ export const menuBarSections: AppMenuSection[] = [
       { commandId: "view.completion.toggle" },
       { commandId: "view.history.toggle" },
       { commandId: "view.plan.toggle" },
+      { commandId: "view.problems.toggle" },
       { commandId: "history.open" },
       { commandId: "git.open" },
       { commandId: "view.zoomIn" },

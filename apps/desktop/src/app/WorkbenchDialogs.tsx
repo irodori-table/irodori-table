@@ -124,6 +124,12 @@ export function WorkbenchDialogs() {
   const setSidebarViewLabels = usePreferencesStore(
     (state) => state.setSidebarViewLabels,
   );
+  const problemsBadgeVisible = usePreferencesStore(
+    (state) => state.problemsBadgeVisible,
+  );
+  const setProblemsBadgeVisible = usePreferencesStore(
+    (state) => state.setProblemsBadgeVisible,
+  );
   const autoCommit = usePreferencesStore((state) => state.autoCommit);
   const setAutoCommit = usePreferencesStore((state) => state.setAutoCommit);
   const updateCheckOnStartup = usePreferencesStore(
@@ -241,6 +247,8 @@ export function WorkbenchDialogs() {
           setAnimationsEnabled={setAnimationsEnabled}
           sidebarViewLabels={sidebarViewLabels}
           setSidebarViewLabels={setSidebarViewLabels}
+          problemsBadgeVisible={problemsBadgeVisible}
+          setProblemsBadgeVisible={setProblemsBadgeVisible}
           autoCommit={autoCommit}
           setAutoCommit={setAutoCommit}
           updateCheckOnStartup={updateCheckOnStartup}

@@ -363,6 +363,7 @@
 }
 
 .sidebar-view-switcher button {
+  position: relative;
   display: inline-flex;
   flex: 1 1 auto;
   align-items: center;
@@ -407,6 +408,27 @@
 
 .sidebar-view-switcher button > svg {
   flex: 0 0 auto;
+}
+
+/* Count bubble on the view tab. Absolutely positioned so it never shifts the
+ * icon row, and it overrides the label-hiding rule above. */
+.sidebar-view-switcher button .sidebar-view-badge {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border: 1px solid var(--surface-muted);
+  border-radius: 999px;
+  background: var(--danger, #e5484d);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
 }
 
 /* Labels turn on once the sidebar is wide enough to hold them, and truncate

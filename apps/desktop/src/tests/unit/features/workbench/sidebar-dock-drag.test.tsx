@@ -70,6 +70,7 @@ function sidebarProps(overrides: Partial<SidebarProps> = {}): SidebarProps {
     planPanel: null,
     gitPanel: null,
     aiChatPanel: null,
+    problemsPanel: null,
     searchReplacePanel: null,
     rowDetailPanel: null,
     knowledgePanel: null,

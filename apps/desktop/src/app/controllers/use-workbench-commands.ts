@@ -151,6 +151,7 @@ export function useWorkbenchCommands({
     toggleCompletion: () => sidebars.toggleSidebarView("completion"),
     toggleHistory: () => sidebars.toggleSidebarView("queryHistory"),
     togglePlan: () => sidebars.toggleSidebarView("plan"),
+    toggleProblems: () => sidebars.toggleSidebarView("problems"),
     zoomIn: () => updateUiZoom(uiZoom + UI_ZOOM_STEP),
     zoomOut: () => updateUiZoom(uiZoom - UI_ZOOM_STEP),
     zoomReset: () => updateUiZoom(UI_ZOOM_DEFAULT),
