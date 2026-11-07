@@ -1,5 +1,7 @@
 .search-panel {
   display: grid;
+  /* Rows respond to the dock width, not the viewport. */
+  container-type: inline-size;
   grid-template-rows: auto auto auto minmax(0, 1fr);
   min-width: 0;
   min-height: 100%;
@@ -41,16 +43,22 @@
 
 /* Inputs ----------------------------------------------------------------- */
 .search-inputs {
-  display: flex;
-  gap: 4px;
-  padding: 6px 8px;
+  display: grid;
+  /* A slim disclosure gutter, then the query field takes every other pixel. */
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 2px;
+  padding: 5px 6px;
   border-bottom: 1px solid var(--border);
 }
 
 .search-replace-expand {
-  align-self: flex-start;
   display: inline-flex;
-  padding: 4px 2px;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 22px;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--muted);
@@ -67,7 +75,7 @@
 .search-field {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   /* A grid item defaults to `min-width: auto`, so this box could not shrink
      below its own min-content — an input's intrinsic ~20 characters plus three
      toggles. In a narrow sidebar it kept that width and was clipped by the
@@ -76,7 +84,7 @@
   border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--editor-bg, var(--surface));
-  padding-right: 4px;
+  padding-right: 2px;
 }
 
 .search-field.invalid {
@@ -84,9 +92,9 @@
 }
 
 .search-field input {
-  flex: 1;
+  flex: 1 1 8ch;
   min-width: 0;
-  padding: 5px 7px;
+  padding: 5px 6px;
   font-size: var(--font-ui-md);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   background: transparent;
@@ -97,12 +105,12 @@
 
 .search-toggles {
   display: inline-flex;
-  gap: 1px;
+  gap: 0;
 }
 
 .search-toggles button {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   font-size: var(--font-ui-sm);
   font-family: ui-monospace, monospace;
   color: var(--muted);
@@ -273,4 +281,21 @@
 .search-match-replace:hover {
   background: var(--hover);
   color: var(--text);
+}
+
+/* At the narrow end the toggles stop sharing the line with the query. The
+ * input keeps the full width and the secondary controls get their own row. */
+@container (max-width: 200px) {
+  .search-field {
+    flex-wrap: wrap;
+  }
+
+  .search-field input {
+    flex-basis: 100%;
+  }
+
+  .search-toggles {
+    flex: 1 0 100%;
+    justify-content: flex-end;
+  }
 }

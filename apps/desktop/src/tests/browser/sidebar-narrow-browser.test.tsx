@@ -59,9 +59,15 @@ describe("search panel in a narrow sidebar (real layout)", () => {
       expect(input.getBoundingClientRect().right).toBeLessThanOrEqual(
         width + 1,
       );
-      // Shrunk, not hidden: the toggles are still on screen beside it.
+      // The query is the primary control, so it gets most of the row instead
+      // of splitting it evenly with the option toggles.
+      expect(input.getBoundingClientRect().width).toBeGreaterThan(width * 0.55);
+      // Shrunk or wrapped, not hidden: the toggles stay reachable.
       const toggles = host.querySelector<HTMLElement>(".search-toggles")!;
       expect(toggles.getBoundingClientRect().width).toBeGreaterThan(0);
+      expect(toggles.getBoundingClientRect().right).toBeLessThanOrEqual(
+        width + 1,
+      );
     });
   }
 });
