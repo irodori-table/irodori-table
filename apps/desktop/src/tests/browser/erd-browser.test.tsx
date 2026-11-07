@@ -1,12 +1,14 @@
 import { createRef } from "react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import "@/App.css";
 import type {
   ColumnMetadata,
   DatabaseMetadata,
   DbObjectMetadata,
 } from "@/generated/irodori-api";
+import { ErdDialog } from "@/features/erd/ErdDialog";
 import { buildErdModel, layoutErdModel } from "@/features/erd/erd";
 import { ErdSvg, erdSvgStyle } from "@/features/erd/erd-svg";
 import {
@@ -156,6 +158,66 @@ describe("ERD browser rendering", () => {
     expect(stats.height).toBeGreaterThan(300);
     expect(stats.opaqueSamples).toBeGreaterThan(100);
     expect(stats.colorCount).toBeGreaterThan(3);
+
+    root.unmount();
+    host.remove();
+  });
+});
+
+describe("ERD schema actions", () => {
+  it("keeps the All and None labels inside their buttons", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    const root = createRoot(host);
+    flushSync(() =>
+      root.render(
+        <ErdDialog
+          activeConnectionName="demo"
+          model={null}
+          layout={null}
+          svgRef={createRef<SVGSVGElement>()}
+          canvasRef={createRef<HTMLDivElement>()}
+          svgStyle=""
+          zoom={1}
+          search=""
+          schemaNames={[]}
+          availableSchemas={["sales", "auth"]}
+          error={null}
+          metadataLoaded
+          onClose={vi.fn()}
+          onFit={vi.fn()}
+          onZoomChange={vi.fn()}
+          onSearchChange={vi.fn()}
+          onSchemaNamesChange={vi.fn()}
+          onCopySvg={vi.fn()}
+          onCopyPng={vi.fn()}
+          onDownloadSvg={vi.fn()}
+          onDownloadPng={vi.fn()}
+          onDownloadSpecMarkdown={vi.fn()}
+          onDownloadSpecJson={vi.fn()}
+          onLoadSpecDdl={vi.fn()}
+          onCreateDatabaseSql={vi.fn()}
+          onEditInDesigner={vi.fn()}
+          onSelectTable={vi.fn()}
+          onCopyMermaid={vi.fn()}
+        />,
+      ),
+    );
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    const buttons = Array.from(
+      host.querySelectorAll<HTMLElement>(".diagram-schema-actions button"),
+    );
+    expect(buttons.map((button) => button.textContent)).toEqual([
+      "All",
+      "None",
+    ]);
+    for (const button of buttons) {
+      // Client width includes the padding the label needs; scrollWidth is the
+      // content that would overflow if the fixed icon width still applied.
+      expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth + 1);
+    }
+    expect(buttons[0]!.getBoundingClientRect().width).toBeGreaterThan(25);
 
     root.unmount();
     host.remove();

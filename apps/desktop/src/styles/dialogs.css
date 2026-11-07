@@ -1225,6 +1225,18 @@
   min-width: 0;
 }
 
+.diagram-schema-actions {
+  flex: 0 0 auto;
+}
+
+/* The shared mini-button is a fixed icon square. These two labels carry text,
+ * so size them to their content instead of clipping to the icon width. */
+.diagram-schema-actions .mini-button {
+  width: auto;
+  min-width: 25px;
+  padding: 0 8px;
+}
+
 .diagram-schema-list {
   overflow-x: auto;
   padding-bottom: 1px;
