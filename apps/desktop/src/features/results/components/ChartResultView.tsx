@@ -16,8 +16,11 @@ import {
   type ChartResultSeries,
   type ChartSort,
 } from "../chart-result";
+import type { QueryResultSet } from "@/generated/irodori-api";
+import type { Translator } from "@/i18n";
 import { normalizeHexColor } from "@/lib/color";
 import { truncate } from "@/lib/text";
+import { buildBiResultSummary, type BiResultSummary } from "../bi-result";
 
 const svgWidth = 920;
 const svgHeight = 380;
@@ -53,9 +56,16 @@ function defaultSeriesColor(kind: ChartKind): string {
   return normalizeHexColor(value) ?? fallback;
 }
 
-export function ChartResultView({ model }: { model: ChartResultModel }) {
+export function ChartResultView({
+  model,
+  result,
+}: {
+  model: ChartResultModel;
+  result: QueryResultSet | null;
+}) {
   const locale = usePreferencesStore((state) => state.locale);
   const { t } = createTranslator(locale);
+  const summary = buildBiResultSummary(result, model, locale);
   const [selection, setSelection] = useState<ChartResultSelection | null>(
     model.defaultSelection,
   );
@@ -96,8 +106,13 @@ export function ChartResultView({ model }: { model: ChartResultModel }) {
 
   if (!effectiveSelection || !series) {
     return (
-      <div className="chart-result-empty">
-        No numeric columns available for charting
+      <div className="chart-result-view">
+        <div className="chart-result-empty">
+          No numeric columns available for charting
+        </div>
+        {summary ? (
+          <ChartResultMeta summary={summary} locale={locale} t={t} />
+        ) : null}
       </div>
     );
   }
@@ -114,6 +129,9 @@ export function ChartResultView({ model }: { model: ChartResultModel }) {
         onOpenWindow={() => setWindowOpen(true)}
       />
       <ChartCanvas series={series} color={effectiveSelection.color ?? null} />
+      {summary ? (
+        <ChartResultMeta summary={summary} locale={locale} t={t} />
+      ) : null}
       {windowOpen ? (
         <div
           className="palette-overlay chart-window-overlay"
@@ -144,6 +162,61 @@ export function ChartResultView({ model }: { model: ChartResultModel }) {
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function ChartResultMeta({
+  summary,
+  locale,
+  t,
+}: {
+  summary: BiResultSummary;
+  locale: string;
+  t: Translator["t"];
+}) {
+  const visibleProfiles = summary.profiles.slice(0, 12);
+  const hiddenProfileCount = Math.max(
+    0,
+    summary.profiles.length - visibleProfiles.length,
+  );
+  return (
+    <div className="chart-result-meta">
+      <div className="bi-summary" aria-label={t("bi.resultSummary")}>
+        <div>
+          <strong>{summary.rowCountLabel}</strong>
+          <span>{summary.columnCountLabel}</span>
+        </div>
+        <div>
+          <strong>{summary.elapsedLabel}</strong>
+          <span>{summary.sampleLabel ?? t("bi.summary.notSampled")}</span>
+        </div>
+      </div>
+      <div className="bi-field-list" aria-label={t("bi.fields")}>
+        <strong>{t("bi.fieldsHeading")}</strong>
+        {visibleProfiles.map((profile) => (
+          <div
+            className="bi-field-row"
+            key={`${profile.index}-${profile.name}`}
+          >
+            <span>{profile.name}</span>
+            <small>{profile.roleLabel}</small>
+            <em>
+              {profile.kindLabel}
+              {" · "}
+              {profile.filledLabel}
+              {profile.distinctLabel ? ` · ${profile.distinctLabel}` : ""}
+            </em>
+          </div>
+        ))}
+        {hiddenProfileCount > 0 ? (
+          <div className="bi-field-more">
+            {t("bi.moreFields", {
+              count: hiddenProfileCount.toLocaleString(locale),
+            })}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

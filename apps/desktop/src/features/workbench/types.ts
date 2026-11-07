@@ -22,7 +22,6 @@ export const workbenchViewIds = [
   "rowDetail",
   "aiChat",
   "plan",
-  "bi",
   "knowledge",
 ] as const;
 
@@ -37,7 +36,6 @@ export const defaultWorkbenchViewPlacements: WorkbenchViewPlacements = {
   completion: "left",
   queryHistory: "left",
   plan: "right",
-  bi: "right",
   git: "left",
   aiChat: "right",
   searchReplace: "left",
@@ -50,7 +48,6 @@ export const defaultWorkbenchViewVisibility: WorkbenchViewVisibility = {
   completion: false,
   queryHistory: false,
   plan: false,
-  bi: false,
   git: false,
   aiChat: false,
   searchReplace: false,
@@ -75,7 +72,6 @@ export const defaultWorkbenchViewHidden: WorkbenchViewHidden = {
   completion: false,
   queryHistory: false,
   plan: true,
-  bi: true,
   git: false,
   aiChat: false,
   searchReplace: false,

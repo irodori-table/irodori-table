@@ -85,7 +85,7 @@ describe("workbench store view placements", () => {
     const requested: WorkbenchViewPlacements = {
       ...defaultWorkbenchViewPlacements,
       objectBrowser: "right",
-      bi: "left",
+      plan: "left",
       git: "left",
     };
     const expected: WorkbenchViewPlacements = {
@@ -142,10 +142,10 @@ describe("workbench store view placements", () => {
     const store = await loadWorkbenchStore();
     const expected: WorkbenchViewVisibility = {
       ...defaultWorkbenchViewVisibility,
-      bi: true,
+      plan: true,
     };
 
-    store.getState().setViewOpen("bi", true);
+    store.getState().setViewOpen("plan", true);
 
     expect(store.getState().viewVisibility).toEqual(expected);
     expect(
@@ -178,9 +178,9 @@ describe("workbench store view placements", () => {
     expect(
       activeWorkbenchView({
         ...defaultWorkbenchViewVisibility,
-        bi: true,
+        plan: true,
       }),
-    ).toBe("bi");
+    ).toBe("plan");
   });
 
   it("sets and persists the sidebar tab order as a full permutation", async () => {
@@ -201,7 +201,9 @@ describe("workbench store view placements", () => {
   it("drops unknown ids from a stored tab order and appends missing ones", async () => {
     window.localStorage.setItem(
       "irodori.workbench.viewOrder.v1",
-      JSON.stringify(["plan", "bogusView", "plan", "git"]),
+      // "bi" is the retired panel that moved into Chart; it must not leave an
+      // orphaned tab behind.
+      JSON.stringify(["plan", "bogusView", "bi", "plan", "git"]),
     );
 
     const store = await loadWorkbenchStore();
@@ -209,6 +211,7 @@ describe("workbench store view placements", () => {
     const order = store.getState().viewOrder;
     expect(order.slice(0, 2)).toEqual(["plan", "git"]);
     expect(order).toHaveLength(workbenchViewIds.length);
+    expect(order).not.toContain("bi");
   });
 
   it("hides views but never the object browser", async () => {

@@ -334,7 +334,6 @@ export function useSidebarViews() {
     completionOpen: viewOpenOnItsSide("completion"),
     historyOpen: viewOpenOnItsSide("queryHistory"),
     planOpen: viewOpenOnItsSide("plan"),
-    biOpen: viewOpenOnItsSide("bi"),
     setActiveSidebarView,
     closeSidebarView,
     toggleSidebarView,

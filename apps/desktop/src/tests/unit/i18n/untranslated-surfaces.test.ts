@@ -57,7 +57,7 @@ const NOT_PROSE =
 /**
  * Dialogs and panels that contain no `t()` call at all.
  *
- * Empty since #170 cleared the last three (BiPanel, LakehousePanel,
+ * Empty since #170 cleared the last three (the BI panel, LakehousePanel,
  * PlanPanel). Keeping the constant rather than inlining `[]` keeps the failure
  * message legible when something regresses: the diff names the file.
  */

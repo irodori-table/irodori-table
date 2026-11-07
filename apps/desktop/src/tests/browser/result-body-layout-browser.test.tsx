@@ -70,6 +70,7 @@ function resultBodyProps(
     structureObject: null,
     resultMode: "data",
     chartModel: null,
+    result: null,
     graphModel: null,
     formatObjectName: (object) => `${object.schema}.${object.name}`,
     formatCount: String,

@@ -17,7 +17,7 @@ import type { Translator } from "@/i18n";
 type QueryWorkspaceDeps = {
   connections: WorkbenchConnections;
   editor: EditorWorkspace;
-  sidebars: Pick<SidebarViews, "biOpen" | "setActiveSidebarView">;
+  sidebars: Pick<SidebarViews, "setActiveSidebarView">;
   settings: Pick<SettingsController, "queryHistoryResultRows">;
   erd: Pick<ReturnType<typeof useErdDiagram>, "openDiagramForSearch">;
   confirm: Parameters<typeof useResultGridWorkspace>[0]["confirm"];
@@ -84,7 +84,6 @@ export function useQueryWorkspace({
     metadataByConnection,
     activeConnectionId,
     activeConnectionReadOnly,
-    biOpen: sidebars.biOpen,
     activeEditorApi,
     onRowSelected: () => sidebars.setActiveSidebarView("rowDetail"),
     runQuery: async () => {
