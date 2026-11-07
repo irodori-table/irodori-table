@@ -77,22 +77,17 @@ function sidebarProps(overrides: Partial<SidebarProps> = {}): SidebarProps {
     searchReplacePanel: null,
     rowDetailPanel: null,
     knowledgePanel: null,
-    connections: [connection],
     profileById: new Map(),
-    connectionColorFallback: "#888888",
-    activeConnectionId: connection.id,
     activeConnection: connection,
     activeConnectionOpen: true,
     activeMetadata: metadata,
     activeMetadataLoading: false,
     activeMetadataError: undefined,
-    connectedIds: new Set([connection.id]),
     objectActionMenu: null,
     objectKindLabel: () => "table",
     formatObjectName: (object) => object.name,
     onAddProfile: vi.fn(),
     onOpenConnectionManager: vi.fn(),
-    onSelectConnection: vi.fn(),
     onOpenBlankSchemaDesigner: vi.fn(),
     onNewTableFromFile: vi.fn(),
     onCreateDatabase: vi.fn(),
@@ -106,8 +101,6 @@ function sidebarProps(overrides: Partial<SidebarProps> = {}): SidebarProps {
     onSetObjectActionMenu: vi.fn(),
     onSelectView: vi.fn(),
     onCloseSidebar: vi.fn(),
-    onBeginResize: vi.fn(),
-    onResizeKey: vi.fn(),
     ...overrides,
   };
 }
@@ -148,25 +141,6 @@ beforeEach(() => {
 });
 
 describe("Sidebar portaled menus", () => {
-  it("opens the connection context menu inside the viewport", () => {
-    renderUi(<Sidebar {...sidebarProps()} />);
-
-    fireEvent.contextMenu(
-      screen.getByRole("button", { name: "Switch to Analytics" }),
-      bottomRightCorner(),
-    );
-
-    const menu = screen.getByRole("menu");
-    expect(
-      screen.getByRole("menuitem", { name: "Edit connection…" }),
-    ).toBeVisible();
-    expectPortaledIntoViewport(menu, {
-      clippedBy: CLIPPING_ANCESTORS,
-      width: MENU_WIDTH,
-      height: MENU_HEIGHT,
-    });
-  });
-
   it("opens the view configuration menu inside the viewport", () => {
     renderUi(
       <Sidebar

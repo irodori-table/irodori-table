@@ -36,7 +36,6 @@ export function WorkbenchRoot() {
     keybindings,
     layout,
     notices,
-    overlays,
     queryEditorController,
     queryRunner,
     resultGridController,
@@ -93,7 +92,6 @@ export function WorkbenchRoot() {
         sidebarWidth={layout.sidebarWidth}
         inspectorWidth={layout.inspectorWidth}
         resultsHeight={layout.resultsHeight}
-        editorSplitPercent={layout.editorSplitPercent}
         menuBarSections={localizedMenuBarSections}
         commandCatalog={localizedMenuCommandCatalog}
         keymap={keybindings.keymap}
@@ -119,11 +117,7 @@ export function WorkbenchRoot() {
           connections.setConnectionManagerOpen(true)
         }
         onRunCommand={runCommand}
-        onCloseWorkspaceMenu={() => overlays.setWorkspaceMenuOpen(false)}
-        dockLayout
         rail={<ConnectionsRail />}
-        leftSidebar={null}
-        rightSidebar={null}
       >
         <WorkbenchDockLayout
           leftSidebarOpen={sidebars.sidebarOpen}

@@ -32,7 +32,6 @@ type WorkbenchMenubarProps = {
   commandCatalog: readonly CommandMeta[];
   keymap: Keymap;
   onRunCommand: (commandId: string) => void;
-  onCloseWorkspaceMenu: () => void;
 };
 
 export const WorkbenchMenubar = forwardRef<
@@ -49,7 +48,6 @@ export const WorkbenchMenubar = forwardRef<
     commandCatalog,
     keymap,
     onRunCommand,
-    onCloseWorkspaceMenu,
   },
   ref,
 ) {
@@ -261,7 +259,6 @@ export const WorkbenchMenubar = forwardRef<
       event.preventDefault();
       const trigger = menubarButtonRefs.current.get(activeMenuLabel);
       closeMenuBarMenu();
-      onCloseWorkspaceMenu();
       trigger?.focus();
     };
     const closeOnOutsidePointerDown = (event: PointerEvent) => {
@@ -286,7 +283,7 @@ export const WorkbenchMenubar = forwardRef<
       window.removeEventListener("pointerdown", closeOnOutsidePointerDown);
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [activeMenuLabel, onCloseWorkspaceMenu]);
+  }, [activeMenuLabel]);
 
   const commandById = new Map(
     commandCatalog.map((command) => [command.id, command]),
@@ -321,7 +318,6 @@ export const WorkbenchMenubar = forwardRef<
   };
   const runMenuCommand = (commandId: string) => {
     closeMenuBarMenu();
-    onCloseWorkspaceMenu();
     onRunCommand(commandId);
   };
   const renderMenuButtons = (section: AppMenuSection) =>

@@ -2,9 +2,7 @@ import {
   useCallback,
   useRef,
   useState,
-  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
-  type PointerEvent as ReactPointerEvent,
   type RefObject,
   type ReactNode,
 } from "react";
@@ -21,7 +19,6 @@ import type { SqlMetadataTarget } from "../../sql/metadata-inspection";
 import type { SqlLinterId } from "../../sql/linter";
 import type { IrodoriTheme } from "@/theme";
 import type { Keymap } from "@/core";
-import type { EditorSplitMode } from "@/lib/editor-split-mode";
 import { EditorCommandBar } from "./EditorCommandBar";
 import { EditorContextMenu } from "./EditorContextMenu";
 import { editorShellBackgroundStyle } from "./EditorGroupShell";
@@ -42,15 +39,11 @@ export interface QueryEditorPaneProps {
   activeTabLabel: string;
   /** Per-group active tab labels; each routes its buffer's language (EDITOR-178). */
   primaryTabKey: string;
-  secondaryTabKey: string;
   primaryTabLabel: string;
-  secondaryTabLabel: string;
   running: boolean;
   formatter: SqlFormatterId;
   primaryQuery: string;
-  secondaryQuery: string;
   onPrimaryQueryChange: (next: string) => void;
-  onSecondaryQueryChange: (next: string) => void;
   renderEditorTabStrip: (group: EditorGroup) => ReactNode;
   onNewTab: (group: EditorGroup) => void;
   editorEngine: DbEngine;
@@ -62,12 +55,7 @@ export interface QueryEditorPaneProps {
   vimMode: boolean;
   sqlLinter: SqlLinterId;
   editorApiRef: RefObject<SqlEditorHandle | null>;
-  secondaryEditorApiRef: RefObject<SqlEditorHandle | null>;
-  editorSplitRef: RefObject<HTMLDivElement | null>;
-  editorSplitOpen: boolean;
-  editorSplitMode: EditorSplitMode;
   activeEditorGroup: EditorGroup;
-  setActiveEditorGroup: (group: EditorGroup) => void;
   setEditorSelection: (group: EditorGroup, selection: EditorSelections) => void;
   runPrimaryLabel: string;
   runShortcutLabel: string;
@@ -83,8 +71,6 @@ export interface QueryEditorPaneProps {
   runAllQuery: () => Promise<void>;
   cancelQuery: () => Promise<void>;
   setRunMenuOpen: (value: boolean | ((open: boolean) => boolean)) => void;
-  beginEditorSplitResize: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onEditorSplitResizeKey: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
   onSqlFileDrop?: (file: File) => void;
   onUnsupportedFileDrop?: () => void;
   sqlFileDropLabel?: string;
@@ -95,15 +81,11 @@ export interface QueryEditorPaneProps {
 export function QueryEditorPane({
   activeTabLabel,
   primaryTabKey,
-  secondaryTabKey,
   primaryTabLabel,
-  secondaryTabLabel,
   running,
   formatter,
   primaryQuery,
-  secondaryQuery,
   onPrimaryQueryChange,
-  onSecondaryQueryChange,
   renderEditorTabStrip,
   onNewTab,
   editorEngine,
@@ -115,12 +97,7 @@ export function QueryEditorPane({
   vimMode,
   sqlLinter,
   editorApiRef,
-  secondaryEditorApiRef,
-  editorSplitRef,
-  editorSplitOpen,
-  editorSplitMode,
   activeEditorGroup,
-  setActiveEditorGroup,
   setEditorSelection,
   runPrimaryLabel,
   runShortcutLabel,
@@ -136,8 +113,6 @@ export function QueryEditorPane({
   runAllQuery,
   cancelQuery,
   setRunMenuOpen,
-  beginEditorSplitResize,
-  onEditorSplitResizeKey,
   onSqlFileDrop,
   onUnsupportedFileDrop,
   sqlFileDropLabel = "Drop .sql file to load",
@@ -157,21 +132,19 @@ export function QueryEditorPane({
     editorBackgroundImage,
     editorBackgroundOpacity,
   );
-  const activeQuery =
-    activeEditorGroup === "secondary" ? secondaryQuery : primaryQuery;
+  const activeQuery = primaryQuery;
   const { sqlFileDragOver, sqlFileDropHandlers } = useSqlFileDrop({
     onSqlFileDrop,
     onUnsupportedFileDrop,
   });
 
   const openEditorContextMenu = useCallback(
-    (event: ReactMouseEvent<HTMLDivElement>, group: EditorGroup) => {
+    (event: ReactMouseEvent<HTMLDivElement>) => {
       event.preventDefault();
       event.stopPropagation();
-      setActiveEditorGroup(group);
       setContextMenu({ x: event.clientX, y: event.clientY });
     },
-    [setActiveEditorGroup],
+    [],
   );
 
   const closeEditorContextMenu = useCallback(() => {
@@ -187,13 +160,7 @@ export function QueryEditorPane({
   );
 
   const revealMetadataUsage = (selection: EditorSelection) => {
-    const primary = editorApiRef.current;
-    const secondary = secondaryEditorApiRef.current;
-    const active =
-      activeEditorGroup === "secondary"
-        ? (secondary ?? primary)
-        : (primary ?? secondary);
-    active?.revealRange(selection);
+    editorApiRef.current?.revealRange(selection);
   };
 
   return (
@@ -205,9 +172,6 @@ export function QueryEditorPane({
         {...sqlFileDropHandlers}
       >
         <EditorSplitLayout
-          editorSplitRef={editorSplitRef}
-          editorSplitOpen={editorSplitOpen}
-          editorSplitMode={editorSplitMode}
           activeEditorGroup={activeEditorGroup}
           primary={{
             query: primaryQuery,
@@ -215,13 +179,6 @@ export function QueryEditorPane({
             tabLabel: primaryTabLabel,
             apiRef: editorApiRef,
             onQueryChange: onPrimaryQueryChange,
-          }}
-          secondary={{
-            query: secondaryQuery,
-            tabKey: secondaryTabKey,
-            tabLabel: secondaryTabLabel,
-            apiRef: secondaryEditorApiRef,
-            onQueryChange: onSecondaryQueryChange,
           }}
           formatter={formatter}
           editorEngine={editorEngine}
@@ -233,14 +190,11 @@ export function QueryEditorPane({
           sqlLinter={sqlLinter}
           renderEditorTabStrip={renderEditorTabStrip}
           onNewTab={onNewTab}
-          setActiveEditorGroup={setActiveEditorGroup}
           setEditorSelection={setEditorSelection}
           onEditorContextMenu={openEditorContextMenu}
           onMetadataJump={onMetadataJump}
           onMetadataToolWindow={setMetadataToolWindow}
           onLogProfileImport={onLogProfileImport}
-          beginEditorSplitResize={beginEditorSplitResize}
-          onEditorSplitResizeKey={onEditorSplitResizeKey}
         />
         {metadataToolWindow ? (
           <MetadataToolWindow

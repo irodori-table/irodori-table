@@ -1544,7 +1544,6 @@ export const en = {
   "colorPicker.addCurrentColor": "Add current color",
   "colorPicker.addCurrentColorToPalette": "Add current color to custom palette",
   "erd.diagramLabel": "Entity relationship diagram",
-  "editor.resizeSplit": "Resize editor split",
   "editor.queryActions": "SQL query actions",
   "results.graphLabel": "Query result graph",
   "inspector.closeCompletion": "Close completion",

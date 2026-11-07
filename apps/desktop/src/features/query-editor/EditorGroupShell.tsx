@@ -68,7 +68,6 @@ export type EditorGroupShellProps = {
   renderEditorTabStrip: (group: EditorGroup) => ReactNode;
   onNewTab: (group: EditorGroup) => void;
   onQueryChange: (next: string) => void;
-  setActiveEditorGroup: (group: EditorGroup) => void;
   setEditorSelection: (group: EditorGroup, selection: EditorSelections) => void;
   onContextMenu: (
     event: ReactMouseEvent<HTMLDivElement>,
@@ -97,7 +96,6 @@ export function EditorGroupShell({
   renderEditorTabStrip,
   onNewTab,
   onQueryChange,
-  setActiveEditorGroup,
   setEditorSelection,
   onContextMenu,
   onMetadataJump,
@@ -244,8 +242,6 @@ export function EditorGroupShell({
     <div
       className={className}
       style={editorBackgroundStyle}
-      onFocusCapture={() => setActiveEditorGroup(group)}
-      onPointerDown={() => setActiveEditorGroup(group)}
       onContextMenu={(event) => onContextMenu(event, group)}
     >
       {editorBackgroundStyle ? (
@@ -291,7 +287,6 @@ export function EditorGroupShell({
             logMarks={language === "log" ? visibleMarks : undefined}
             onChange={onQueryChange}
             onSelectionChange={(selection) => {
-              setActiveEditorGroup(group);
               setEditorSelection(group, selection);
             }}
             engine={editorEngine}

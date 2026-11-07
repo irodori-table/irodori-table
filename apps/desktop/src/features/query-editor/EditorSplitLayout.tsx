@@ -1,8 +1,6 @@
 import type {
   CSSProperties,
-  KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
-  PointerEvent as ReactPointerEvent,
   ReactNode,
   RefObject,
 } from "react";
@@ -11,15 +9,12 @@ import type {
   SqlMetadataToolWindowRequest,
 } from "./SqlEditor";
 import { EditorGroupShell } from "./EditorGroupShell";
-import { usePreferencesStore } from "@/features/preferences";
-import { createTranslator } from "@/i18n";
 import type { DatabaseMetadata, DbEngine } from "../../generated/irodori-api";
 import type { SqlSnippetDefinition } from "../../sql/completion";
 import type { SqlFormatterId } from "../../sql/formatter";
 import type { SqlLinterId } from "../../sql/linter";
 import type { SqlMetadataTarget } from "../../sql/metadata-inspection";
 import type { IrodoriTheme } from "@/theme";
-import type { EditorSplitMode } from "@/lib/editor-split-mode";
 import type { EditorGroup, EditorSelections } from "./query-editor-pane-types";
 import type { LogProfileImportRequest } from "./editor-log-profile";
 
@@ -39,12 +34,8 @@ export type EditorContextMenuHandler = (
 ) => void;
 
 export type EditorSplitLayoutProps = {
-  editorSplitRef: RefObject<HTMLDivElement | null>;
-  editorSplitOpen: boolean;
-  editorSplitMode: EditorSplitMode;
   activeEditorGroup: EditorGroup;
   primary: EditorGroupState;
-  secondary: EditorGroupState;
   formatter: SqlFormatterId;
   editorEngine: DbEngine;
   activeMetadata?: DatabaseMetadata;
@@ -55,23 +46,16 @@ export type EditorSplitLayoutProps = {
   sqlLinter: SqlLinterId;
   renderEditorTabStrip: (group: EditorGroup) => ReactNode;
   onNewTab: (group: EditorGroup) => void;
-  setActiveEditorGroup: (group: EditorGroup) => void;
   setEditorSelection: (group: EditorGroup, selection: EditorSelections) => void;
   onEditorContextMenu: EditorContextMenuHandler;
   onMetadataJump?: (target: SqlMetadataTarget) => void;
   onMetadataToolWindow: (request: SqlMetadataToolWindowRequest) => void;
   onLogProfileImport?: (request: LogProfileImportRequest) => void;
-  beginEditorSplitResize: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onEditorSplitResizeKey: (event: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
 
 export function EditorSplitLayout({
-  editorSplitRef,
-  editorSplitOpen,
-  editorSplitMode,
   activeEditorGroup,
   primary,
-  secondary,
   formatter,
   editorEngine,
   activeMetadata,
@@ -82,17 +66,12 @@ export function EditorSplitLayout({
   sqlLinter,
   renderEditorTabStrip,
   onNewTab,
-  setActiveEditorGroup,
   setEditorSelection,
   onEditorContextMenu,
   onMetadataJump,
   onMetadataToolWindow,
   onLogProfileImport,
-  beginEditorSplitResize,
-  onEditorSplitResizeKey,
 }: EditorSplitLayoutProps) {
-  const locale = usePreferencesStore((state) => state.locale);
-  const { t } = createTranslator(locale);
   const renderEditorGroup = (group: EditorGroup, state: EditorGroupState) => (
     <EditorGroupShell
       group={group}
@@ -112,7 +91,6 @@ export function EditorSplitLayout({
       renderEditorTabStrip={renderEditorTabStrip}
       onNewTab={onNewTab}
       onQueryChange={state.onQueryChange}
-      setActiveEditorGroup={setActiveEditorGroup}
       setEditorSelection={setEditorSelection}
       onContextMenu={onEditorContextMenu}
       onMetadataJump={onMetadataJump}
@@ -122,27 +100,8 @@ export function EditorSplitLayout({
   );
 
   return (
-    <div
-      ref={editorSplitRef}
-      className={`editor-split editor-split-${editorSplitMode}`}
-    >
+    <div className="editor-split editor-split-single">
       {renderEditorGroup("primary", primary)}
-      {editorSplitOpen ? (
-        <>
-          <div
-            className={`panel-resizer editor-split-resizer ${editorSplitMode}`}
-            role="separator"
-            aria-label={t("editor.resizeSplit")}
-            aria-orientation={
-              editorSplitMode === "down" ? "horizontal" : "vertical"
-            }
-            tabIndex={0}
-            onPointerDown={beginEditorSplitResize}
-            onKeyDown={onEditorSplitResizeKey}
-          />
-          {renderEditorGroup("secondary", secondary)}
-        </>
-      ) : null}
     </div>
   );
 }

@@ -6,20 +6,6 @@
   min-height: 0;
 }
 
-.workspace.left-sidebar-collapsed {
-  grid-template-columns:
-    44px minmax(0, 1fr)
-    var(--right-sidebar-width, var(--sidebar-width, 200px));
-}
-
-.workspace.right-sidebar-collapsed {
-  grid-template-columns: 44px var(--sidebar-width, 200px) minmax(0, 1fr);
-}
-
-.workspace.left-sidebar-collapsed.right-sidebar-collapsed {
-  grid-template-columns: 44px minmax(0, 1fr);
-}
-
 .workspace.workspace-dock {
   display: flex;
   min-width: 0;
@@ -2224,20 +2210,6 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-.editor-split-right {
-  grid-template-columns: minmax(0, var(--editor-split-primary, 50%)) 4px minmax(
-      0,
-      1fr
-    );
-}
-
-.editor-split-down {
-  grid-template-rows: minmax(0, var(--editor-split-primary, 50%)) 4px minmax(
-      0,
-      1fr
-    );
-}
-
 .editor-shell {
   display: grid;
   grid-template-rows: var(--bar-md) minmax(0, 1fr);
@@ -2660,23 +2632,7 @@ body.panel-resizing .panel-resizer::after {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--focus) 32%, transparent);
 }
 
-.sidebar-resizer {
-  position: absolute;
-  top: 0;
-  right: -3px;
-  width: 6px;
-  height: 100%;
-  cursor: col-resize;
-}
-
-.sidebar.sidebar-right .sidebar-resizer {
-  right: auto;
-  left: -3px;
-}
-
-.sidebar-resizer::after,
-.inspector-resizer::after,
-.editor-split-resizer.right::after {
+.inspector-resizer::after {
   top: 0;
   left: 2px;
   width: 1px;
@@ -2686,23 +2642,6 @@ body.panel-resizing .panel-resizer::after {
 .inspector-resizer {
   min-width: 4px;
   cursor: col-resize;
-}
-
-.editor-split-resizer.right {
-  min-width: 4px;
-  cursor: col-resize;
-}
-
-.editor-split-resizer.down {
-  min-height: 4px;
-  cursor: row-resize;
-}
-
-.editor-split-resizer.down::after {
-  top: 2px;
-  left: 0;
-  width: 100%;
-  height: 1px;
 }
 
 .results-resizer {

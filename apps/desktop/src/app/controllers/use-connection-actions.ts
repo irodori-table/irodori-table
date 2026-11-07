@@ -133,16 +133,6 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     setConnectionError(null);
   }
 
-  function selectSidebarConnection(
-    connection: WorkspaceConnection,
-    profile: ConnectionDraft | undefined,
-  ) {
-    setActiveConnectionId(connection.id);
-    if (profile) {
-      selectProfile(profile);
-    }
-  }
-
   function saveDraft(showSaved = true) {
     const validationError = validateDraft(draft, modelFor(draft));
     if (validationError) {
@@ -646,7 +636,6 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
   return {
     updateDraft,
     selectProfile,
-    selectSidebarConnection,
     saveDraft,
     addProfile,
     prunePristineDrafts,

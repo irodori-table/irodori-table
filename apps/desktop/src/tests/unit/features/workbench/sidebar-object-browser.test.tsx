@@ -32,10 +32,7 @@ const renderSidebar = componentRenderer(Sidebar, () => {
     searchReplacePanel: null,
     rowDetailPanel: null,
     knowledgePanel: null,
-    connections: [activeConnection],
     profileById: new Map(),
-    connectionColorFallback: "#888888",
-    activeConnectionId: activeConnection.id,
     activeConnection,
     activeConnectionOpen: true,
     activeMetadata: {
@@ -46,13 +43,11 @@ const renderSidebar = componentRenderer(Sidebar, () => {
     },
     activeMetadataLoading: false,
     activeMetadataError: undefined,
-    connectedIds: new Set([activeConnection.id]),
     objectActionMenu: null,
     objectKindLabel: () => "table",
     formatObjectName: (object) => object.name,
     onAddProfile: vi.fn(),
     onOpenConnectionManager: vi.fn(),
-    onSelectConnection: vi.fn(),
     onOpenBlankSchemaDesigner: vi.fn(),
     onNewTableFromFile: vi.fn(),
     onCreateDatabase: vi.fn(),
@@ -66,8 +61,6 @@ const renderSidebar = componentRenderer(Sidebar, () => {
     onSetObjectActionMenu: vi.fn(),
     onSelectView: vi.fn(),
     onCloseSidebar: vi.fn(),
-    onBeginResize: vi.fn(),
-    onResizeKey: vi.fn(),
   } satisfies Parameters<typeof Sidebar>[0];
 });
 
@@ -78,10 +71,7 @@ function renderForEngine(
 ) {
   const activeConnection = connectionWith(engine);
   return renderSidebar({
-    connections: [activeConnection],
     activeConnection,
-    activeConnectionId: activeConnection.id,
-    connectedIds: new Set([activeConnection.id]),
     ...overrides,
   });
 }

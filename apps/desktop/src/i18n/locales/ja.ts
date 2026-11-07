@@ -1583,7 +1583,6 @@ export const ja = {
   "colorPicker.addCurrentColor": "現在の色を追加",
   "colorPicker.addCurrentColorToPalette": "現在の色をカスタムパレットに追加",
   "erd.diagramLabel": "ER 図",
-  "editor.resizeSplit": "エディタ分割のサイズを変更",
   "editor.queryActions": "SQL クエリの操作",
   "results.graphLabel": "クエリ結果のグラフ",
   "inspector.closeCompletion": "補完を閉じる",

@@ -93,7 +93,7 @@ function useWorkbench() {
     prompt: promptAction,
     t,
   });
-  const layout = useWorkbenchLayout({ editor });
+  const layout = useWorkbenchLayout();
   const settings = useSettingsController({
     themes,
     keybindings,
@@ -138,7 +138,6 @@ function useWorkbench() {
     settings,
     erd,
     queryWorkspace,
-    layout,
     showActionNotice,
     t,
   });
