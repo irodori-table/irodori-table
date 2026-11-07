@@ -16,6 +16,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.14.0] - 2026-11-07
+
+### Added
+
+- **A searchable Problems view for SQL diagnostics.** The right sidebar can list
+  every linter error and warning across the open SQL buffers with its severity,
+  message, file, line, and column. Selecting a result activates its tab and
+  reveals the range. Problems is an optional view available from the View menu
+  and a Toggle command, and its error + warning count appears as a tab badge.
+- **The Problems badge can be hidden in Settings** without disabling the
+  diagnostics or the panel. The setting is searchable like the other options.
+
+### Fixed
+
+- **The Problems scan no longer slows ordinary typing.** It runs only while the
+  view is visible and is debounced, so the 5k-line typing scenario dropped from
+  11.2s back to 2.5s in the browser benchmark.
+
 ## [0.13.0] - 2026-11-07
 
 ### Added
