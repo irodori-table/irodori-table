@@ -86,7 +86,10 @@ describe("workbench views gated on a feature extension", () => {
     });
 
     expect(result.current.enabledHostFeatures).toEqual(["knowledge"]);
-    expect(result.current.rightSidebarViews).toContain("knowledge");
+    // Optional views start hidden from the default strip, so the installed
+    // feature becomes reachable through the switcher's show/hide checklist.
+    expect(result.current.rightSidebarAllViews).toContain("knowledge");
+    expect(result.current.rightSidebarViews).not.toContain("knowledge");
 
     act(() => {
       result.current.setActiveSidebarView("knowledge");

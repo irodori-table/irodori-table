@@ -147,8 +147,14 @@ export function useSidebarViews() {
     }
     // Read the latest placements so activation directly after a move/hide
     // works with the just-updated state instead of this render's snapshot.
-    const placements = useWorkbenchStore.getState().viewPlacements;
+    const state = useWorkbenchStore.getState();
+    const placements = state.viewPlacements;
     const side = placements[viewId] ?? "left";
+    // Activating a view explicitly (command, menu, or opening it) also brings
+    // it back into the strip if it had been hidden.
+    if (state.viewHidden[viewId]) {
+      state.setViewHidden(viewId, false);
+    }
     if (side === "right") {
       setRightSidebarOpen(true);
     } else {

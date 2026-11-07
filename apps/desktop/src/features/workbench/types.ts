@@ -10,16 +10,19 @@ export type WorkbenchKeyScope = KeybindingScope;
 
 export type WorkbenchSide = "left" | "right";
 
+// This is also the default tab order: left side Tables, Completion, History,
+// Git, Search; right side Row Detail, AI Chat. Optional views sort after them
+// and start hidden.
 export const workbenchViewIds = [
   "objectBrowser",
   "completion",
   "queryHistory",
-  "plan",
-  "bi",
   "git",
-  "aiChat",
   "searchReplace",
   "rowDetail",
+  "aiChat",
+  "plan",
+  "bi",
   "knowledge",
 ] as const;
 
@@ -71,13 +74,13 @@ export const defaultWorkbenchViewHidden: WorkbenchViewHidden = {
   objectBrowser: false,
   completion: false,
   queryHistory: false,
-  plan: false,
-  bi: false,
+  plan: true,
+  bi: true,
   git: false,
   aiChat: false,
   searchReplace: false,
   rowDetail: false,
-  knowledge: false,
+  knowledge: true,
 };
 
 function isWorkbenchViewId(value: unknown): value is WorkbenchViewId {
