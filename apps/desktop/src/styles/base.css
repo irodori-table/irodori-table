@@ -748,17 +748,36 @@ textarea::placeholder {
   z-index: 1;
   width: min(100%, var(--titlebar-connection-width));
   max-width: var(--titlebar-connection-width);
+  min-width: 0;
   transform: none;
   height: calc(var(--control-xs) * var(--titlebar-scale));
   justify-content: center;
   border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
   background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface-raised));
   font-size: var(--font-ui-lg);
+  /* Keep the detail layer inside this pill so it can never paint over the
+     name or leave the control's clip boundary. */
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* The name is the foreground layer and keeps its width; the server detail
+   sits behind it and is the first thing to truncate. */
+.titlebar-connection > span:not(.connection-color-dot) {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 auto;
+  min-width: 8ch;
+  background: inherit;
 }
 
 /* Keep the whole label cluster centered inside the wide pill instead of
    pinning the transport tag to the right edge. */
 .titlebar-connection small {
+  position: relative;
+  z-index: 0;
+  flex: 0 1 auto;
+  min-width: 0;
   margin-left: 6px;
 }
 
