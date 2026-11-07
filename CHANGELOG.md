@@ -16,6 +16,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.13.0] - 2026-11-07
+
+### Added
+
+- **Result columns fit their content.** Each column is measured from its header
+  and a bounded sample of the rows, with a drag handle on every header boundary
+  and keyboard resizing. Double-click restores the fitted width. Manual widths
+  survive sorting, filtering, and switching between result sets, and horizontal
+  virtualization now follows the real column offsets.
+- **Settings is searchable.** A field under the header finds options across
+  every section in English and Japanese, opens the right section, and focuses
+  the exact control. The shortcut list also has its own name and key filter.
+- **The Chart view carries the result statistics and field list.** The separate
+  BI sidebar duplicated the chart controls, so it has been removed; its useful
+  result summary and field profiles now live in Chart.
+
+### Changed
+
+- **A fresh workbench opens with the requested sidebar layout.** The left strip
+  is Tables, Completion, History, Git, and Search; the right strip is Row Detail
+  then AI Chat. Plan, BI-era knowledge, and other optional views stay available
+  from the view menu instead of taking default strip space.
+- **Settings rows are denser.** Descriptions are shorter, row spacing is
+  tighter, and numeric inputs no longer reserve the native spinner width twice.
+- **Selected On/Off and mode segments are clearly marked**, including
+  `aria-pressed` for assistive technology.
+- **The UI zoom slider centers 100%** and accepts a typed percentage, with
+  Enter or blur committing the value.
+- **Import and Export read in the expected direction**: an inward arrow for
+  importing and an outward arrow for exporting.
+
+### Fixed
+
+- **The right sidebar follows its stored width.** Opening AI Chat now widens an
+  already-open sidebar, and a sash drag is no longer overwritten by a deferred
+  default width.
+- **Schema nodes show open and closed folders**, explain the disclosure on hover
+  or keyboard focus, and keep every expand/collapse action labeled.
+- **Row Detail view labels fit their tabs** instead of being squeezed into equal
+  columns, and still fold into the overflow menu when the panel is narrow.
+- **The connection name keeps visual priority** over a long server description
+  in the title bar, with the detail truncating first.
+- **ER diagram All/None buttons size to their labels**, and the Search sidebar
+  gives the query input priority over the option toggles at narrow widths.
+
 ## [0.12.0] - 2026-11-06
 
 ### Changed
