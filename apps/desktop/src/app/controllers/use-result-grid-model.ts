@@ -155,7 +155,6 @@ export function useResultGridModel({
     return model.nodes.length > 0 || model.edges.length > 0 ? model : null;
   }, [activeResult, editorEngine, spillInfo]);
   const graphAvailable = Boolean(graphResultModel);
-  const webGlAvailable = Boolean(activeResult && resultColumns.length > 0);
   const rowDetailTable = useMemo(
     () =>
       findTableMetadata(activeMetadata, parseSourceTable(query), resultColumns),
@@ -187,9 +186,6 @@ export function useResultGridModel({
     sets: Record<number, Record<number, number>>;
   }>({ result: null, sets: {} });
   const gridColumnWidths = useMemo(() => {
-    // The canvas renderer retains its fixed-width geometry.
-    if (resultMode === "webgl" && !editMode)
-      return resultColumns.map(() => gridColumnWidth);
     const overrides =
       columnSizes.result === result
         ? columnSizes.sets[activeResultIndexView]
@@ -343,11 +339,8 @@ export function useResultGridModel({
     if (resultMode === "graph" && !graphAvailable) {
       return "data";
     }
-    if (resultMode === "webgl" && (!webGlAvailable || editMode)) {
-      return "data";
-    }
     return resultMode;
-  }, [chartResultModel, editMode, graphAvailable, resultMode, webGlAvailable]);
+  }, [chartResultModel, editMode, graphAvailable, resultMode]);
   const totalRows = resultGridView.totalRowCount;
   const rowWindow = useMemo(
     () =>
@@ -434,7 +427,6 @@ export function useResultGridModel({
     visibleColumnIndexes,
     visibleRows,
     visibleRowsRevision,
-    webGlAvailable,
     copyCellsForRow,
     activeFilters: resultGridView.activeFilters,
     filteredOutCount: resultGridView.filteredOutCount,

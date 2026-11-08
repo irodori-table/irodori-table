@@ -26,7 +26,6 @@ import type {
 } from "../types";
 import { ChartResultView } from "./ChartResultView";
 import { GraphResultView } from "./GraphResultView";
-import { WebGlResultGrid } from "./WebGlResultGrid";
 import { ShortcutTips, type ShortcutTip } from "@/components/ShortcutTips";
 import type { Translator } from "@/i18n";
 import { ColumnResizeHandle } from "./ColumnResizeHandle";
@@ -169,39 +168,6 @@ export function ResultBody({
 
   if (resultMode === "chart" && chartModel) {
     return <ChartResultView model={chartModel} result={result} />;
-  }
-
-  if (resultMode === "webgl") {
-    return (
-      <div className="result-body">
-        <WebGlResultGrid
-          columns={resultColumns}
-          totalRows={totalRows}
-          visibleRows={visibleRows}
-          visibleColumnIndexes={visibleColumnIndexes}
-          firstVisible={firstVisible}
-          rowHeight={gridRowHeight}
-          columnWidth={gridColumnWidth}
-          gridRef={gridRef}
-          selectedRowKey={selectedRowKey}
-          selectedCell={selectedCell}
-          selectedRangeBounds={selectedRangeBounds}
-          sortRuleByColumn={sortRuleByColumn}
-          sortRules={sortRules}
-          running={running}
-          filtersActive={filtersActive}
-          unfilteredRowCount={unfilteredRowCount}
-          onGridScroll={onGridScroll}
-          onGridKeyDown={onGridKeyDown}
-          onGridPaste={onGridPaste}
-          onGridCopy={onGridCopy}
-          onToggleSort={onToggleSort}
-          onSelectGridRow={onSelectGridRow}
-          onSelectGridCell={onSelectGridCell}
-          t={t}
-        />
-      </div>
-    );
   }
 
   return (

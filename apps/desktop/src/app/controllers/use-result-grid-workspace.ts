@@ -238,7 +238,6 @@ export function useResultGridWorkspace({
     visibleColumnIndexes,
     visibleRows,
     visibleRowsRevision,
-    webGlAvailable,
   } = useResultGridModel({
     result,
     activeResultIndex,
@@ -450,7 +449,6 @@ export function useResultGridWorkspace({
       graphModel: graphResultModel,
       chartAvailable,
       graphAvailable,
-      webGlAvailable,
       resultSets,
       activeResult,
       hasResult: Boolean(activeResult),
