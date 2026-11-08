@@ -360,6 +360,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
             rowCount: 0n,
             elapsedMs: 0n,
             truncated: false,
+            affectedRows: undefined,
           });
         }
         return streamResultSets[index];
@@ -377,6 +378,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
           elapsedMs: first.elapsedMs,
           truncated: first.truncated,
           message: first.message,
+          affectedRows: first.affectedRows,
           resultSets:
             streamResultSets.length > 1
               ? streamResultSets.map((set) => ({
@@ -399,6 +401,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
         rowCount: number,
         elapsedMs: number,
         truncated: boolean,
+        affectedRows: number | undefined,
         result: ReturnType<typeof createQueryHistoryResultSnapshot>,
       ) => {
         appendHistory({
@@ -411,6 +414,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
           rowCount,
           elapsedMs,
           truncated,
+          affectedRows,
           result,
           ranAt,
         });
@@ -430,6 +434,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
             rowCount: spill.totalRows,
             elapsedMs: spill.elapsedMs,
             truncated: spill.truncated,
+            affectedRows: spill.affectedRows,
             message: spill.spilled
               ? "result retained on disk; history kept a preview"
               : undefined,
@@ -463,6 +468,9 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
           totalRows,
           Number(spill.elapsedMs),
           spill.truncated,
+          spill.affectedRows === undefined
+            ? undefined
+            : Number(spill.affectedRows),
           historyResult,
         );
         refreshMetadataForDdl();
@@ -542,6 +550,10 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
                   set.rowCount = BigInt(summary.rowCount);
                   set.elapsedMs = BigInt(summary.elapsedMs || event.elapsedMs);
                   set.truncated = summary.truncated;
+                  set.affectedRows =
+                    summary.affectedRows === undefined
+                      ? undefined
+                      : BigInt(summary.affectedRows);
                   set.message = summary.truncated
                     ? "result capped at 10000 rows"
                     : undefined;
@@ -557,6 +569,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
                       elapsedMs: BigInt(event.elapsedMs),
                       truncated: event.truncated,
                       message: first.message,
+                      affectedRows: first.affectedRows,
                       resultSets:
                         streamResultSets.length > 1
                           ? streamResultSets.map((set) => ({
@@ -568,6 +581,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
                               elapsedMs: set.elapsedMs,
                               truncated: set.truncated,
                               message: set.message,
+                              affectedRows: set.affectedRows,
                             }))
                           : undefined,
                     },
@@ -577,6 +591,9 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
                     event.rowCount,
                     event.elapsedMs,
                     event.truncated,
+                    first.affectedRows === undefined
+                      ? undefined
+                      : Number(first.affectedRows),
                     historyResult,
                   );
                 }

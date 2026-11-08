@@ -68,6 +68,19 @@ describe("query history outcome chip", () => {
     expect(formatHistoryOutcome(baseItem, tJa, "ja")).toBe("1,234 行 · 42 ms");
   });
 
+  it("reports affected rows for a DML entry", () => {
+    const dml = {
+      ...baseItem,
+      rowCount: 0,
+      affectedRows: 2,
+    } as QueryHistoryItem;
+
+    expect(formatHistoryOutcome(dml, tEn, "en")).toBe(
+      "2 rows affected · 42 ms",
+    );
+    expect(formatHistoryOutcome(dml, tJa, "ja")).toBe("2 行に影響 · 42 ms");
+  });
+
   it("marks a capped result", () => {
     const capped = { ...baseItem, truncated: true } as QueryHistoryItem;
 

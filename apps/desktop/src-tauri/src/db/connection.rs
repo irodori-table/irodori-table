@@ -60,9 +60,22 @@ pub(crate) trait Connection: Send + Sync {
             ))
         }
     }
+    /// Like [`run_query`] but carries the driver's command-completion count for
+    /// DML that returned no rows. Engines that cannot expose it return `None`
+    /// instead of a fabricated zero.
+    async fn run_query_affected(&self, sql: &str, cap: usize) -> DbResult<(RowSet, Option<u64>)> {
+        Ok((self.run_query(sql, cap).await?, None))
+    }
+    async fn run_prepared_query_affected(
+        &self,
+        query: &PreparedQuery,
+        cap: usize,
+    ) -> DbResult<(RowSet, Option<u64>)> {
+        Ok((self.run_prepared_query(query, cap).await?, None))
+    }
     async fn run_query_sets(&self, sql: &str, cap: usize) -> DbResult<Vec<RawResultSet>> {
         let start = Instant::now();
-        let (columns, rows, truncated) = self.run_query(sql, cap).await?;
+        let ((columns, rows, truncated), affected_rows) = self.run_query_affected(sql, cap).await?;
         Ok(vec![RawResultSet {
             statement_index: 0,
             statement: sql.to_string(),
@@ -70,6 +83,7 @@ pub(crate) trait Connection: Send + Sync {
             rows,
             elapsed_ms: start.elapsed().as_millis() as u64,
             truncated,
+            affected_rows,
         }])
     }
     async fn metadata(&self) -> DbResult<DatabaseMetadata>;
@@ -112,6 +126,7 @@ pub(crate) trait Connection: Send + Sync {
                 row_count,
                 truncated,
                 elapsed_ms: 0,
+                affected_rows: None,
             }],
             truncated,
             row_count,
@@ -170,6 +185,20 @@ impl Connection for PgConn {
     async fn run_prepared_query(&self, query: &PreparedQuery, cap: usize) -> DbResult<RowSet> {
         let mut session = self.session.begin().await?;
         let result = postgres::run_prepared_query(session.conn(), query, cap).await;
+        session.finish(result).await
+    }
+    async fn run_query_affected(&self, sql: &str, cap: usize) -> DbResult<(RowSet, Option<u64>)> {
+        let mut session = self.session.begin().await?;
+        let result = postgres::run_query_affected(session.conn(), sql, cap).await;
+        session.finish(result).await
+    }
+    async fn run_prepared_query_affected(
+        &self,
+        query: &PreparedQuery,
+        cap: usize,
+    ) -> DbResult<(RowSet, Option<u64>)> {
+        let mut session = self.session.begin().await?;
+        let result = postgres::run_prepared_query_affected(session.conn(), query, cap).await;
         session.finish(result).await
     }
     async fn stream_query(
@@ -293,6 +322,20 @@ impl Connection for MysqlConn {
         let result = mysql::run_prepared_query(session.conn(), query, cap).await;
         session.finish(result).await
     }
+    async fn run_query_affected(&self, sql: &str, cap: usize) -> DbResult<(RowSet, Option<u64>)> {
+        let mut session = self.session.begin().await?;
+        let result = mysql::run_query_affected(session.conn(), sql, cap).await;
+        session.finish(result).await
+    }
+    async fn run_prepared_query_affected(
+        &self,
+        query: &PreparedQuery,
+        cap: usize,
+    ) -> DbResult<(RowSet, Option<u64>)> {
+        let mut session = self.session.begin().await?;
+        let result = mysql::run_prepared_query_affected(session.conn(), query, cap).await;
+        session.finish(result).await
+    }
     async fn stream_query(
         &self,
         sql: &str,
@@ -340,6 +383,16 @@ impl Connection for SqliteConn {
     }
     async fn run_prepared_query(&self, query: &PreparedQuery, cap: usize) -> DbResult<RowSet> {
         sqlite::run_prepared_query(&self.0, query, cap).await
+    }
+    async fn run_query_affected(&self, sql: &str, cap: usize) -> DbResult<(RowSet, Option<u64>)> {
+        sqlite::run_query_affected(&self.0, sql, cap).await
+    }
+    async fn run_prepared_query_affected(
+        &self,
+        query: &PreparedQuery,
+        cap: usize,
+    ) -> DbResult<(RowSet, Option<u64>)> {
+        sqlite::run_prepared_query_affected(&self.0, query, cap).await
     }
     async fn run_query_sets(&self, sql: &str, cap: usize) -> DbResult<Vec<RawResultSet>> {
         sqlite::run_query_sets(&self.0, sql, cap).await
