@@ -103,7 +103,7 @@ describe("zoom buttons with an uncommitted percentage", () => {
       .getByRole("spinbutton", { name: "UI zoom percentage" })
       .fill("125");
 
-    await page.getByRole("button", { name: "Reset", exact: true }).click();
+    await page.getByTitle("Reset zoom").click();
 
     await expect.poll(() => percentField(host).value).toBe("100");
   });
