@@ -664,6 +664,34 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
     await expectGridScrollPosition(grid, { top: 0, left: 0 });
   });
 
+  test("quick filtering a 10k result follows typing", async ({ page }) => {
+    await installVirtualizationMock(page);
+    await page.goto("/");
+
+    await connectMockDatabase(page);
+    await openFixtureTable(page, 1);
+    await waitForGridPaint();
+
+    const filter = page.getByRole("textbox", { name: "Quick filter" });
+    await expect(filter).toBeVisible();
+    await filter.click();
+
+    const start = Date.now();
+    await page.keyboard.type("row_1234");
+    // The summary switches to "shown / total" once the filter is applied,
+    // which is later than the keystroke that narrows it.
+    await expect(page.locator(".results-title")).toContainText("shown", {
+      timeout: 5_000,
+    });
+    const typingMs = Date.now() - start;
+    console.log(`PERF: filterTyping=${typingMs}ms`);
+
+    expect(
+      typingMs,
+      `filtering 10k rows from 9 chars took ${typingMs}ms`,
+    ).toBeLessThan(3_000);
+  });
+
   test("EXEC-004B million-row logical fixture stays bounded while scrolling", async ({
     page,
   }) => {
