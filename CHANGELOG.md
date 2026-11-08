@@ -16,6 +16,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.1] - 2026-11-07
+
+### Fixed
+
+- **Settings zoom buttons apply the typed percentage on the first click.**
+  The numeric draft no longer commits on blur and rescales the interface out
+  from under the click; 125% + Zoom in now lands on 135% immediately.
+- **Chart keeps a usable plot when the result pane is short.** The statistics
+  and field list are capped and the view scrolls instead of squeezing the plot
+  to zero height.
+- **Manual result-column widths survive streamed snapshots.** Widths are tied to
+  the executed statement and column shape rather than one `QueryResult` object,
+  so later batches keep the resize while a new statement starts fresh.
+
 ## [0.16.0] - 2026-11-07
 
 ### Removed
