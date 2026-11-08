@@ -315,9 +315,12 @@
 
 .chart-result-view {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* Keep a usable plot even when the result pane is short: the metadata row
+   * is capped, and the whole view scrolls rather than collapsing the canvas. */
+  grid-template-rows: auto minmax(120px, 1fr) minmax(0, 240px);
   min-height: 0;
   height: 100%;
+  overflow: auto;
   container-type: inline-size;
   background: var(--surface-raised);
 }
