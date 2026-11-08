@@ -114,7 +114,7 @@ export function useResultGridModel({
     return [
       {
         statementIndex: 0,
-        statement: "statement 1",
+        statement: query || "statement 1",
         columns: result.columns,
         rows: result.rows,
         rowCount: result.rowCount,
@@ -124,7 +124,7 @@ export function useResultGridModel({
         affectedRows: result.affectedRows,
       },
     ];
-  }, [result]);
+  }, [query, result]);
   const activeResultIndexView = useMemo(
     () => Math.min(activeResultIndex, Math.max(0, resultSets.length - 1)),
     [activeResultIndex, resultSets.length],
@@ -181,15 +181,20 @@ export function useResultGridModel({
       columnScale,
     );
   }, [resultColumns, activeResult?.rows, columnScale, gridWindowVersion]);
-  const [columnSizes, setColumnSizes] = useState<{
-    result: QueryResult | null;
-    sets: Record<number, Record<number, number>>;
-  }>({ result: null, sets: {} });
+  // Manual widths belong to the executed statement and its column shape, not
+  // to one `QueryResult` snapshot: a stream publishes a fresh object for every
+  // batch. A different statement (or a changed schema) gets a fresh set, and
+  // result sets from one run stay independent.
+  const columnWidthKey = activeResult
+    ? `${activeResultIndexView}\u0000${activeResult.statement}\u0000${resultColumns.join("\u0001")}`
+    : null;
+  const [columnWidthSets, setColumnWidthSets] = useState<
+    Record<string, Record<number, number>>
+  >({});
   const gridColumnWidths = useMemo(() => {
-    const overrides =
-      columnSizes.result === result
-        ? columnSizes.sets[activeResultIndexView]
-        : undefined;
+    const overrides = columnWidthKey
+      ? columnWidthSets[columnWidthKey]
+      : undefined;
     return autoColumnWidths.map((width, index) =>
       overrides?.[index] === undefined
         ? width
@@ -200,19 +205,23 @@ export function useResultGridModel({
     editMode,
     resultColumns,
     gridColumnWidth,
-    columnSizes,
-    result,
-    activeResultIndexView,
+    columnWidthSets,
+    columnWidthKey,
     autoColumnWidths,
     columnScale,
   ]);
   function resizeColumn(index: number, width: number | null) {
-    setColumnSizes((previous) => {
-      const sets = previous.result === result ? previous.sets : {};
-      const widths = { ...sets[activeResultIndexView] };
+    if (!columnWidthKey) return;
+    setColumnWidthSets((previous) => {
+      const widths = { ...previous[columnWidthKey] };
       if (width === null) delete widths[index];
       else widths[index] = width / columnScale;
-      return { result, sets: { ...sets, [activeResultIndexView]: widths } };
+      const next = { ...previous, [columnWidthKey]: widths };
+      if (!(columnWidthKey in previous)) {
+        const keys = Object.keys(next).filter((key) => key !== columnWidthKey);
+        if (keys.length >= 8) delete next[keys[0]!];
+      }
+      return next;
     });
   }
   const gridColumnOffsets = useMemo(
