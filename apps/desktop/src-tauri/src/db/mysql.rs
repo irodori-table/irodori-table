@@ -76,7 +76,7 @@ pub async fn run_query_affected(
 ) -> DbResult<(RowSet, Option<u64>)> {
     let reports = super::sql_statement_reports_affected_rows(sql);
     super::stream::collect_capped_many(
-        sqlx::query(super::audited_sql(sql)).fetch_many(conn),
+        sqlx::raw_sql(super::audited_sql(sql)).fetch_many(conn),
         cap,
         cell_to_json,
         move |result: &sqlx::mysql::MySqlQueryResult| reports.then_some(result.rows_affected()),
@@ -92,6 +92,7 @@ pub async fn run_prepared_query(
     super::stream::collect_capped(bind_query(query).fetch(conn), cap, cell_to_json).await
 }
 
+#[allow(deprecated)]
 pub async fn run_prepared_query_affected(
     conn: &mut sqlx::MySqlConnection,
     query: &PreparedQuery,
@@ -114,7 +115,7 @@ pub async fn stream_query(
 ) -> DbResult<super::stream::StreamSummary> {
     let reports = super::sql_statement_reports_affected_rows(sql);
     super::stream::stream_capped_many(
-        sqlx::query(super::audited_sql(sql)).fetch_many(conn),
+        sqlx::raw_sql(super::audited_sql(sql)).fetch_many(conn),
         ctx,
         cell_to_json,
         move |result: &sqlx::mysql::MySqlQueryResult| reports.then_some(result.rows_affected()),
@@ -122,6 +123,7 @@ pub async fn stream_query(
     .await
 }
 
+#[allow(deprecated)]
 pub async fn stream_prepared_query(
     conn: &mut sqlx::MySqlConnection,
     query: &PreparedQuery,
