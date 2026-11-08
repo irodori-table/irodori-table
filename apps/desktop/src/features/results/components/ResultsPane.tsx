@@ -144,7 +144,6 @@ type ResultsPaneProps = {
   graphModel: GraphResultModel | null;
   chartAvailable: boolean;
   graphAvailable: boolean;
-  webGlAvailable: boolean;
   resultSets: QueryResultSet[];
   activeResult: QueryResultSet | null;
   hasResult: boolean;
@@ -209,7 +208,6 @@ export function ResultsPane({
   graphModel,
   chartAvailable,
   graphAvailable,
-  webGlAvailable,
   resultSets,
   activeResult,
   hasResult,
@@ -418,10 +416,7 @@ export function ResultsPane({
     <section className={running ? "results-pane is-running" : "results-pane"}>
       <div className="results-header">
         <div className="results-title">
-          {tableViewObject ||
-          chartAvailable ||
-          graphAvailable ||
-          webGlAvailable ? (
+          {tableViewObject || chartAvailable || graphAvailable ? (
             <div className="segmented-control result-mode-toggle">
               <button
                 type="button"
@@ -441,17 +436,6 @@ export function ResultsPane({
                   onClick={() => onResultModeChange("chart")}
                 >
                   {t("results.mode.chart")}
-                </button>
-              ) : null}
-              {webGlAvailable ? (
-                <button
-                  type="button"
-                  className={resultMode === "webgl" ? "active" : undefined}
-                  aria-pressed={resultMode === "webgl"}
-                  disabled={editMode}
-                  onClick={() => onResultModeChange("webgl")}
-                >
-                  WebGL
                 </button>
               ) : null}
               {graphAvailable ? (

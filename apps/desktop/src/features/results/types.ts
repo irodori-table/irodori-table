@@ -1,4 +1,4 @@
-export type ResultMode = "data" | "structure" | "chart" | "graph" | "webgl";
+export type ResultMode = "data" | "structure" | "chart" | "graph";
 
 export type EditingCell = {
   key: string;

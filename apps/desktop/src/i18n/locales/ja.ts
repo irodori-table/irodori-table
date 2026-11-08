@@ -422,8 +422,6 @@ export const ja = {
   "results.runningQuery": "クエリを実行中...",
   "results.noRowsMatchFilters": "フィルタに一致する行はありません",
   "results.noRowsReturned": "返された行はありません",
-  "results.webGlUnavailable": "WebGL を利用できません",
-  "results.webGlPreview": "クエリ結果 WebGL プレビュー",
   "results.confirmApplyEdits.title":
     "{table} に {count} 件の変更を反映しますか？",
   "results.confirmApplyEdits.message":

@@ -417,8 +417,6 @@ export const en = {
   "results.runningQuery": "Running query...",
   "results.noRowsMatchFilters": "No rows match filters",
   "results.noRowsReturned": "No rows returned",
-  "results.webGlUnavailable": "WebGL unavailable",
-  "results.webGlPreview": "Query result WebGL preview",
   "results.confirmApplyEdits.title": "Apply {count} changes to {table}?",
   "results.confirmApplyEdits.message":
     "{updates} updated, {inserts} added, {deletes} deleted. Changes are written to the database.",
