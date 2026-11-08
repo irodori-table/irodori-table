@@ -1375,7 +1375,9 @@ fn dml_statements_report_affected_rows_only() {
     assert!(sql_statement_reports_affected_rows(
         "-- c\nupdate t set x = 1"
     ));
-    assert!(sql_statement_reports_affected_rows(
+    // A CTE leads with `with`, so leave the count unavailable rather than
+    // guessing at the statement behind it.
+    assert!(!sql_statement_reports_affected_rows(
         "with x as (select 1) delete from t"
     ));
     assert!(!sql_statement_reports_affected_rows("select * from t"));
