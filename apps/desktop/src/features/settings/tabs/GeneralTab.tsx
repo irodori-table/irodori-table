@@ -111,6 +111,16 @@ export function GeneralTab({
 }: GeneralTabProps) {
   const uiZoomPercent = `${Math.round(uiZoom * 100)}%`;
   const [zoomDraft, setZoomDraft] = useState<string | null>(null);
+  // A zoom button must not blur the numeric field first: committing the draft
+  // changes the interface scale and can move the button out from under the
+  // click. The buttons prevent the focus change and apply the draft themselves.
+  const draftZoom = (() => {
+    if (zoomDraft === null) return uiZoom;
+    const parsed = Number(zoomDraft);
+    return zoomDraft.trim() && Number.isFinite(parsed)
+      ? normalizeUiZoom(parsed / 100)
+      : uiZoom;
+  })();
 
   function chooseEditorBackgroundImage(file: File | undefined) {
     if (!file || !file.type.startsWith("image/")) {
@@ -183,8 +193,12 @@ export function GeneralTab({
             type="button"
             title={t("settings.general.uiZoom.zoomOut")}
             aria-label={t("settings.general.uiZoom.zoomOut")}
-            disabled={uiZoom <= UI_ZOOM_MIN}
-            onClick={() => setUiZoom(uiZoom - UI_ZOOM_STEP)}
+            disabled={draftZoom <= UI_ZOOM_MIN}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              setUiZoom(normalizeUiZoom(draftZoom - UI_ZOOM_STEP));
+              setZoomDraft(null);
+            }}
           >
             <ZoomOut size={14} />
           </button>
@@ -229,8 +243,12 @@ export function GeneralTab({
             type="button"
             title={t("settings.general.uiZoom.zoomIn")}
             aria-label={t("settings.general.uiZoom.zoomIn")}
-            disabled={uiZoom >= UI_ZOOM_MAX}
-            onClick={() => setUiZoom(uiZoom + UI_ZOOM_STEP)}
+            disabled={draftZoom >= UI_ZOOM_MAX}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              setUiZoom(normalizeUiZoom(draftZoom + UI_ZOOM_STEP));
+              setZoomDraft(null);
+            }}
           >
             <ZoomIn size={14} />
           </button>
@@ -238,7 +256,11 @@ export function GeneralTab({
             className="text-button"
             type="button"
             title={t("settings.general.uiZoom.reset")}
-            onClick={() => setUiZoom(UI_ZOOM_DEFAULT)}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => {
+              setUiZoom(UI_ZOOM_DEFAULT);
+              setZoomDraft(null);
+            }}
           >
             <RotateCcw size={14} />
             <span>{t("common.reset")}</span>
