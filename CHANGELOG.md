@@ -16,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.0] - 2026-11-07
+
+### Removed
+
+- **The WebGL result mode.** Data and Chart are the only result views now. The
+  canvas renderer kept a fixed-width geometry that could not follow the
+  content-fitted columns, and the virtualized DOM grid already stays bounded on
+  million-row and 2,000-column results. Removing it leaves one renderer with one
+  set of selection, sorting, copying, keyboard, and width semantics. The
+  terminal's xterm WebGL addon is unaffected.
+
 ## [0.15.0] - 2026-11-07
 
 ### Added
