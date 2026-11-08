@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.15.0] - 2026-11-07
+
+### Added
+
+- **DML results report how many rows they affected.** INSERT, UPDATE, DELETE,
+  MERGE, REPLACE, and UPSERT now carry the driver's command-completion count
+  through collected, streamed, multi-statement, prepared, and disk-offloaded
+  runs. The result summary reads “N rows affected in X ms”, result switching
+  keeps each statement's count, and query history records it. Drivers that
+  cannot expose the count show it as unavailable rather than a fabricated zero;
+  statements that return rows keep their returned-row count.
+
 ## [0.14.0] - 2026-11-07
 
 ### Added
