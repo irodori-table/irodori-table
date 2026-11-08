@@ -69,10 +69,17 @@ export function formatHistoryOutcome(
       ? compactSql(item.error, 72)
       : t("history.outcome.failed");
   }
-  const rows = t(
-    item.truncated ? "history.outcome.rowsCapped" : "history.outcome.rows",
-    { count: toCount(item.rowCount, locale) },
-  );
+  const rows =
+    item.affectedRows !== undefined
+      ? t("history.outcome.affected", {
+          count: toCount(item.affectedRows, locale),
+        })
+      : t(
+          item.truncated
+            ? "history.outcome.rowsCapped"
+            : "history.outcome.rows",
+          { count: toCount(item.rowCount, locale) },
+        );
   const elapsed = t("history.outcome.elapsed", {
     ms: toCount(item.elapsedMs, locale),
   });

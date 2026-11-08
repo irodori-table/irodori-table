@@ -124,12 +124,43 @@ pub async fn run_query(pool: &SqlitePool, sql: &str, cap: usize) -> DbResult<Row
     .await
 }
 
+pub async fn run_query_affected(
+    pool: &SqlitePool,
+    sql: &str,
+    cap: usize,
+) -> DbResult<(RowSet, Option<u64>)> {
+    let reports = super::sql_statement_reports_affected_rows(sql);
+    super::stream::collect_capped_many(
+        sqlx::raw_sql(super::audited_sql(sql)).fetch_many(pool),
+        cap,
+        cell_to_json,
+        move |result: &sqlx::sqlite::SqliteQueryResult| reports.then_some(result.rows_affected()),
+    )
+    .await
+}
+
 pub async fn run_prepared_query(
     pool: &SqlitePool,
     query: &PreparedQuery,
     cap: usize,
 ) -> DbResult<RowSet> {
     super::stream::collect_capped(bind_query(query).fetch(pool), cap, cell_to_json).await
+}
+
+#[allow(deprecated)]
+pub async fn run_prepared_query_affected(
+    pool: &SqlitePool,
+    query: &PreparedQuery,
+    cap: usize,
+) -> DbResult<(RowSet, Option<u64>)> {
+    let reports = super::sql_statement_reports_affected_rows(&query.sql);
+    super::stream::collect_capped_many(
+        bind_query(query).fetch_many(pool),
+        cap,
+        cell_to_json,
+        move |result: &sqlx::sqlite::SqliteQueryResult| reports.then_some(result.rows_affected()),
+    )
+    .await
 }
 
 pub async fn run_query_sets(
@@ -146,7 +177,8 @@ pub async fn run_query_sets(
     let mut sets = Vec::with_capacity(statements.len());
     for (statement_index, statement) in statements.into_iter().enumerate() {
         let start = std::time::Instant::now();
-        let (columns, rows, truncated) = run_query(pool, &statement, cap).await?;
+        let ((columns, rows, truncated), affected_rows) =
+            run_query_affected(pool, &statement, cap).await?;
         sets.push(RawResultSet {
             statement_index,
             statement,
@@ -154,6 +186,7 @@ pub async fn run_query_sets(
             rows,
             elapsed_ms: start.elapsed().as_millis() as u64,
             truncated,
+            affected_rows,
         });
     }
     Ok(sets)
@@ -164,20 +197,30 @@ pub async fn stream_query(
     sql: &str,
     ctx: &super::stream::StreamCtx,
 ) -> DbResult<super::stream::StreamSummary> {
-    super::stream::stream_capped(
-        sqlx::query(super::audited_sql(sql)).fetch(pool),
+    let reports = super::sql_statement_reports_affected_rows(sql);
+    super::stream::stream_capped_many(
+        sqlx::raw_sql(super::audited_sql(sql)).fetch_many(pool),
         ctx,
         cell_to_json,
+        move |result: &sqlx::sqlite::SqliteQueryResult| reports.then_some(result.rows_affected()),
     )
     .await
 }
 
+#[allow(deprecated)]
 pub async fn stream_prepared_query(
     pool: &SqlitePool,
     query: &PreparedQuery,
     ctx: &super::stream::StreamCtx,
 ) -> DbResult<super::stream::StreamSummary> {
-    super::stream::stream_capped(bind_query(query).fetch(pool), ctx, cell_to_json).await
+    let reports = super::sql_statement_reports_affected_rows(&query.sql);
+    super::stream::stream_capped_many(
+        bind_query(query).fetch_many(pool),
+        ctx,
+        cell_to_json,
+        move |result: &sqlx::sqlite::SqliteQueryResult| reports.then_some(result.rows_affected()),
+    )
+    .await
 }
 
 pub async fn stream_query_sets(

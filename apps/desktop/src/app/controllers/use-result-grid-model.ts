@@ -121,6 +121,7 @@ export function useResultGridModel({
         elapsedMs: result.elapsedMs,
         truncated: result.truncated,
         message: result.message,
+        affectedRows: result.affectedRows,
       },
     ];
   }, [result]);
@@ -374,15 +375,20 @@ export function useResultGridModel({
     effectiveResultMode === "structure" ? tableViewObject : null;
   const showingStructure = Boolean(structureObject);
   const resultSummary = activeResult
-    ? t(
-        activeResult.truncated
-          ? "results.summary.completedCapped"
-          : "results.summary.completed",
-        {
-          rows: toCount(activeResult.rowCount),
+    ? activeResult.affectedRows !== undefined
+      ? t("results.summary.affected", {
+          count: toCount(activeResult.affectedRows),
           ms: toCount(activeResult.elapsedMs),
-        },
-      )
+        })
+      : t(
+          activeResult.truncated
+            ? "results.summary.completedCapped"
+            : "results.summary.completed",
+          {
+            rows: toCount(activeResult.rowCount),
+            ms: toCount(activeResult.elapsedMs),
+          },
+        )
     : t("results.summary.none");
   const displayedResultSummary =
     activeResult && resultGridView.filtersActive

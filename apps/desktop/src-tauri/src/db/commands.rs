@@ -366,6 +366,7 @@ pub async fn db_run_query_stream(
                         row_count: set.row_count,
                         elapsed_ms: set.elapsed_ms,
                         truncated: set.truncated,
+                        affected_rows: set.affected_rows,
                     })
                     .collect(),
             }

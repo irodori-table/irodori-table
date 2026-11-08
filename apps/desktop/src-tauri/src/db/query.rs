@@ -19,6 +19,9 @@ pub(crate) struct RawResultSet {
     pub rows: Vec<Vec<serde_json::Value>>,
     pub elapsed_ms: u64,
     pub truncated: bool,
+    /// Command-completion count for a DML statement that returned no rows.
+    /// `None` means the driver does not expose it (or the statement returns rows).
+    pub affected_rows: Option<u64>,
 }
 
 /// One streamed-query event forwarded to the frontend over a Tauri channel. The
@@ -59,6 +62,8 @@ pub struct QueryStreamResultSetSummary {
     pub row_count: u64,
     pub elapsed_ms: u64,
     pub truncated: bool,
+    #[serde(rename = "affectedRows", skip_serializing_if = "Option::is_none")]
+    pub affected_rows: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -76,6 +81,11 @@ pub struct QueryResult {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub message: Option<String>,
+    /// Command-completion count for the first statement, when it was DML with no
+    /// returned rows. `None` is "unavailable", not zero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub affected_rows: Option<u64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub result_sets: Vec<QueryResultSet>,
 }
@@ -94,6 +104,11 @@ pub struct QueryResultSet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub message: Option<String>,
+    /// Command-completion count for DML that returned no rows. `None` means the
+    /// driver does not expose it, or the statement returned rows instead.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub affected_rows: Option<u64>,
 }
 
 /// Outcome of a disk-offloaded run (EXEC-010). The first `in_memory_rows` rows are
@@ -116,6 +131,10 @@ pub struct SpillRunResult {
     /// Whether rows were dropped (offload off and over budget, or the hard ceiling).
     pub truncated: bool,
     pub elapsed_ms: u64,
+    /// Command-completion count for a DML statement with no returned rows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub affected_rows: Option<u64>,
 }
 
 /// One page of a retained result, read from RAM and/or the spill file.
@@ -224,6 +243,7 @@ pub(crate) fn query_result_set(raw: RawResultSet, cap: usize) -> QueryResultSet 
         message: raw
             .truncated
             .then(|| format!("result capped at {cap} rows")),
+        affected_rows: raw.affected_rows,
     }
 }
 
@@ -243,6 +263,7 @@ pub(crate) fn query_result_from_sets(
             elapsed_ms,
             truncated: false,
             message: None,
+            affected_rows: None,
         });
     let nested = (result_sets.len() > 1)
         .then(|| std::mem::take(&mut result_sets))
@@ -254,6 +275,7 @@ pub(crate) fn query_result_from_sets(
         elapsed_ms,
         truncated: first.truncated,
         message: first.message,
+        affected_rows: first.affected_rows,
         result_sets: nested,
     }
 }
@@ -304,6 +326,16 @@ pub(crate) fn sql_may_write(sql: &str) -> bool {
     split_sql_statements(sql)
         .iter()
         .any(|statement| sql_tokens(statement).any(is_write_keyword))
+}
+
+/// Whether a statement's command-completion count is a meaningful "affected
+/// rows" value. Queries that return rows and DDL are excluded; unknown and
+/// driver-specific statements stay `None` rather than showing a fabricated 0.
+pub(crate) fn sql_statement_reports_affected_rows(sql: &str) -> bool {
+    matches!(
+        sql_tokens(sql).next().as_deref(),
+        Some("insert" | "update" | "delete" | "merge" | "replace" | "upsert")
+    )
 }
 
 fn sql_tokens(sql: &str) -> impl Iterator<Item = String> + '_ {

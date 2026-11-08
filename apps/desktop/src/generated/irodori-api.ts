@@ -159,7 +159,12 @@ password?: string, auth?: AuthConfig, tls?: TlsConfig, database?: string, socket
 
 export type ConnectionInfo = { id: string, engine: DbEngine, serverVersion: string, };
 
-export type QueryResultSet = { statementIndex: number, statement: string, columns: Array<string>, rows: Array<Array<JsonValue>>, rowCount: bigint, elapsedMs: bigint, truncated: boolean, message?: string, };
+export type QueryResultSet = { statementIndex: number, statement: string, columns: Array<string>, rows: Array<Array<JsonValue>>, rowCount: bigint, elapsedMs: bigint, truncated: boolean, message?: string,
+/**
+ * Command-completion count for DML that returned no rows. `None` means the
+ * driver does not expose it, or the statement returned rows instead.
+ */
+affectedRows?: bigint, };
 
 export type QueryResult = { columns: Array<string>, rows: Array<Array<JsonValue>>, rowCount: bigint, elapsedMs: bigint,
 /**
@@ -167,7 +172,12 @@ export type QueryResult = { columns: Array<string>, rows: Array<Array<JsonValue>
  * server, so the UI can offer "load more" / run-to-file instead of silently
  * hiding data.
  */
-truncated: boolean, message?: string, resultSets?: Array<QueryResultSet>, };
+truncated: boolean, message?: string,
+/**
+ * Command-completion count for the first statement, when it was DML with no
+ * returned rows. `None` is "unavailable", not zero.
+ */
+affectedRows?: bigint, resultSets?: Array<QueryResultSet>, };
 
 export type SpillRunResult = {
 /**
@@ -189,7 +199,11 @@ spilled: boolean,
 /**
  * Whether rows were dropped (offload off and over budget, or the hard ceiling).
  */
-truncated: boolean, elapsedMs: bigint, };
+truncated: boolean, elapsedMs: bigint,
+/**
+ * Command-completion count for a DML statement with no returned rows.
+ */
+affectedRows?: bigint, };
 
 export type ResultWindow = {
 /**

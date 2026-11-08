@@ -1364,3 +1364,42 @@ async fn wait_for_terminal_job(runtime: &irodori_jobs::JobRuntime) -> irodori_jo
     }
     panic!("timed out waiting for metadata refresh job");
 }
+
+#[test]
+fn dml_statements_report_affected_rows_only() {
+    use super::query::{query_result_from_sets, query_result_set, RawResultSet};
+
+    assert!(sql_statement_reports_affected_rows(
+        "insert into t values (1)"
+    ));
+    assert!(sql_statement_reports_affected_rows(
+        "-- c\nupdate t set x = 1"
+    ));
+    // A CTE leads with `with`, so leave the count unavailable rather than
+    // guessing at the statement behind it.
+    assert!(!sql_statement_reports_affected_rows(
+        "with x as (select 1) delete from t"
+    ));
+    assert!(!sql_statement_reports_affected_rows("select * from t"));
+    assert!(!sql_statement_reports_affected_rows(
+        "create table t (id int)"
+    ));
+    assert!(!sql_statement_reports_affected_rows(""));
+
+    let set = query_result_set(
+        RawResultSet {
+            statement_index: 0,
+            statement: "update t set x = 1".to_string(),
+            columns: Vec::new(),
+            rows: Vec::new(),
+            elapsed_ms: 3,
+            truncated: false,
+            affected_rows: Some(2),
+        },
+        100,
+    );
+    assert_eq!(set.affected_rows, Some(2));
+
+    let result = query_result_from_sets(vec![set], 3);
+    assert_eq!(result.affected_rows, Some(2));
+}

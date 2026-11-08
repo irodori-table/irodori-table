@@ -25,6 +25,7 @@ export type QueryHistoryResultSetSnapshot = {
   truncated: boolean;
   retentionTruncated: boolean;
   message?: string;
+  affectedRows?: number;
 };
 
 export type QueryHistoryResultSnapshot = {
@@ -36,6 +37,7 @@ export type QueryHistoryResultSnapshot = {
   truncated: boolean;
   retentionTruncated: boolean;
   message?: string;
+  affectedRows?: number;
   resultSets?: QueryHistoryResultSetSnapshot[];
 };
 
@@ -49,6 +51,7 @@ export type QueryHistoryItem = {
   rowCount: number;
   elapsedMs: number;
   truncated: boolean;
+  affectedRows?: number;
   error?: string;
   result?: QueryHistoryResultSnapshot;
   ranAt: string;
@@ -135,6 +138,7 @@ type QueryResultSetLike = {
   elapsedMs: number | bigint;
   truncated: boolean;
   message?: string;
+  affectedRows?: number | bigint;
 };
 
 type QueryResultLike = {
@@ -144,6 +148,7 @@ type QueryResultLike = {
   elapsedMs: number | bigint;
   truncated: boolean;
   message?: string;
+  affectedRows?: number | bigint;
   resultSets?: QueryResultSetLike[];
 };
 
@@ -167,6 +172,10 @@ export function createQueryHistoryResultSnapshot(
     retentionTruncated:
       rowCount > rows.length || result.rows.length > rows.length,
     message: result.message,
+    affectedRows:
+      result.affectedRows === undefined
+        ? undefined
+        : numberValue(result.affectedRows),
   };
   if (result.resultSets && result.resultSets.length > 1) {
     snapshot.resultSets = result.resultSets.map((set) =>
@@ -195,6 +204,10 @@ function createQueryHistoryResultSetSnapshot(
     retentionTruncated:
       rowCount > rows.length || result.rows.length > rows.length,
     message: result.message,
+    affectedRows:
+      result.affectedRows === undefined
+        ? undefined
+        : numberValue(result.affectedRows),
   };
 }
 
@@ -274,6 +287,10 @@ function sanitizeQueryHistoryItem(
     rowCount: Number(item.rowCount) || 0,
     elapsedMs: Number(item.elapsedMs) || 0,
     truncated: Boolean(item.truncated),
+    affectedRows:
+      item.affectedRows === undefined
+        ? undefined
+        : numberValue(item.affectedRows),
     error: typeof item.error === "string" ? item.error : undefined,
     result: sanitizeResultSnapshot(item.result, rowLimit),
     ranAt: item.ranAt,

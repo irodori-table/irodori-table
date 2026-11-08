@@ -82,7 +82,8 @@ pub async fn run_query_with_params_impl(
     let sets = if prepared.params.is_empty() {
         conn.run_query_sets(&prepared.sql, cap).await?
     } else {
-        let (columns, rows, truncated) = conn.run_prepared_query(&prepared, cap).await?;
+        let ((columns, rows, truncated), affected_rows) =
+            conn.run_prepared_query_affected(&prepared, cap).await?;
         vec![RawResultSet {
             statement_index: 0,
             statement: sql,
@@ -90,6 +91,7 @@ pub async fn run_query_with_params_impl(
             rows,
             elapsed_ms: start.elapsed().as_millis() as u64,
             truncated,
+            affected_rows,
         }]
     };
     let elapsed_ms = start.elapsed().as_millis() as u64;
@@ -476,6 +478,10 @@ pub(crate) async fn run_query_spill_impl(
         )
     };
     let handle = register_result(state, &connection_id, store).await;
+    let affected_rows = summary
+        .result_sets
+        .first()
+        .and_then(|set| set.affected_rows);
 
     Ok(SpillRunResult {
         handle,
@@ -485,6 +491,7 @@ pub(crate) async fn run_query_spill_impl(
         spilled,
         truncated,
         elapsed_ms: started.elapsed().as_millis() as u64,
+        affected_rows,
     })
 }
 

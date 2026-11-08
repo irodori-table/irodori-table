@@ -69,6 +69,21 @@ pub async fn run_query(
     .await
 }
 
+pub async fn run_query_affected(
+    conn: &mut sqlx::MySqlConnection,
+    sql: &str,
+    cap: usize,
+) -> DbResult<(RowSet, Option<u64>)> {
+    let reports = super::sql_statement_reports_affected_rows(sql);
+    super::stream::collect_capped_many(
+        sqlx::raw_sql(super::audited_sql(sql)).fetch_many(conn),
+        cap,
+        cell_to_json,
+        move |result: &sqlx::mysql::MySqlQueryResult| reports.then_some(result.rows_affected()),
+    )
+    .await
+}
+
 pub async fn run_prepared_query(
     conn: &mut sqlx::MySqlConnection,
     query: &PreparedQuery,
@@ -77,25 +92,51 @@ pub async fn run_prepared_query(
     super::stream::collect_capped(bind_query(query).fetch(conn), cap, cell_to_json).await
 }
 
+#[allow(deprecated)]
+pub async fn run_prepared_query_affected(
+    conn: &mut sqlx::MySqlConnection,
+    query: &PreparedQuery,
+    cap: usize,
+) -> DbResult<(RowSet, Option<u64>)> {
+    let reports = super::sql_statement_reports_affected_rows(&query.sql);
+    super::stream::collect_capped_many(
+        bind_query(query).fetch_many(conn),
+        cap,
+        cell_to_json,
+        move |result: &sqlx::mysql::MySqlQueryResult| reports.then_some(result.rows_affected()),
+    )
+    .await
+}
+
 pub async fn stream_query(
     conn: &mut sqlx::MySqlConnection,
     sql: &str,
     ctx: &super::stream::StreamCtx,
 ) -> DbResult<super::stream::StreamSummary> {
-    super::stream::stream_capped(
-        sqlx::query(super::audited_sql(sql)).fetch(conn),
+    let reports = super::sql_statement_reports_affected_rows(sql);
+    super::stream::stream_capped_many(
+        sqlx::raw_sql(super::audited_sql(sql)).fetch_many(conn),
         ctx,
         cell_to_json,
+        move |result: &sqlx::mysql::MySqlQueryResult| reports.then_some(result.rows_affected()),
     )
     .await
 }
 
+#[allow(deprecated)]
 pub async fn stream_prepared_query(
     conn: &mut sqlx::MySqlConnection,
     query: &PreparedQuery,
     ctx: &super::stream::StreamCtx,
 ) -> DbResult<super::stream::StreamSummary> {
-    super::stream::stream_capped(bind_query(query).fetch(conn), ctx, cell_to_json).await
+    let reports = super::sql_statement_reports_affected_rows(&query.sql);
+    super::stream::stream_capped_many(
+        bind_query(query).fetch_many(conn),
+        ctx,
+        cell_to_json,
+        move |result: &sqlx::mysql::MySqlQueryResult| reports.then_some(result.rows_affected()),
+    )
+    .await
 }
 
 pub async fn explain_query(

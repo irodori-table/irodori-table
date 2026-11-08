@@ -24,6 +24,7 @@ export type QueryStreamEvent =
         rowCount: number;
         elapsedMs: number;
         truncated: boolean;
+        affectedRows?: number;
       }>;
     }
   | { type: "error"; message: string };

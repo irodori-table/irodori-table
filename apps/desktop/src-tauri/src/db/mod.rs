@@ -93,7 +93,9 @@ pub use query::{
     QueryParameterPromptSet, QueryResult, QueryResultSet, QueryStreamEvent,
     QueryStreamResultSetSummary, ResultWindow, SpillRunResult,
 };
-pub(crate) use query::{split_sql_statements, PreparedQuery, RawResultSet, RowSet};
+pub(crate) use query::{
+    split_sql_statements, sql_statement_reports_affected_rows, PreparedQuery, RawResultSet, RowSet,
+};
 #[cfg(test)]
 pub(crate) use query::{sql_may_change_metadata, sql_may_write};
 pub(crate) use runner::{

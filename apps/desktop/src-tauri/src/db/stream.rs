@@ -50,6 +50,7 @@ pub(crate) struct StreamResultSetSummary {
     pub row_count: u64,
     pub truncated: bool,
     pub elapsed_ms: u64,
+    pub affected_rows: Option<u64>,
 }
 
 /// Outcome of a streamed run — the rows themselves were delivered via the sink.
@@ -103,72 +104,6 @@ impl StreamCtx {
     }
 }
 
-/// Streaming twin of [`collect_capped`]: drive `stream`, emit the header once and
-/// rows in `batch_rows`-sized batches through `ctx.sink`, stop at `ctx.cap` (the
-/// anti-OOM cap), and check `ctx.token` each row so a cancel stops the fetch
-/// promptly — cooperative server-side cancel even for the non-pooled drivers.
-pub(crate) async fn stream_capped<R, S, F>(
-    mut stream: S,
-    ctx: &StreamCtx,
-    decode: F,
-) -> DbResult<StreamSummary>
-where
-    R: Row,
-    S: Stream<Item = Result<R, sqlx::Error>> + Unpin,
-    F: Fn(&R, usize) -> serde_json::Value,
-{
-    let mut columns_sent = false;
-    let mut batch: Vec<Cells> = Vec::new();
-    let mut row_count: u64 = 0;
-    let mut truncated = false;
-    loop {
-        if ctx.cancelled() {
-            return Err(DbError::cancelled("query cancelled"));
-        }
-        let Some(row) = stream
-            .try_next()
-            .await
-            .map_err(|e| DbError::query(format!("query failed: {}", describe_sqlx_error(&e))))?
-        else {
-            break;
-        };
-        if !columns_sent {
-            ctx.columns(row.columns().iter().map(|c| c.name().to_string()).collect())
-                .await?;
-            columns_sent = true;
-        }
-        if row_count as usize >= ctx.cap {
-            truncated = true;
-            break;
-        }
-        let count = row.columns().len();
-        let mut cells = Vec::with_capacity(count);
-        for i in 0..count {
-            cells.push(decode(&row, i));
-        }
-        batch.push(cells);
-        row_count += 1;
-        if batch.len() >= ctx.batch_rows {
-            ctx.rows(std::mem::take(&mut batch)).await?;
-        }
-    }
-    ctx.rows(batch).await?;
-    // An empty result still needs a header so the grid can render its columns.
-    if !columns_sent {
-        ctx.columns(Vec::new()).await?;
-    }
-    Ok(StreamSummary {
-        result_sets: vec![StreamResultSetSummary {
-            result_set_index: ctx.result_set_index,
-            row_count,
-            truncated,
-            elapsed_ms: 0,
-        }],
-        truncated,
-        row_count,
-    })
-}
-
 /// Drain `stream` into a [`RowSet`], decoding each cell with `decode`, keeping at
 /// most `cap` rows and setting `truncated` when more remain.
 pub(crate) async fn collect_capped<R, S, F>(
@@ -204,4 +139,137 @@ where
         rows.push(cells);
     }
     Ok((columns, rows, truncated))
+}
+
+/// [`collect_capped`] over a `fetch_many` stream, which also yields the
+/// command-completion result for each statement. `affected` decides whether that
+/// result is a meaningful DML count (the caller classifies the statement).
+pub(crate) async fn collect_capped_many<R, Q, S, F, A>(
+    mut stream: S,
+    cap: usize,
+    decode: F,
+    affected: A,
+) -> DbResult<(RowSet, Option<u64>)>
+where
+    R: Row,
+    S: Stream<Item = Result<sqlx::Either<Q, R>, sqlx::Error>> + Unpin,
+    F: Fn(&R, usize) -> serde_json::Value,
+    A: Fn(&Q) -> Option<u64>,
+{
+    let mut columns: Vec<String> = Vec::new();
+    let mut rows: Vec<Vec<serde_json::Value>> = Vec::new();
+    let mut truncated = false;
+    let mut affected_rows: Option<u64> = None;
+    while let Some(event) = stream
+        .try_next()
+        .await
+        .map_err(|e| DbError::query(format!("query failed: {}", describe_sqlx_error(&e))))?
+    {
+        match event {
+            sqlx::Either::Left(result) => {
+                if let Some(count) = affected(&result) {
+                    affected_rows = Some(count);
+                }
+            }
+            sqlx::Either::Right(row) => {
+                if columns.is_empty() {
+                    columns = row.columns().iter().map(|c| c.name().to_string()).collect();
+                }
+                if rows.len() >= cap {
+                    truncated = true;
+                    break;
+                }
+                let count = row.columns().len();
+                let mut cells = Vec::with_capacity(count);
+                for i in 0..count {
+                    cells.push(decode(&row, i));
+                }
+                rows.push(cells);
+            }
+        }
+    }
+    // A statement that returned a row set reports returned rows, not affected
+    // rows, even if the driver also exposes a command count.
+    if !columns.is_empty() {
+        affected_rows = None;
+    }
+    Ok(((columns, rows, truncated), affected_rows))
+}
+
+/// Streaming twin of [`collect_capped_many`]: capture the command-completion
+/// count from a `fetch_many` stream and report it on the single set summary.
+pub(crate) async fn stream_capped_many<R, Q, S, F, A>(
+    mut stream: S,
+    ctx: &StreamCtx,
+    decode: F,
+    affected: A,
+) -> DbResult<StreamSummary>
+where
+    R: Row,
+    S: Stream<Item = Result<sqlx::Either<Q, R>, sqlx::Error>> + Unpin,
+    F: Fn(&R, usize) -> serde_json::Value,
+    A: Fn(&Q) -> Option<u64>,
+{
+    let mut columns_sent = false;
+    let mut batch: Vec<Cells> = Vec::new();
+    let mut row_count: u64 = 0;
+    let mut truncated = false;
+    let mut affected_rows: Option<u64> = None;
+    loop {
+        if ctx.cancelled() {
+            return Err(DbError::cancelled("query cancelled"));
+        }
+        let Some(event) = stream
+            .try_next()
+            .await
+            .map_err(|e| DbError::query(format!("query failed: {}", describe_sqlx_error(&e))))?
+        else {
+            break;
+        };
+        match event {
+            sqlx::Either::Left(result) => {
+                if let Some(count) = affected(&result) {
+                    affected_rows = Some(count);
+                }
+            }
+            sqlx::Either::Right(row) => {
+                if !columns_sent {
+                    ctx.columns(row.columns().iter().map(|c| c.name().to_string()).collect())
+                        .await?;
+                    columns_sent = true;
+                }
+                if row_count as usize >= ctx.cap {
+                    truncated = true;
+                    break;
+                }
+                let count = row.columns().len();
+                let mut cells = Vec::with_capacity(count);
+                for i in 0..count {
+                    cells.push(decode(&row, i));
+                }
+                batch.push(cells);
+                row_count += 1;
+                if batch.len() >= ctx.batch_rows {
+                    ctx.rows(std::mem::take(&mut batch)).await?;
+                }
+            }
+        }
+    }
+    ctx.rows(batch).await?;
+    if !columns_sent {
+        ctx.columns(Vec::new()).await?;
+    } else {
+        affected_rows = None;
+    }
+    Ok(StreamSummary {
+        result_sets: vec![StreamResultSetSummary {
+            result_set_index: ctx.result_set_index,
+            row_count,
+            truncated,
+            elapsed_ms: 0,
+            affected_rows,
+        }],
+        truncated,
+        row_count,
+    })
 }
