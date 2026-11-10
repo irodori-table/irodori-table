@@ -97,8 +97,7 @@ export type EngineOptionField = {
   /**
    * A closed set of accepted values, rendered as a select instead of a text
    * input. The empty string is always offered first and means "leave it to the
-   * driver default" — for `sslMode` that is what keeps existing local profiles
-   * connecting exactly as they did before the field existed.
+   * driver default".
    */
   choices?: string[];
 };
@@ -119,6 +118,22 @@ const noOptionFields: EngineOptionField[] = [];
 export function engineOptionFields(engine: DbEngine): EngineOptionField[] {
   return configuredOptionFields.get(engine) ?? noOptionFields;
 }
+
+/**
+ * Engines whose connection form gets the typed TLS section. These are the
+ * Postgres- and MySQL-wire engines that the built-in sqlx transport connects to
+ * directly; extension-backed engines declare their own TLS fields instead.
+ */
+const tlsEngines = new Set<DbEngine>(
+  builtinEngineConnectionConfig.tlsEngines as DbEngine[],
+);
+
+export function engineSupportsTls(engine: DbEngine): boolean {
+  return tlsEngines.has(engine);
+}
+
+export const engineTlsPlaceholders =
+  builtinEngineConnectionConfig.tlsPlaceholders;
 
 const tcpDatabaseLayout =
   builtinEngineConnectionConfig.defaultSettings as EngineConnectionLayout;

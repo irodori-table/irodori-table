@@ -7,6 +7,7 @@ import {
   engineConnectionSettings,
   engineOptionFields,
   engineOptions,
+  engineSupportsTls,
   loadProfiles,
   memoryDefaults,
   normalizeConnectionColor,
@@ -26,6 +27,7 @@ import {
   extensionRequiredEngines,
   parseConnectorConnectionModel,
 } from "@/features/extensions/connection-model";
+import { connectionTlsModes } from "@/features/connections/connection-tls";
 
 const englishTranslator = createTranslator("en");
 const japaneseTranslator = createTranslator("ja");
@@ -581,9 +583,7 @@ describe("connector options", () => {
     ).toBeUndefined();
   });
 
-  it("offers SSL controls on every sqlx-backed engine (#229)", () => {
-    // Keys must match what db/engine.rs `SslSettings::from_profile` reads.
-    const expected = ["sslMode", "sslRootCert", "sslCert", "sslKey"];
+  it("offers the typed TLS surface on every sqlx-backed engine (#229)", () => {
     const postgresWire = [
       "postgres",
       "cockroachdb",
@@ -591,25 +591,22 @@ describe("connector options", () => {
       "redshift",
       "timescaledb",
       "neon",
+      "supabase",
       "h2",
       "questdb",
     ] as const;
     const mysqlWire = ["mysql", "mariadb", "tidb"] as const;
 
-    for (const engine of postgresWire) {
+    for (const engine of [...postgresWire, ...mysqlWire]) {
+      expect(engineSupportsTls(engine), `${engine} TLS surface`).toBe(true);
+      // TLS is no longer a generic option: it must not leak back into the
+      // options map that older builds persisted.
       expect(
-        engineOptionFields(engine).map((field) => field.key),
+        engineOptionFields(engine).some((field) => field.key.startsWith("ssl")),
         `${engine} SSL options`,
-      ).toEqual(expected);
+      ).toBe(false);
     }
-    // The MySQL wire carries the same four plus its connection charset, which
-    // Postgres has no connect-time counterpart for.
-    for (const engine of mysqlWire) {
-      expect(
-        engineOptionFields(engine).map((field) => field.key),
-        `${engine} SSL options`,
-      ).toEqual([...expected, "charset"]);
-    }
+    expect(engineSupportsTls("sqlite")).toBe(false);
   });
 
   it("offers a connection charset on the MySQL wire only (#229)", () => {
@@ -629,41 +626,88 @@ describe("connector options", () => {
     ).toBe(false);
   });
 
-  it("constrains sslMode to the modes the Rust side can translate (#229)", () => {
-    // db/engine.rs `SslMode::parse` accepts these six and maps each to the
-    // MySQL spelling; anything else is silently dropped, so the form must not
-    // let a user type one.
-    const sslMode = engineOptionFields("postgres").find(
-      (field) => field.key === "sslMode",
-    );
-    expect(sslMode?.choices).toEqual([
+  it("constrains the TLS mode to the values the Rust side can translate (#229)", () => {
+    // db/engine.rs `SslMode::from_tls_mode` accepts these seven; the select
+    // must not let a user type one it would silently drop.
+    expect(connectionTlsModes).toEqual([
+      "default",
       "disable",
-      "allow",
       "prefer",
       "require",
-      "verify-ca",
-      "verify-full",
+      "verifyCa",
+      "verifyFull",
+      "clientCertificate",
     ]);
-
-    // The certificate fields are free-form paths, not a closed set.
-    for (const key of ["sslRootCert", "sslCert", "sslKey"]) {
-      const field = engineOptionFields("postgres").find(
-        (candidate) => candidate.key === key,
-      );
-      expect(field?.choices, key).toBeUndefined();
-      expect(field?.placeholder, key).toBeTruthy();
-    }
   });
 
-  it("stores certificate paths, never key material (#229)", () => {
-    // `sslKey` names a file on disk. Options persist to localStorage in the
-    // clear, so the value must stay a path — the sibling test
-    // "declares no secret-valued option keys" is what enforces that no option
-    // is named like a secret, and this one records why sslKey is allowed.
-    const keys = engineOptionFields("postgres").map((field) => field.key);
-    expect(keys).toContain("sslKey");
-    expect(keys).not.toContain("sslPassword");
-    expect(keys).not.toContain("sslKeyPassphrase");
+  it("stores certificate paths on the typed TLS config, never key material (#229)", () => {
+    const profile = profileFromDraft(
+      draft({
+        engine: "postgres",
+        tls: {
+          mode: "verifyFull",
+          rootCert: "/etc/ssl/root.pem",
+          clientCert: "/etc/ssl/client.pem",
+          clientKey: "/etc/ssl/client.key",
+        },
+        options: { sslMode: "verify-full", sslKeyPassphrase: "nope" },
+      }),
+    );
+
+    expect(profile.tls).toEqual({
+      mode: "verifyFull",
+      rootCert: { handle: "/etc/ssl/root.pem" },
+      clientCert: { handle: "/etc/ssl/client.pem" },
+      clientKey: { handle: "/etc/ssl/client.key" },
+    });
+    // Legacy SSL keys are not forwarded alongside the typed section.
+    expect(profile.options).toBeUndefined();
+  });
+
+  it("migrates legacy SSL options onto the typed TLS config", () => {
+    const migrated = settingsProfileFromJson(
+      {
+        id: "legacy",
+        engine: "postgres",
+        host: "db.example.test",
+        options: {
+          sslMode: "verify-full",
+          sslRootCert: "/etc/ssl/root.pem",
+          charset: "utf8mb4",
+        },
+      },
+      0,
+    );
+
+    expect(migrated.tls).toEqual({
+      mode: "verifyFull",
+      rootCert: "/etc/ssl/root.pem",
+      clientCert: "",
+      clientKey: "",
+    });
+    expect(migrated.options).toEqual({ charset: "utf8mb4" });
+  });
+
+  it("maps MySQL's allow legacy mode to prefer", () => {
+    const migrated = settingsProfileFromJson(
+      { id: "legacy", engine: "mysql", options: { sslMode: "allow" } },
+      0,
+    );
+    expect(migrated.tls?.mode).toBe("prefer");
+  });
+
+  it("rejects a client certificate without its key", () => {
+    const error = validateDraft(
+      draft({
+        tls: {
+          mode: "clientCertificate",
+          rootCert: "",
+          clientCert: "/etc/ssl/client.pem",
+          clientKey: "",
+        },
+      }),
+    );
+    expect(error).toContain("certificate and key");
   });
 });
 

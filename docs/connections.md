@@ -242,10 +242,11 @@ local Postgres and MySQL profiles pointing at the sample containers from the
 ## Gaps
 
 - **SSH tunnels are field-mode only**, and a URL/DSN profile has to be rewritten
-  as fields before it can use one. Structured TLS controls cover the
-  PostgreSQL/MySQL wires and the fields declared by an installed connector;
-  dedicated compiled connectors used without an extension still need
-  connector-specific TLS work.
+  as fields before it can use one. The typed `tls` section covers the
+  PostgreSQL/MySQL wires (certificates are file paths, because sqlx reads them
+  from disk) and the fields declared by an installed connector; dedicated
+  compiled connectors used without an extension still need connector-specific
+  TLS work.
 - **SSH tunnels have no jump-host chain and no local-port control.** One hop,
   and the local port is always chosen for you.
 - **No connection folders.** Grouping is inferred from the profile name and
