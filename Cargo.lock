@@ -1281,7 +1281,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -1482,7 +1482,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2616,8 +2616,8 @@ dependencies = [
 
 [[package]]
 name = "irodori-completion"
-version = "0.9.3"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.3#1ebdaab75574b15fe41dbb14458c674cb4a40baa"
+version = "0.9.6"
+source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.6#29cb1da55fb69d188c2fb4506d72312b3194cefe"
 dependencies = [
  "irodori-sql",
  "serde",
@@ -2626,8 +2626,8 @@ dependencies = [
 
 [[package]]
 name = "irodori-connection"
-version = "0.9.3"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.3#1ebdaab75574b15fe41dbb14458c674cb4a40baa"
+version = "0.9.6"
+source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.6#29cb1da55fb69d188c2fb4506d72312b3194cefe"
 dependencies = [
  "irodori-error",
  "serde",
@@ -2653,8 +2653,8 @@ dependencies = [
 
 [[package]]
 name = "irodori-generate"
-version = "0.9.3"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.3#1ebdaab75574b15fe41dbb14458c674cb4a40baa"
+version = "0.9.6"
+source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.6#29cb1da55fb69d188c2fb4506d72312b3194cefe"
 dependencies = [
  "irodori-error",
  "irodori-sql",
@@ -2688,8 +2688,8 @@ dependencies = [
 
 [[package]]
 name = "irodori-proxy"
-version = "0.9.3"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.3#1ebdaab75574b15fe41dbb14458c674cb4a40baa"
+version = "0.9.6"
+source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.6#29cb1da55fb69d188c2fb4506d72312b3194cefe"
 dependencies = [
  "irodori-connection",
  "irodori-error",
@@ -2704,8 +2704,8 @@ dependencies = [
 
 [[package]]
 name = "irodori-secure-store"
-version = "0.9.3"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.3#1ebdaab75574b15fe41dbb14458c674cb4a40baa"
+version = "0.9.6"
+source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.6#29cb1da55fb69d188c2fb4506d72312b3194cefe"
 dependencies = [
  "irodori-connection",
  "irodori-error",
@@ -2714,8 +2714,8 @@ dependencies = [
 
 [[package]]
 name = "irodori-security"
-version = "0.9.3"
-source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.3#1ebdaab75574b15fe41dbb14458c674cb4a40baa"
+version = "0.9.6"
+source = "git+https://github.com/irodori-table/irodori-kit?tag=v0.9.6#29cb1da55fb69d188c2fb4506d72312b3194cefe"
 dependencies = [
  "serde",
  "ts-rs",
@@ -4762,7 +4762,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4842,7 +4842,7 @@ dependencies = [
  "security-framework 3.7.0",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -6322,7 +6322,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -7262,7 +7262,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
