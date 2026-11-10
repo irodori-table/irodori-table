@@ -118,20 +118,25 @@ All roadmap sources currently promoted into the registry are listed above. Keep 
 ## 4b. Transport security (sqlx-backed engines)
 
 The Postgres- and MySQL-wire engines take TLS settings from the connection form
-and pass them to sqlx as URL parameters (`db/engine.rs` `SslSettings`):
+as the profile's typed `tls` config (`TlsConfig` / `TlsMode`) and pass them to
+sqlx as URL parameters (`db/engine.rs` `SslSettings`). Profiles saved before the
+typed surface stored the same values in `options`; both shapes are read, with
+the typed config winning when present.
 
 | Form field | Postgres parameter | MySQL parameter |
 |---|---|---|
-| SSL mode | `sslmode` | `ssl-mode` |
-| SSL root certificate | `sslrootcert` | `ssl-ca` |
-| SSL client certificate | `sslcert` | `ssl-cert` |
-| SSL client key | `sslkey` | `ssl-key` |
+| TLS mode | `sslmode` | `ssl-mode` |
+| Root certificate | `sslrootcert` | `ssl-ca` |
+| Client certificate | `sslcert` | `ssl-cert` |
+| Client key | `sslkey` | `ssl-key` |
 
-The app speaks the PostgreSQL vocabulary (`disable`, `allow`, `prefer`,
-`require`, `verify-ca`, `verify-full`) and translates for MySQL, which has no
-`allow` and spells the strongest mode `verify_identity`.
+The app speaks the PostgreSQL vocabulary (`disable`, `prefer`, `require`,
+`verify-ca`, `verify-full`) and translates for MySQL, which has no `allow` and
+spells the strongest mode `verify_identity`. A `clientCertificate` mode maps to
+`require` plus the certificate parameters.
 
-Leaving SSL mode unset keeps sqlx's own default — `prefer` / `preferred`, which
+Leaving the TLS mode at `default` keeps sqlx's own default — `prefer` /
+`preferred`, which
 attempts TLS, **falls back to plaintext without complaint**, and verifies no
 certificate. That is why **Neon** and **Redshift** default to `require`: they
 cannot be run locally, so there is no plaintext case to preserve. Every

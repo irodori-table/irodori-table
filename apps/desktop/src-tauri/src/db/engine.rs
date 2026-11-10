@@ -6,6 +6,7 @@
 //! hang per-engine quoting/paging and generic information-schema query builders
 //! off the same registry.
 
+use irodori_connection::TlsMode;
 use irodori_sql::dialect::{
     MySqlDialect, OracleDialect, PostgresDialect, SnowflakeDialect, SqlDialect, SqlServerDialect,
     SqliteDialect,
@@ -613,6 +614,24 @@ impl SslMode {
         }
     }
 
+    /// Translate the typed TLS mode carried by the profile.
+    ///
+    /// `Default` returns `None` so the engine's own floor (or sqlx's own
+    /// default) still applies. A client certificate has no standalone sqlx
+    /// mode: it is sent only when the connection is required, so it maps to
+    /// `Require` and the certificate parameters carry the rest.
+    fn from_tls_mode(mode: TlsMode) -> Option<Self> {
+        match mode {
+            TlsMode::Default => None,
+            TlsMode::Disable => Some(Self::Disable),
+            TlsMode::Prefer => Some(Self::Prefer),
+            TlsMode::Require => Some(Self::Require),
+            TlsMode::VerifyCa => Some(Self::VerifyCa),
+            TlsMode::VerifyFull => Some(Self::VerifyFull),
+            TlsMode::ClientCertificate => Some(Self::Require),
+        }
+    }
+
     /// `sslmode` as `sqlx-postgres` parses it.
     fn as_postgres(self) -> &'static str {
         match self {
@@ -638,12 +657,11 @@ impl SslMode {
     }
 }
 
-/// The TLS settings a profile carries, as the connection form collects them.
+/// The TLS settings a profile carries, taking the typed `ConnectionProfile::tls`
+/// surface first and falling back to the option keys older profiles stored.
 ///
-/// These live in `options` rather than as profile columns because that is the
-/// map the form already round-trips and the connectors already receive. Once
-/// `irodori-kit` grows a typed `TlsConfig` they should move onto the profile
-/// itself — tracked in irodori-table/irodori-kit#11.
+/// Certificates are file paths on this wire: sqlx reads them from disk, and the
+/// typed `SecretRef` handle carries the path the form collected.
 struct SslSettings<'a> {
     mode: Option<SslMode>,
     root_cert: Option<&'a str>,
@@ -662,13 +680,43 @@ impl<'a> SslSettings<'a> {
                     .filter(|value| !value.is_empty())
             })
         };
+        let tls_cert = |secret: Option<&'a irodori_connection::SecretRef>| -> Option<&'a str> {
+            secret
+                .map(|secret| secret.handle.trim())
+                .filter(|value| !value.is_empty())
+        };
+
+        let legacy_root = option(&["sslRootCert", "sslrootcert", "ssl-ca", "sslCa"]);
+        let legacy_cert = option(&["sslCert", "sslcert", "ssl-cert"]);
+        let legacy_key = option(&["sslKey", "sslkey", "ssl-key"]);
+        let root_cert = tls_cert(p.tls.root_cert.as_ref()).or(legacy_root);
+        let client_cert = tls_cert(p.tls.client_cert.as_ref()).or(legacy_cert);
+        let client_key = tls_cert(p.tls.client_key.as_ref()).or(legacy_key);
+
+        let mode = SslMode::from_tls_mode(p.tls.mode)
+            .or_else(|| option(&["sslMode", "sslmode", "ssl-mode"]).and_then(SslMode::parse))
+            // A certificate without an explicit mode used to fall through to the
+            // driver's unverified `prefer`; keep it from silently ignoring the
+            // certificate now that it is a first-class field.
+            .or_else(|| {
+                (root_cert.is_some() || client_cert.is_some() || client_key.is_some())
+                    .then_some(SslMode::Require)
+            })
+            .or_else(|| p.engine.default_ssl_mode());
+
+        if matches!(mode, Some(SslMode::Disable)) {
+            return Self {
+                mode,
+                root_cert: None,
+                client_cert: None,
+                client_key: None,
+            };
+        }
         Self {
-            mode: option(&["sslMode", "sslmode", "ssl-mode"])
-                .and_then(SslMode::parse)
-                .or_else(|| p.engine.default_ssl_mode()),
-            root_cert: option(&["sslRootCert", "sslrootcert", "ssl-ca", "sslCa"]),
-            client_cert: option(&["sslCert", "sslcert", "ssl-cert"]),
-            client_key: option(&["sslKey", "sslkey", "ssl-key"]),
+            mode,
+            root_cert,
+            client_cert,
+            client_key,
         }
     }
 
@@ -782,6 +830,7 @@ fn build_tcp_url(scheme: &str, p: &ConnectionProfile) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use irodori_connection::{SecretRef, TlsConfig, TlsMode};
 
     const ENGINE_CASES: &[(DbEngine, Wire, u16)] = &[
         (DbEngine::Postgres, Wire::Postgres, 5432),
@@ -1157,6 +1206,22 @@ mod tests {
         profile
     }
 
+    fn with_tls(engine: DbEngine, tls: TlsConfig) -> ConnectionProfile {
+        let mut profile = profile(engine);
+        profile.tls = tls;
+        profile
+    }
+
+    fn tls(mode: TlsMode, root: Option<&str>, cert: Option<&str>, key: Option<&str>) -> TlsConfig {
+        TlsConfig {
+            mode,
+            root_cert: root.map(SecretRef::new),
+            client_cert: cert.map(SecretRef::new),
+            client_key: key.map(SecretRef::new),
+            server_name: None,
+        }
+    }
+
     #[test]
     fn a_profile_without_ssl_options_is_unchanged() {
         // sqlx keeps its own default (`prefer`/`preferred`), so every existing
@@ -1190,6 +1255,93 @@ mod tests {
              &sslrootcert=%2Fetc%2Fssl%2Froot.crt\
              &sslcert=%2Fetc%2Fssl%2Fclient.crt\
              &sslkey=%2Fetc%2Fssl%2Fclient.key"
+        );
+    }
+
+    #[test]
+    fn typed_tls_config_becomes_sqlx_query_parameters() {
+        let profile = with_tls(
+            DbEngine::Postgres,
+            tls(
+                TlsMode::VerifyFull,
+                Some("/etc/ssl/root.crt"),
+                Some("/etc/ssl/client.crt"),
+                Some("/etc/ssl/client.key"),
+            ),
+        );
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://db.example.test:5432/sample\
+             ?sslmode=verify-full\
+             &sslrootcert=%2Fetc%2Fssl%2Froot.crt\
+             &sslcert=%2Fetc%2Fssl%2Fclient.crt\
+             &sslkey=%2Fetc%2Fssl%2Fclient.key"
+        );
+    }
+
+    #[test]
+    fn typed_tls_config_wins_over_legacy_options() {
+        let mut profile = with_options(
+            DbEngine::Mysql,
+            [("sslMode", "disable"), ("sslRootCert", "/legacy/ca.pem")],
+        );
+        profile.tls = tls(TlsMode::VerifyCa, Some("/tls/ca.pem"), None, None);
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "mysql://db.example.test:3306/sample\
+             ?ssl-mode=verify_ca\
+             &ssl-ca=%2Ftls%2Fca.pem"
+        );
+    }
+
+    #[test]
+    fn a_client_certificate_mode_still_requires_tls() {
+        let profile = with_tls(
+            DbEngine::Postgres,
+            tls(
+                TlsMode::ClientCertificate,
+                None,
+                Some("/etc/ssl/client.crt"),
+                Some("/etc/ssl/client.key"),
+            ),
+        );
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://db.example.test:5432/sample\
+             ?sslmode=require\
+             &sslcert=%2Fetc%2Fssl%2Fclient.crt\
+             &sslkey=%2Fetc%2Fssl%2Fclient.key"
+        );
+    }
+
+    #[test]
+    fn a_certificate_without_an_explicit_mode_is_not_silently_ignored() {
+        let profile = with_tls(
+            DbEngine::Postgres,
+            tls(TlsMode::Default, Some("/etc/ssl/root.crt"), None, None),
+        );
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://db.example.test:5432/sample\
+             ?sslmode=require\
+             &sslrootcert=%2Fetc%2Fssl%2Froot.crt"
+        );
+    }
+
+    #[test]
+    fn a_disabled_tls_mode_drops_certificate_parameters() {
+        let profile = with_tls(
+            DbEngine::Postgres,
+            tls(TlsMode::Disable, Some("/etc/ssl/root.crt"), None, None),
+        );
+
+        assert_eq!(
+            build_url(&profile).unwrap(),
+            "postgres://db.example.test:5432/sample?sslmode=disable"
         );
     }
 

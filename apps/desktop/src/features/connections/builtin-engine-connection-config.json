@@ -1,5 +1,24 @@
 {
   "scope": "builtinEngines",
+  "tlsEngines": [
+    "postgres",
+    "cockroachdb",
+    "yugabytedb",
+    "redshift",
+    "timescaledb",
+    "neon",
+    "supabase",
+    "h2",
+    "questdb",
+    "mysql",
+    "mariadb",
+    "tidb"
+  ],
+  "tlsPlaceholders": {
+    "rootCert": "/etc/ssl/certs/server-ca.pem",
+    "clientCert": "/etc/ssl/certs/client.pem",
+    "clientKey": "/etc/ssl/private/client.key"
+  },
   "defaultSettings": {
     "preferredMode": "fields",
     "urlLabelKey": "connection.field.urlDsn",
@@ -217,76 +236,8 @@
       ]
     },
     {
-      "engines": [
-        "postgres",
-        "cockroachdb",
-        "yugabytedb",
-        "redshift",
-        "timescaledb",
-        "neon",
-        "h2",
-        "questdb"
-      ],
-      "fields": [
-        {
-          "key": "sslMode",
-          "labelKey": "connection.field.sslMode",
-          "choices": [
-            "disable",
-            "allow",
-            "prefer",
-            "require",
-            "verify-ca",
-            "verify-full"
-          ]
-        },
-        {
-          "key": "sslRootCert",
-          "labelKey": "connection.field.sslRootCert",
-          "placeholder": "/etc/ssl/certs/server-ca.pem"
-        },
-        {
-          "key": "sslCert",
-          "labelKey": "connection.field.sslCert",
-          "placeholder": "/etc/ssl/certs/client.pem"
-        },
-        {
-          "key": "sslKey",
-          "labelKey": "connection.field.sslKey",
-          "placeholder": "/etc/ssl/private/client.key"
-        }
-      ]
-    },
-    {
       "engines": ["mysql", "mariadb", "tidb"],
       "fields": [
-        {
-          "key": "sslMode",
-          "labelKey": "connection.field.sslMode",
-          "choices": [
-            "disable",
-            "allow",
-            "prefer",
-            "require",
-            "verify-ca",
-            "verify-full"
-          ]
-        },
-        {
-          "key": "sslRootCert",
-          "labelKey": "connection.field.sslRootCert",
-          "placeholder": "/etc/ssl/certs/server-ca.pem"
-        },
-        {
-          "key": "sslCert",
-          "labelKey": "connection.field.sslCert",
-          "placeholder": "/etc/ssl/certs/client.pem"
-        },
-        {
-          "key": "sslKey",
-          "labelKey": "connection.field.sslKey",
-          "placeholder": "/etc/ssl/private/client.key"
-        },
         {
           "key": "charset",
           "labelKey": "connection.field.charset",
@@ -301,33 +252,6 @@
           "key": "poolMode",
           "labelKey": "connection.field.supabasePoolMode",
           "choices": ["direct", "session", "transaction"]
-        },
-        {
-          "key": "sslMode",
-          "labelKey": "connection.field.sslMode",
-          "choices": [
-            "disable",
-            "allow",
-            "prefer",
-            "require",
-            "verify-ca",
-            "verify-full"
-          ]
-        },
-        {
-          "key": "sslRootCert",
-          "labelKey": "connection.field.sslRootCert",
-          "placeholder": "/etc/ssl/certs/server-ca.pem"
-        },
-        {
-          "key": "sslCert",
-          "labelKey": "connection.field.sslCert",
-          "placeholder": "/etc/ssl/certs/client.pem"
-        },
-        {
-          "key": "sslKey",
-          "labelKey": "connection.field.sslKey",
-          "placeholder": "/etc/ssl/private/client.key"
         }
       ]
     }

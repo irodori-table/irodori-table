@@ -883,7 +883,7 @@ describe("ConnectionManagerDialog", () => {
       expect(container.querySelector(".connector-options")).toBeNull();
     });
 
-    it("renders sslMode as a select and the certificates as paths (#229)", () => {
+    it("renders the typed TLS mode as a select and the certificates as paths (#229)", () => {
       renderDialog({ draft: draft({ engine: "postgres", mode: "fields" }) });
 
       const sslMode = screen.getByLabelText("SSL mode");
@@ -893,17 +893,17 @@ describe("ConnectionManagerDialog", () => {
           (option) => option.value,
         ),
       ).toEqual([
-        "",
+        "default",
         "disable",
-        "allow",
         "prefer",
         "require",
-        "verify-ca",
-        "verify-full",
+        "verifyCa",
+        "verifyFull",
+        "clientCertificate",
       ]);
-      // The empty first entry is what leaves the driver default in place, so a
-      // profile saved without touching this field connects as it always did.
-      expect((sslMode as HTMLSelectElement).value).toBe("");
+      // Default leaves the driver's own mode in place, so a profile saved
+      // without touching this field connects as it always did.
+      expect((sslMode as HTMLSelectElement).value).toBe("default");
 
       expect(screen.getByLabelText("SSL root certificate")).toHaveAttribute(
         "placeholder",
@@ -911,17 +911,22 @@ describe("ConnectionManagerDialog", () => {
       );
     });
 
-    it("reports the chosen SSL mode as a connector option (#229)", () => {
+    it("reports the chosen TLS settings on the typed TLS section (#229)", () => {
       const { props } = renderDialog({
         draft: draft({ engine: "postgres", mode: "fields" }),
       });
 
       fireEvent.change(screen.getByLabelText("SSL mode"), {
-        target: { value: "verify-full" },
+        target: { value: "verifyFull" },
       });
 
       expect(props.onUpdateDraft).toHaveBeenCalledWith({
-        options: { sslMode: "verify-full" },
+        tls: {
+          mode: "verifyFull",
+          rootCert: "",
+          clientCert: "",
+          clientKey: "",
+        },
       });
     });
   });

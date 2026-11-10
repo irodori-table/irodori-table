@@ -22,6 +22,17 @@ export {
 export { prepareConnectionRequest } from "./ssh-tunnel-request";
 export { prepareStoredPassword } from "./connection-credentials";
 export {
+  connectionTlsModes,
+  legacyTlsOptionKeys,
+  migrateConnectionTls,
+  tlsConfigFromDraft,
+  validateConnectionTls,
+} from "./connection-tls";
+export type {
+  ConnectionTls,
+  ConnectionTlsMode,
+} from "@/lib/workspace-connection";
+export {
   exportConnectionProfiles,
   importConnectionProfiles,
   type ConnectionTransferFormat,

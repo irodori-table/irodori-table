@@ -23,7 +23,13 @@ import {
   defaultPort,
   engineConnectionLayout,
   engineOptionFields,
+  engineSupportsTls,
 } from "./engine-connection-settings";
+import {
+  migrateConnectionTls,
+  tlsConfigFromDraft,
+  validateConnectionTls,
+} from "./connection-tls";
 import {
   sanitizedSshTunnel,
   sshTunnelFromJson,
@@ -39,6 +45,7 @@ export {
   engineConnectionLayout,
   engineConnectionSettings,
   engineOptionFields,
+  engineSupportsTls,
   type EngineConnectionLayout,
   type EngineConnectionSettings,
   type EngineOptionField,
@@ -48,6 +55,8 @@ export type {
   ConnectionInputMode,
   ConnectionSshAuthMethod,
   ConnectionSshTunnel,
+  ConnectionTls,
+  ConnectionTlsMode,
   ConnectionTransportMode,
   WorkspaceConnection,
 } from "@/lib/workspace-connection";
@@ -343,8 +352,11 @@ export function loadProfiles() {
       return [];
     }
     return withStarterProfiles(
-      parsed.map((profile) =>
-        sanitizedProfile({
+      parsed.map((profile) => {
+        const tls = engineSupportsTls(profile.engine)
+          ? migrateConnectionTls(profile.options, profile.tls)
+          : { options: profile.options, tls: undefined };
+        return sanitizedProfile({
           ...newDraft(1),
           ...profile,
           color: normalizeConnectionColor(profile.color),
@@ -353,8 +365,10 @@ export function loadProfiles() {
           connectionTransport: profile.connectionTransport ?? "tcp",
           socketPath: profile.socketPath ?? "",
           ssh: sshTunnelFromJson(profile.ssh),
-        }),
-      ),
+          options: tls.options,
+          tls: tls.tls,
+        });
+      }),
     );
   } catch {
     return [];
@@ -603,6 +617,10 @@ export function settingsProfileFromJson(
     value.mode === "fields" || value.mode === "url"
       ? value.mode
       : defaults.mode;
+  const options = jsonOptions(value.options);
+  const tls = engineSupportsTls(engine)
+    ? migrateConnectionTls(options, value.tls)
+    : { options, tls: undefined };
   return portableProfile(
     repairBuiltinSampleProfile({
       ...defaults,
@@ -621,8 +639,9 @@ export function settingsProfileFromJson(
       database: jsonString(value.database, defaults.database),
       socketPath: jsonString(value.socketPath, defaults.socketPath),
       readOnly: value.readOnly === true,
-      options: jsonOptions(value.options),
+      options: tls.options,
       ssh: sshTunnelFromJson(value.ssh),
+      tls: tls.tls,
     }),
   );
 }
@@ -741,6 +760,10 @@ export function validateDraft(
       return `${translate(field.labelKey).toLowerCase()} is required`;
     }
   }
+  const tlsError = validateConnectionTls(resolvedDraft.tls);
+  if (tlsError) {
+    return tlsError;
+  }
   const sshError = validateSshTunnelDraft(resolvedDraft, connectionModel);
   if (sshError) {
     return sshError;
@@ -805,6 +828,12 @@ export function profileFromDraft(
   const authMethod = connectionModel
     ? selectedConnectorAuthMethod(connectionModel, resolvedDraft)
     : null;
+  // A connector model owns its TLS declarations; the built-in section only
+  // applies to the compiled Postgres/MySQL wires.
+  const tls =
+    !connectionModel && engineSupportsTls(resolvedDraft.engine)
+      ? tlsConfigFromDraft(resolvedDraft.tls)
+      : undefined;
   const supplementalProfileFields = connectionModel
     ? supplementalConnectorProfileFields(connectionModel)
     : [];
@@ -846,6 +875,7 @@ export function profileFromDraft(
     database: connectorValue("database").trim() || undefined,
     socketPath,
     transport: socketPath ? { kind: "localFile", path: socketPath } : undefined,
+    ...(tls ? { tls } : {}),
     ...options,
     ...readOnly,
   };

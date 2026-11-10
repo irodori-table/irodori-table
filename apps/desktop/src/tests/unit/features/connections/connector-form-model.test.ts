@@ -200,10 +200,13 @@ describe("resolveConnectorFormModel", () => {
   });
 
   it("hides built-in option fields the connector declares itself", () => {
-    const optionFields = engineOptionFields("postgres");
-    expect(optionFields.some((field) => field.key === "sslRootCert")).toBe(
-      true,
-    );
+    const optionFields = [
+      {
+        key: "sslRootCert",
+        labelKey: "connection.field.sslRootCert" as const,
+      },
+      { key: "warehouse", labelKey: "connection.field.warehouse" as const },
+    ];
 
     const form = resolveConnectorFormModel(model, draft(), optionFields);
 
@@ -211,7 +214,7 @@ describe("resolveConnectorFormModel", () => {
       "sslRootCert",
     );
     expect(form.visibleOptionFields.map((field) => field.key)).toContain(
-      "sslMode",
+      "warehouse",
     );
   });
 

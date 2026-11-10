@@ -21,6 +21,7 @@ import {
   type ConnectionTransportMode,
 } from "./components/ConnectionEndpointFields";
 import { ConnectionOptionFields } from "./components/ConnectionOptionFields";
+import { ConnectionTlsFields } from "./components/ConnectionTlsFields";
 import { ConnectionProfilePicker } from "./components/ConnectionProfilePicker";
 import { ConnectorDeclaredSections } from "./components/ConnectorDeclaredSections";
 import {
@@ -32,6 +33,7 @@ import {
   engineLabel,
   engineOptionFields,
   engineOptions,
+  engineSupportsTls,
   normalizeConnectionColor,
   supportsSocketTransport,
   type ConnectionDraft,
@@ -327,6 +329,13 @@ export function ConnectionManagerDialog({
             t={t}
             onUpdateDraft={onUpdateDraft}
           />
+          {!form.connectionModel && engineSupportsTls(draft.engine) ? (
+            <ConnectionTlsFields
+              draft={draft}
+              t={t}
+              onUpdateDraft={onUpdateDraft}
+            />
+          ) : null}
           {sshAvailable ? (
             <SshTunnelFields
               draft={draft}

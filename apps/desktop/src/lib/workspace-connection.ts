@@ -6,6 +6,27 @@ export type ConnectionTransportMode = "tcp" | "socket";
 export type ConnectionSshAuthMethod = "password" | "privateKey" | "agent";
 
 /**
+ * TLS settings for the built-in Postgres/MySQL wires. The connection form
+ * collects these into `ConnectionProfile.tls` instead of the options map; the
+ * certificate values are file paths because sqlx reads them from disk.
+ */
+export type ConnectionTlsMode =
+  | "default"
+  | "disable"
+  | "prefer"
+  | "require"
+  | "verifyCa"
+  | "verifyFull"
+  | "clientCertificate";
+
+export type ConnectionTls = {
+  mode: ConnectionTlsMode;
+  rootCert: string;
+  clientCert: string;
+  clientKey: string;
+};
+
+/**
  * SSH tunnel settings for one profile. The host and port on the profile itself
  * stay the database endpoint *as the SSH server sees it*, which is what the
  * forwarder dials once the session is up.
@@ -83,4 +104,10 @@ export type ConnectionDraft = {
    * for isPristineDraftProfile.
    */
   ssh?: ConnectionSshTunnel;
+  /**
+   * TLS settings for the built-in Postgres/MySQL wires. Absent on profiles
+   * saved before the typed surface existed; `loadProfiles` migrates the old
+   * `options` SSL keys into it. Optional for the same reason `ssh` is.
+   */
+  tls?: ConnectionTls;
 };

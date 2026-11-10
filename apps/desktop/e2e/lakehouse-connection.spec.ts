@@ -230,7 +230,7 @@ test("engines without connector settings do not grow an empty section", async ({
   await expect(page.locator(".connector-declared-section")).toHaveCount(2);
 });
 
-test("sqlx-backed engines offer SSL controls in connector settings", async ({
+test("sqlx-backed engines offer TLS controls in their own section", async ({
   page,
 }) => {
   await openConnectionManager(page);
@@ -244,9 +244,9 @@ test("sqlx-backed engines offer SSL controls in connector settings", async ({
   await expect(options.getByLabel("SSL mode")).toBeVisible();
   await expect(options.getByLabel("SSL root certificate")).toBeVisible();
 
-  // Empty is the default, and it is what leaves sqlx at its own `prefer`, so a
-  // profile saved without touching the field connects as it always did.
-  await expect(options.getByLabel("SSL mode")).toHaveValue("");
-  await options.getByLabel("SSL mode").selectOption("verify-full");
-  await expect(options.getByLabel("SSL mode")).toHaveValue("verify-full");
+  // `default` leaves sqlx at its own `prefer`, so a profile saved without
+  // touching the field connects as it always did.
+  await expect(options.getByLabel("SSL mode")).toHaveValue("default");
+  await options.getByLabel("SSL mode").selectOption("verifyFull");
+  await expect(options.getByLabel("SSL mode")).toHaveValue("verifyFull");
 });
