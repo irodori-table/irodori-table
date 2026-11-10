@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.2] - 2026-11-10
+
+### Changed
+
+- **Built-in PostgreSQL and MySQL TLS is now a typed part of the connection
+  profile.** The form's TLS section writes `ConnectionProfile.tls` instead of
+  generic option keys, and the URL builder reads the typed mode plus root,
+  client-certificate, and client-key paths. Profiles saved with
+  `sslMode`/`sslRootCert`/`sslCert`/`sslKey` migrate on load and are still
+  accepted by the URL builder, so existing connections keep working.
+- **The connection dialog shows TLS in its own section.** The mode select uses
+  the same names as the connection model, including client-certificate mode,
+  and the certificate fields remain file paths.
+- **A certificate without an explicit TLS mode now requires TLS.** It no longer
+  falls through to sqlx's unverified `prefer` and silently ignores the
+  certificate.
+
 ## [0.16.1] - 2026-11-07
 
 ### Fixed
