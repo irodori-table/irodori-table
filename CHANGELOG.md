@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.3] - 2026-11-10
+
+### Changed
+
+- **Foundation crates now come from `irodori-kit` v0.9.6.** The update brings
+  the native tool-contribution model, the connector auth and field ratchets,
+  and the kit's dependency updates. `irodori-sql` stays on v0.3.0 because kit
+  v0.9.6 still pins that tag; the app moves when a kit release consumes v0.3.1.
+
 ## [0.16.2] - 2026-11-10
 
 ### Changed
