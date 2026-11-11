@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.4] - 2026-11-12
+
+### Security
+
+- **Updated `hickory-proto` to 0.26.3 and `rustix` to 1.1.6.** The DNS parser
+  picks up the fixes for RUSTSEC-2026-0487 through RUSTSEC-2026-0491 (panics and
+  memory amplification on malformed records), and `rustix` picks up the
+  RUSTSEC-2026-0486 unsound-xattr fix. Both stay inside the ranges the
+  dependency graph already allowed.
+
 ## [0.16.3] - 2026-11-10
 
 ### Changed
