@@ -34,7 +34,7 @@ runs:
     # pushed the repo over its 10GB cache quota and evicted the far more
     # expensive Rust caches. `npm ci` costs 7-29s uncached.
     - name: Setup Node.js
-      uses: actions/setup-node@v7
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
       with:
         node-version: ${{ inputs.node-version }}
 
@@ -44,14 +44,14 @@ runs:
     # installed toolchain into its key, each new Rust stable silently
     # invalidated the release caches.
     - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@1.96.0
+      uses: dtolnay/rust-toolchain@d86e0fa8f147d6539442c26a61ebba8becc19489 # 1.96.0
       with:
         targets: ${{ inputs.rust-targets }}
 
     # Cache the Cargo registry and workspace target dir so external deps don't
     # recompile from scratch every run. Keep aligned with .cargo/config.toml.
     - name: Cache Rust build
-      uses: Swatinem/rust-cache@v2
+      uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       with:
         workspaces: '. -> .irodori-local/target'
         # Must match warm-release-cache.yml's shared-key exactly so the release

@@ -71,7 +71,7 @@ jobs:
             targets: ''
     steps:
       - name: Checkout irodori-table
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install Linux build dependencies
         if: startsWith(matrix.os, 'ubuntu')
@@ -93,12 +93,12 @@ jobs:
       # toolchain into the key, so a different toolchain here warms a cache the
       # release can never restore.
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@1.96.0
+        uses: dtolnay/rust-toolchain@d86e0fa8f147d6539442c26a61ebba8becc19489 # 1.96.0
         with:
           targets: ${{ matrix.targets }}
 
       - name: Cache Rust build
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: '. -> .irodori-local/target'
           # Same shared-key as the release lanes — this is what makes the

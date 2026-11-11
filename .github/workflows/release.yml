@@ -31,7 +31,7 @@ on:
 
 permissions:
   actions: read
-  contents: write
+  contents: read
 
 # Serialize every run that publishes the same tag. A tag push publishes the
 # lightweight channel first; a stable/preview dispatch for the same tag then
@@ -45,6 +45,9 @@ jobs:
   release-gates:
     name: Resolve release channel gates
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
     outputs:
       channel: ${{ steps.resolve.outputs.channel }}
       release_tag: ${{ steps.resolve.outputs.release_tag }}
@@ -355,9 +358,11 @@ jobs:
     needs: release-gates
     if: needs.release-gates.outputs.linux_tauri_args != ''
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - name: Checkout irodori-table
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-gates.outputs.release_tag }}
 
@@ -396,7 +401,7 @@ jobs:
               done || true
 
       - name: Build and Publish Tauri App
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ needs.release-gates.outputs.upload_updater == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
@@ -426,9 +431,11 @@ jobs:
     needs: release-gates
     if: needs.release-gates.outputs.linux_arm_tauri_args != ''
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write
     steps:
       - name: Checkout irodori-table
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-gates.outputs.release_tag }}
 
@@ -467,7 +474,7 @@ jobs:
               done || true
 
       - name: Build and Publish Tauri App
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ needs.release-gates.outputs.upload_updater == 'true' && secrets.TAURI_SIGNING_PRIVATE_KEY || '' }}
@@ -494,9 +501,11 @@ jobs:
     needs: release-gates
     if: needs.release-gates.outputs.macos_tauri_args != ''
     runs-on: macos-15
+    permissions:
+      contents: write
     steps:
       - name: Checkout irodori-table
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-gates.outputs.release_tag }}
 
@@ -546,7 +555,7 @@ jobs:
               done || true
 
       - name: Build and Publish Tauri App
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
         env:
           CI: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -578,9 +587,11 @@ jobs:
     needs: release-gates
     if: needs.release-gates.outputs.windows_tauri_args != ''
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout irodori-table
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.release-gates.outputs.release_tag }}
 
@@ -641,7 +652,7 @@ jobs:
 
       - name: Build and Publish Tauri App
         id: publish-tauri-windows
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1
         env:
           CI: true
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -696,7 +707,7 @@ jobs:
       - name: Stage unsigned installers as a workflow artifact (SignPath)
         id: signpath-unsigned
         if: needs.release-gates.outputs.windows_signing == 'signpath' && (needs.release-gates.outputs.channel == 'preview' || needs.release-gates.outputs.channel == 'stable')
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: irodori-windows-unsigned-${{ needs.release-gates.outputs.release_tag }}
           path: signpath/unsigned/*
@@ -798,10 +809,10 @@ jobs:
       # Default checkout, not the release tag: an older tag predates the apt
       # tooling, and this job only ever needs tools/release/apt-repo.mjs.
       - name: Checkout irodori-table
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
 
@@ -885,10 +896,10 @@ jobs:
       RELEASE_TAG: ${{ needs.release-gates.outputs.release_tag }}
     steps:
       - name: Checkout irodori-table
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
 
@@ -954,7 +965,7 @@ jobs:
 
       - name: Attach the AUR package for manual push
         if: steps.aur-key.outputs.available != 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: irodori-aur-${{ needs.release-gates.outputs.release_tag }}
           path: ${{ runner.temp }}/aurout/*
@@ -977,6 +988,8 @@ jobs:
       && needs.release-gates.result == 'success'
       && !contains(needs.*.result, 'failure')
       && !contains(needs.*.result, 'cancelled')
+    permissions:
+      contents: write
     uses: ./.github/workflows/release-checksums.yml
     with:
       release_tag: ${{ needs.release-gates.outputs.release_tag }}
@@ -1000,6 +1013,9 @@ jobs:
       && needs.publish-macos.result == 'success'
       && needs.publish-windows.result == 'success'
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: write
     steps:
       # Deliberately NOT the release tag. The platform lanes build the tagged
       # source, but this job only needs the manifest tool, which ships with the
@@ -1007,10 +1023,10 @@ jobs:
       # tool. Default checkout tracks the ref the workflow was launched from,
       # so the tool always matches the workflow definition running it.
       - name: Checkout irodori-table
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 24
 
