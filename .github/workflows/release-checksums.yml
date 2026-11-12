@@ -24,14 +24,12 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   sha256sums:
     name: Publish SHA256SUMS.txt
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Hash release packages
         shell: bash
