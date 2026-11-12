@@ -31,7 +31,7 @@ on:
 
 permissions:
   actions: read
-  contents: read
+  contents: write
 
 # Serialize every run that publishes the same tag. A tag push publishes the
 # lightweight channel first; a stable/preview dispatch for the same tag then
@@ -45,9 +45,6 @@ jobs:
   release-gates:
     name: Resolve release channel gates
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: write
     outputs:
       channel: ${{ steps.resolve.outputs.channel }}
       release_tag: ${{ steps.resolve.outputs.release_tag }}
@@ -358,8 +355,6 @@ jobs:
     needs: release-gates
     if: needs.release-gates.outputs.linux_tauri_args != ''
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
     steps:
       - name: Checkout irodori-table
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -431,8 +426,6 @@ jobs:
     needs: release-gates
     if: needs.release-gates.outputs.linux_arm_tauri_args != ''
     runs-on: ubuntu-24.04-arm
-    permissions:
-      contents: write
     steps:
       - name: Checkout irodori-table
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -501,8 +494,6 @@ jobs:
     needs: release-gates
     if: needs.release-gates.outputs.macos_tauri_args != ''
     runs-on: macos-15
-    permissions:
-      contents: write
     steps:
       - name: Checkout irodori-table
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -587,8 +578,6 @@ jobs:
     needs: release-gates
     if: needs.release-gates.outputs.windows_tauri_args != ''
     runs-on: windows-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout irodori-table
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -988,8 +977,6 @@ jobs:
       && needs.release-gates.result == 'success'
       && !contains(needs.*.result, 'failure')
       && !contains(needs.*.result, 'cancelled')
-    permissions:
-      contents: write
     uses: ./.github/workflows/release-checksums.yml
     with:
       release_tag: ${{ needs.release-gates.outputs.release_tag }}
@@ -1013,9 +1000,6 @@ jobs:
       && needs.publish-macos.result == 'success'
       && needs.publish-windows.result == 'success'
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: write
     steps:
       # Deliberately NOT the release tag. The platform lanes build the tagged
       # source, but this job only needs the manifest tool, which ships with the
