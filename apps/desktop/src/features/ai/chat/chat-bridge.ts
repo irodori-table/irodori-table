@@ -63,9 +63,9 @@ export function aiChatCancel(sessionId: string): Promise<void> {
   return invoke("ai_chat_cancel", { sessionId });
 }
 
-/** A unique-enough session id for one chat run. */
+/** A unique session id for one chat run. */
 export function newChatSessionId(): string {
-  return `chat-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  return `chat-${globalThis.crypto.randomUUID()}`;
 }
 
 /** Unload the embedded local model from memory (frees RAM; reloads on next use). */
