@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.5] - 2026-11-12
+
+### Security
+
+- **Updated `hickory-net` to 0.26.3.** The DNS transport picks up the fixes for
+  RUSTSEC-2026-0506, -0507, -0509, and -0517 through -0519 (DNSSEC proof
+  handling, spoofed UDP datagrams, cache reuse, and malformed responses).
+  `hickory-proto` 0.26.3 and `hickory-resolver` 0.26.2 were already current.
+
 ## [0.16.4] - 2026-11-12
 
 ### Security
