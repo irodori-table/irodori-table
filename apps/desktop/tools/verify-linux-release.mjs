@@ -1,12 +1,5 @@
 import { constants } from "node:fs";
-import {
-  access,
-  mkdtemp,
-  open,
-  readdir,
-  readFile,
-  rm,
-} from "node:fs/promises";
+import { access, mkdtemp, open, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
