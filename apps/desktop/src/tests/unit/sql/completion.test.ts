@@ -86,7 +86,7 @@ const metadata: DatabaseMetadata = {
 function withCursor(sql: string): { doc: string; pos: number } {
   const pos = sql.indexOf("|");
   return pos >= 0
-    ? { doc: sql.replace("|", ""), pos }
+    ? { doc: sql.slice(0, pos) + sql.slice(pos + 1), pos }
     : { doc: sql, pos: sql.length };
 }
 

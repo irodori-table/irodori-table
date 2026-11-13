@@ -83,7 +83,7 @@ const metadata: DatabaseMetadata = {
 
 function atMarker(sql: string) {
   const pos = sql.indexOf("|");
-  return { doc: sql.replace("|", ""), pos };
+  return { doc: sql.slice(0, pos) + sql.slice(pos + 1), pos };
 }
 
 function inspect(sql: string) {

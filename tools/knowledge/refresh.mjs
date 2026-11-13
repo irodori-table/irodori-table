@@ -301,18 +301,24 @@ function printSummary(database, path) {
 
 function stripHtml(input) {
   return input
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script[^>]*>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style[^>]*>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript[^>]*>/gi, " ")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/(p|div|section|article|li|h[1-6]|tr)>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+    .replace(
+      /&(nbsp|amp|lt|gt|quot|#39);/g,
+      (_, entity) =>
+        ({
+          nbsp: " ",
+          amp: "&",
+          lt: "<",
+          gt: ">",
+          quot: '"',
+          "#39": "'",
+        })[entity] ?? _,
+    );
 }
 
 function normalizeText(input) {
