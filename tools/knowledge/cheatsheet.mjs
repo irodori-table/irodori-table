@@ -29,6 +29,17 @@ const ENGINES = resolve(ROOT, "knowledge/engines.json");
 const SOURCES = resolve(ROOT, "knowledge/sources.json");
 const DB = resolve(ROOT, "knowledge/irodori-knowledge.sqlite");
 
+function readIfExists(path) {
+  try {
+    return readFileSync(path, "utf8");
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
 // The 8 sections every cheatsheet must have, in template order (registry/cheatsheets/README.md).
 const SECTIONS = [
   { key: "atGlance", heading: "At a glance" },
@@ -64,7 +75,7 @@ function main(args) {
       continue;
     }
     const rendered = renderPage(target, sources);
-    const current = existsSync(target.path) ? readFileSync(target.path, "utf8") : null;
+    const current = readIfExists(target.path);
     if (current === rendered) continue;
     if (args.check) {
       stale += 1;
@@ -84,10 +95,10 @@ function main(args) {
     mkdirSync(alsoDir, { recursive: true });
     for (const target of targets) {
       if (target.kind === "seed" && !existsSync(target.path)) continue;
-      const content = existsSync(target.path) ? readFileSync(target.path, "utf8") : null;
+      const content = readIfExists(target.path);
       if (content == null) continue;
       const mirrored = resolve(alsoDir, basename(target.path));
-      const current = existsSync(mirrored) ? readFileSync(mirrored, "utf8") : null;
+      const current = readIfExists(mirrored);
       if (current === content) continue;
       writeFileSync(mirrored, content);
       console.log(`mirrored ${rel(target.path)} -> ${mirrored}`);
@@ -136,7 +147,9 @@ function discoverTargets(engines, facts) {
     const engine = byId.get(id);
     const path = resolve(PAGES_DIR, `${id}.md`);
     const sourceIds = sourceIdsFor(engine, facts);
-    const isSeed = existsSync(path) && /<!--\s*seed/.test(readFileSync(path, "utf8"));
+    const existing = readIfExists(path);
+    const isSeed =
+      existing !== null && /<!--\s*seed/.test(existing);
     const fixturePath = resolve(FIXTURES_DIR, `${id}.json`);
     const factSections = engine ? facts[productKey(engine.label)] : undefined;
     let kind = "missing";
@@ -152,7 +165,8 @@ function sourceIdsFor(engine, facts) {
   const fromFacts = facts[productKey(engine.label)]?.sourceIds;
   if (fromFacts?.length) return fromFacts;
   const fixturePath = resolve(FIXTURES_DIR, `${engine.id}.json`);
-  if (existsSync(fixturePath)) return JSON.parse(readFileSync(fixturePath, "utf8")).sourceIds ?? [];
+  const fixture = readIfExists(fixturePath);
+  if (fixture !== null) return JSON.parse(fixture).sourceIds ?? [];
   return [];
 }
 
