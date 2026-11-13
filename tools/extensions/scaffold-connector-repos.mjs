@@ -3250,7 +3250,7 @@ ${templates}
 }
 
 function escapeMarkdownTable(value) {
-  return String(value).replace(/\|/g, "\\|");
+  return String(value).replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 }
 
 function sourceReadme(entry, engineMeta, adapter, adapterSha256, migrationSources) {

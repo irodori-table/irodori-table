@@ -1,13 +1,5 @@
 import { constants } from "node:fs";
-import {
-  access,
-  mkdtemp,
-  open,
-  readdir,
-  readFile,
-  rm,
-  stat,
-} from "node:fs/promises";
+import { access, mkdtemp, open, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -96,16 +88,6 @@ async function requiredBundle(directory, extension) {
 }
 
 async function verifyAppImage(file, version) {
-  const info = await stat(file);
-  if (!info.isFile()) {
-    fail(`AppImage path is not a file: ${file}`);
-  }
-  if (info.size < 1_000_000) {
-    fail(`AppImage is suspiciously small (${info.size} bytes): ${file}`);
-  }
-  await access(file, constants.X_OK).catch(() => {
-    fail(`AppImage is not executable: ${file}`);
-  });
   if (!file.includes(version)) {
     fail(
       `AppImage filename does not include package version ${version}: ${file}`,
@@ -115,6 +97,16 @@ async function verifyAppImage(file, version) {
   const handle = await open(file, "r");
   const header = Buffer.alloc(4);
   try {
+    const info = await handle.stat();
+    if (!info.isFile()) {
+      fail(`AppImage path is not a file: ${file}`);
+    }
+    if (info.size < 1_000_000) {
+      fail(`AppImage is suspiciously small (${info.size} bytes): ${file}`);
+    }
+    if ((info.mode & 0o111) === 0) {
+      fail(`AppImage is not executable: ${file}`);
+    }
     await handle.read(header, 0, header.length, 0);
   } finally {
     await handle.close();
@@ -237,15 +229,6 @@ async function exists(path) {
 }
 
 async function verifyPackage(file, version, label, magic) {
-  const info = await stat(file);
-  if (!info.isFile()) {
-    fail(`${label} package path is not a file: ${file}`);
-  }
-  if (info.size < 1_000_000) {
-    fail(
-      `${label} package is suspiciously small (${info.size} bytes): ${file}`,
-    );
-  }
   if (!file.includes(version)) {
     fail(
       `${label} package filename does not include version ${version}: ${file}`,
@@ -255,6 +238,15 @@ async function verifyPackage(file, version, label, magic) {
   const handle = await open(file, "r");
   const header = Buffer.alloc(magic.length);
   try {
+    const info = await handle.stat();
+    if (!info.isFile()) {
+      fail(`${label} package path is not a file: ${file}`);
+    }
+    if (info.size < 1_000_000) {
+      fail(
+        `${label} package is suspiciously small (${info.size} bytes): ${file}`,
+      );
+    }
     await handle.read(header, 0, header.length, 0);
   } finally {
     await handle.close();
