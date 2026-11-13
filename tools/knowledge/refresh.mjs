@@ -301,9 +301,9 @@ function printSummary(database, path) {
 
 function stripHtml(input) {
   return input
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, " ")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style\s*>/gi, " ")
-    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript\s*>/gi, " ")
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script[^>]*>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style[^>]*>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript[^>]*>/gi, " ")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<\/(p|div|section|article|li|h[1-6]|tr)>/gi, "\n")
     .replace(/<[^>]+>/g, " ")
