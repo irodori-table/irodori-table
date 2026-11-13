@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.6] - 2026-11-13
+
+### Fixed
+
+- **Chat session ids and snippet UUIDs no longer fall back to `Math.random`.**
+  Chat sessions use `crypto.randomUUID()`, and the snippet UUID fallback builds
+  an RFC 4122 v4 value from `crypto.getRandomValues`. This clears the CodeQL
+  insecure-randomness findings in shipped code.
+
 ## [0.16.5] - 2026-11-12
 
 ### Security
