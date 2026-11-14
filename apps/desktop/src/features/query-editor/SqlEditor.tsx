@@ -14,10 +14,17 @@
 // severity/timestamp highlighting, `.txt` stays plain, and everything else
 // keeps the SQL pipeline (dialect, completion, lint, metadata insight).
 
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import { EditorView, keymap, ViewPlugin } from "@codemirror/view";
 import { usePreferencesStore } from "@/features/preferences";
 import {
+  Annotation,
   Compartment,
   EditorSelection,
   EditorState,
@@ -206,6 +213,8 @@ interface FormatEditorResult {
   skipped?: "empty" | "unchanged";
 }
 
+const externalDocumentSync = Annotation.define<boolean>();
+
 function createSqlEditorCompartments(): SqlEditorCompartments {
   return {
     clipboard: new Compartment(),
@@ -284,7 +293,12 @@ function createSqlEditorState({
         contentHighlightExtensions(language, engine, theme),
       ),
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) {
+        if (
+          update.docChanged &&
+          !update.transactions.some((transaction) =>
+            transaction.annotation(externalDocumentSync),
+          )
+        ) {
           onChangeRef.current(update.state.doc.toString());
         }
         if (update.selectionSet || update.docChanged) {
@@ -551,7 +565,12 @@ function syncEditorDocument(view: EditorView | null, value: string) {
   if (!view) return;
   const current = view.state.doc.toString();
   if (value !== current) {
-    replaceEditorDocument(view, current, value);
+    // The parent already owns this value. Echoing it as a new edit can feed
+    // stale React commits back into the document while the user is typing.
+    view.dispatch({
+      changes: { from: 0, to: current.length, insert: value },
+      annotations: externalDocumentSync.of(true),
+    });
   }
 }
 
@@ -842,7 +861,7 @@ const SqlEditor = forwardRef<SqlEditorHandle, SqlEditorProps>(
     }, [vimMode, compartments]);
 
     // Controlled sync: push external value changes (history click, etc.) into the doc.
-    useEffect(() => {
+    useLayoutEffect(() => {
       syncEditorDocument(viewRef.current, value);
     }, [value]);
 

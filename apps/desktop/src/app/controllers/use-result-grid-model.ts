@@ -47,7 +47,7 @@ export type ResultGridModelDeps = {
   activeResultIndex: number;
   resultMode: ResultMode;
   tableViewObject: DbObjectMetadata | null;
-  query: string;
+  executedSql: string;
   editorEngine: DbEngine;
   activeMetadata: DatabaseMetadata | undefined;
   spillInfo: { handle: string; total: number } | null;
@@ -77,7 +77,7 @@ export function useResultGridModel({
   activeResultIndex,
   resultMode,
   tableViewObject,
-  query,
+  executedSql,
   editorEngine,
   activeMetadata,
   spillInfo,
@@ -114,7 +114,7 @@ export function useResultGridModel({
     return [
       {
         statementIndex: 0,
-        statement: query || "statement 1",
+        statement: executedSql || "statement 1",
         columns: result.columns,
         rows: result.rows,
         rowCount: result.rowCount,
@@ -124,7 +124,7 @@ export function useResultGridModel({
         affectedRows: result.affectedRows,
       },
     ];
-  }, [query, result]);
+  }, [executedSql, result]);
   const activeResultIndexView = useMemo(
     () => Math.min(activeResultIndex, Math.max(0, resultSets.length - 1)),
     [activeResultIndex, resultSets.length],
@@ -157,8 +157,12 @@ export function useResultGridModel({
   const graphAvailable = Boolean(graphResultModel);
   const rowDetailTable = useMemo(
     () =>
-      findTableMetadata(activeMetadata, parseSourceTable(query), resultColumns),
-    [activeMetadata, query, resultColumns],
+      findTableMetadata(
+        activeMetadata,
+        parseSourceTable(executedSql),
+        resultColumns,
+      ),
+    [activeMetadata, executedSql, resultColumns],
   );
   const selectedRowValues = useMemo(
     () =>
@@ -181,12 +185,11 @@ export function useResultGridModel({
       columnScale,
     );
   }, [resultColumns, activeResult?.rows, columnScale, gridWindowVersion]);
-  // Manual widths belong to the executed statement and its column shape, not
-  // to one `QueryResult` snapshot: a stream publishes a fresh object for every
-  // batch. A different statement (or a changed schema) gets a fresh set, and
-  // result sets from one run stay independent.
+  // Use the captured execution SQL and set index. The editor can change while
+  // results remain visible, and streaming changes the statement label when a
+  // second set arrives. Neither event changes the displayed result's identity.
   const columnWidthKey = activeResult
-    ? `${activeResultIndexView}\u0000${activeResult.statement}\u0000${resultColumns.join("\u0001")}`
+    ? `${activeResultIndexView}\u0000${executedSql}\u0000${resultColumns.join("\u0001")}`
     : null;
   const [columnWidthSets, setColumnWidthSets] = useState<
     Record<string, Record<number, number>>

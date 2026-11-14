@@ -532,7 +532,7 @@ fn append_query_param(url: &mut String, key: &str, value: &str) {
 /// instead.
 pub(crate) fn build_url(p: &ConnectionProfile) -> DbResult<String> {
     if let Some(url) = &p.url {
-        return Ok(url.clone());
+        return apply_explicit_url_tls(p, url);
     }
     match p.engine.wire() {
         Wire::Sqlite => {
@@ -578,6 +578,78 @@ pub(crate) fn build_url(p: &ConnectionProfile) -> DbResult<String> {
             "this engine uses a dedicated connector, not a sqlx URL",
         )),
     }
+}
+
+/// Explicit form settings override URL TLS parameters. Without a typed TLS
+/// choice, preserve the user's URL verbatim, including its driver options.
+fn apply_explicit_url_tls(p: &ConnectionProfile, original: &str) -> DbResult<String> {
+    let wire = p.engine.wire();
+    let explicit_mode = p.tls.mode != TlsMode::Default;
+    let cert_path = |secret: Option<&irodori_connection::SecretRef>| {
+        secret.is_some_and(|value| !value.handle.trim().is_empty())
+    };
+    let has_root = cert_path(p.tls.root_cert.as_ref());
+    let has_cert = cert_path(p.tls.client_cert.as_ref());
+    let has_key = cert_path(p.tls.client_key.as_ref());
+    if !matches!(wire, Wire::Postgres | Wire::Mysql)
+        || !(explicit_mode || has_root || has_cert || has_key)
+    {
+        return Ok(original.to_owned());
+    }
+    // Do not include the URL in errors: it may contain credentials.
+    let mut url = reqwest::Url::parse(original)
+        .map_err(|_| DbError::validation("Invalid connection URL for TLS settings"))?;
+    let settings = SslSettings::from_profile(p);
+    let disabled = matches!(settings.mode, Some(SslMode::Disable));
+    let mode_keys = ["sslmode", "ssl-mode", "sslMode"];
+    let root_keys = ["sslrootcert", "sslRootCert", "ssl-ca", "sslCa"];
+    let cert_keys = ["sslcert", "sslCert", "ssl-cert"];
+    let key_keys = ["sslkey", "sslKey", "ssl-key"];
+    let has_url_mode = url
+        .query_pairs()
+        .any(|(key, _)| mode_keys.contains(&key.as_ref()));
+    let pairs: Vec<(String, String)> = url
+        .query_pairs()
+        .filter(|(key, _)| {
+            let key = key.as_ref();
+            !(explicit_mode && mode_keys.contains(&key)
+                || (disabled || has_root) && root_keys.contains(&key)
+                || (disabled || has_cert) && cert_keys.contains(&key)
+                || (disabled || has_key) && key_keys.contains(&key))
+        })
+        .map(|(key, value)| (key.into_owned(), value.into_owned()))
+        .collect();
+    url.set_query(None);
+    {
+        let mut query = url.query_pairs_mut();
+        query.extend_pairs(pairs);
+        if explicit_mode || !has_url_mode {
+            if let Some(mode) = settings.mode {
+                let (key, value) = match wire {
+                    Wire::Mysql => ("ssl-mode", mode.as_mysql()),
+                    _ => ("sslmode", mode.as_postgres()),
+                };
+                query.append_pair(key, value);
+            }
+        }
+        if !disabled {
+            let keys = if matches!(wire, Wire::Mysql) {
+                ["ssl-ca", "ssl-cert", "ssl-key"]
+            } else {
+                ["sslrootcert", "sslcert", "sslkey"]
+            };
+            for (key, selected, value) in [
+                (keys[0], has_root, settings.root_cert),
+                (keys[1], has_cert, settings.client_cert),
+                (keys[2], has_key, settings.client_key),
+            ] {
+                if let Some(value) = value.filter(|_| selected) {
+                    query.append_pair(key, value);
+                }
+            }
+        }
+    }
+    Ok(url.into())
 }
 
 /// How a profile wants the transport secured.
@@ -1472,7 +1544,73 @@ mod tests {
     }
 
     #[test]
-    fn an_explicit_url_is_never_rewritten() {
+    fn explicit_url_tls_replaces_duplicate_modes_and_preserves_other_parameters() {
+        let mut p = profile(DbEngine::Postgres);
+        p.url = Some("postgres://user:p%40ss@host/db?application_name=a%26b&sslmode=disable&sslmode=prefer&sslrootcert=%2Fold.pem".into());
+        p.tls.mode = TlsMode::VerifyFull;
+        p.tls.root_cert = Some(irodori_connection::SecretRef {
+            handle: "/new ca & cert.pem".into(),
+            service: None,
+        });
+        let url = reqwest::Url::parse(&build_url(&p).unwrap()).unwrap();
+        let pairs: Vec<_> = url.query_pairs().collect();
+        assert_eq!(url.password(), Some("p%40ss"));
+        assert_eq!(pairs.iter().filter(|(key, _)| key == "sslmode").count(), 1);
+        assert!(pairs
+            .iter()
+            .any(|(key, value)| key == "sslmode" && value == "verify-full"));
+        assert!(pairs
+            .iter()
+            .any(|(key, value)| key == "sslrootcert" && value == "/new ca & cert.pem"));
+        assert!(pairs
+            .iter()
+            .any(|(key, value)| key == "application_name" && value == "a&b"));
+    }
+
+    #[test]
+    fn explicit_mysql_url_tls_uses_mysql_names_and_can_disable_url_certificates() {
+        let mut p = profile(DbEngine::Mysql);
+        p.url = Some("mysql://host/db?ssl-mode=preferred&ssl-ca=old&ssl-cert=cert&ssl-key=key&charset=utf8mb4".into());
+        p.tls.mode = TlsMode::VerifyFull;
+        let secured = build_url(&p).unwrap();
+        assert!(secured.contains("ssl-mode=verify_identity"));
+        assert!(secured.contains("ssl-ca=old"));
+
+        p.tls.mode = TlsMode::Disable;
+        let disabled = build_url(&p).unwrap();
+        assert!(disabled.contains("ssl-mode=disabled"));
+        assert!(disabled.contains("charset=utf8mb4"));
+        assert!(!disabled.contains("ssl-ca="));
+        assert!(!disabled.contains("ssl-cert="));
+        assert!(!disabled.contains("ssl-key="));
+    }
+
+    #[test]
+    fn a_url_certificate_preserves_an_existing_stronger_mode() {
+        let mut p = profile(DbEngine::Postgres);
+        p.url = Some("postgres://host/db?sslmode=verify-full".into());
+        p.tls.root_cert = Some(irodori_connection::SecretRef {
+            handle: "/ca.pem".into(),
+            service: None,
+        });
+        let url = build_url(&p).unwrap();
+        assert!(url.contains("sslmode=verify-full"));
+        assert!(!url.contains("sslmode=require"));
+        p.url = Some("postgres://host/db".into());
+        assert!(build_url(&p).unwrap().contains("sslmode=require"));
+    }
+
+    #[test]
+    fn invalid_url_tls_errors_do_not_echo_credentials() {
+        let mut p = profile(DbEngine::Postgres);
+        p.url = Some("not a url with secret-password".into());
+        p.tls.mode = TlsMode::VerifyFull;
+        let error = format!("{:?}", build_url(&p).unwrap_err());
+        assert!(!error.contains("secret-password"));
+    }
+
+    #[test]
+    fn a_url_without_explicit_typed_tls_is_not_rewritten() {
         let mut profile = with_options(DbEngine::Neon, [("sslMode", "verify-full")]);
         profile.url = Some("postgres://user@host/db?sslmode=disable".into());
         assert_eq!(

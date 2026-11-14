@@ -48,6 +48,9 @@ export function ConnectionTlsFields({
       <span className="connector-options-label">
         {t("connection.tls.section")}
       </span>
+      {draft.mode === "url" ? (
+        <small>{t("connection.tls.urlOverride")}</small>
+      ) : null}
       <div className="connection-form-grid">
         <label>
           <span>{t("connection.field.sslMode")}</span>

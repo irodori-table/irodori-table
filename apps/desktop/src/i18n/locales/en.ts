@@ -1126,6 +1126,8 @@ export const en = {
   "connection.field.sslMode": "SSL mode",
   "connection.field.sslRootCert": "SSL root certificate",
   "connection.tls.section": "TLS",
+  "connection.tls.urlOverride":
+    "Explicit TLS settings override URL parameters.",
   "connection.tls.mode.disable": "Disable",
   "connection.tls.mode.prefer": "Prefer (fall back to plaintext)",
   "connection.tls.mode.require": "Require",

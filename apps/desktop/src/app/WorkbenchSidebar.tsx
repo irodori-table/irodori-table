@@ -11,7 +11,10 @@ import {
 import { RowDetailSidebar } from "@/features/results";
 import { useSchemaDesignerStore } from "@/features/schema-designer";
 import { usePreferencesStore } from "@/features/preferences";
-import { SearchReplacePanel } from "@/features/search/SearchReplacePanel";
+import {
+  SearchReplacePanel,
+  type SearchTab,
+} from "@/features/search/SearchReplacePanel";
 import {
   InspectorContent,
   PlanPanel,
@@ -19,6 +22,8 @@ import {
   objectKindLabel,
   qualifiedObjectName,
 } from "@/features/workbench";
+
+const emptyProblemTabs: SearchTab[] = [];
 
 // One side of the workbench: the view rail plus every dockable panel
 // (completion, history, plan, git, AI chat, search) wired to
@@ -73,18 +78,23 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
   const problemsEnabled =
     !sidebars.viewHidden.problems ||
     sidebars.activeRightSidebarView === "problems";
-  const [problemTabs, setProblemTabs] = useState(editorGroups.searchTabs);
+  // Keep the effect input stable while hidden, so typing does not schedule
+  // any Problems state updates (even a no-op updater adds work during input).
+  const problemSourceTabs = problemsEnabled
+    ? editorGroups.searchTabs
+    : emptyProblemTabs;
+  const [problemTabs, setProblemTabs] = useState(problemSourceTabs);
   useEffect(() => {
     if (!problemsEnabled) {
-      setProblemTabs([]);
+      setProblemTabs(emptyProblemTabs);
       return;
     }
     const handle = window.setTimeout(
-      () => setProblemTabs(editorGroups.searchTabs),
+      () => setProblemTabs(problemSourceTabs),
       150,
     );
     return () => window.clearTimeout(handle);
-  }, [editorGroups.searchTabs, problemsEnabled]);
+  }, [problemSourceTabs, problemsEnabled]);
   const problems = useMemo(
     () =>
       problemsEnabled

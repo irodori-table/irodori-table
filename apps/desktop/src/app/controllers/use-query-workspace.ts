@@ -77,7 +77,6 @@ export function useQueryWorkspace({
   );
   const grid = useResultGridWorkspace({
     uiZoom,
-    query,
     editorEngine,
     activeEngine,
     activeMetadata,

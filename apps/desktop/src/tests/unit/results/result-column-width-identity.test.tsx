@@ -35,7 +35,7 @@ function result(sets: QueryResultSet[]): QueryResult {
 const deps = {
   resultMode: "data" as const,
   tableViewObject: null,
-  query: "select description from t",
+  executedSql: "select description from t",
   editorEngine: "postgres" as const,
   activeMetadata: undefined,
   spillInfo: null,
@@ -65,11 +65,18 @@ let latest: ReturnType<typeof useResultGridModel>;
 function Harness({
   value,
   activeResultIndex = 0,
+  executedSql = deps.executedSql,
 }: {
   value: QueryResult;
   activeResultIndex?: number;
+  executedSql?: string;
 }) {
-  latest = useResultGridModel({ ...deps, result: value, activeResultIndex });
+  latest = useResultGridModel({
+    ...deps,
+    executedSql,
+    result: value,
+    activeResultIndex,
+  });
   return null;
 }
 
@@ -100,7 +107,9 @@ describe("manual result column widths", () => {
     const newQuery = result([
       set("select description from other", [["short"]]),
     ]);
-    rerender(<Harness value={newQuery} />);
+    rerender(
+      <Harness value={newQuery} executedSql="select description from other" />,
+    );
     expect(latest.gridColumnWidths[0]).not.toBeCloseTo(350, 0);
   });
 
@@ -118,5 +127,29 @@ describe("manual result column widths", () => {
 
     rerender(<Harness value={twoSets} activeResultIndex={0} />);
     expect(latest.gridColumnWidths[0]).toBeCloseTo(350, 0);
+  });
+
+  it("keeps the first width when streaming adds explicit result sets", () => {
+    const executedSql = "select description from t; select description from u";
+    const first = result([set("statement 1", [["short"]])]);
+    delete first.resultSets;
+    const { rerender } = render(
+      <Harness value={first} executedSql={executedSql} />,
+    );
+    act(() => latest.resizeColumn(0, 350));
+
+    const next = result([
+      set("statement 1", [["short"], ["another"]]),
+      { ...set("statement 2", [["other"]]), statementIndex: 1 },
+    ]);
+    rerender(<Harness value={next} executedSql={executedSql} />);
+    expect(latest.gridColumnWidths[0]).toBe(350);
+
+    rerender(
+      <Harness value={next} executedSql={executedSql} activeResultIndex={1} />,
+    );
+    expect(latest.gridColumnWidths[0]).not.toBe(350);
+    rerender(<Harness value={next} executedSql={executedSql} />);
+    expect(latest.gridColumnWidths[0]).toBe(350);
   });
 });
