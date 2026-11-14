@@ -58,6 +58,9 @@ for (const zoom of ["1", "1.15"]) {
     await content.click();
     await page.keyboard.press("ControlOrMeta+a");
     await page.keyboard.type(SQL);
+    await expect
+      .poll(() => content.locator(".cm-line").allTextContents())
+      .toEqual(SQL.split("\n"));
     await page.waitForTimeout(300);
 
     const data = await measure(page);

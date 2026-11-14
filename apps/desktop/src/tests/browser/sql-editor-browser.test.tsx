@@ -22,23 +22,26 @@ function renderSqlEditor({
 
   const editorRef = createRef<SqlEditorHandle>();
   const root = createRoot(host);
-  flushSync(() =>
-    root.render(
-      <SqlEditor
-        ref={editorRef}
-        value={value}
-        onChange={onChange}
-        engine="postgres"
-        snippets={[]}
-        theme={lightTheme}
-        vimMode={vimMode}
-        formatter="sql-formatter"
-        linter="disabled"
-      />,
-    ),
-  );
+  const renderValue = (next: string) => {
+    flushSync(() =>
+      root.render(
+        <SqlEditor
+          ref={editorRef}
+          value={next}
+          onChange={onChange}
+          engine="postgres"
+          snippets={[]}
+          theme={lightTheme}
+          vimMode={vimMode}
+          formatter="sql-formatter"
+          linter="disabled"
+        />,
+      ),
+    );
+  };
+  renderValue(value);
 
-  return { host, root, editorRef };
+  return { host, root, editorRef, renderValue };
 }
 
 async function waitForEditor(host: HTMLElement) {
@@ -49,6 +52,31 @@ async function waitForEditor(host: HTMLElement) {
 }
 
 describe("SQL editor browser shortcuts", () => {
+  it("applies external SQL without echoing it as another edit", async () => {
+    const onChange = vi.fn();
+    const { host, root, editorRef, renderValue } = renderSqlEditor({
+      value: "select 1;",
+      onChange,
+    });
+    try {
+      const content = await waitForEditor(host);
+      renderValue("select 2;");
+      expect(content.textContent).toBe("select 2;");
+      expect(onChange).not.toHaveBeenCalled();
+
+      editorRef.current?.revealRange({ from: 9, to: 9 });
+      editorRef.current?.insertText(" -- edited");
+      expect(onChange).toHaveBeenCalledExactlyOnceWith("select 2; -- edited");
+
+      renderValue("select 2; -- edited");
+      expect(onChange).toHaveBeenCalledTimes(1);
+      expect(content.textContent).toBe("select 2; -- edited");
+    } finally {
+      root.unmount();
+      host.remove();
+    }
+  });
+
   it("keeps Mod+A as editor select-all when Vim mode is enabled", async () => {
     const sql = "select 1;\nselect 2;";
     const { host, root, editorRef } = renderSqlEditor({

@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   column widths change.
 - F6 and Shift+F6 move focus between visible workbench panels without requiring
   an unavailable Dockview module.
+- Rapid multiline typing no longer feeds controlled SQL updates back into
+  editor changes and triggers React update-depth errors.
 
 ## [0.16.6] - 2026-11-13
 
