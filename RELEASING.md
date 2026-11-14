@@ -27,6 +27,9 @@ That is the whole everyday flow. The tag push publishes the Linux pre-release;
 the stable dispatch in step 4 adds the Windows and macOS packages and the
 updater manifest (see [Signing, Notarization, And Updates](#signing-notarization-and-updates)
 for why it is required).
+Package-manager repository updates are separate: the default dispatch writes
+only to this app repository. See [Linux Distribution Packages](#linux-distribution-packages)
+for the explicit opt-in that also writes to the APT and AUR repositories.
 **Everything below is reference for the uncommon cases** — signed/stable
 channels, sibling-tag ordering, updater keys, and rollback. You do not need any
 of it to ship a normal patch.
@@ -318,18 +321,20 @@ credentials block neither prerelease checkpoints nor stable releases.
 
 ## Linux Distribution Packages
 
-Stable releases also republish the Linux `.deb` payload into package-manager
+Stable releases can also republish the Linux `.deb` payload into package-manager
 repositories, so users can `apt install irodori-table` or `yay -S irodori-table`
-instead of downloading an AppImage.
+instead of downloading an AppImage. This is disabled by default because it writes
+to repositories outside this app. Maintainers with separate authorization for
+both destinations can dispatch with `-f publish_package_repositories=true`.
 
 - The `publish-linux` lane builds `appimage,deb,rpm` for **x86_64** on
   `ubuntu-24.04`; `publish-linux-aarch64` builds **deb,rpm** for **arm64** on
   `ubuntu-24.04-arm`. aarch64 skips the AppImage because the linuxdeploy tooling
   the bundler drives is x86_64-only, and nothing downstream needs an aarch64
   AppImage.
-- `publish-apt` and `publish-aur` run only for a **stable** release
-  (`prerelease == false`), after both Linux lanes finish. Pre-releases never leak
-  into the `stable` apt suite or the AUR.
+- `publish-apt` and `publish-aur` require `publish_package_repositories=true`
+  and a **stable** release (`prerelease == false`), after both Linux lanes finish.
+  Pre-releases never leak into the `stable` apt suite or the AUR.
 - `publish-apt` signs the repository with the project GPG key and pushes
   `dists/`, `pool/`, and `irodori-archive-keyring.gpg` to the
   [`irodori-packages`](https://github.com/irodori-table/irodori-packages)

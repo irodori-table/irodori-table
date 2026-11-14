@@ -28,6 +28,11 @@ on:
           - pfx
           - azure
           - signpath
+      publish_package_repositories:
+        description: 'Also publish to irodori-table/irodori-packages and AUR'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   actions: read
@@ -784,10 +789,12 @@ jobs:
       - release-gates
       - publish-linux
       - publish-linux-aarch64
-    # Packages are a stable-channel artifact only: the published apt suite is
-    # `stable`, so a pre-release must never leak into it.
+    # These jobs write to repositories outside this app. Publishing the app
+    # release alone must not implicitly authorize those additional writes.
+    # The published apt suite is `stable`, so pre-releases must never enter it.
     if: |
-      needs.release-gates.outputs.prerelease == 'false'
+      inputs.publish_package_repositories
+      && needs.release-gates.outputs.prerelease == 'false'
       && needs.publish-linux.result == 'success'
       && needs.publish-linux-aarch64.result == 'success'
     runs-on: ubuntu-latest
@@ -877,7 +884,8 @@ jobs:
       - publish-linux
       - publish-linux-aarch64
     if: |
-      needs.release-gates.outputs.prerelease == 'false'
+      inputs.publish_package_repositories
+      && needs.release-gates.outputs.prerelease == 'false'
       && needs.publish-linux.result == 'success'
       && needs.publish-linux-aarch64.result == 'success'
     runs-on: ubuntu-latest
