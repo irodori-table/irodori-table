@@ -41,6 +41,15 @@ for (const zoom of ["1", "1.15"]) {
     page,
   }) => {
     test.setTimeout(60_000);
+    const updateErrors: string[] = [];
+    page.on("console", (message) => {
+      if (
+        message.type() === "error" &&
+        message.text().includes("Maximum update depth")
+      ) {
+        updateErrors.push(message.text());
+      }
+    });
     await page.addInitScript((value) => {
       window.localStorage.setItem("irodori.ui.zoom.v1", value);
     }, zoom);
@@ -49,6 +58,9 @@ for (const zoom of ["1", "1.15"]) {
     await content.click();
     await page.keyboard.press("ControlOrMeta+a");
     await page.keyboard.type(SQL);
+    await expect
+      .poll(() => content.locator(".cm-line").allTextContents())
+      .toEqual(SQL.split("\n"));
     await page.waitForTimeout(300);
 
     const data = await measure(page);
@@ -60,5 +72,6 @@ for (const zoom of ["1", "1.15"]) {
       expect(Math.abs(nums[i].top - lines[i].top)).toBeLessThanOrEqual(1);
       expect(Math.abs(nums[i].height - lines[i].height)).toBeLessThanOrEqual(1);
     }
+    expect(updateErrors).toEqual([]);
   });
 }

@@ -68,9 +68,22 @@ export function useResultGridScroll({
       setGridViewportWidth(element.clientWidth);
     };
     measure();
-    const observer = new ResizeObserver(measure);
+    // Virtualization can add/remove scrollbars and resize the observed grid.
+    // Update after observer delivery so that layout change starts a fresh frame
+    // instead of feeding the same ResizeObserver loop.
+    let resizeRaf: number | null = null;
+    const observer = new ResizeObserver(() => {
+      if (resizeRaf !== null) return;
+      resizeRaf = requestAnimationFrame(() => {
+        resizeRaf = null;
+        measure();
+      });
+    });
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (resizeRaf !== null) cancelAnimationFrame(resizeRaf);
+    };
   }, [result]);
 
   function onGridScroll(event: UIEvent<HTMLDivElement>) {

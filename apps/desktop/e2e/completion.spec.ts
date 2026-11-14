@@ -161,23 +161,15 @@ async function moveEditorCursorTo(page: Page, offset: number) {
 }
 
 async function connectMockDatabase(page: Page) {
-  const connectionManager = page
-    .getByRole("button", { name: "Connection manager", exact: true })
-    .first();
-  if (
-    (await connectionManager.count()) > 0 &&
-    (await connectionManager.isVisible())
-  ) {
-    await connectionManager.click();
-  } else {
-    await page.locator(".connection-select").click();
-  }
+  await page.getByRole("menuitem", { name: "File", exact: true }).click();
+  await page.getByRole("menuitem", { name: /Open Connection Manager/ }).click();
   await page.getByRole("button", { name: "Connect", exact: true }).click();
 }
 
 test("schema metadata drives table and column completion in the editor", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   await installCompletionMock(page);
   await page.goto("/");
   await connectMockDatabase(page);

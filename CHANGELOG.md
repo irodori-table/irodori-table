@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.7] - 2026-11-14
+
+### Fixed
+
+- Explicit TLS settings now apply to PostgreSQL and MySQL URL connections.
+  Selected settings override matching URL parameters while preserving credentials
+  and unrelated options. URLs without explicit TLS settings keep their behavior.
+- Manual result column widths survive SQL edits and the arrival of another
+  streamed result set.
+- Result viewport updates avoid ResizeObserver delivery loops when results or
+  column widths change.
+- F6 and Shift+F6 move focus between visible workbench panels without requiring
+  an unavailable Dockview module.
+- Hidden Problems no longer schedules redundant updates on every keystroke,
+  avoiding React update-depth errors during rapid multiline typing. External
+  SQL synchronization no longer echoes the same value as another edit.
+
 ## [0.16.6] - 2026-11-13
 
 ### Fixed

@@ -1149,6 +1149,7 @@ export const ja = {
   "connection.field.sslMode": "SSL モード",
   "connection.field.sslRootCert": "SSL ルート証明書",
   "connection.tls.section": "TLS",
+  "connection.tls.urlOverride": "明示したTLS設定をURLの指定より優先します。",
   "connection.tls.mode.disable": "無効",
   "connection.tls.mode.prefer": "優先（失敗時は平文）",
   "connection.tls.mode.require": "必須",

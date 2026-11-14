@@ -76,7 +76,10 @@ export function WorkbenchSidebar({ side }: { side: "left" | "right" }) {
   const [problemTabs, setProblemTabs] = useState(editorGroups.searchTabs);
   useEffect(() => {
     if (!problemsEnabled) {
-      setProblemTabs([]);
+      // Typing changes searchTabs even while Problems is hidden. Replacing
+      // an already-empty list on every keystroke creates a passive update
+      // chain that can trip React's depth limit during continuous input.
+      setProblemTabs((current) => (current.length === 0 ? current : []));
       return;
     }
     const handle = window.setTimeout(

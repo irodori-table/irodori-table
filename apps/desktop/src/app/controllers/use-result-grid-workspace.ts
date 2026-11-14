@@ -37,7 +37,6 @@ import type {
 
 export type ResultGridWorkspaceDeps = {
   uiZoom: number;
-  query: string;
   editorEngine: DbEngine;
   activeEngine: DbEngine;
   activeMetadata: DatabaseMetadata | undefined;
@@ -62,7 +61,6 @@ export type ResultGridWorkspaceDeps = {
 // ResultGridController consumed by ResultsPane.
 export function useResultGridWorkspace({
   uiZoom,
-  query,
   editorEngine,
   activeEngine,
   activeMetadata,
@@ -243,7 +241,7 @@ export function useResultGridWorkspace({
     activeResultIndex,
     resultMode,
     tableViewObject,
-    query,
+    executedSql: lastRunSql,
     editorEngine,
     activeMetadata,
     spillInfo,
