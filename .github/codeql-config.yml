@@ -1,0 +1,5 @@
+# Vendored third-party fixes (for example the patched glib 0.18.5) are not
+# first-party code. Keep CodeQL on the app and tooling sources; scanning the
+# patch only reports findings in upstream code we do not maintain here.
+paths-ignore:
+  - vendor/**
