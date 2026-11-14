@@ -68,7 +68,9 @@ const multiStatementFixture = [
   },
 ] satisfies readonly MultiResultSetFixture[];
 
-function createMultiResultMockBackend(): MultiResultMockBackend {
+function createMultiResultMockBackend(
+  singleResult = false,
+): MultiResultMockBackend {
   return {
     workspace: {
       activeConnectionId: "local-pg",
@@ -92,11 +94,16 @@ function createMultiResultMockBackend(): MultiResultMockBackend {
     },
     metadata: { schemas: [{ name: "public", objects: [] }] },
     parameterPromptSet: { prompts: [], signature: "mock-sig" },
-    resultSets: multiStatementFixture,
+    resultSets: singleResult
+      ? multiStatementFixture.slice(0, 1)
+      : multiStatementFixture,
   };
 }
 
-export async function installMultiResultMock(page: Page) {
+export async function installMultiResultMock(
+  page: Page,
+  options: { singleResult?: boolean } = {},
+) {
   await page.addInitScript(() => window.localStorage.clear());
   await page.addInitScript((backend: MultiResultMockBackend) => {
     const { metadata, parameterPromptSet, resultSets, workspace } = backend;
@@ -207,7 +214,7 @@ export async function installMultiResultMock(page: Page) {
         callbacks.delete(id);
       },
     };
-  }, createMultiResultMockBackend());
+  }, createMultiResultMockBackend(options.singleResult));
 }
 
 export async function connectMockDatabase(page: Page) {

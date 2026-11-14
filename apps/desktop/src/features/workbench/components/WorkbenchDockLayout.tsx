@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
@@ -531,13 +532,13 @@ export function WorkbenchDockLayout({
       <div
         className="workbench-dock dockview-theme-irodori"
         onPointerDownCapture={handleSashPointerDown}
+        onKeyDownCapture={handleDockKeyboardNavigation}
       >
         <DockviewReact
           components={dockComponents}
           defaultTabComponent={WorkbenchDockTab}
           dndStrategy="pointer"
           getTabContextMenuItems={() => []}
-          keyboardNavigation
           theme={IRODORI_DOCKVIEW_THEME}
           onReady={handleReady}
         />
@@ -550,10 +551,66 @@ function WorkbenchDockPanel({ api }: IDockviewPanelProps) {
   const content = useContext(DockPanelContentContext);
   const panelId = isDockPanelId(api.id) ? api.id : "editor";
   return (
-    <div className={`workbench-dock-panel ${panelId}`}>
+    <div
+      className={`workbench-dock-panel ${panelId}`}
+      role="region"
+      aria-label={api.title ?? api.id}
+      tabIndex={-1}
+    >
       {content?.[panelId] ?? null}
     </div>
   );
+}
+
+// The dock has one fixed panel per group and hides the vendor tab bars. Keep
+// pane focus navigation in the app instead of enabling an unavailable module.
+function handleDockKeyboardNavigation(
+  event: ReactKeyboardEvent<HTMLDivElement>,
+) {
+  if (
+    event.key !== "F6" ||
+    event.defaultPrevented ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.nativeEvent.isComposing ||
+    !event.currentTarget.contains(event.target as Node)
+  )
+    return;
+  const visible = (element: HTMLElement) =>
+    element.getClientRects().length > 0 &&
+    getComputedStyle(element).visibility !== "hidden";
+  const panels = dockPanelIds
+    .map((id) =>
+      event.currentTarget.querySelector<HTMLElement>(
+        `.workbench-dock-panel.${id}`,
+      ),
+    )
+    .filter((panel): panel is HTMLElement => panel !== null && visible(panel));
+  if (panels.length < 2) return;
+  const current = panels.findIndex((panel) =>
+    panel.contains(event.target as Node),
+  );
+  const direction = event.shiftKey ? -1 : 1;
+  const index =
+    current < 0
+      ? event.shiftKey
+        ? panels.length - 1
+        : 0
+      : (current + direction + panels.length) % panels.length;
+  const panel = panels[index]!;
+  const primary = panel.querySelector<HTMLElement>(".cm-content, .result-grid");
+  const target =
+    primary && visible(primary)
+      ? primary
+      : (Array.from(
+          panel.querySelectorAll<HTMLElement>(
+            'button:not(:disabled), input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), [tabindex="0"], [contenteditable="true"]',
+          ),
+        ).find(visible) ?? panel);
+  target.focus({ preventScroll: true });
+  event.preventDefault();
+  event.stopPropagation();
 }
 
 function WorkbenchDockTab({ api }: IDockviewPanelHeaderProps) {

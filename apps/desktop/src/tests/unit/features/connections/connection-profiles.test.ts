@@ -664,6 +664,31 @@ describe("connector options", () => {
     expect(profile.options).toBeUndefined();
   });
 
+  it.each(["postgres", "mysql"] as const)(
+    "forwards explicit TLS settings for a %s URL",
+    (engine) => {
+      const profile = profileFromDraft(
+        draft({
+          engine,
+          mode: "url",
+          url: `${engine}://localhost/samples?sslmode=disable`,
+          tls: {
+            mode: "verifyFull",
+            rootCert: "/ca.pem",
+            clientCert: "/client.pem",
+            clientKey: "/client.key",
+          },
+        }),
+      );
+      expect(profile.tls).toEqual({
+        mode: "verifyFull",
+        rootCert: { handle: "/ca.pem" },
+        clientCert: { handle: "/client.pem" },
+        clientKey: { handle: "/client.key" },
+      });
+    },
+  );
+
   it("migrates legacy SSL options onto the typed TLS config", () => {
     const migrated = settingsProfileFromJson(
       {

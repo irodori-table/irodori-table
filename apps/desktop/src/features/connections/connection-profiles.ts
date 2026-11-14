@@ -852,6 +852,7 @@ export function profileFromDraft(
       id: resolvedDraft.id.trim(),
       engine: resolvedDraft.engine,
       url: connectorValue("url").trim(),
+      ...(tls ? { tls } : {}),
       ...(connectionModel && includeUser
         ? { user: connectorValue("user").trim() || undefined }
         : {}),
