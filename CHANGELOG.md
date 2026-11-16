@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.9] - 2026-11-16
+
+### Fixed
+
+- **The connection dialog's Connect button is visible in dark themes again.**
+  Dialogs render beside the workbench shell, where the accent colors were never
+  defined, so primary buttons lost their fill and dark themes left an ink label
+  on the dark surface. The accent colors now reach every dialog and popover, so
+  primary buttons, the selected connection, and active toggles are filled again
+  in light themes too.
+- The Database objects header keeps its title readable at the default sidebar
+  width. Its actions move to a second line when they do not fit, instead of
+  squeezing the title down to a single letter.
+- The connection form's **Remember password** checkbox sits on one line with
+  its caption again, not as a large box with the caption underneath.
+- **Open SQLite sample** appears only when there are no saved connections.
+
 ## [0.16.8] - 2026-11-16
 
 Dependency and release-tooling maintenance with no intentional application
