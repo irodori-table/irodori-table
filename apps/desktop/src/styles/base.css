@@ -139,6 +139,24 @@ textarea::placeholder {
   --focus-ring: 0 0 0 2px color-mix(in srgb, var(--focus) 24%, transparent);
 }
 
+/*
+ * The accent family is derived from the theme's --teal/--blue/--green, which
+ * AppWorkbench writes inline onto .app-root, .app-shell and :root. Deriving it
+ * only inside .app-shell left everything rendered beside the shell -- the
+ * connection manager, settings and the other WorkbenchDialogs, plus popovers
+ * portaled to <body> -- with no --accent at all. A primary button there lost
+ * its fill (the color-mix went invalid, so the background fell to
+ * transparent) while dark themes still set its label to ink: the dialog's
+ * Connect button vanished into the dark surface.
+ */
+:root,
+.app-root {
+  --accent: color-mix(in srgb, var(--teal) 68%, var(--blue));
+  --accent-hover: color-mix(in srgb, var(--teal) 58%, var(--green));
+  --accent-soft: color-mix(in srgb, var(--accent) 13%, var(--surface-raised));
+  --accent-text: #ffffff;
+}
+
 .app-root {
   --font-ui-xs: 10px;
   --font-ui-sm: 11px;

@@ -781,17 +781,24 @@
   }
 }
 
-/* Remember-password opt-in under the password field. */
-.connection-remember-password {
+/* Remember-password opt-in under the password field. Qualified by the form
+   body: `.connection-form-body label` (a stacked, uppercase field label) and
+   `.connection-form input` (a 30px text box) otherwise win on specificity,
+   which put the checkbox on a line of its own as a large empty box with its
+   caption shouted underneath. */
+.connection-form-body .connection-remember-password {
   display: flex;
   align-items: center;
   gap: 6px;
   color: var(--muted);
   font-size: var(--font-ui-md);
+  font-weight: 400;
+  text-transform: none;
 }
 
-.connection-remember-password input[type="checkbox"] {
+.connection-form .connection-remember-password input[type="checkbox"] {
   width: 14px;
   height: 14px;
+  padding: 0;
   accent-color: var(--accent);
 }

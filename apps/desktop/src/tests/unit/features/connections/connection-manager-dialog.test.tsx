@@ -259,6 +259,31 @@ function colorSwatch(color: string) {
 }
 
 describe("ConnectionManagerDialog", () => {
+  it("offers the SQLite sample only while there are no saved connections", async () => {
+    const { props, user } = renderDialog({ profiles: [] });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open SQLite sample" }),
+    );
+    expect(props.onOpenSqliteSample).toHaveBeenCalledTimes(1);
+  });
+
+  it("hides the SQLite sample once a connection is saved", () => {
+    renderDialog();
+
+    expect(
+      screen.queryByRole("button", { name: "Open SQLite sample" }),
+    ).toBeNull();
+  });
+
+  it("does not offer the sample for a search that matched nothing", () => {
+    renderDialog({ profiles: [], search: "nope" });
+
+    expect(
+      screen.queryByRole("button", { name: "Open SQLite sample" }),
+    ).toBeNull();
+  });
+
   it("selects preset colors from the compact color picker", async () => {
     const nextColor = connectionColorOptions[1];
     const { props, user } = renderDialog();

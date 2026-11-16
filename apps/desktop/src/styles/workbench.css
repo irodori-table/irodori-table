@@ -554,22 +554,27 @@
 
 .section-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: 2px 6px;
   min-width: 0;
-  height: var(--bar-md);
-  padding: 0 6px;
+  min-height: var(--bar-md);
+  padding: 5px 6px;
   color: var(--muted);
   font-size: var(--font-ui-md);
   font-weight: 800;
   text-transform: uppercase;
 }
 
-/* In a narrow sidebar the title gives up its width to the row's actions: the
-   buttons are the affordances, the heading is a label the user can still read
-   from its ellipsis. */
+/* The object browser's header carries six actions, which at the default
+   sidebar width left the title one letter and an ellipsis ("D…"), or nothing
+   at all. The title now asks for its full width before it shares the row;
+   when the actions do not fit beside it they wrap onto a second line, right
+   aligned, instead of squeezing the title out. The ellipsis is left only for
+   a title that is wider than the whole sidebar. */
 .section-heading > span {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -578,15 +583,7 @@
 
 .section-heading-actions {
   flex: 0 0 auto;
-}
-
-/* Past this the actions have taken the row and the title is down to a letter
-   and an ellipsis, which reads as damage rather than as a label. Drop it and
-   let the header be its buttons, matching the icon-only view tabs. */
-@container (max-width: 175px) {
-  .section-heading > span {
-    display: none;
-  }
+  margin-left: auto;
 }
 
 .plan-panel {

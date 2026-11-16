@@ -251,16 +251,19 @@ export function ConnectionProfilePicker({
             : t("connection.emptyState")
           : null}
       </div>
-      {/* A database to look at when you have none of your own. It belongs
-          here, next to the list it is a sample of, rather than in the
-          workbench where it outranked opening a real connection. */}
-      <button
-        type="button"
-        className="text-button connection-sample"
-        onClick={onOpenSqliteSample}
-      >
-        {t("connection.openSqliteSample")}
-      </button>
+      {/* A database to look at when you have none of your own, so it is
+          offered only from the empty list. Once there are saved connections
+          it is noise beside them (and a sample is never pre-seeded either,
+          see commit 2d42fb79). */}
+      {profiles.length === 0 && search.trim().length === 0 ? (
+        <button
+          type="button"
+          className="text-button connection-sample"
+          onClick={onOpenSqliteSample}
+        >
+          {t("connection.openSqliteSample")}
+        </button>
+      ) : null}
       {rowMenu
         ? createPortal(
             <div
