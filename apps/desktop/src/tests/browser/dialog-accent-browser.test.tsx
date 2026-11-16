@@ -65,6 +65,24 @@ describe("dialog accent outside the shell (real stylesheet)", () => {
     expect(style.color).toBe("rgb(14, 26, 23)");
   });
 
+  it("keeps a disabled primary action's label off the ink colour", () => {
+    const root = mountDialog(`
+      <form class="connection-form">
+        <div class="dialog-footer">
+          <button class="primary-action" type="submit" disabled>Connecting</button>
+        </div>
+      </form>`);
+    const button = root.querySelector<HTMLButtonElement>(".primary-action")!;
+    const style = getComputedStyle(button);
+
+    // Ink (#0e1a17) is only legible on the accent fill, which a disabled
+    // button does not have.
+    expect(style.color).not.toBe("rgb(14, 26, 23)");
+    // --muted from the palette above (#9aa6a2).
+    expect(style.color).toBe("rgb(154, 166, 162)");
+    expect(style.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+  });
+
   it("keeps the remember-password checkbox on one line with its caption", () => {
     const root = mountDialog(`
       <form class="connection-form">

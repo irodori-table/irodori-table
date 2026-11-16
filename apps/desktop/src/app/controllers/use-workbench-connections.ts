@@ -5,6 +5,7 @@ import { NO_ACTIVE_CONNECTION } from "@/app/app-workbench-utils";
 import type { ConnectionController } from "@/app/controllers/workbench-controllers";
 import { useConnectionActions } from "@/app/controllers/use-connection-actions";
 import {
+  createConnectionAttemptTracker,
   defaultConnectionColor,
   engineLabel,
   useConnectionStore,
@@ -207,6 +208,9 @@ export function useWorkbenchConnections({
     [activeMetadata],
   );
 
+  // Outlives renders: a Cancel pressed after a re-render must still reach the
+  // attempt that started before it.
+  const [attemptTracker] = useState(createConnectionAttemptTracker);
   const connectionActions = useConnectionActions({
     draft,
     profiles,
@@ -229,6 +233,7 @@ export function useWorkbenchConnections({
     showActionNotice,
     t,
     installedExtensions,
+    attemptTracker,
   });
   const {
     updateDraft,
@@ -241,6 +246,7 @@ export function useWorkbenchConnections({
     deleteProfiles,
     testActiveProfile,
     connectActiveProfile,
+    cancelConnectionAttempts,
     refreshObjects,
     openSqliteSample,
   } = connectionActions;
@@ -295,6 +301,7 @@ export function useWorkbenchConnections({
         onSave: () => saveDraft(),
         onTest: () => void testActiveProfile(),
         onConnect: connectActiveProfile,
+        onCancelConnection: cancelConnectionAttempts,
         onOpenSqliteSample: () => void openSqliteSample(),
       } satisfies ConnectionController)
     : null;

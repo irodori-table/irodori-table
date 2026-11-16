@@ -791,6 +791,8 @@ export const en = {
   "notice.connection.testFailed": "Connection test failed",
   "notice.connection.testSucceeded": "Connection test succeeded",
   "notice.connection.connectFailed": "Connect failed",
+  "notice.connection.connectCancelled": "Connect cancelled",
+  "notice.connection.testCancelled": "Connection test cancelled",
   "notice.connection.connected": "Connected",
   "notice.connection.connectedDetail": "{name} · {ms} ms",
   "notice.connection.disconnected": "Disconnected",
@@ -1067,6 +1069,9 @@ export const en = {
   "connection.testing": "Testing",
   "connection.connect": "Connect",
   "connection.connecting": "Connecting",
+  "connection.cancelAttempt": "Cancel",
+  "connection.timedOut":
+    "No response after {seconds} seconds. Check the host, port, and network or VPN, then try again.",
   "connection.group.prod": "PRD / Production",
   "connection.group.stg": "STG / Staging",
   "connection.group.dev": "DEV / Development",

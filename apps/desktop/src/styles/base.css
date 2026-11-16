@@ -850,9 +850,14 @@ textarea::placeholder {
   font-size: var(--font-ui-md);
 }
 
+/* The label colour has to follow the fill: --accent-text is tuned for the
+   accent fill (white in light themes, ink in dark ones), and on the muted
+   disabled fill either one vanishes -- a "Connecting" button read as an empty
+   box. */
 .primary-action:disabled,
 .primary-button:disabled {
   border-color: var(--border-strong);
+  color: var(--muted);
   background: var(--surface-muted);
 }
 

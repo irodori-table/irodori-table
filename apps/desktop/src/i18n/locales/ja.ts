@@ -803,6 +803,8 @@ export const ja = {
   "notice.connection.testFailed": "接続テストに失敗しました",
   "notice.connection.testSucceeded": "接続テストに成功しました",
   "notice.connection.connectFailed": "接続に失敗しました",
+  "notice.connection.connectCancelled": "接続をキャンセルしました",
+  "notice.connection.testCancelled": "接続テストをキャンセルしました",
   "notice.connection.connected": "接続しました",
   "notice.connection.connectedDetail": "{name} · {ms} ms",
   "notice.connection.disconnected": "切断しました",
@@ -1089,6 +1091,9 @@ export const ja = {
   "connection.testing": "テスト中",
   "connection.connect": "接続",
   "connection.connecting": "接続中",
+  "connection.cancelAttempt": "キャンセル",
+  "connection.timedOut":
+    "{seconds} 秒以内に応答がありませんでした。ホスト、ポート、ネットワークや VPN を確認してから再試行してください。",
   "connection.group.prod": "PRD / 本番",
   "connection.group.stg": "STG / ステージング",
   "connection.group.dev": "DEV / 開発",

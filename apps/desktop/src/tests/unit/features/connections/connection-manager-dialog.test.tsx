@@ -225,6 +225,7 @@ const render = componentRenderer(ConnectionManagerDialog, () => ({
   onSave: vi.fn(),
   onTest: vi.fn(),
   onConnect: vi.fn((event) => event.preventDefault()),
+  onCancelConnection: vi.fn(),
   onOpenSqliteSample: vi.fn(),
 }));
 
@@ -282,6 +283,22 @@ describe("ConnectionManagerDialog", () => {
     expect(
       screen.queryByRole("button", { name: "Open SQLite sample" }),
     ).toBeNull();
+  });
+
+  it("offers Cancel only while a connect or test is waiting", async () => {
+    renderDialog();
+    expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
+  });
+
+  it.each([
+    ["connecting", { connecting: true }],
+    ["testing", { testing: true }],
+  ])("cancels the attempt while %s", async (_label, state) => {
+    const { props, user } = renderDialog(state);
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(props.onCancelConnection).toHaveBeenCalledTimes(1);
   });
 
   it("selects preset colors from the compact color picker", async () => {

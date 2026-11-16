@@ -73,6 +73,7 @@ export function ConnectionManagerDialog({
   onSave,
   onTest,
   onConnect,
+  onCancelConnection,
   onOpenSqliteSample,
 }: {
   profiles: ConnectionDraft[];
@@ -96,6 +97,8 @@ export function ConnectionManagerDialog({
   onSave: () => void;
   onTest: () => void;
   onConnect: FormEventHandler<HTMLFormElement>;
+  /** Stop waiting for an in-flight Connect or Test. */
+  onCancelConnection: () => void;
   onOpenSqliteSample: () => void;
 }) {
   const locale = usePreferencesStore((state) => state.locale);
@@ -389,6 +392,17 @@ export function ConnectionManagerDialog({
           >
             {testing ? t("connection.testing") : t("connection.test")}
           </button>
+          {/* An unreachable host can hold Connect or Test for up to the
+              attempt timeout; this is the way out before then. */}
+          {testing || connecting ? (
+            <button
+              className="text-button"
+              type="button"
+              onClick={onCancelConnection}
+            >
+              {t("connection.cancelAttempt")}
+            </button>
+          ) : null}
           <button
             className="primary-action"
             type="submit"

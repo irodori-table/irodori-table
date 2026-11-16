@@ -22,6 +22,13 @@ export {
 export { prepareConnectionRequest } from "./ssh-tunnel-request";
 export { prepareStoredPassword } from "./connection-credentials";
 export {
+  connectionAttemptTimeoutMs,
+  createConnectionAttemptTracker,
+  startConnectionAttempt,
+  type ConnectionAttempt,
+  type ConnectionAttemptTracker,
+} from "./connection-attempt";
+export {
   connectionTlsModes,
   legacyTlsOptionKeys,
   migrateConnectionTls,

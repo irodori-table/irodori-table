@@ -1,6 +1,8 @@
 import type { FormEvent } from "react";
 import type { ShowActionNotice } from "@/app/ActionToast";
 import {
+  connectionAttemptTimeoutMs,
+  createConnectionAttemptTracker,
   describeConnection,
   engineCorrectnessWarning,
   engineLabel,
@@ -16,9 +18,11 @@ import {
   sanitizedProfile,
   sqliteSampleProfile,
   sqliteSampleSeedSql,
+  startConnectionAttempt,
   validateDraft,
   withStarterProfiles,
   withUniqueProfileIds,
+  type ConnectionAttemptTracker,
   type ConnectionTransferFormat,
   type ConnectionDraft,
   type WorkspaceConnection,
@@ -37,6 +41,7 @@ import type {
   ConnectionInfo,
   DatabaseMetadata,
   InstalledExtension,
+  IrodoriError,
 } from "@/generated/irodori-api";
 import { connectionModelForEngine } from "@/features/extensions/connection-model";
 import { tauriRuntimeError } from "../app-workbench-utils";
@@ -70,6 +75,11 @@ export type ConnectionActionsDeps = {
   showActionNotice: ShowActionNotice;
   t: Translator["t"];
   installedExtensions: readonly InstalledExtension[];
+  /**
+   * In-flight Connect/Test attempts. The workbench keeps one for its lifetime;
+   * without it, attempts are tracked only within this call.
+   */
+  attemptTracker?: ConnectionAttemptTracker;
 };
 
 export function useConnectionActions(deps: ConnectionActionsDeps) {
@@ -95,10 +105,35 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     showActionNotice,
     t,
     installedExtensions,
+    attemptTracker = createConnectionAttemptTracker(),
   } = deps;
 
   const modelFor = (profile: ConnectionDraft) =>
     connectionModelForEngine(installedExtensions, profile.engine);
+
+  // Connect and Test give up after connectionAttemptTimeoutMs, or when the
+  // user cancels. The backend call runs on regardless, so the tracker is what
+  // a late success checks before it closes the connection nobody is waiting
+  // for.
+  attemptTracker.connectedIds.current = connectedIds;
+
+  function cancelConnectionAttempts() {
+    for (const attempt of attemptTracker.pending) {
+      attempt.cancel();
+    }
+  }
+
+  // Shaped like a backend timeout so the error callout titles it "Timed out"
+  // and the failure notice offers Retry.
+  function connectionTimedOut(): IrodoriError {
+    return {
+      kind: "timeout",
+      message: t("connection.timedOut", {
+        seconds: Math.round(connectionAttemptTimeoutMs / 1000),
+      }),
+      retryable: true,
+    };
+  }
 
   function updateDraft(patch: Partial<ConnectionDraft>) {
     setDraft((current) => {
@@ -347,32 +382,48 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     setTestingConnection(true);
     setConnectionError(null);
     const testId = `__test_${draft.id}_${Date.now()}`;
+    const label = `${draft.name.trim()} (${engineLabel(draft.engine)})`;
+    const attempt = startConnectionAttempt(
+      async () => {
+        const model = modelFor(draft);
+        const request = await prepareConnectionRequest(
+          draft,
+          profileFromDraft(draft, model),
+          model,
+        );
+        // Test only forwards an already-remembered handle; it never writes one.
+        const credentials = await prepareStoredPassword(
+          draft,
+          request.profile,
+          undefined,
+          false,
+        );
+        try {
+          await queryService.connect({ ...credentials.profile, id: testId });
+        } finally {
+          await request.release();
+        }
+      },
+      // The test id is unique to this attempt, so a late success can always
+      // be closed.
+      {
+        onLateSuccess: () =>
+          void queryService.disconnect(testId).catch(() => undefined),
+      },
+    );
+    attemptTracker.pending.add(attempt);
     try {
-      const model = modelFor(draft);
-      const request = await prepareConnectionRequest(
-        draft,
-        profileFromDraft(draft, model),
-        model,
-      );
-      // Test only forwards an already-remembered handle; it never writes one.
-      const credentials = await prepareStoredPassword(
-        draft,
-        request.profile,
-        undefined,
-        false,
-      );
-      try {
-        await queryService.connect({ ...credentials.profile, id: testId });
-      } finally {
-        await request.release();
+      const outcome = await attempt.result;
+      if (outcome.kind === "cancelled") {
+        showActionNotice("info", t("notice.connection.testCancelled"), label);
+        return;
+      }
+      if (outcome.kind === "timeout") {
+        throw connectionTimedOut();
       }
       await queryService.disconnect(testId);
       setConnectionError(null);
-      showActionNotice(
-        "success",
-        t("notice.connection.testSucceeded"),
-        `${draft.name.trim()} (${engineLabel(draft.engine)})`,
-      );
+      showActionNotice("success", t("notice.connection.testSucceeded"), label);
     } catch (error) {
       const display = errorDisplay(error);
       setConnectionError(error);
@@ -382,6 +433,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         display.detail ?? display.title,
       );
     } finally {
+      attemptTracker.pending.delete(attempt);
       setTestingConnection(false);
     }
   }
@@ -402,21 +454,60 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     }
     setConnecting(true);
     setConnectionError(null);
+    const generation = (attemptTracker.generations.get(profile.id) ?? 0) + 1;
+    attemptTracker.generations.set(profile.id, generation);
+    const started = performance.now();
+    const attempt = startConnectionAttempt(
+      async () => {
+        const model = modelFor(profile);
+        const request = await prepareConnectionRequest(
+          profile,
+          profileFromDraft(profile, model),
+          model,
+        );
+        const credentials = await prepareStoredPassword(
+          profile,
+          request.profile,
+        );
+        try {
+          const info: ConnectionInfo = await queryService.connect(
+            credentials.profile,
+          );
+          return { info, credentials };
+        } finally {
+          await request.release();
+        }
+      },
+      {
+        // Given up on, but the server answered after all. Close it unless a
+        // newer attempt for this profile has started, or the profile was
+        // already open -- then the backend connection is the live one.
+        onLateSuccess: ({ info }) => {
+          if (
+            attemptTracker.generations.get(profile.id) !== generation ||
+            attemptTracker.connectedIds.current.has(info.id)
+          ) {
+            return;
+          }
+          void queryService.disconnect(info.id).catch(() => undefined);
+        },
+      },
+    );
+    attemptTracker.pending.add(attempt);
     try {
-      const started = performance.now();
-      const model = modelFor(profile);
-      const request = await prepareConnectionRequest(
-        profile,
-        profileFromDraft(profile, model),
-        model,
-      );
-      const credentials = await prepareStoredPassword(profile, request.profile);
-      let info: ConnectionInfo;
-      try {
-        info = await queryService.connect(credentials.profile);
-      } finally {
-        await request.release();
+      const outcome = await attempt.result;
+      if (outcome.kind === "cancelled") {
+        showActionNotice(
+          "info",
+          t("notice.connection.connectCancelled"),
+          profile.name.trim(),
+        );
+        return;
       }
+      if (outcome.kind === "timeout") {
+        throw connectionTimedOut();
+      }
+      const { info, credentials } = outcome.value;
       // Persist the keychain handle (a handle, not the password) so the next
       // launch resolves it with an empty field.
       setProfiles((current) =>
@@ -478,6 +569,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
           : undefined,
       );
     } finally {
+      attemptTracker.pending.delete(attempt);
       setConnecting(false);
     }
   }
@@ -645,6 +737,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     testActiveProfile,
     connectActiveProfile,
     connectProfile,
+    cancelConnectionAttempts,
     openSqliteSample,
     disconnectActiveProfile,
     disconnectProfile,
