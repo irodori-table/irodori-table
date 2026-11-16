@@ -20,11 +20,15 @@ export {
   type WorkspaceConnection,
 } from "./connection-profiles";
 export { prepareConnectionRequest } from "./ssh-tunnel-request";
-export { prepareStoredPassword } from "./connection-credentials";
+export {
+  PASSWORD_SECRET_OPTION,
+  prepareStoredPassword,
+} from "./connection-credentials";
 export {
   connectionAttemptTimeoutMs,
   createConnectionAttemptTracker,
   startConnectionAttempt,
+  type AbandonReason,
   type ConnectionAttempt,
   type ConnectionAttemptTracker,
 } from "./connection-attempt";

@@ -1,6 +1,7 @@
 import type { FormEvent } from "react";
 import type { ShowActionNotice } from "@/app/ActionToast";
 import {
+  PASSWORD_SECRET_OPTION,
   connectionAttemptTimeoutMs,
   createConnectionAttemptTracker,
   describeConnection,
@@ -82,6 +83,25 @@ export type ConnectionActionsDeps = {
   attemptTracker?: ConnectionAttemptTracker;
 };
 
+/**
+ * Carry only the keychain handle from a finished connect into the profile's
+ * current options. A connect that lands late must not roll back edits saved
+ * while it was pending.
+ */
+function withPasswordHandle(
+  current: Record<string, string> | undefined,
+  fromConnect: Record<string, string> | undefined,
+): Record<string, string> {
+  const next = { ...current };
+  const handle = fromConnect?.[PASSWORD_SECRET_OPTION];
+  if (handle) {
+    next[PASSWORD_SECRET_OPTION] = handle;
+  } else {
+    delete next[PASSWORD_SECRET_OPTION];
+  }
+  return next;
+}
+
 export function useConnectionActions(deps: ConnectionActionsDeps) {
   const {
     draft,
@@ -112,10 +132,10 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     connectionModelForEngine(installedExtensions, profile.engine);
 
   // Connect and Test give up after connectionAttemptTimeoutMs, or when the
-  // user cancels. The backend call runs on regardless, so the tracker is what
-  // a late success checks before it closes the connection nobody is waiting
-  // for.
+  // user cancels. The backend call runs on regardless, so a late success
+  // reads the tracker to decide whether it is still wanted.
   attemptTracker.connectedIds.current = connectedIds;
+  attemptTracker.profiles.current = profiles;
 
   function cancelConnectionAttempts() {
     for (const attempt of attemptTracker.pending) {
@@ -405,10 +425,19 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         }
       },
       // The test id is unique to this attempt, so a late success can always
-      // be closed.
+      // be closed. After a timeout it is still news: the "failed" notice was
+      // only about the wait, and the host turned out to be reachable.
       {
-        onLateSuccess: () =>
-          void queryService.disconnect(testId).catch(() => undefined),
+        onLateSuccess: (_value, givenUp) => {
+          void queryService.disconnect(testId).catch(() => undefined);
+          if (givenUp === "timeout") {
+            showActionNotice(
+              "success",
+              t("notice.connection.testSucceeded"),
+              label,
+            );
+          }
+        },
       },
     );
     attemptTracker.pending.add(attempt);
@@ -438,6 +467,61 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     }
   }
 
+  /**
+   * Register a backend connection that just opened and announce it. `take`
+   * makes it the active connection; `if-idle` does so only when the user is
+   * not already working on another live one, for a connect that finished
+   * after the dialog stopped waiting.
+   */
+  function openConnection(
+    profile: ConnectionDraft,
+    info: ConnectionInfo,
+    started: number,
+    focus: "take" | "if-idle",
+  ) {
+    const elapsedMs = Math.max(1, Math.round(performance.now() - started));
+    const nextConnection = describeConnection(
+      info,
+      elapsedMs,
+      profile.name.trim(),
+    );
+    setLiveConnections((current) => ({
+      ...current,
+      [nextConnection.id]: nextConnection,
+    }));
+    setConnectedIds((current) => new Set(current).add(nextConnection.id));
+    if (focus === "take") {
+      setActiveConnectionId(nextConnection.id);
+    } else {
+      setActiveConnectionId((current) =>
+        attemptTracker.connectedIds.current.has(current)
+          ? current
+          : nextConnection.id,
+      );
+    }
+    void refreshObjects(nextConnection.id, true);
+    showActionNotice(
+      "success",
+      t("notice.connection.connected"),
+      t("notice.connection.connectedDetail", {
+        name: profile.name.trim(),
+        ms: elapsedMs,
+      }),
+    );
+    // A connector that can return wrong rows has to say so on every connect,
+    // not once in the docs (#117). This rides after the success notice
+    // because the connection genuinely opened; it is the results that cannot
+    // be trusted. Warnings do not auto-dismiss.
+    const correctness = engineCorrectnessWarning(profile.engine);
+    if (correctness) {
+      showActionNotice(
+        "warning",
+        t(correctness.titleKey),
+        t(correctness.detailKey),
+      );
+    }
+  }
+
   async function connectProfile(
     profile: ConnectionDraft,
     afterConnect?: (connectionId: string) => Promise<void>,
@@ -457,6 +541,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     const generation = (attemptTracker.generations.get(profile.id) ?? 0) + 1;
     attemptTracker.generations.set(profile.id, generation);
     const started = performance.now();
+    let timeoutError: IrodoriError | null = null;
     const attempt = startConnectionAttempt(
       async () => {
         const model = modelFor(profile);
@@ -479,17 +564,49 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         }
       },
       {
-        // Given up on, but the server answered after all. Close it unless a
-        // newer attempt for this profile has started, or the profile was
-        // already open -- then the backend connection is the live one.
-        onLateSuccess: ({ info }) => {
+        // Given up on, but the server answered after all. Leave it alone when
+        // a newer attempt for this profile has started, or the profile was
+        // already open: the backend connection is then the live one.
+        onLateSuccess: (value, givenUp) => {
           if (
             attemptTracker.generations.get(profile.id) !== generation ||
-            attemptTracker.connectedIds.current.has(info.id)
+            attemptTracker.connectedIds.current.has(value.info.id)
           ) {
             return;
           }
-          void queryService.disconnect(info.id).catch(() => undefined);
+          // The user stopped this one on purpose, or deleted the profile
+          // while it was pending.
+          if (
+            givenUp === "cancelled" ||
+            !attemptTracker.profiles.current.some(
+              (item) => item.id === profile.id,
+            )
+          ) {
+            void queryService.disconnect(value.info.id).catch(() => undefined);
+            return;
+          }
+          // Only the wait ran out. The server was slow rather than gone, or
+          // the backend sat on a keychain prompt (unsigned macOS builds ask
+          // again after every update) -- keep the connection that was asked
+          // for, without pulling focus from whatever the user moved on to.
+          const shownError = timeoutError;
+          setConnectionError((current: unknown) =>
+            current === shownError ? null : current,
+          );
+          setProfiles((current) =>
+            current.map((item) =>
+              item.id === profile.id
+                ? {
+                    ...item,
+                    options: withPasswordHandle(
+                      item.options,
+                      value.credentials.options,
+                    ),
+                  }
+                : item,
+            ),
+          );
+          openConnection(profile, value.info, started, "if-idle");
         },
       },
     );
@@ -505,7 +622,8 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         return;
       }
       if (outcome.kind === "timeout") {
-        throw connectionTimedOut();
+        timeoutError = connectionTimedOut();
+        throw timeoutError;
       }
       const { info, credentials } = outcome.value;
       // Persist the keychain handle (a handle, not the password) so the next
@@ -518,40 +636,8 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         ),
       );
       await afterConnect?.(info.id);
-      const elapsedMs = Math.max(1, Math.round(performance.now() - started));
-      const nextConnection = describeConnection(
-        info,
-        elapsedMs,
-        profile.name.trim(),
-      );
-      setLiveConnections((current) => ({
-        ...current,
-        [nextConnection.id]: nextConnection,
-      }));
-      setConnectedIds((current) => new Set(current).add(nextConnection.id));
-      setActiveConnectionId(nextConnection.id);
-      void refreshObjects(nextConnection.id, true);
+      openConnection(profile, info, started, "take");
       setConnectionManagerOpen(false);
-      showActionNotice(
-        "success",
-        t("notice.connection.connected"),
-        t("notice.connection.connectedDetail", {
-          name: profile.name.trim(),
-          ms: elapsedMs,
-        }),
-      );
-      // A connector that can return wrong rows has to say so on every connect,
-      // not once in the docs (#117). This rides after the success notice
-      // because the connection genuinely opened; it is the results that cannot
-      // be trusted. Warnings do not auto-dismiss.
-      const correctness = engineCorrectnessWarning(profile.engine);
-      if (correctness) {
-        showActionNotice(
-          "warning",
-          t(correctness.titleKey),
-          t(correctness.detailKey),
-        );
-      }
     } catch (error) {
       const display = errorDisplay(error);
       setConnectionError(error);

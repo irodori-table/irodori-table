@@ -10,6 +10,9 @@ export type ConnectionAttemptOutcome<T> =
   | { kind: "timeout" }
   | { kind: "cancelled" };
 
+/** Why an attempt stopped being waited for. */
+export type AbandonReason = "timeout" | "cancelled";
+
 export type ConnectionAttempt<T> = {
   /**
    * Settles with the outcome. Rejects only when the work itself fails before
@@ -26,37 +29,41 @@ export type ConnectionAttempt<T> = {
  *
  * The backend call cannot be aborted from here, so giving up only frees the
  * UI: the work runs on. If it later succeeds, `onLateSuccess` receives its
- * value so the caller can close the connection nobody is waiting for; a late
- * failure is dropped, because it has already been reported as a timeout or a
- * cancellation.
+ * value and why the attempt was given up on. The caller decides what to do
+ * with it: a cancelled connect should be closed, but a timed-out one may only
+ * have been slow (a cold server, or a keychain prompt waiting for the user).
+ * A late failure is dropped, because it has already been reported as a
+ * timeout or a cancellation.
  */
 export function startConnectionAttempt<T>(
   run: () => Promise<T>,
   options: {
     timeoutMs?: number;
-    onLateSuccess?: (value: T) => void;
+    onLateSuccess?: (value: T, givenUp: AbandonReason) => void;
   } = {},
 ): ConnectionAttempt<T> {
   const timeoutMs = options.timeoutMs ?? connectionAttemptTimeoutMs;
   let settled = false;
-  let abandon: (outcome: ConnectionAttemptOutcome<T>) => void = () => {};
+  let abandonedAs: AbandonReason = "cancelled";
+  let abandon: (reason: AbandonReason) => void = () => {};
 
   const result = new Promise<ConnectionAttemptOutcome<T>>((resolve, reject) => {
-    const timer = setTimeout(() => abandon({ kind: "timeout" }), timeoutMs);
-    abandon = (outcome) => {
+    const timer = setTimeout(() => abandon("timeout"), timeoutMs);
+    abandon = (reason) => {
       if (settled) {
         return;
       }
       settled = true;
+      abandonedAs = reason;
       clearTimeout(timer);
-      resolve(outcome);
+      resolve({ kind: reason });
     };
     Promise.resolve()
       .then(run)
       .then(
         (value) => {
           if (settled) {
-            options.onLateSuccess?.(value);
+            options.onLateSuccess?.(value, abandonedAs);
             return;
           }
           settled = true;
@@ -76,7 +83,7 @@ export function startConnectionAttempt<T>(
 
   return {
     result,
-    cancel: () => abandon({ kind: "cancelled" }),
+    cancel: () => abandon("cancelled"),
   };
 }
 
@@ -90,6 +97,8 @@ export type ConnectionAttemptTracker = {
   generations: Map<string, number>;
   /** The latest connected ids, refreshed on every render. */
   connectedIds: { current: ReadonlySet<string> };
+  /** The latest saved profiles, refreshed on every render. */
+  profiles: { current: readonly { id: string }[] };
 };
 
 export function createConnectionAttemptTracker(): ConnectionAttemptTracker {
@@ -97,5 +106,6 @@ export function createConnectionAttemptTracker(): ConnectionAttemptTracker {
     pending: new Set(),
     generations: new Map(),
     connectedIds: { current: new Set() },
+    profiles: { current: [] },
   };
 }

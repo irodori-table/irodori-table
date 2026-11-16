@@ -7,8 +7,9 @@ import {
 /**
  * An unreachable host held Connect and Test on "Connecting" until the OS gave
  * up on the TCP handshake, minutes later. An attempt now stops waiting after
- * ten seconds or on Cancel, and anything that answers after that is closed
- * rather than left open behind the user's back.
+ * ten seconds or on Cancel, and hands anything that answers after that back
+ * to the caller with the reason, so a cancelled connect can be closed while a
+ * merely slow one can still be kept.
  */
 
 function deferred<T>() {
@@ -43,7 +44,7 @@ describe("startConnectionAttempt", () => {
     });
   });
 
-  it("gives up at the timeout and closes a late success", async () => {
+  it("gives up at the timeout and hands a late success back", async () => {
     const work = deferred<string>();
     const onLateSuccess = vi.fn();
     const attempt = startConnectionAttempt(() => work.promise, {
@@ -64,7 +65,7 @@ describe("startConnectionAttempt", () => {
 
     work.resolve("late");
     await vi.runAllTimersAsync();
-    expect(onLateSuccess).toHaveBeenCalledWith("late");
+    expect(onLateSuccess).toHaveBeenCalledWith("late", "timeout");
   });
 
   it("stops waiting on cancel, before the timeout", async () => {
@@ -79,7 +80,7 @@ describe("startConnectionAttempt", () => {
 
     work.resolve("late");
     await vi.runAllTimersAsync();
-    expect(onLateSuccess).toHaveBeenCalledWith("late");
+    expect(onLateSuccess).toHaveBeenCalledWith("late", "cancelled");
   });
 
   it("reports a failure that arrives in time", async () => {

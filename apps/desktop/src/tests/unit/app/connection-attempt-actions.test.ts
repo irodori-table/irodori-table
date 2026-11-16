@@ -22,7 +22,9 @@ const { createTranslator } = await import("@/i18n");
 /**
  * Connect and Test against a host that never answers used to wait until the
  * OS dropped the TCP handshake. They now give up after ten seconds or on
- * Cancel, free the dialog, and close a connection that answers too late.
+ * Cancel and free the dialog. A connect that answers after Cancel is closed;
+ * one that answers after the timeout was only slow (a cold server, a keychain
+ * prompt), so it is kept without taking focus.
  */
 
 const { t } = createTranslator("en");
@@ -116,11 +118,82 @@ describe("connect attempts", () => {
       }),
     );
     expect(deps.setConnectionManagerOpen).not.toHaveBeenCalled();
+  });
 
-    // The server answers after all: nobody is waiting, so it is closed.
+  it("keeps a connect that answers after the timeout, without taking focus", async () => {
+    const pending = deferred<ConnectionInfo>();
+    connect.mockReturnValue(pending.promise);
+    const { profile, deps, actions } = harness();
+    deps.connectedIds = new Set(["connection-other"]);
+
+    const run = actions().connectProfile(profile);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await run;
+    const shownError = deps.setConnectionError.mock.lastCall![0];
+
+    // A keychain prompt answered, or a cold server woke up.
     pending.resolve(info(profile.id));
     await vi.runAllTimersAsync();
+
+    expect(disconnect).not.toHaveBeenCalled();
+    const connected = deps.setConnectedIds.mock.lastCall![0] as (
+      current: Set<string>,
+    ) => Set<string>;
+    expect([...connected(new Set())]).toEqual([profile.id]);
+    expect(deps.showActionNotice).toHaveBeenLastCalledWith(
+      "success",
+      "Connected",
+      expect.stringContaining("prod - takana"),
+    );
+    // The timeout callout clears, but only if it is still the one shown.
+    const clearError = deps.setConnectionError.mock.lastCall![0] as (
+      current: unknown,
+    ) => unknown;
+    expect(clearError(shownError)).toBeNull();
+    const other = { kind: "auth" };
+    expect(clearError(other)).toBe(other);
+    // The user is working on another live connection: it stays active.
+    const activate = deps.setActiveConnectionId.mock.lastCall![0] as (
+      current: string,
+    ) => string;
+    expect(activate("connection-other")).toBe("connection-other");
+    expect(activate("")).toBe(profile.id);
+    expect(deps.setConnectionManagerOpen).not.toHaveBeenCalled();
+  });
+
+  it("closes a late connect whose profile was deleted meanwhile", async () => {
+    const pending = deferred<ConnectionInfo>();
+    connect.mockReturnValue(pending.promise);
+    const { profile, deps, actions } = harness();
+
+    const run = actions().connectProfile(profile);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await run;
+    deps.profiles = [];
+    actions();
+    pending.resolve(info(profile.id));
+    await vi.runAllTimersAsync();
+
     expect(disconnect).toHaveBeenCalledWith(profile.id);
+    expect(deps.setConnectedIds).not.toHaveBeenCalled();
+  });
+
+  it("keeps edits saved while a late connect was pending", async () => {
+    const pending = deferred<ConnectionInfo>();
+    connect.mockReturnValue(pending.promise);
+    const { profile, deps, actions } = harness();
+
+    const run = actions().connectProfile(profile);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await run;
+    pending.resolve(info(profile.id));
+    await vi.runAllTimersAsync();
+
+    const persist = deps.setProfiles.mock.lastCall![0] as (
+      current: Array<typeof profile>,
+    ) => Array<typeof profile>;
+    const edited = { ...profile, options: { sslmode: "require" } };
+    expect(persist([edited])[0]!.options).toEqual({ sslmode: "require" });
   });
 
   it("stops waiting on Cancel without reporting a failure", async () => {
@@ -143,6 +216,12 @@ describe("connect attempts", () => {
     expect(deps.setConnectionError).not.toHaveBeenCalledWith(
       expect.objectContaining({ kind: "timeout" }),
     );
+
+    // The server answers after all: the user asked to stop, so it is closed.
+    pending.resolve(info(profile.id));
+    await vi.runAllTimersAsync();
+    expect(disconnect).toHaveBeenCalledWith(profile.id);
+    expect(deps.setConnectedIds).not.toHaveBeenCalled();
   });
 
   it("leaves a late connection alone when a newer attempt took over", async () => {
@@ -187,5 +266,11 @@ describe("connect attempts", () => {
     pending.resolve(info(testId));
     await vi.runAllTimersAsync();
     expect(disconnect).toHaveBeenCalledWith(testId);
+    // The failure notice was only about the wait; the host answered.
+    expect(deps.showActionNotice).toHaveBeenLastCalledWith(
+      "success",
+      "Connection test succeeded",
+      expect.stringContaining("prod - takana"),
+    );
   });
 });
