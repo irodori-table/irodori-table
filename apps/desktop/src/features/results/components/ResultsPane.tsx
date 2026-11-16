@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   ArrowDownToLine,
   ArrowUpFromLine,
+  ChartColumn,
   ChevronDown,
   Columns3,
   Copy,
@@ -17,6 +18,7 @@ import {
   Search,
   Table2,
   Undo2,
+  Waypoints,
   X,
 } from "lucide-react";
 import type { DbObjectMetadata, QueryResultSet } from "@/generated/irodori-api";
@@ -435,6 +437,7 @@ export function ResultsPane({
                   disabled={editMode}
                   onClick={() => onResultModeChange("chart")}
                 >
+                  <ChartColumn size={13} aria-hidden="true" />
                   {t("results.mode.chart")}
                 </button>
               ) : null}
@@ -445,6 +448,7 @@ export function ResultsPane({
                   aria-pressed={resultMode === "graph"}
                   onClick={() => onResultModeChange("graph")}
                 >
+                  <Waypoints size={13} aria-hidden="true" />
                   {t("results.mode.graph")}
                 </button>
               ) : null}
