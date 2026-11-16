@@ -92,6 +92,13 @@ const DockPanelContentContext = createContext<WorkbenchDockPanelContent | null>(
   null,
 );
 
+// A stable reference on purpose. DockviewReact passes any option whose
+// identity changed to `updateOptions`, which relays the grid out from the
+// proportions saved before the current sash drag. An inline `() => []` changed
+// on every render, so each re-render during a drag snapped the sidebar back to
+// its old width for a frame and the drag shook between the two.
+const noTabContextMenuItems = () => [];
+
 const dockComponents = {
   workbenchPanel: WorkbenchDockPanel,
 };
@@ -110,7 +117,10 @@ export function WorkbenchDockLayout({
   onSidebarSnapClose,
 }: WorkbenchDockLayoutProps) {
   const locale = usePreferencesStore((state) => state.locale);
-  const { t } = createTranslator(locale);
+  // createTranslator returns a new `t` per call. Every panel callback below
+  // closes over it, so an unmemoised `t` re-ran the panel sync effect on each
+  // render -- including every frame of a sash drag.
+  const { t } = useMemo(() => createTranslator(locale), [locale]);
   const apiRef = useRef<DockviewApi | null>(null);
   const readyRef = useRef(false);
   const layoutDisposableRef = useRef<Disposable | null>(null);
@@ -538,7 +548,7 @@ export function WorkbenchDockLayout({
           components={dockComponents}
           defaultTabComponent={WorkbenchDockTab}
           dndStrategy="pointer"
-          getTabContextMenuItems={() => []}
+          getTabContextMenuItems={noTabContextMenuItems}
           theme={IRODORI_DOCKVIEW_THEME}
           onReady={handleReady}
         />
