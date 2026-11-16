@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.8] - 2026-11-16
+
+Dependency and release-tooling maintenance with no intentional application
+behavior changes.
+
+### Changed
+
+- Publishing to the external APT and AUR package repositories is now opt-in
+  per stable dispatch and stays disabled unless explicitly requested (#386).
+- Updated the desktop npm dependency group, including Dockview React 8.9.0,
+  Zustand 5.1.0, Vite 8.3.8, oxfmt 0.78.0, and oxlint 1.93.0 (#388).
+- Updated the Rust dependency group, including MongoDB 3.10.1, Scylla 1.10.0
+  and Scylla CQL 3.0.0, flate2 1.1.11, and tauri-plugin-opener 2.7.3 (#389).
+- Updated the CodeQL and OpenSSF Scorecard actions to their current pinned
+  revisions (#387).
+
 ## [0.16.7] - 2026-11-14
 
 ### Fixed
