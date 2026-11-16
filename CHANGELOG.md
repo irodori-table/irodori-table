@@ -16,6 +16,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.10] - 2026-11-16
+
+### Changed
+
+- **Connect and Test stop waiting after 10 seconds, and can be cancelled.**
+  An unreachable host used to hold the dialog on "Connecting" until the
+  operating system gave up, which could take minutes. After 10 seconds without
+  an answer the dialog is free again and the error offers Retry; a **Cancel**
+  button stops waiting at once. A connection that still opens after the
+  timeout (a slow server, or a keychain prompt that took a while to answer) is
+  kept without switching away from the connection you are using; one you
+  cancelled is closed.
+
+### Fixed
+
+- Dragging the sidebar's edge resizes it smoothly again. The width jumped back
+  and forth during the drag and often snapped back to the old width on
+  release.
+- The Chart and Graph result tabs have icons like Data and Structure, so they
+  no longer look smaller than the other tabs.
+- A disabled primary button keeps a readable label, so "Connecting" no longer
+  shows as an empty box.
+
 ## [0.16.9] - 2026-11-16
 
 ### Fixed
