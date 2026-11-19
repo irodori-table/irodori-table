@@ -44,7 +44,7 @@ irodori-knowledge.workspace = true
 sql-dialect-fmt-formatter = { git = "https://github.com/hjosugi/sql-dialect-fmt", tag = "v1.29.1" }
 ts-rs = { version = "12.0.1", features = ["serde-json-impl"] }
 
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs", "io-util"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "fs", "io-util", "time"] }
 # Real connectivity for PostgreSQL, MySQL, and SQLite through one Any-driver path.
 # No TLS feature yet (local-dev first); TLS lands with the network/security work.
 # Oracle is intentionally NOT here: the plan is a pure-Rust thin TNS driver
