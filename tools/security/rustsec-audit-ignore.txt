@@ -16,6 +16,16 @@ RUSTSEC-2026-0370 zvariant via zbus 5; merged into zbus 6, no Tauri 2 release ye
 RUSTSEC-2026-0371 zbus_names via zbus 5; merged into zbus 6, no Tauri 2 release yet
 RUSTSEC-2026-0372 zvariant_derive via zbus 5; merged into zbus 6, no Tauri 2 release yet
 
+# chrono 0.4.45 is unmaintained upstream; no release is affected by a
+# vulnerability, but the advisory covers all versions. sqlx 0.9 has no release
+# that drops it yet. Remove when sqlx moves off chrono.
+RUSTSEC-2026-0543 chrono via sqlx 0.9; no sqlx release without it yet
+
+# chrono-tz 0.8 and its build crate are unmaintained; neo4rs 0.8 pins them.
+# neo4rs 0.9 moves to chrono-tz 0.10 but is still a release candidate.
+RUSTSEC-2026-0555 chrono-tz via neo4rs 0.8; 0.9 line is still a release candidate
+RUSTSEC-2026-0559 chrono-tz-build via chrono-tz 0.8; see RUSTSEC-2026-0555
+
 # Optional/database/tooling transitive crates with no compatible upstream
 # replacement in the current dependency graph.
 RUSTSEC-2024-0370 proc-macro-error via schema/codegen tooling
