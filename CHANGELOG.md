@@ -16,6 +16,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.16.11] - 2026-11-20
+
+### Fixed
+
+- **A connection attempt that cannot reach the server is abandoned after 30
+  seconds.** The dialog stopped waiting after 10 seconds, but the backend kept
+  going until the operating system's TCP timeout, about two minutes on Linux,
+  holding the socket and any SSH tunnel. Built-in engines now end the connect at
+  30 seconds — the same limit Postgres and MySQL already got from sqlx — and
+  report a retryable timeout. Keychain lookups still happen before the limit, so
+  a prompt waiting for you does not count against it. Connector extensions keep
+  their own, longer cloud handshakes, and now run them off the async workers
+  that every other backend command shares.
+
+### Security
+
+- **Updated `libz-sys` to 1.1.33.** This picks up the RUSTSEC-2026-0544 fix for
+  a heap buffer overflow in the bundled zlib, reached through the SSH tunnel
+  (`ssh2` → `libssh2-sys`).
+
 ## [0.16.10] - 2026-11-16
 
 ### Changed
