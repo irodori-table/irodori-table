@@ -1,5 +1,6 @@
+use std::future::Future;
 use std::sync::Arc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
 #[cfg(feature = "sqlserver")]
@@ -631,6 +632,45 @@ impl Connection for CassandraConnection {
     async fn close(&self) {}
 }
 
+/// How long a built-in engine may take to open its connection: the network
+/// handshake (through the SSH or proxy tunnel when there is one, which dials
+/// on this first connection), TLS, and login.
+///
+/// sqlx already gave up on Postgres and MySQL after 30 seconds, its default
+/// acquire timeout. The other drivers waited for the operating system's TCP
+/// connect timeout, about two minutes on Linux, so an unreachable host kept
+/// the attempt alive long after the dialog stopped waiting for it (the webview
+/// gives up after 10 seconds). Dropping the connect future here closes the
+/// socket instead.
+///
+/// Keychain lookups happen before this, so a prompt waiting for the user is
+/// not counted. Connector extensions are not bounded: some start a cloud
+/// warehouse on connect, which can take minutes.
+pub(crate) const CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// Give up on `connect` after `limit` with a retryable timeout error.
+async fn within_connect_timeout<T>(
+    limit: Duration,
+    connect: impl Future<Output = DbResult<T>>,
+) -> DbResult<T> {
+    tokio::time::timeout(limit, connect)
+        .await
+        .unwrap_or_else(|_| {
+            Err(DbError::timeout(format!(
+                "no response from the server within {}; check the host, port, and network or VPN",
+                describe_duration(limit)
+            )))
+        })
+}
+
+fn describe_duration(limit: Duration) -> String {
+    match limit.as_secs() {
+        0 => format!("{} ms", limit.as_millis()),
+        1 => "1 second".to_string(),
+        secs => format!("{secs} seconds"),
+    }
+}
+
 /// The single connector/registry: map an engine's wire protocol to a concrete
 /// [`Connection`]. This is the only place that knows every engine.
 pub(crate) async fn connect_engine(
@@ -642,9 +682,13 @@ pub(crate) async fn connect_engine(
     // for every catalog-backed engine; engines compiled into the desktop keep
     // their existing implementation as the fallback when no extension is
     // installed.
-    if let Some(conn) = connect_installed_extension(profile, app)? {
+    if let Some(conn) = connect_installed_extension(profile, app).await? {
         return Ok(conn);
     }
+    within_connect_timeout(CONNECT_TIMEOUT, connect_builtin_engine(profile)).await
+}
+
+async fn connect_builtin_engine(profile: &ConnectionProfile) -> DbResult<Arc<dyn Connection>> {
     let conn: Arc<dyn Connection> = match profile.engine.wire() {
         Wire::Postgres => {
             let pool = postgres::connect(&engine::build_url(profile)?).await?;
@@ -778,7 +822,7 @@ pub(crate) async fn connect_engine(
     Ok(conn)
 }
 
-fn connect_installed_extension(
+async fn connect_installed_extension(
     profile: &ConnectionProfile,
     app: Option<&tauri::AppHandle>,
 ) -> DbResult<Option<Arc<dyn Connection>>> {
@@ -801,8 +845,18 @@ fn connect_installed_extension(
     let Some(extension) = extension else {
         return Ok(None);
     };
-    let conn = extensions::NativeExtensionConnection::connect(&extension, profile)
-        .map_err(DbError::connection)?;
+    // A connector is a native library called synchronously, and its connect
+    // takes as long as the server does. Run it on the blocking pool: called
+    // inline it held one of the async workers that every other command shares
+    // for the whole handshake, so a few slow connectors could stall the
+    // backend.
+    let profile = profile.clone();
+    let conn = tokio::task::spawn_blocking(move || {
+        extensions::NativeExtensionConnection::connect(&extension, &profile)
+    })
+    .await
+    .map_err(|error| DbError::connection(format!("connector connect did not finish: {error}")))?
+    .map_err(DbError::connection)?;
     Ok(Some(Arc::new(ExtensionConn(conn))))
 }
 
@@ -834,7 +888,50 @@ fn should_seed_builtin_sample(profile: &ConnectionProfile) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{feature_required, CONNECTOR_STATUS_DOC_URL};
+    use std::time::Duration;
+
+    use irodori_error::{IrodoriError, IrodoriErrorKind};
+
+    use super::{
+        feature_required, within_connect_timeout, DbError, DbResult, CONNECTOR_STATUS_DOC_URL,
+        CONNECT_TIMEOUT,
+    };
+
+    #[test]
+    fn connect_timeout_matches_the_sqlx_engines() {
+        // Postgres and MySQL already stopped at sqlx's 30-second acquire
+        // timeout; the bound brings every built-in engine to the same limit.
+        assert_eq!(CONNECT_TIMEOUT, Duration::from_secs(30));
+    }
+
+    #[tokio::test]
+    async fn a_connect_that_never_answers_ends_as_a_retryable_timeout() {
+        let silent = std::future::pending::<DbResult<()>>();
+
+        let error = within_connect_timeout(Duration::from_millis(20), silent)
+            .await
+            .expect_err("a connect that never answers must time out");
+        let error = IrodoriError::from(error);
+
+        assert_eq!(error.kind, IrodoriErrorKind::Timeout);
+        assert!(error.retryable);
+        assert!(error.message.contains("within 20 ms"), "{}", error.message);
+    }
+
+    #[tokio::test]
+    async fn a_connect_that_answers_in_time_keeps_its_own_result() {
+        let refused = async { Err::<(), _>(DbError::connection("connection refused")) };
+
+        let error = within_connect_timeout(Duration::from_secs(5), refused)
+            .await
+            .expect_err("the driver's own error passes through");
+
+        assert_eq!(error, DbError::connection("connection refused"));
+        assert_eq!(
+            within_connect_timeout(Duration::from_secs(5), async { Ok(7) }).await,
+            Ok(7)
+        );
+    }
 
     #[test]
     fn feature_required_message_is_user_facing() {
