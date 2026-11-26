@@ -7,8 +7,6 @@ ignore = [
   { id = "RUSTSEC-2026-0371", reason = "unmaintained zbus_names 4 pulled in by zbus 5; merged into zbus 6, which has no Tauri 2 release yet" },
   { id = "RUSTSEC-2026-0372", reason = "unmaintained zvariant_derive 5 pulled in by zbus 5; merged into zbus 6, which has no Tauri 2 release yet" },
   { id = "RUSTSEC-2026-0543", reason = "unmaintained chrono pulled in by sqlx 0.9; sqlx has no release that drops it yet" },
-  { id = "RUSTSEC-2026-0555", reason = "unmaintained chrono-tz 0.8 pulled in by neo4rs 0.8; neo4rs moves to chrono-tz 0.10 only on its 0.9 release-candidate line" },
-  { id = "RUSTSEC-2026-0559", reason = "unmaintained chrono-tz-build 0.2 comes with chrono-tz 0.8 via neo4rs 0.8; see RUSTSEC-2026-0555" },
 ]
 
 [licenses]
