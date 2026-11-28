@@ -319,6 +319,10 @@ const commandTranslationKeys: Partial<Record<string, CommandTranslationKeys>> =
       title: "commands.editor.transform.uppercase.title",
       category: "commands.category.editor",
     },
+    "file.notebook": {
+      title: "commands.file.notebook.title",
+      category: "commands.category.file",
+    },
     "file.save": {
       title: "commands.file.save.title",
       category: "commands.category.file",
@@ -549,6 +553,7 @@ export const menuBarSections: AppMenuSection[] = [
     items: [
       { commandId: "tab.new" },
       { commandId: "tab.close" },
+      { commandId: "file.notebook" },
       { commandId: "file.save" },
       { commandId: "file.saveAs" },
       { commandId: "connection.manager" },

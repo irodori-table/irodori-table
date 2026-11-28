@@ -99,6 +99,7 @@ export function useWorkbenchActions({
     openQueryHistoryDialog,
     ui: {
       openPalette: overlays.openPalette,
+      openNotebook: overlays.openNotebook,
       openAbout: overlays.openAbout,
       openTool: overlays.openTool,
       openAiGenerate: overlays.openAiGenerate,

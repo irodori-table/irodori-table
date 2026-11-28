@@ -5,6 +5,7 @@ import type { SqlEditorTransformAction } from "@/sql/editor-transforms";
 type WorkbenchCommandHandlerDeps = {
   editMode: boolean;
   openPalette: () => void;
+  openNotebook: () => void;
   openSettings: () => void;
   openKeymap: () => void;
   openExtensions: () => void;
@@ -70,6 +71,7 @@ type WorkbenchCommandHandlerDeps = {
 export function createWorkbenchCommandHandler({
   editMode,
   openPalette,
+  openNotebook,
   openSettings,
   openKeymap,
   openExtensions,
@@ -208,6 +210,9 @@ export function createWorkbenchCommandHandler({
         break;
       case "file.save":
         saveQuery();
+        break;
+      case "file.notebook":
+        openNotebook();
         break;
       case "file.saveAs":
         saveQueryAs();
