@@ -58,6 +58,29 @@ pub struct SqlFileState {
     sequence: AtomicU64,
 }
 
+pub(super) fn validate_session_options(
+    options: &sqlx::sqlite::SqliteConnectOptions,
+) -> super::DbResult<()> {
+    // SQLx exposes the parsed flags via ConnectOptions::to_url_lossy. Only
+    // serialize the flags: a local filename can contain a drive letter or
+    // SQLite's special "file:" prefix and need not be a URL authority.
+    let flags = options.clone().filename("main").to_url_lossy();
+    let has = |key: &str, value: &str| flags.query_pairs().any(|(k, v)| k == key && v == value);
+    if has("mode", "ro") || has("immutable", "true") {
+        return Err(DbError::validation(
+            "SQL file jobs require a writable SQLite connection",
+        ));
+    }
+    if options.get_filename().as_os_str().is_empty()
+        || (has("mode", "memory") && has("cache", "private"))
+    {
+        return Err(DbError::validation(
+            "This SQLite database is private to the editor session. To run a file, use a database file or shared in-memory SQLite connection.",
+        ));
+    }
+    Ok(())
+}
+
 async fn target(state: &DbState, id: &str) -> Result<Arc<dyn Connection>> {
     let conn = state
         .conns
