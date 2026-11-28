@@ -1,6 +1,10 @@
 import type { DbEngine, WorkspaceSnapshot } from "@/generated/irodori-api";
 
-export type WorkspaceConnection = WorkspaceSnapshot["connections"][number];
+export type WorkspaceConnection = WorkspaceSnapshot["connections"][number] & {
+  databaseLabel?: string;
+  connectedEngine?: DbEngine;
+  connectedReadOnly?: boolean;
+};
 export type ConnectionInputMode = "url" | "fields";
 export type ConnectionTransportMode = "tcp" | "socket";
 export type ConnectionSshAuthMethod = "password" | "privateKey" | "agent";
@@ -70,6 +74,7 @@ export type ConnectionDraft = {
   database: string;
   socketPath: string;
   readOnly: boolean;
+  reviewWrites?: boolean;
   /**
    * Free-form connector settings forwarded verbatim as `ConnectionProfile.options`
    * Built-in keys are declared in builtin-engine-connection-config.json;

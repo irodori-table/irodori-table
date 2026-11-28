@@ -359,6 +359,20 @@ export function ConnectionManagerDialog({
               <strong>{t("connection.readOnly")}</strong>
             </span>
           </label>
+          <label className="connection-readonly-toggle full-row">
+            <input
+              type="checkbox"
+              checked={draft.reviewWrites === true}
+              disabled={draft.readOnly}
+              onChange={(event) =>
+                onUpdateDraft({ reviewWrites: event.currentTarget.checked })
+              }
+            />
+            <span>
+              <ShieldCheck size={14} />
+              <strong>{t("connection.reviewWrites")}</strong>
+            </span>
+          </label>
           <div className="connection-transport full-row">
             <ShieldCheck size={15} />
             <span>{t("connection.transport")}</span>

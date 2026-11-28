@@ -3,6 +3,11 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import type { ActionNotice } from "@/app/ActionToast";
+import {
+  confirmConnectionOperation,
+  writeTargetLabel,
+  type ConnectionWriteTarget,
+} from "@/features/connections/write-review";
 import type { ConfirmOptions } from "@/components/ConfirmDialog";
 import {
   buildResultGridViewModel,
@@ -20,7 +25,7 @@ import {
   type ResultGridRowOrigin,
 } from "@/features/results";
 import { writeTextToClipboard } from "@/features/erd";
-import { queryService } from "@/features/workbench";
+import { queryService, tablePreviewSql } from "@/features/workbench";
 import { type ValueUpdater, errorMessage } from "@/core";
 import type { Translator } from "@/i18n";
 import type {
@@ -68,6 +73,7 @@ export type ResultGridEditingDeps = {
   // Connection / engine context.
   activeConnectionId: string;
   activeConnectionReadOnly: boolean;
+  writeTarget: ConnectionWriteTarget;
   activeEngine: DbEngine;
   lastRunSql: string;
   metadataByConnection: Record<string, DatabaseMetadata>;
@@ -116,7 +122,7 @@ export type ResultGridEditingDeps = {
   selectedGridCopyText: () => string | null;
   copyCellsForRow: (row: ResultGridRowLike) => string[];
   activeEditorApi: () => SqlEditorHandle | null | undefined;
-  runQuery: () => Promise<void>;
+  refreshTable: (sql: string, table: DbObjectMetadata) => Promise<void>;
   showActionNotice: (
     kind: ActionNotice["kind"],
     title: string,
@@ -137,6 +143,7 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
     selectedRowValues,
     activeConnectionId,
     activeConnectionReadOnly,
+    writeTarget,
     activeEngine,
     lastRunSql,
     metadataByConnection,
@@ -172,7 +179,7 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
     selectedGridCopyText,
     copyCellsForRow,
     activeEditorApi,
-    runQuery,
+    refreshTable,
     showActionNotice,
     confirm,
     t,
@@ -606,7 +613,7 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
       return;
     }
     const target = inferEditTarget();
-    if (!target) {
+    if (!target || !tableViewObject) {
       const message = t("notice.grid.commitNoTargetDetail");
       setCommitError(message);
       showActionNotice("error", t("notice.grid.commitFailed"), message);
@@ -665,19 +672,16 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
       inserts: toCount(inserts.length),
       deletes: toCount(deletes.length),
     });
-    const confirmed = await confirm({
+    const confirmed = await confirmConnectionOperation(writeTarget, confirm, {
       title: t("results.confirmApplyEdits.title", {
         count: toCount(changeCount),
         table,
       }),
-      message:
-        deletes.length > 0
-          ? `${summary} ${t("results.confirmApplyEdits.deleteWarning")}`
-          : summary,
+      message: `${writeTargetLabel(writeTarget, t)}\n${summary}${deletes.length ? " " + t("results.confirmApplyEdits.deleteWarning") : ""}`,
       confirmLabel: t("results.confirmApplyEdits.confirm"),
       tone: deletes.length > 0 ? "danger" : "default",
     });
-    if (!confirmed) {
+    if (!confirmed || !writeTarget.isCurrent()) {
       return;
     }
 
@@ -685,10 +689,13 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
     setCommitError(null);
     try {
       await queryService.applyEdits(activeConnectionId, edits);
+      if (!writeTarget.isCurrent()) return;
       resetEdits();
       setEditMode(false);
-      // Re-run the last query so the grid shows the committed state.
-      await runQuery();
+      await refreshTable(
+        tablePreviewSql(activeEngine, tableViewObject),
+        tableViewObject,
+      );
       showActionNotice(
         "success",
         t("notice.grid.editsCommitted"),

@@ -17,6 +17,7 @@ import {
   usePendingResultChangesGuard,
   useResultGridSpillPaging,
 } from "@/app/controllers/use-result-grid-runtime";
+import type { ConnectionWriteTarget } from "@/features/connections/write-review";
 import type { ConfirmOptions } from "@/components/ConfirmDialog";
 import type { SqlEditorHandle } from "@/features/query-editor";
 import {
@@ -43,13 +44,12 @@ export type ResultGridWorkspaceDeps = {
   metadataByConnection: Record<string, DatabaseMetadata>;
   activeConnectionId: string;
   activeConnectionReadOnly: boolean;
+  writeTarget: ConnectionWriteTarget;
   activeEditorApi: () => SqlEditorHandle | null;
   // Selecting a grid row surfaces its detail in the right sidebar
   // (VS Code-style: the detail view follows the selection).
   onRowSelected?: () => void;
-  // Supplied through a deferring closure: the editor-commands hook that owns
-  // runQuery is created after this workspace because it needs activeResult.
-  runQuery: () => Promise<void>;
+  refreshTable: (sql: string, table: DbObjectMetadata) => Promise<void>;
   setQueryError: (value: unknown | null) => void;
   confirm: (options: ConfirmOptions) => Promise<boolean>;
   showActionNotice: ShowActionNotice;
@@ -67,9 +67,10 @@ export function useResultGridWorkspace({
   metadataByConnection,
   activeConnectionId,
   activeConnectionReadOnly,
+  writeTarget,
   activeEditorApi,
   onRowSelected,
-  runQuery,
+  refreshTable,
   setQueryError,
   confirm,
   showActionNotice,
@@ -341,6 +342,7 @@ export function useResultGridWorkspace({
     selectedRowValues,
     activeConnectionId,
     activeConnectionReadOnly,
+    writeTarget,
     activeEngine,
     lastRunSql,
     metadataByConnection,
@@ -376,7 +378,7 @@ export function useResultGridWorkspace({
     selectedGridCopyText,
     copyCellsForRow,
     activeEditorApi,
-    runQuery,
+    refreshTable,
     showActionNotice,
     confirm,
     t,

@@ -1,6 +1,11 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useMachine } from "@xstate/react";
 
+import {
+  reviewEditorWrite,
+  type ConnectionWriteTarget,
+} from "@/features/connections/write-review";
+import type { ConfirmOptions } from "@/components/ConfirmDialog";
 import { type ShowActionNotice } from "@/app/ActionToast";
 import {
   createQueryHistoryResultSnapshot,
@@ -69,6 +74,8 @@ export type QueryRunnerDeps = {
   queryService?: QueryService;
   activeConnectionId: string;
   activeConnectionOpen: boolean;
+  writeTarget: ConnectionWriteTarget;
+  confirm: (options: ConfirmOptions) => Promise<boolean>;
   activeConnectionReadOnly: boolean;
   activeConnectionName: string;
   activeConnectionEngine: DbEngine;
@@ -110,6 +117,8 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
     queryService = defaultQueryService,
     activeConnectionId,
     activeConnectionOpen,
+    writeTarget,
+    confirm,
     activeConnectionReadOnly,
     activeConnectionName,
     activeConnectionEngine,
@@ -160,6 +169,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
     useState<QueryParameterMemory>(loadQueryParameterMemory);
   const [pendingQueryParameters, setPendingQueryParameters] =
     useState<PendingQueryParameters | null>(null);
+  const pendingParameterRevision = useRef<number | null>(null);
   const [parameterDraftValues, setParameterDraftValues] = useState<
     Record<string, string>
   >({});
@@ -170,6 +180,16 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
       JSON.stringify(queryParameterMemory),
     );
   }, [queryParameterMemory]);
+
+  useEffect(() => {
+    setPendingQueryParameters(null);
+    setParameterDraftValues({});
+  }, [writeTarget.revision]);
+
+  async function reviewSql(sql: string, params?: QueryParameterInput[]) {
+    if (blockReadOnlySql(sql)) return false;
+    return reviewEditorWrite(writeTarget, sql, params, confirm, t);
+  }
 
   function validateSqlRun(sqlToRun: string) {
     if (!activeConnectionOpen) {
@@ -246,6 +266,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
     }
     try {
       const promptSet = await queryService.queryParameters(sqlToRun);
+      if (!writeTarget.isCurrent()) return true;
       if (promptSet.prompts.length > 0) {
         const remembered = queryParameterMemory[promptSet.signature] ?? {};
         setParameterDraftValues(
@@ -256,6 +277,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
             ]),
           ),
         );
+        pendingParameterRevision.current = writeTarget.revision;
         setPendingQueryParameters({ sql: sqlToRun, promptSet });
         setQueryError(null);
         return true;
@@ -298,9 +320,8 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
       showActionNotice("info", t("notice.query.nothingToRun"));
       return;
     }
-    if (blockReadOnlySql(sqlToRun)) {
+    if (!(await reviewSql(sqlToRun, params)) || !writeTarget.isCurrent())
       return;
-    }
     sendQueryRun({ type: "SUBMIT", sql: sqlToRun });
     setQueryError(null);
     setLastRunSql(sqlToRun);
@@ -681,7 +702,11 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
   async function submitQueryParameters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const pending = pendingQueryParameters;
-    if (!pending) {
+    if (
+      !pending ||
+      pendingParameterRevision.current !== writeTarget.revision ||
+      !writeTarget.isCurrent()
+    ) {
       return;
     }
     const values = { ...parameterDraftValues };
@@ -781,6 +806,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
 
   return {
     ...transaction,
+    reviewSql,
     running,
     pendingQueryParameters,
     parameterDraftValues,

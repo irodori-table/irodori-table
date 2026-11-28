@@ -9,7 +9,10 @@
 
 .confirm-dialog {
   width: min(460px, 92vw);
-  max-height: none;
+}
+
+.confirm-dialog:has(.sql-preview) {
+  width: min(700px, 92vw);
 }
 
 .confirm-dialog .confirm-danger-icon {

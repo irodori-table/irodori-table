@@ -1030,6 +1030,13 @@ export const en = {
   "connection.socketDirectory": "Socket directory",
   "connection.connectorSettings": "Connector settings",
   "connection.option.driverDefault": "Driver default",
+  "connection.reviewWrites": "Review writes on this connection",
+  "connection.defaultDatabase": "Connection default",
+  "query.reviewWrites.title": "Review SQL before running",
+  "query.reviewWrites.target":
+    "Connection: {name} ({id}) · Database: {database}",
+  "query.reviewWrites.confirm": "Run reviewed SQL",
+  "query.reviewWrites.parameters": "Parameters",
   "connection.readOnly": "Read-only mode",
   "connection.readOnlyBadge": "read-only",
   "connection.transport": "Transport",

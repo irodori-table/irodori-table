@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import type { ShowActionNotice } from "@/app/ActionToast";
+import { profileDatabaseLabel } from "@/features/connections/connection-transfer";
 import {
   PASSWORD_SECRET_OPTION,
   connectionAttemptTimeoutMs,
@@ -487,7 +488,12 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     );
     setLiveConnections((current) => ({
       ...current,
-      [nextConnection.id]: nextConnection,
+      [nextConnection.id]: {
+        ...nextConnection,
+        databaseLabel: profileDatabaseLabel(profile),
+        connectedEngine: info.engine,
+        connectedReadOnly: profile.readOnly,
+      },
     }));
     setConnectedIds((current) => new Set(current).add(nextConnection.id));
     if (focus === "take") {
