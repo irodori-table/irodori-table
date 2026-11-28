@@ -49,6 +49,11 @@ const QueryHistoryDialog = lazy(() =>
     default: module.QueryHistoryDialog,
   })),
 );
+const NotebookWorkbench = lazy(() =>
+  import("@/features/notebook/NotebookWorkbench").then((module) => ({
+    default: module.NotebookWorkbench,
+  })),
+);
 
 // Suspense fallback for lazy-loaded dialogs: show the scrim and a spinner
 // right away, otherwise the first open looks like the command did nothing
@@ -230,6 +235,48 @@ export function WorkbenchDialogs() {
           t={t}
         />
       ) : null}
+
+      {overlays.notebookMounted && (
+        <Suspense
+          fallback={<DialogLoadingFallback label={t("common.loading")} />}
+        >
+          <NotebookWorkbench
+            open={overlays.notebookOpen}
+            onClose={overlays.closeNotebook}
+            connections={Array.from(
+              new Set([
+                ...connections.profileById.keys(),
+                ...connections.connectedIds,
+              ]),
+              (id) => ({
+                id,
+                name:
+                  connections.profileById.get(id)?.name ||
+                  connectionById.get(id)?.name ||
+                  id,
+              }),
+            )}
+            connected={activeConnectionOpen}
+            onSelectConnection={connections.setActiveConnectionId}
+            onConnect={async () => {
+              const profile = connections.profileById.get(activeConnectionId);
+              if (profile)
+                await connections.connectionActions.connectProfile(profile);
+              else {
+                overlays.closeNotebook();
+                connections.setConnectionManagerOpen(true);
+              }
+            }}
+            execution={{
+              target: connections.activeWriteTarget,
+              reviewSql: queryRunner.reviewSql,
+              manualTransaction: queryRunner.manualTransaction,
+              refreshTransactionStatus: queryRunner.refreshTransactionStatus,
+            }}
+            t={t}
+          />
+        </Suspense>
+      )}
 
       <AiGenerateDialog
         open={overlays.aiGenerateOpen}

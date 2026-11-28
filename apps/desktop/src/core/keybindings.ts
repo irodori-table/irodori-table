@@ -91,6 +91,12 @@ export const commandCatalog: CommandMeta[] = [
     scope: "global",
   },
   {
+    id: "file.notebook",
+    title: "SQL notebooks",
+    category: "File",
+    scope: "global",
+  },
+  {
     id: "file.save",
     title: "Save",
     category: "File",

@@ -7,6 +7,7 @@ function createHandler(calls: string[]) {
     editMode: false,
     openSqlFile: () => calls.push("sql-file"),
     openPalette: () => calls.push("palette"),
+    openNotebook: () => calls.push("notebook"),
     openSettings: () => calls.push("settings"),
     openKeymap: () => calls.push("keymap"),
     openExtensions: () => calls.push("extensions"),
@@ -114,6 +115,7 @@ describe("createWorkbenchCommandHandler", () => {
     runCommand("view.zoomOut");
     runCommand("view.zoomReset");
     runCommand("tab.new");
+    runCommand("file.notebook");
     runCommand("file.save");
     runCommand("file.saveAs");
     runCommand("app.exit");
@@ -135,6 +137,7 @@ describe("createWorkbenchCommandHandler", () => {
       "zoom-out",
       "zoom-reset",
       "tab-new",
+      "notebook",
       "save",
       "save-as",
       "exit",

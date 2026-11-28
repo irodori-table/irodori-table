@@ -11,6 +11,9 @@ export function useWorkbenchOverlays() {
   const [paletteQuery, setPaletteQuery] = useState("");
   const [sqlFileOpen, setSqlFileOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [notebook, setNotebook] = useState<"unused" | "open" | "closed">(
+    "unused",
+  );
   const [activeToolCommandId, setActiveToolCommandId] = useState<string | null>(
     null,
   );
@@ -32,6 +35,10 @@ export function useWorkbenchOverlays() {
     aboutOpen,
     openAbout: () => setAboutOpen(true),
     closeAbout: () => setAboutOpen(false),
+    notebookMounted: notebook !== "unused",
+    notebookOpen: notebook === "open",
+    openNotebook: () => setNotebook("open"),
+    closeNotebook: () => setNotebook("closed"),
     activeToolCommandId,
     openTool: (commandId: string) => setActiveToolCommandId(commandId),
     closeTool: () => setActiveToolCommandId(null),

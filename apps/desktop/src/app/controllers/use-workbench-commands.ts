@@ -84,6 +84,7 @@ type WorkbenchCommandsDeps = {
   openQueryHistoryDialog: () => void;
   ui: {
     openPalette: () => void;
+    openNotebook: () => void;
     openAbout: () => void;
     openSqlFile: () => void;
     openTool: (commandId: string) => void;
@@ -129,6 +130,7 @@ export function useWorkbenchCommands({
   const runCommand = createWorkbenchCommandHandler({
     editMode: grid.editMode,
     openPalette: ui.openPalette,
+    openNotebook: ui.openNotebook,
     openSettings: () => settings.openSettingsSection("general"),
     openKeymap: () => settings.openSettingsSection("keymap"),
     openExtensions: () => settings.openSettingsSection("extensions"),
