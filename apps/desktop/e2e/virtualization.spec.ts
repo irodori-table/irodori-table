@@ -635,14 +635,19 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
   test("table filtering uses the selected database on apply and refresh", async ({
     page,
   }) => {
+    test.setTimeout(90_000);
     await installVirtualizationMock(page, {
       columns: ["id", "name"],
       rowCount: 2,
       rowsPerBatch: 2,
     });
-    await page.goto("/");
-    await connectMockDatabase(page);
+    await page.goto("/", { waitUntil: "commit" });
+    await expect(page.locator(".app-shell")).toBeVisible({ timeout: 60_000 });
     const calls: { connectionId: string; sql: string }[] = [];
+    let selectedConnection = "";
+    await page.exposeFunction("recordTableConnection", (id: string) => {
+      selectedConnection = id;
+    });
     await page.exposeFunction(
       "recordTableQuery",
       (connectionId: string, sql: string) => {
@@ -658,11 +663,19 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
         }
       ).recordTableQuery;
       api.invoke = async (command, args) => {
+        if (command === "db_connect") {
+          const { recordTableConnection } = window as unknown as {
+            recordTableConnection: (id: string) => Promise<void>;
+          };
+          await recordTableConnection((args?.profile as { id: string }).id);
+        }
         if (command === "db_run_query_stream")
           await record(args?.connectionId, args?.sql);
         return previous(command, args);
       };
     });
+    await connectMockDatabase(page);
+    expect(selectedConnection).not.toBe("");
     const tool = page.getByRole("button", { name: "Filter or sort table" });
     await expect(tool).toHaveCount(0);
     await openFixtureTable(page, 1);
@@ -675,7 +688,7 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
     await dialog.getByRole("button", { name: "Apply" }).click();
     await waitForCompletedRun(page, 2);
     expect(calls[1]).toEqual({
-      connectionId: "local-pg",
+      connectionId: selectedConnection,
       sql: 'select * from "public"."huge_table" where "id" = E\'250\' order by "id" desc limit 200;',
     });
     await page

@@ -188,6 +188,14 @@ describe("isTablePreviewSql", () => {
   });
 
   it("rejects edited SQL and other tables", () => {
+    const spaced = object({ name: "a  b" });
+    expect(
+      isTablePreviewSql(
+        "sqlite",
+        spaced,
+        tablePreviewSql("sqlite", spaced).replace("a  b", "a b"),
+      ),
+    ).toBe(false);
     expect(
       isTablePreviewSql(
         "postgres",

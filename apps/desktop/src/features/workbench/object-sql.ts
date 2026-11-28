@@ -106,7 +106,15 @@ export function isTablePreviewSql(
   sql: string,
 ): boolean {
   const normalize = (text: string) =>
-    text.trim().replace(/;+$/, "").replace(/\s+/g, " ").trim();
+    text
+      .trim()
+      .replace(/;+$/, "")
+      .replace(
+        /("(?:[^"]|"")*"|`(?:[^`]|``)*`|'(?:[^']|'')*')|\s+/g,
+        (match, quoted: string | undefined) =>
+          quoted === undefined ? " " : match,
+      )
+      .trim();
   return normalize(sql) === normalize(tablePreviewSql(engine, object));
 }
 
