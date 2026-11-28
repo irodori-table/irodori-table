@@ -90,6 +90,8 @@ export function CommandPalette({
             event.preventDefault();
             setActiveIndex(Math.max(0, commands.length - 1));
           } else if (event.key === "Enter") {
+            // The command may immediately focus a button in a new dialog.
+            event.preventDefault();
             runCommand(commands[highlightedIndex]);
           }
         }}
