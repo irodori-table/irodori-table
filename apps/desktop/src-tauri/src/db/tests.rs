@@ -684,6 +684,98 @@ async fn stream_query_stops_on_a_cancelled_token() {
 }
 
 #[tokio::test]
+async fn sqlite_exact_integers_survive_stream_paging_and_targeted_edits() {
+    use serde_json::json;
+
+    let state = DbState::default();
+    let id = "exact_integers";
+    connect_impl(
+        &state,
+        &SecurityState::default(),
+        None,
+        temp_sqlite_profile(id),
+    )
+    .await
+    .unwrap();
+    for sql in [
+        "CREATE TABLE t (id INTEGER PRIMARY KEY, note TEXT)",
+        "INSERT INTO t (id) VALUES (-9223372036854775808),(-9007199254740992),(-9007199254740991),(9007199254740991),(9007199254740992),(9007199254740993),(9223372036854775807)",
+    ] {
+        run_query_impl(&state, id.into(), sql.into(), None).await.unwrap();
+    }
+    let expected = vec![
+        json!("-9223372036854775808"),
+        json!("-9007199254740992"),
+        json!(-9_007_199_254_740_991_i64),
+        json!(9_007_199_254_740_991_i64),
+        json!("9007199254740992"),
+        json!("9007199254740993"),
+        json!("9223372036854775807"),
+    ];
+    let sql = "SELECT id FROM t ORDER BY id";
+    let (tx, mut rx) = mpsc::channel(16);
+    run_query_stream_impl(&state, id.into(), sql.into(), None, None, None, tx)
+        .await
+        .unwrap();
+    let mut streamed = Vec::new();
+    while let Some(event) = rx.recv().await {
+        if let stream::FetchEvent::Rows { rows, .. } = event {
+            streamed.extend(rows.into_iter().map(|row| row[0].clone()));
+        }
+    }
+    assert_eq!(streamed, expected);
+
+    let config = SpillConfig {
+        memory_budget: 1,
+        offload_enabled: true,
+        max_total_rows: MAX_SPILL_ROWS,
+    };
+    let (tx, _rx) = mpsc::channel(16);
+    let result = run_query_spill_impl(&state, id.into(), sql.into(), config, None, None, None, tx)
+        .await
+        .unwrap();
+    let page = result_window_impl(&state, result.handle, 0, 7)
+        .await
+        .unwrap();
+    assert_eq!(
+        page.rows.iter().map(|r| &r[0]).collect::<Vec<_>>(),
+        expected.iter().collect::<Vec<_>>()
+    );
+    let edits = TableEdits {
+        schema: None,
+        table: "t".into(),
+        updates: vec![RowUpdate {
+            keys: vec![CellValue {
+                column: "id".into(),
+                value: page.rows[5][0].clone(),
+            }],
+            set: vec![CellValue {
+                column: "note".into(),
+                value: json!("edited"),
+            }],
+        }],
+        inserts: vec![],
+        deletes: vec![],
+    };
+    assert_eq!(
+        apply_edits_impl(&state, id.into(), edits)
+            .await
+            .unwrap()
+            .updated,
+        1
+    );
+    let edited = run_query_impl(
+        &state,
+        id.into(),
+        "SELECT id FROM t WHERE note = 'edited'".into(),
+        None,
+    )
+    .await
+    .unwrap();
+    assert_eq!(edited.rows, vec![vec![json!("9007199254740993")]]);
+}
+
+#[tokio::test]
 async fn apply_edits_commits_update_insert_delete() {
     let state = DbState::default();
     connect_impl(

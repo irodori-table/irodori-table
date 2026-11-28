@@ -610,7 +610,15 @@ fn cell_to_json(row: &SqliteRow, i: usize) -> serde_json::Value {
         return Value::Null;
     }
     row.try_get::<i64, _>(i)
-        .map(Value::from)
+        .map(|integer| {
+            // JSON numbers are read as IEEE-754 doubles in the webview.
+            const JS_MAX_SAFE_INTEGER: i64 = (1_i64 << 53) - 1;
+            if (-JS_MAX_SAFE_INTEGER..=JS_MAX_SAFE_INTEGER).contains(&integer) {
+                Value::from(integer)
+            } else {
+                Value::String(integer.to_string())
+            }
+        })
         .or_else(|_| row.try_get::<f64, _>(i).map(Value::from))
         .or_else(|_| row.try_get::<String, _>(i).map(Value::String))
         .or_else(|_| {

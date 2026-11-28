@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { formatResultGridTsvRow } from "@/features/results/result-grid";
+import { formatResultGridCell } from "@/features/results/result-view-model";
 import {
   buildResultExport,
   resultExportFileName,
@@ -17,6 +19,23 @@ const result: ResultLike = {
 };
 
 describe("result exports", () => {
+  it("copies and exports exact decimal strings received from SQLite", () => {
+    const keys = [
+      "-9223372036854775808",
+      "-9007199254740992",
+      "9007199254740992",
+      "9007199254740993",
+      "9223372036854775807",
+    ];
+    const rows = keys.map((key) => [key]);
+    expect(
+      rows.map((row) => formatResultGridTsvRow(row.map(formatResultGridCell))),
+    ).toEqual(keys);
+    expect(buildResultExport({ columns: ["id"], rows }, "csv").content).toBe(
+      ["id", ...keys].join("\r\n"),
+    );
+  });
+
   it("advertises the implemented export formats", () => {
     expect(resultExportFormats.map(({ id, label }) => [id, label])).toEqual([
       ["csv", "CSV"],
