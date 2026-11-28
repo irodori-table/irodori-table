@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { openSqliteFixture } from "@/tests/helpers/sqlite-fixture";
 import {
   isTablePreviewSql,
   objectKindLabel,
   qualifiedObjectName,
   tablePreviewSql,
+  tableBrowseKey,
+  unfilteredTable,
 } from "@/features/workbench/object-sql";
 import type { DbObjectMetadata } from "@/generated/irodori-api";
 
@@ -21,6 +24,74 @@ function object(partial: Partial<DbObjectMetadata>): DbObjectMetadata {
 }
 
 describe("workbench object SQL helpers", () => {
+  it("filters and sorts all SQLite rows before the preview limit", async () => {
+    const db = await openSqliteFixture();
+    try {
+      db.exec(
+        'CREATE TABLE "odd""table"(id INTEGER PRIMARY KEY, "user name" TEXT); WITH RECURSIVE n(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM n WHERE i<250) INSERT INTO "odd""table"(id) SELECT i FROM n;',
+      );
+      db.exec(
+        'UPDATE "odd""table" SET "user name" = \'O\'\'Brien\' WHERE id = 250',
+      );
+      const source = object({
+        schema: "main",
+        name: 'odd"table',
+        columns: ["id", "user name"].map((name, i) => ({
+          name,
+          dataType: "TEXT",
+          nullable: true,
+          ordinal: i + 1,
+        })),
+      });
+      function read(options: typeof unfilteredTable) {
+        return db
+          .prepare(tablePreviewSql("sqlite", source, options))
+          .all() as Array<{ id: number }>;
+      }
+      expect(
+        read({ ...unfilteredTable, column: "id", value: "250" }).map(
+          (r) => r.id,
+        ),
+      ).toEqual([250]);
+      expect(
+        read({ ...unfilteredTable, sortColumn: "id", direction: "desc" })[0].id,
+      ).toBe(250);
+      expect(
+        read({ ...unfilteredTable, column: "user name", value: "O'Brien" }).map(
+          (r) => r.id,
+        ),
+      ).toEqual([250]);
+      expect(
+        read({
+          ...unfilteredTable,
+          column: "user name",
+          operator: "IS NULL",
+          sortColumn: "id",
+          direction: "desc",
+        })[0].id,
+      ).toBe(249);
+      expect(read(unfilteredTable)).toHaveLength(200);
+      expect(tableBrowseKey("local", source)).not.toBe(
+        tableBrowseKey("staging", source),
+      );
+      expect(
+        tablePreviewSql("postgres", source, {
+          ...unfilteredTable,
+          column: "user name",
+          value: "O'Brien",
+        }),
+      ).toContain("E'O''Brien'");
+      expect(
+        tablePreviewSql("mysql", source, {
+          ...unfilteredTable,
+          column: "user name",
+          value: "O'Brien",
+        }),
+      ).toContain("CONVERT(X'4f27427269656e' USING utf8mb4)");
+    } finally {
+      db.close();
+    }
+  });
   it("quotes object names for the active engine", () => {
     expect(qualifiedObjectName("postgres", object({}))).toBe(
       '"public"."customers"',

@@ -632,6 +632,68 @@ async function expectLogicalFixtureStayedLazy(
 test.describe("Result Grid Virtualization and Sticky Gutter", () => {
   test.describe.configure({ mode: "serial" });
 
+  test("table filtering uses the selected database on apply and refresh", async ({
+    page,
+  }) => {
+    await installVirtualizationMock(page, {
+      columns: ["id", "name"],
+      rowCount: 2,
+      rowsPerBatch: 2,
+    });
+    await page.goto("/");
+    await connectMockDatabase(page);
+    const calls: { connectionId: string; sql: string }[] = [];
+    await page.exposeFunction(
+      "recordTableQuery",
+      (connectionId: string, sql: string) => {
+        calls.push({ connectionId, sql });
+      },
+    );
+    await page.evaluate(() => {
+      const api = window.__TAURI_INTERNALS__!;
+      const previous = api.invoke;
+      const record = (
+        window as unknown as {
+          recordTableQuery: (id: unknown, sql: unknown) => Promise<void>;
+        }
+      ).recordTableQuery;
+      api.invoke = async (command, args) => {
+        if (command === "db_run_query_stream")
+          await record(args?.connectionId, args?.sql);
+        return previous(command, args);
+      };
+    });
+    const tool = page.getByRole("button", { name: "Filter or sort table" });
+    await expect(tool).toHaveCount(0);
+    await openFixtureTable(page, 1);
+    await tool.click();
+    const dialog = page.getByRole("dialog", { name: "Filter or sort table" });
+    await dialog.getByLabel("Filter column").selectOption("id");
+    await dialog.getByLabel("Value").fill("250");
+    await dialog.getByLabel("Sort column").selectOption("id");
+    await dialog.getByLabel("Direction").selectOption("desc");
+    await dialog.getByRole("button", { name: "Apply" }).click();
+    await waitForCompletedRun(page, 2);
+    expect(calls[1]).toEqual({
+      connectionId: "local-pg",
+      sql: 'select * from "public"."huge_table" where "id" = E\'250\' order by "id" desc limit 200;',
+    });
+    await page
+      .getByRole("button", { name: "Run Current", exact: true })
+      .click();
+    await waitForCompletedRun(page, 3);
+    expect(calls[2]).toEqual(calls[1]);
+    await tool.click();
+    await dialog.getByRole("button", { name: "Clear" }).click();
+    await waitForCompletedRun(page, 4);
+    expect(calls[3]).toEqual(calls[0]);
+    await replaceEditorText(page, "select id from huge_table;");
+    await expect(tool).toHaveCount(0);
+    await expect(
+      page.getByRole("textbox", { name: "Quick filter displayed rows" }),
+    ).toBeVisible();
+  });
+
   test("virtualization limits DOM nodes and handles large scrolling", async ({
     page,
   }) => {

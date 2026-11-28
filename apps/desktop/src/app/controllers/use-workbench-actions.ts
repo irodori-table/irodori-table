@@ -150,7 +150,7 @@ export function useWorkbenchActions({
     workspace,
     cancelQuery: queryRunner.cancelQuery,
   });
-  const resultGridController = grid.buildResultGridController({
+  const resultGridProps = grid.buildResultGridController({
     running: queryRunner.running,
     queryError,
     importFileRef,
@@ -165,7 +165,10 @@ export function useWorkbenchActions({
     runCommand,
     closeTransientOverlaysFromEscape,
     queryEditorController,
-    resultGridController,
+    resultGridController: {
+      ...resultGridProps,
+      databaseBrowse: queryWorkspace.databaseBrowse,
+    },
   };
 }
 

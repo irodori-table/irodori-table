@@ -44,6 +44,10 @@ import type { ChartResultModel } from "../chart-result";
 import type { GraphResultModel } from "../graph-result";
 import { ResultBody } from "./ResultBody";
 import { ResultFilterPanel } from "./ResultFilterPanel";
+import {
+  DatabaseTableFilter,
+  type DatabaseBrowseControl,
+} from "./DatabaseTableFilter";
 import type { ShortcutTip } from "@/components/ShortcutTips";
 import type {
   EditingCell,
@@ -138,6 +142,7 @@ export type ResultsPaneGridGeometry = {
 };
 
 type ResultsPaneProps = {
+  databaseBrowse?: DatabaseBrowseControl;
   running: boolean;
   readOnly: boolean;
   tableViewObject: DbObjectMetadata | null;
@@ -202,6 +207,7 @@ function usePersistedResultFormat(
 }
 
 export function ResultsPane({
+  databaseBrowse,
   running,
   readOnly,
   tableViewObject,
@@ -502,6 +508,14 @@ export function ResultsPane({
           </span>
         </div>
         <div className="results-actions">
+          {databaseBrowse && (
+            <DatabaseTableFilter
+              key={databaseBrowse.key}
+              browse={databaseBrowse}
+              disabled={running || committing || pendingCount > 0}
+              t={t}
+            />
+          )}
           <label className="result-quick-filter">
             <Search size={13} />
             <input

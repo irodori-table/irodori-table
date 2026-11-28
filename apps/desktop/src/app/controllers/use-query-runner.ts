@@ -45,6 +45,11 @@ import type {
 } from "@/generated/irodori-api";
 import { sqlMayWrite } from "@/sql/read-only";
 import {
+  tableBrowseKey,
+  tablePreviewSql,
+  type TableBrowse,
+} from "@/features/workbench/object-sql";
+import {
   RESULT_WINDOW_MAX_RESIDENT_PAGES,
   RESULT_WINDOW_PAGE_SIZE,
   tauriRuntimeError,
@@ -62,9 +67,12 @@ export type RunEditorSqlOptions = {
 
 export type ExecuteQueryOptions = {
   sourceObject?: DbObjectMetadata;
+  tableBrowse?: TableBrowse;
 };
 
 export type QueryRunnerDeps = {
+  activeTableObject?: DbObjectMetadata | null;
+  tableViews?: Readonly<Record<string, TableBrowse>>;
   queryService?: QueryService;
   activeConnectionId: string;
   activeConnectionOpen: boolean;
@@ -272,6 +280,18 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
     params?: QueryParameterInput[],
     options: ExecuteQueryOptions = {},
   ) {
+    const candidate =
+      "sourceObject" in options ? options.sourceObject : deps.activeTableObject;
+    const source =
+      candidate && isTablePreviewSql(activeEngine, candidate, sqlToRun)
+        ? candidate
+        : null;
+    if (source) {
+      const browse =
+        options.tableBrowse ??
+        deps.tableViews?.[tableBrowseKey(activeConnectionId, source)];
+      if (browse) sqlToRun = tablePreviewSql(activeEngine, source, browse);
+    }
     if (!activeConnectionOpen) {
       const message = t("notice.query.notConnectedDetail", {
         id: activeConnectionId,
@@ -301,13 +321,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
     // A run of a table tab's untouched preview stays that table's data, the
     // only result rows can be written back from, whether it came from the
     // sidebar, Ctrl+Enter or the refresh after saving. Any other SQL is not.
-    setTableViewObject(
-      (current) =>
-        options.sourceObject ??
-        (current && isTablePreviewSql(activeEngine, current, sqlToRun)
-          ? current
-          : null),
-    );
+    setTableViewObject(source);
     setActiveResultIndex(0);
     resetEdits();
     resetGridView();

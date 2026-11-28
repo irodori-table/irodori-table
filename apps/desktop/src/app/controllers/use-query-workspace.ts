@@ -1,4 +1,13 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { tableTabId } from "@/app/editor-tabs";
+import {
+  isTablePreviewSql,
+  supportsTableBrowse,
+  tableBrowseKey,
+  tablePreviewSql,
+  unfilteredTable,
+  type TableBrowse,
+} from "@/features/workbench/object-sql";
 import type { ShowActionNotice } from "@/app/ActionToast";
 import { useEditorCommands } from "@/app/controllers/use-editor-commands";
 import type { EditorWorkspace } from "@/app/controllers/use-editor-workspace";
@@ -53,6 +62,21 @@ export function useQueryWorkspace({
     connectionActions,
   } = connections;
   const { query, setQuery, activeEditorApi } = editor;
+  const [tableViews, setTableViews] = useState<Record<string, TableBrowse>>({});
+  const groups = editor.editorGroups;
+  const activeTabId =
+    groups.editorGroupStates[groups.activeEditorGroup].activeTabId;
+  const activeTableObject = useMemo(() => {
+    if (!activeTabId.startsWith("table:")) return null;
+    const matches = activeMetadata?.schemas.flatMap((schema) =>
+      schema.objects.filter(
+        (object) =>
+          (object.kind === "table" || object.kind === "view") &&
+          tableTabId(object.schema, object.name) === activeTabId,
+      ),
+    );
+    return matches?.length === 1 ? matches[0] : null;
+  }, [activeMetadata, activeTabId]);
   const uiZoom = usePreferencesStore((state) => state.uiZoom);
   const formatter = usePreferencesStore((state) => state.formatter);
   const appendHistory = useQueryHistoryStore((state) => state.append);
@@ -95,6 +119,8 @@ export function useQueryWorkspace({
   });
 
   const queryRunner = useQueryRunner({
+    activeTableObject,
+    tableViews,
     activeConnectionId,
     activeConnectionOpen,
     activeConnectionReadOnly,
@@ -159,6 +185,29 @@ export function useQueryWorkspace({
   });
   editorCommandsRef.current = { runQuery: editorCommands.runQuery };
 
+  const browseKey =
+    activeTableObject && tableBrowseKey(activeConnectionId, activeTableObject);
+  const databaseBrowse =
+    activeConnectionOpen &&
+    activeTableObject &&
+    browseKey &&
+    supportsTableBrowse(activeEngine) &&
+    isTablePreviewSql(activeEngine, activeTableObject, query)
+      ? {
+          key: browseKey,
+          object: activeTableObject,
+          options: tableViews[browseKey] ?? unfilteredTable,
+          apply: async (next: TableBrowse) => {
+            setTableViews((current) => ({ ...current, [browseKey]: next }));
+            await queryRunner.executeQuery(
+              tablePreviewSql(activeEngine, activeTableObject),
+              undefined,
+              { sourceObject: activeTableObject, tableBrowse: next },
+            );
+          },
+        }
+      : undefined;
+
   const historyActions = useHistoryActions({
     activeConnectionId,
     setActiveConnectionId,
@@ -184,6 +233,7 @@ export function useQueryWorkspace({
 
   return {
     grid,
+    databaseBrowse,
     queryRunner,
     editorCommands,
     historyActions,

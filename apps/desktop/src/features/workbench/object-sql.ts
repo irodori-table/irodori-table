@@ -31,6 +31,57 @@ export function qualifiedObjectName(
 
 const PREVIEW_ROWS = 200;
 
+export const tableFilterOperators = [
+  "=",
+  "<>",
+  "<",
+  "<=",
+  ">",
+  ">=",
+  "IS NULL",
+  "IS NOT NULL",
+] as const;
+export type TableBrowse = {
+  column: string;
+  operator: (typeof tableFilterOperators)[number];
+  value: string;
+  sortColumn: string;
+  direction: "asc" | "desc";
+};
+export const unfilteredTable: TableBrowse = {
+  column: "",
+  operator: "=",
+  value: "",
+  sortColumn: "",
+  direction: "asc",
+};
+
+export function supportsTableBrowse(engine: DbEngine) {
+  return (
+    engine === "sqlite" ||
+    engine === "postgres" ||
+    engine === "mysql" ||
+    engine === "mariadb"
+  );
+}
+
+export function tableBrowseKey(connection: string, object: DbObjectMetadata) {
+  return JSON.stringify([connection, object.schema, object.name]);
+}
+
+function previewValueSql(engine: DbEngine, value: string): string {
+  const quoted = "'" + value.replace(/'/g, "''") + "'";
+  if (engine === "mysql" || engine === "mariadb") {
+    // Hex avoids the session-dependent interpretation of backslashes in MySQL.
+    const hex = Array.from(new TextEncoder().encode(value), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+    return "CONVERT(X'" + hex + "' USING utf8mb4)";
+  }
+  // E strings have the same meaning under both PostgreSQL string modes.
+  return engine === "postgres" ? "E" + quoted.replace(/\\/g, "\\\\") : quoted;
+}
+
 /**
  * Preview an object's contents in the language its connector actually speaks.
  *
@@ -59,7 +110,34 @@ export function isTablePreviewSql(
   return normalize(sql) === normalize(tablePreviewSql(engine, object));
 }
 
-export function tablePreviewSql(engine: DbEngine, object: DbObjectMetadata) {
+export function tablePreviewSql(
+  engine: DbEngine,
+  object: DbObjectMetadata,
+  browse?: TableBrowse,
+) {
+  if (browse && supportsTableBrowse(engine)) {
+    const columns = new Set(object.columns.map(({ name }) => name));
+    let sql = "select * from " + qualifiedObjectName(engine, object);
+    if (
+      columns.has(browse.column) &&
+      tableFilterOperators.includes(browse.operator)
+    ) {
+      sql +=
+        " where " +
+        quoteSqlIdentifier(engine, browse.column) +
+        " " +
+        browse.operator;
+      if (!browse.operator.startsWith("IS "))
+        sql += " " + previewValueSql(engine, browse.value);
+    }
+    if (columns.has(browse.sortColumn)) {
+      sql +=
+        " order by " +
+        quoteSqlIdentifier(engine, browse.sortColumn) +
+        (browse.direction === "desc" ? " desc" : " asc");
+    }
+    return sql + " limit " + PREVIEW_ROWS + ";";
+  }
   switch (engine) {
     // PartiQL: the table stands alone and the cap is not part of the statement.
     case "dynamodb":
