@@ -13,7 +13,7 @@ use super::query::{
 };
 use super::result_spill_manager::ResultEntry;
 use super::spill::{ResultStore, SpillConfig};
-use super::state::{ensure_connection_can_run_sql, MAX_RETAINED_RESULTS};
+use super::state::MAX_RETAINED_RESULTS;
 use super::{
     stream, DbState, QueryPlanAnalysis, QueryPlanMode, QueryResult, ResultWindow, SpillRunResult,
     DEFAULT_MAX_ROWS, MAX_RESULT_ROWS, MAX_SPILL_ROWS, MAX_SQL_BYTES, STREAM_BATCH_ROWS,
@@ -65,17 +65,14 @@ pub async fn run_query_with_params_impl(
         )));
     }
     // Clone the handle out of the lock so the query does not hold the mutex.
-    let conn = {
-        let guard = state.conns.lock().await;
-        guard
-            .get(&connection_id)
-            .cloned()
-            .ok_or_else(|| DbError::not_found(format!("no open connection: {connection_id}")))?
-    };
-    ensure_connection_can_run_sql(state, &connection_id, &sql).await?;
+    let options = options.into();
+    let conn = state.conns.lock().await.for_request(
+        &connection_id,
+        options.session_id.as_deref(),
+        sql_may_write(&sql),
+    )?;
 
     let cap = bounded_query_cap(max_rows)?;
-    let options = options.into();
     let prepared = prepare_query(conn.wire(), &sql, options.params.as_deref())?;
     let metadata_sql = prepared.sql.clone();
     let start = Instant::now();
@@ -301,15 +298,12 @@ pub(crate) async fn run_query_stream_capped_impl(
             "query text must be at most {MAX_SQL_BYTES} bytes"
         )));
     }
-    let conn = {
-        let guard = state.conns.lock().await;
-        guard
-            .get(&connection_id)
-            .cloned()
-            .ok_or_else(|| DbError::not_found(format!("no open connection: {connection_id}")))?
-    };
-    ensure_connection_can_run_sql(state, &connection_id, &sql).await?;
     let options = options.into();
+    let conn = state.conns.lock().await.for_request(
+        &connection_id,
+        options.session_id.as_deref(),
+        sql_may_write(&sql),
+    )?;
     let prepared = prepare_query(conn.wire(), &sql, options.params.as_deref())?;
     let metadata_sql = prepared.sql.clone();
 

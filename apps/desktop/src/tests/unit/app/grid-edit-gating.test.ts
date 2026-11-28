@@ -56,6 +56,7 @@ function editing(overrides: Partial<ResultGridEditingDeps>) {
     resultColumns: ["id", "kind"],
     activeConnectionId: "local",
     writeTarget: {
+      sessionId: "session-1",
       id: "local",
       name: "Staging",
       database: "audit_stage",
@@ -185,6 +186,7 @@ describe("saving edits", () => {
     expect(apply).toHaveBeenCalledWith(
       "local",
       expect.objectContaining({ table: "memories" }),
+      "session-1",
     );
   });
 

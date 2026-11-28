@@ -8,6 +8,7 @@ export type ConnectionWriteTarget = {
   id: string;
   name: string;
   database: string;
+  sessionId?: string;
   reviewWrites: boolean;
   revision: number;
   isCurrent: () => boolean;

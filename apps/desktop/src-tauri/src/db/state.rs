@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
@@ -12,7 +12,7 @@ use super::connection::Connection;
 use super::error::{DbError, DbResult};
 use super::meta::convert_metadata_to_snapshot;
 use super::metadata_manager::MetadataManager;
-use super::query::{sql_may_change_metadata, sql_may_write};
+use super::query::sql_may_change_metadata;
 use super::query_executor::QueryExecutor;
 use super::result_spill_manager::{ResultEntry, ResultSpillManager};
 use super::DatabaseMetadata;
@@ -22,11 +22,75 @@ use crate::jobs::JobState;
 /// (closing its temp file). One per recent run/tab is plenty.
 pub(super) const MAX_RETAINED_RESULTS: usize = 16;
 
+#[derive(Default)]
+pub(super) struct OpenConnections {
+    next_session: u64,
+    entries: HashMap<String, OpenConnection>,
+}
+
+struct OpenConnection {
+    session: String,
+    read_only: bool,
+    driver: Arc<dyn Connection>,
+}
+
+impl OpenConnections {
+    pub(super) fn insert(
+        &mut self,
+        id: String,
+        driver: Arc<dyn Connection>,
+        read_only: bool,
+    ) -> (String, Option<Arc<dyn Connection>>) {
+        self.next_session += 1;
+        let session = self.next_session.to_string();
+        let old = self.entries.insert(
+            id,
+            OpenConnection {
+                session: session.clone(),
+                read_only,
+                driver,
+            },
+        );
+        (session, old.map(|entry| entry.driver))
+    }
+
+    pub(super) fn get(&self, id: &str) -> Option<&Arc<dyn Connection>> {
+        self.entries.get(id).map(|entry| &entry.driver)
+    }
+
+    pub(super) fn remove(&mut self, id: &str) -> Option<Arc<dyn Connection>> {
+        self.entries.remove(id).map(|entry| entry.driver)
+    }
+
+    /// Check the reviewed session and retain its driver under the same lock.
+    pub(super) fn for_request(
+        &self,
+        id: &str,
+        expected: Option<&str>,
+        write: bool,
+    ) -> DbResult<Arc<dyn Connection>> {
+        let entry = self
+            .entries
+            .get(id)
+            .ok_or_else(|| DbError::not_found(format!("no open connection: {id}")))?;
+        if expected.is_some_and(|expected| expected != entry.session) {
+            return Err(DbError::validation(
+                "connection session changed; review the operation again",
+            ));
+        }
+        if entry.read_only && write {
+            return Err(DbError::validation(
+                "read-only connection: write operations are blocked",
+            ));
+        }
+        Ok(entry.driver.clone())
+    }
+}
+
 /// Open connections keyed by connection id. Lives in Tauri managed state.
 #[derive(Clone)]
 pub struct DbState {
-    pub(super) conns: Arc<Mutex<HashMap<String, Arc<dyn Connection>>>>,
-    pub(super) read_only_connections: Arc<Mutex<HashSet<String>>>,
+    pub(super) conns: Arc<Mutex<OpenConnections>>,
     /// In-flight cancellable queries keyed by a caller-supplied `query_id`, so
     /// `db_cancel` can stop a specific run. Entries are removed when the run ends.
     pub(super) cancels: Arc<Mutex<HashMap<String, CancellationToken>>>,
@@ -44,8 +108,7 @@ pub struct DbState {
 impl Default for DbState {
     fn default() -> Self {
         Self {
-            conns: Arc::new(Mutex::new(HashMap::new())),
-            read_only_connections: Arc::new(Mutex::new(HashSet::new())),
+            conns: Default::default(),
             cancels: Arc::new(Mutex::new(HashMap::new())),
             metadata_cache: Arc::new(Mutex::new(MetadataCache::new())),
             metadata_generation: Arc::new(AtomicU64::new(0)),
@@ -69,31 +132,6 @@ impl DbState {
     pub(crate) fn result_spill_manager(&self) -> ResultSpillManager<'_> {
         ResultSpillManager::new(self)
     }
-}
-
-pub(super) async fn ensure_connection_can_run_sql(
-    state: &DbState,
-    connection_id: &str,
-    sql: &str,
-) -> DbResult<()> {
-    if !sql_may_write(sql) || !is_connection_read_only(state, connection_id).await {
-        return Ok(());
-    }
-    Err(DbError::validation(
-        "read-only connection: write statements are blocked",
-    ))
-}
-
-pub(super) async fn ensure_connection_writable(
-    state: &DbState,
-    connection_id: &str,
-) -> DbResult<()> {
-    if is_connection_read_only(state, connection_id).await {
-        return Err(DbError::validation(
-            "read-only connection: write operations are blocked",
-        ));
-    }
-    Ok(())
 }
 
 pub(super) fn trigger_background_refresh(state: DbState, connection_id: String) {
@@ -250,14 +288,6 @@ pub(super) async fn refresh_metadata_after_mutation(state: &DbState, connection_
         .await
         .invalidate_connection(connection_id);
     trigger_background_refresh(state.clone(), connection_id.to_string());
-}
-
-async fn is_connection_read_only(state: &DbState, connection_id: &str) -> bool {
-    state
-        .read_only_connections
-        .lock()
-        .await
-        .contains(connection_id)
 }
 
 fn bump_metadata_generation(state: &DbState) {

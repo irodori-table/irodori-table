@@ -114,10 +114,7 @@ pub use runner::{
 pub(crate) use runner::{run_query_stream_impl, with_timeout};
 pub use spill::SpillConfig;
 pub use state::DbState;
-use state::{
-    ensure_connection_writable, metadata_generation, trigger_background_refresh,
-    upsert_metadata_snapshot_if_current,
-};
+use state::{metadata_generation, trigger_background_refresh, upsert_metadata_snapshot_if_current};
 
 /// Default page size when the caller does not pass `max_rows`. Keeps memory
 /// bounded so a `select *` over a 10M-row table cannot exhaust RAM (the
@@ -153,6 +150,9 @@ pub(crate) fn audited_sql(sql: &str) -> sqlx::AssertSqlSafe<&str> {
 #[ts(rename_all = "camelCase")]
 pub struct ConnectionInfo {
     pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub session_id: Option<String>,
     pub engine: DbEngine,
     pub server_version: String,
 }
@@ -201,19 +201,14 @@ pub async fn connect_impl(
     let server_version = conn.version().await.unwrap_or_else(|| "unknown".into());
     let connection_id = profile.id.clone();
     let read_only = profile.read_only;
-    let old = state.conns.lock().await.insert(connection_id.clone(), conn);
+    let (session_id, old) = state
+        .conns
+        .lock()
+        .await
+        .insert(connection_id.clone(), conn, read_only);
     if let Some(old) = old {
         old.close().await;
     }
-    {
-        let mut read_only_connections = state.read_only_connections.lock().await;
-        if read_only {
-            read_only_connections.insert(connection_id.clone());
-        } else {
-            read_only_connections.remove(&connection_id);
-        }
-    }
-
     if let Some(cancel_token) = resolved_tunnel {
         let old = state
             .tunnels
@@ -230,6 +225,7 @@ pub async fn connect_impl(
 
     Ok(ConnectionInfo {
         id: connection_id,
+        session_id: Some(session_id),
         engine: profile.engine,
         server_version,
     })
@@ -281,18 +277,24 @@ pub async fn apply_edits_impl(
     connection_id: String,
     edits: TableEdits,
 ) -> DbResult<AppliedEdits> {
+    apply_edits_to_session(state, connection_id, edits, None).await
+}
+
+async fn apply_edits_to_session(
+    state: &DbState,
+    connection_id: String,
+    edits: TableEdits,
+    session_id: Option<&str>,
+) -> DbResult<AppliedEdits> {
     let connection_id = connection_id.trim().to_string();
     if connection_id.is_empty() {
         return Err(DbError::validation("connection id is required"));
     }
-    ensure_connection_writable(state, &connection_id).await?;
-    let conn = {
-        let guard = state.conns.lock().await;
-        guard
-            .get(&connection_id)
-            .cloned()
-            .ok_or_else(|| DbError::not_found(format!("no open connection: {connection_id}")))?
-    };
+    let conn = state
+        .conns
+        .lock()
+        .await
+        .for_request(&connection_id, session_id, true)?;
     conn.apply_edits(&edits).await
 }
 
@@ -307,11 +309,6 @@ pub async fn disconnect_impl(state: &DbState, connection_id: String) -> DbResult
     if let Some(cancel_token) = state.tunnels.lock().await.remove(&connection_id) {
         cancel_token.cancel();
     }
-    state
-        .read_only_connections
-        .lock()
-        .await
-        .remove(&connection_id);
     state
         .result_spill_manager()
         .release_for_connection(&connection_id)

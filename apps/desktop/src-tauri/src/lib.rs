@@ -287,7 +287,8 @@ mod typegen {
                     .arg(Arg::rust("timeout_ms", TsType::number()).optional())
                     .arg(Arg::rust("query_id", TsType::string()).optional())
                     .arg(Arg::new("params", TsType::named("Array<QueryParameterInput>")).optional())
-                    .arg(Arg::rust("manual_transaction", TsType::boolean()).optional()),
+                    .arg(Arg::rust("manual_transaction", TsType::boolean()).optional())
+                    .arg(Arg::rust("session_id", TsType::string()).optional()),
             )
             .command(
                 Command::returning("db_editor_transaction_pending", TsType::boolean())
@@ -325,7 +326,8 @@ mod typegen {
             .command(
                 Command::new("db_apply_edits", "AppliedEdits")
                     .arg(Arg::rust("connection_id", TsType::string()))
-                    .arg(Arg::new("edits", TsType::named("TableEdits"))),
+                    .arg(Arg::new("edits", TsType::named("TableEdits")))
+                    .arg(Arg::rust("session_id", TsType::string()).optional()),
             )
             .command(
                 Command::new("db_list_objects", "DatabaseMetadata")

@@ -23,7 +23,11 @@ const firstConnection = {
   name: "Local A",
   password: "private-credential",
 };
-const secondConnection = { id: "local-b", name: "Local B" };
+const secondConnection = {
+  id: "local-b",
+  name: "Local B",
+  sessionId: "session-b",
+};
 const renderNotebook = componentRenderer(NotebookWorkbench, () => ({
   open: true,
   onClose: vi.fn(),
@@ -185,6 +189,7 @@ describe("SQL notebooks in the workbench", () => {
         expect.objectContaining({
           sql: second,
           connectionId: "local-b",
+          sessionId: "session-b",
           manualTransaction: true,
           queryId: expect.any(String),
         }),

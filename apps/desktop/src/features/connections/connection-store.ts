@@ -164,6 +164,15 @@ export const useConnectionStore = create<ConnectionState>((set) => ({
     })),
 }));
 
+// A pending review belongs to the session that was selected when it opened.
+export function invalidateConnectionReviews(id: string) {
+  useConnectionStore.setState((state) =>
+    state.activeConnectionId === id
+      ? { activeConnectionRevision: state.activeConnectionRevision + 1 }
+      : state,
+  );
+}
+
 let lastPersistedProfiles = useConnectionStore.getState().profiles;
 useConnectionStore.subscribe((state) => {
   if (state.profiles === lastPersistedProfiles) {

@@ -2,6 +2,7 @@ import type { DbEngine, WorkspaceSnapshot } from "@/generated/irodori-api";
 
 export type WorkspaceConnection = WorkspaceSnapshot["connections"][number] & {
   databaseLabel?: string;
+  sessionId?: string;
   connectedEngine?: DbEngine;
   connectedReadOnly?: boolean;
 };

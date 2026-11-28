@@ -217,13 +217,14 @@ pub struct QueryParameterPromptSet {
 pub struct EditorQueryOptions {
     pub params: Option<Vec<QueryParameterInput>>,
     pub manual_transaction: bool,
+    pub session_id: Option<String>,
 }
 
 impl From<Option<Vec<QueryParameterInput>>> for EditorQueryOptions {
     fn from(params: Option<Vec<QueryParameterInput>>) -> Self {
         Self {
             params,
-            manual_transaction: false,
+            ..Default::default()
         }
     }
 }

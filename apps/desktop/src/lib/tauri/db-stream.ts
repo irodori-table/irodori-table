@@ -38,6 +38,7 @@ export interface RunQueryStreamArgs {
   queryId?: string;
   params?: QueryParameterInput[];
   manualTransaction?: boolean;
+  sessionId?: string;
 }
 
 /// Start a streaming query; `onEvent` is called for each batch as it arrives. The
@@ -57,6 +58,7 @@ export function runQueryStream(
     queryId: args.queryId,
     params: args.params,
     manualTransaction: args.manualTransaction,
+    sessionId: args.sessionId,
     onEvent: channel,
   });
 }
@@ -79,6 +81,7 @@ export interface RunQuerySpillArgs {
   queryId?: string;
   params?: QueryParameterInput[];
   manualTransaction?: boolean;
+  sessionId?: string;
 }
 
 /**
@@ -104,6 +107,7 @@ export function runQuerySpill(
     queryId: args.queryId,
     params: args.params,
     manualTransaction: args.manualTransaction,
+    sessionId: args.sessionId,
     onEvent: channel,
   });
 }

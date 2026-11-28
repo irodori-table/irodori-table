@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/core/errors";
+import type { ConnectionWriteTarget } from "@/features/connections/write-review";
 import type { QueryResult } from "@/generated/irodori-api";
 import { queryService } from "@/features/workbench/query-service";
 import type { NotebookCell } from "./notebook-document";
 
 export type NotebookExecution = {
-  target: { id: string; name: string; isCurrent: () => boolean };
+  target: Pick<
+    ConnectionWriteTarget,
+    "id" | "name" | "sessionId" | "isCurrent"
+  >;
   reviewSql: (sql: string) => Promise<boolean>;
   manualTransaction: boolean;
   refreshTransactionStatus: () => Promise<void>;
@@ -78,6 +82,7 @@ export function useNotebookRuns(execution: NotebookExecution) {
       run.dispatched = true;
       const result = await queryService.execute({
         connectionId: target.id,
+        sessionId: target.sessionId,
         sql: cell.source,
         queryId: run.queryId,
         maxRows: 200,

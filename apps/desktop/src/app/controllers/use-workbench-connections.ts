@@ -200,6 +200,7 @@ export function useWorkbenchConnections({
     id: activeConnectionId,
     name: activeConnection.name,
     database: activeDatabaseLabel,
+    sessionId: session?.sessionId,
     reviewWrites: activeWriteProtection,
     revision,
     isCurrent: () => {

@@ -225,6 +225,7 @@ pub async fn db_run_query(
     query_id: Option<String>,
     params: Option<Vec<QueryParameterInput>>,
     manual_transaction: Option<bool>,
+    session_id: Option<String>,
 ) -> IrodoriResult<QueryResult> {
     // The managed run applies the optional timeout deadline and registers the
     // optional `query_id` so `db_cancel` can stop this specific statement.
@@ -242,6 +243,7 @@ pub async fn db_run_query(
             EditorQueryOptions {
                 params,
                 manual_transaction: manual_transaction.unwrap_or(false),
+                session_id,
             },
         )
         .await
@@ -317,6 +319,7 @@ pub async fn db_run_query_stream(
     query_id: Option<String>,
     params: Option<Vec<QueryParameterInput>>,
     manual_transaction: Option<bool>,
+    session_id: Option<String>,
     on_event: tauri::ipc::Channel<QueryStreamEvent>,
 ) -> IrodoriResult<()> {
     let (tx, mut rx) = mpsc::channel::<stream::FetchEvent>(16);
@@ -333,6 +336,7 @@ pub async fn db_run_query_stream(
         EditorQueryOptions {
             params,
             manual_transaction: manual_transaction.unwrap_or(false),
+            session_id,
         },
         tx,
     );
@@ -433,6 +437,7 @@ pub async fn db_run_query_spill(
     query_id: Option<String>,
     params: Option<Vec<QueryParameterInput>>,
     manual_transaction: Option<bool>,
+    session_id: Option<String>,
     on_event: tauri::ipc::Channel<QueryStreamEvent>,
 ) -> IrodoriResult<SpillRunResult> {
     let config = bounded_spill_config(memory_budget, offload_enabled);
@@ -449,6 +454,7 @@ pub async fn db_run_query_spill(
         EditorQueryOptions {
             params,
             manual_transaction: manual_transaction.unwrap_or(false),
+            session_id,
         },
         tx,
     );
@@ -550,8 +556,9 @@ pub async fn db_apply_edits(
     state: tauri::State<'_, DbState>,
     connection_id: String,
     edits: TableEdits,
+    session_id: Option<String>,
 ) -> IrodoriResult<AppliedEdits> {
-    apply_edits_impl(state.inner(), connection_id, edits)
+    super::apply_edits_to_session(state.inner(), connection_id, edits, session_id.as_deref())
         .await
         .map_err(IrodoriError::from)
 }

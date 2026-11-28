@@ -1229,6 +1229,7 @@ async fn postgres_manual_editor_transactions_are_visible_only_after_commit() {
             EditorQueryOptions {
                 params: None,
                 manual_transaction: true,
+                ..Default::default()
             },
         )
     };
