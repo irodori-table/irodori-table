@@ -7,7 +7,7 @@ import {
   type CompletionSource,
 } from "@codemirror/autocomplete";
 import type { SQLDialect } from "@codemirror/lang-sql";
-import type { Extension } from "@codemirror/state";
+import { Text, type Extension } from "@codemirror/state";
 import type {
   ColumnMetadata,
   DatabaseMetadata,
@@ -243,18 +243,37 @@ export function lightweightSqlCompletionSource(
   index: SqlCompletionIndex,
   snippets: readonly SqlSnippetDefinition[] = defaultSqlSnippets,
 ): CompletionSource {
+  let prefix = Text.empty;
+  let prefixIndex = index;
   return (context: CompletionContext) => {
-    const windowStart = Math.max(0, context.pos - MAX_SCAN_CHARS);
+    const document = context.state.doc;
+    if (
+      context.pos < prefix.length ||
+      !prefix.eq(document.slice(0, prefix.length))
+    ) {
+      prefix = Text.empty;
+      prefixIndex = index;
+    }
+    const tail = document.sliceString(prefix.length, context.pos);
+    const delimiters = statementDelimiters(tail);
+    if (delimiters.length) {
+      prefixIndex = withDeclaredTables(prefixIndex, engine, tail, delimiters);
+      prefix = document.slice(
+        0,
+        prefix.length + delimiters[delimiters.length - 1] + 1,
+      );
+    }
+    const windowStart = Math.max(prefix.length, context.pos - MAX_SCAN_CHARS);
     const windowEnd = Math.min(
       context.state.doc.length,
       context.pos + MAX_SCAN_CHARS,
     );
     const doc = context.state.sliceDoc(windowStart, windowEnd);
-    const result = completeSqlLightweight({
+    const result = completeWithIndex({
       doc,
       engine,
       explicit: context.explicit,
-      index,
+      index: prefixIndex,
       pos: context.pos - windowStart,
       snippetVariables: snippetVariablesForContext(context),
       snippets,
@@ -327,6 +346,21 @@ function mapObjectsByQualifiedName(
 }
 
 export function completeSqlLightweight(
+  input: LightweightCompletionInput,
+): CompletionResult | null {
+  const before = input.doc.slice(0, input.pos ?? input.doc.length);
+  return completeWithIndex({
+    ...input,
+    index: withDeclaredTables(
+      input.index,
+      input.engine,
+      before,
+      statementDelimiters(before),
+    ),
+  });
+}
+
+function completeWithIndex(
   input: LightweightCompletionInput,
 ): CompletionResult | null {
   const pos = input.pos ?? input.doc.length;
@@ -1176,6 +1210,143 @@ function tokenizeSql(sql: string): SqlToken[] {
     i += 1;
   }
   return tokens;
+}
+
+// Only complete, preceding statements contribute. Reuse the metadata-shaped
+// index so normal alias, schema and ranking rules also apply offline.
+function withDeclaredTables(
+  base: SqlCompletionIndex,
+  engine: DbEngine,
+  sql: string,
+  ends: number[],
+): SqlCompletionIndex {
+  const changed = new Map<string, DbObjectMetadata>();
+  let start = 0;
+  for (const end of ends) {
+    const statement = sql.slice(start, end);
+    start = end + 1;
+    if (!/\b(?:create|alter)\b/i.test(statement)) continue;
+    const tokens = tokenizeSql(statement);
+    const operation = tokens[0]?.lower;
+    if (operation !== "create" && operation !== "alter") continue;
+    let i = 1;
+    if (
+      operation === "create" &&
+      ["temporary", "temp"].includes(tokens[i]?.lower)
+    )
+      i++;
+    if (tokens[i++]?.lower !== "table") continue;
+    if (
+      tokens[i]?.lower === "if" &&
+      tokens[i + 1]?.lower === "not" &&
+      tokens[i + 2]?.lower === "exists"
+    )
+      i += 3;
+    const ident = readQualifiedName(tokens, i);
+    if (!ident || ident.parts.length > 2) continue;
+    const name = ident.parts[ident.parts.length - 1];
+    const schema =
+      ident.parts.length === 2
+        ? ident.parts[0]
+        : (base.defaultSchema ?? (engine === "sqlite" ? "main" : "public"));
+    const key = qualifiedKey(schema, name);
+    const previous =
+      changed.get(key) ?? base.objectByQualifiedName.get(key)?.object;
+    i = ident.next;
+    let columns: ColumnMetadata[];
+    if (operation === "alter") {
+      if (tokens[i++]?.lower !== "add") continue;
+      if (tokens[i]?.lower === "column") i++;
+      if (
+        tokens[i]?.lower === "if" &&
+        tokens[i + 1]?.lower === "not" &&
+        tokens[i + 2]?.lower === "exists"
+      )
+        i += 3;
+      const column = declaredColumn(
+        tokens,
+        i,
+        (previous?.columns.length ?? 0) + 1,
+      );
+      if (
+        !column ||
+        previous?.columns.some(
+          (c) => c.name.toLowerCase() === column.name.toLowerCase(),
+        )
+      )
+        continue;
+      columns = [...(previous?.columns ?? []), column];
+    } else {
+      if (
+        tokens[i++]?.type !== "open" ||
+        tokens[tokens.length - 1]?.type !== "close"
+      )
+        continue;
+      columns = [];
+      let depth = 0;
+      let first = true;
+      for (; i < tokens.length - 1; i++) {
+        const type = tokens[i].type;
+        if (first) {
+          const column = declaredColumn(tokens, i, columns.length + 1);
+          if (column) columns.push(column);
+        }
+        first = type === "comma" && depth === 0;
+        if (type === "open") depth++;
+        if (type === "close") depth--;
+      }
+    }
+    changed.set(key, {
+      schema,
+      name,
+      kind: "table",
+      indexes: [],
+      primaryKey: [],
+      foreignKeys: [],
+      ...previous,
+      columns,
+    });
+  }
+  if (!changed.size) return base;
+  const schemas = new Map(
+    base.schemas.map((s) => [
+      s.name,
+      s.objects
+        .map((e) => e.object)
+        .filter((o) => !changed.has(qualifiedKey(o.schema, o.name))),
+    ]),
+  );
+  for (const object of changed.values()) {
+    if (!schemas.has(object.schema)) schemas.set(object.schema, []);
+    schemas.get(object.schema)!.push(object);
+  }
+  return buildSqlCompletionIndex({
+    schemas: Array.from(schemas, ([name, objects]) => ({ name, objects })),
+  });
+}
+
+const tableConstraints = new Set([
+  "primary",
+  "foreign",
+  "unique",
+  "constraint",
+  "check",
+  "exclude",
+]);
+
+function declaredColumn(
+  tokens: SqlToken[],
+  i: number,
+  ordinal: number,
+): ColumnMetadata | null {
+  const name = tokens[i];
+  if (name?.type !== "word" || tableConstraints.has(name.lower)) return null;
+  return {
+    name: name.text,
+    ordinal,
+    dataType: tokens[i + 1]?.type === "word" ? tokens[i + 1].text : "",
+    nullable: true,
+  };
 }
 
 function wordBefore(doc: string, pos: number): { from: number; text: string } {

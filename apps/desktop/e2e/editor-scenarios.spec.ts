@@ -456,9 +456,10 @@ test("scenario 11: clicking a line number selects exactly that line; shift-click
 // ---------------------------------------------------------------------------
 
 const BIG_LINE_COUNT = 5_000;
-const bigLines = Array.from(
-  { length: BIG_LINE_COUNT },
-  (_, i) => `select ${i + 1} as v${i + 1}; -- line ${i + 1}`,
+const bigLines = Array.from({ length: BIG_LINE_COUNT }, (_, i) =>
+  i % 50 === 0
+    ? `create table batch_${i}(seq_no integer); -- line ${i + 1}`
+    : `select ${i + 1} as v${i + 1}; -- line ${i + 1}`,
 );
 
 test("scenarios 7-10: 5k-line load, end-of-document typing, scrolling, gutter alignment", async ({

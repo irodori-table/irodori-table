@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { Completion } from "@codemirror/autocomplete";
+import { CompletionContext, type Completion } from "@codemirror/autocomplete";
+import { EditorState } from "@codemirror/state";
 import {
   buildSqlCompletionIndex,
   completeSqlLightweight,
+  lightweightSqlCompletionSource,
   completionOpensNextLevel,
   defaultSqlSnippets,
   expandSqlSnippetVariables,
@@ -280,6 +282,70 @@ function appliesForEngine(
 }
 
 describe("completeSqlLightweight", () => {
+  it.each(["sqlite", "postgres"] as const)(
+    "completes preceding local DDL offline in %s",
+    (engine) => {
+      const ddl =
+        "CREATE TABLE audit_batch(seq_no INTEGER, amount decimal(10,2), CONSTRAINT pk PRIMARY KEY(seq_no)); ALTER TABLE audit_batch ADD COLUMN note TEXT;";
+      const options = completeWithEngine(
+        ddl + " SELECT b.| FROM audit_batch AS b",
+        { schemas: [] },
+        engine,
+      );
+      expect(options.map(({ label }) => label).sort()).toEqual([
+        "amount",
+        "note",
+        "seq_no",
+      ]);
+      expect(
+        completeWithEngine(
+          ddl + " SELECT * FROM aud|",
+          { schemas: [] },
+          engine,
+        ).map(({ label }) => label),
+      ).toContain("audit_batch");
+    },
+  );
+
+  it("ignores comments, quoted bodies and declarations after the cursor", () => {
+    const sql =
+      "-- CREATE TABLE t1(fake INT);\n/* CREATE TABLE t2(fake INT); */ SELECT 'CREATE TABLE t3(fake INT);'; DO $$ BEGIN CREATE TABLE t4(fake INT); END $$; SELECT * FROM t|; CREATE TABLE t5(fake INT);";
+    expect(
+      completeWithMetadata(sql, { schemas: [] }).filter(
+        (item) => item.type === "class",
+      ),
+    ).toEqual([]);
+  });
+
+  it("invalidates the current tab's cached declarations after edits and on switching documents", async () => {
+    const source = lightweightSqlCompletionSource(
+      "sqlite",
+      buildSqlCompletionIndex(undefined),
+    );
+    const tail = "\nSELECT b. FROM audit_batch AS b";
+    const text =
+      "CREATE TABLE audit_batch(seq_no INT);" +
+      "\nSELECT 1;".repeat(1200) +
+      tail;
+    const state = EditorState.create({ doc: text });
+    async function columns(s: EditorState) {
+      const pos = s.doc.length - " FROM audit_batch AS b".length;
+      return (
+        (await source(new CompletionContext(s, pos, true)))?.options.map(
+          (o) => o.label,
+        ) ?? []
+      );
+    }
+    expect(await columns(state)).toEqual(["seq_no"]);
+    const from = text.indexOf("seq_no");
+    const changed = state.update({
+      changes: { from, to: from + 6, insert: "job_id" },
+    }).state;
+    expect(await columns(changed)).toEqual(["job_id"]);
+    expect(await columns(state)).toEqual(["seq_no"]);
+    expect(await columns(EditorState.create({ doc: tail }))).toEqual([]);
+  });
+
   it("never commits a table when a dot is typed after a schema name", () => {
     // Every table in "public" matches the prefix "public" through its
     // qualified name. With "." as a commit character, typing "public." took
