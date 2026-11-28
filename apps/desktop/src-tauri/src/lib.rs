@@ -4,6 +4,7 @@ pub mod crash_report;
 pub mod db;
 pub mod extensions;
 pub mod git;
+mod import_export;
 pub mod indexing;
 pub mod jobs;
 pub mod pty;
@@ -222,6 +223,20 @@ mod typegen {
                 TsType::boolean(),
             ))
             .command(Command::new("crash_report_status", "CrashReportStatus"))
+            .command(
+                Command::new("import_output_open", "number | null")
+                    .arg(Arg::new("name", TsType::string())),
+            )
+            .command(
+                Command::returning("import_output_append", TsType::void())
+                    .arg(Arg::new("handle", TsType::number()))
+                    .arg(Arg::new("sql", TsType::string())),
+            )
+            .command(
+                Command::returning("import_output_finish", TsType::void())
+                    .arg(Arg::new("handle", TsType::number()))
+                    .arg(Arg::new("publish", TsType::boolean())),
+            )
             .command(
                 Command::new("sql_format_snowflake", "string")
                     .arg(Arg::new("sql", TsType::string()))

@@ -2772,6 +2772,7 @@ dependencies = [
  "tauri-plugin-fs",
  "tauri-plugin-opener",
  "tauri-plugin-updater",
+ "tempfile",
  "tiberius",
  "tokio",
  "tokio-util",

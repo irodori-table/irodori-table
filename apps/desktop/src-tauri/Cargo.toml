@@ -124,6 +124,8 @@ libloading = "0.9"
 sha2 = "0.11"
 flate2 = "1"
 tar = "0.4"
+# Atomically replace a user-selected import script after streaming completes.
+tempfile = "3"
 neo4rs = { version = "0.8.0", optional = true }
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-fs = "2"

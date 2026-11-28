@@ -36,7 +36,8 @@ describe("dialogs render in the active locale", () => {
     renderUi(
       <ImportDialog
         preview={importPreview}
-        sqlPreview="CREATE TABLE people (...)"
+        engine="sqlite"
+        connectionId="local"
         onPreviewChange={vi.fn()}
         onClose={vi.fn()}
         onPutSqlInEditor={vi.fn()}

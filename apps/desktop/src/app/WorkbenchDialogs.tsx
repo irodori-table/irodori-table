@@ -371,7 +371,9 @@ export function WorkbenchDialogs() {
       {workspace.importPreview ? (
         <ImportDialog
           preview={workspace.importPreview}
-          sqlPreview={workspace.importSqlPreview}
+          engine={connections.activeEngine}
+          metadata={activeMetadata}
+          connectionId={activeConnectionId}
           onPreviewChange={workspace.setImportPreview}
           onClose={() => {
             workspace.setImportPreview(null);

@@ -1407,6 +1407,29 @@ export const en = {
   "import.dialog.table": "Table",
   "import.dialog.rowCount": "{shown} / {total} rows",
   "import.dialog.rowCountCapped": "{shown} / {total} rows capped",
+  "import.dialog.copyPreview": "Copy preview SQL",
+  "import.dialog.putPreview": "Put preview SQL in editor",
+  "import.dialog.saveFull": "Save SQL for all {total} rows",
+  "import.dialog.cancelSave": "Cancel save",
+  "import.dialog.saved": "Saved SQL for {total} rows.",
+  "import.mapping.table": "Destination table",
+  "import.mapping.manual": "Use the typed table name",
+  "import.mapping.column": "Destination for {source}",
+  "import.mapping.choose": "Choose a column",
+  "import.mapping.skip": "Skip this field",
+  "import.mapping.duplicate":
+    "Two source fields map to the same destination column.",
+  "import.mapping.unresolved":
+    "Choose a destination or skip each unmatched field.",
+  "import.mapping.empty": "Map at least one source field.",
+  "import.mapping.unavailable": "Select a table on the active connection.",
+  "import.error.rowTooLarge":
+    "A CSV or TSV record exceeds the limit of 4,194,304 characters.",
+  "import.error.unclosedQuote": "The file ends inside a quoted field.",
+  "import.error.sourceChanged":
+    "The source row count changed. Open the file again.",
+  "import.error.saveUnavailable":
+    "Open this file in the desktop app to save the full SQL script.",
   "schemaDesigner.dialogLabel": "Schema designer",
   "schemaDesigner.title": "Schema Designer",
   "schemaDesigner.mode": "Mode",

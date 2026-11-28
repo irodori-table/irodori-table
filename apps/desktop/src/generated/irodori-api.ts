@@ -402,6 +402,18 @@ export function crashReportStatus(): Promise<CrashReportStatus> {
   return invoke<CrashReportStatus>("crash_report_status");
 }
 
+export function importOutputOpen(name: string): Promise<number | null> {
+  return invoke<number | null>("import_output_open", { name });
+}
+
+export function importOutputAppend(handle: number, sql: string): Promise<void> {
+  return invoke<void>("import_output_append", { handle, sql });
+}
+
+export function importOutputFinish(handle: number, publish: boolean): Promise<void> {
+  return invoke<void>("import_output_finish", { handle, publish });
+}
+
 export function sqlFormatSnowflake(sql: string, lineWidth?: number, indentWidth?: number, uppercaseKeywords?: boolean): Promise<string> {
   return invoke<string>("sql_format_snowflake", { sql, lineWidth, indentWidth, uppercaseKeywords });
 }

@@ -753,6 +753,19 @@
   font-weight: 800;
 }
 
+.import-mapping {
+  display: grid;
+  gap: 6px;
+}
+
+.import-mapping label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+
 .import-mode-row {
   display: flex;
   flex-wrap: wrap;
