@@ -663,11 +663,11 @@ test.describe("Result Grid Virtualization and Sticky Gutter", () => {
         }
       ).recordTableQuery;
       api.invoke = async (command, args) => {
-        if (command === "db_connect") {
+        if (command === "db_connect" && args?.profile) {
           const { recordTableConnection } = window as unknown as {
             recordTableConnection: (id: string) => Promise<void>;
           };
-          await recordTableConnection((args?.profile as { id: string }).id);
+          await recordTableConnection((args.profile as { id: string }).id);
         }
         if (command === "db_run_query_stream")
           await record(args?.connectionId, args?.sql);
