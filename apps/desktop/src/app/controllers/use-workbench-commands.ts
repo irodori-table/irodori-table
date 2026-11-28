@@ -85,6 +85,7 @@ type WorkbenchCommandsDeps = {
   ui: {
     openPalette: () => void;
     openAbout: () => void;
+    openSqlFile: () => void;
     openTool: (commandId: string) => void;
     openAiGenerate: () => void;
     toggleTerminal: () => void;
@@ -139,6 +140,7 @@ export function useWorkbenchCommands({
     // made the Help menu's two entries do the same thing.
     openHelp: () => openExternalUrl(DOCS_URL),
     openAbout: ui.openAbout,
+    openSqlFile: ui.openSqlFile,
     openDeveloperTools: () => void workspace.openAppDeveloperTools(),
     openConnectionManager: () => connections.setConnectionManagerOpen(true),
     openTool: ui.openTool,

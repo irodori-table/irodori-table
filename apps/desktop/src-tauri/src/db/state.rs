@@ -237,10 +237,12 @@ pub(super) async fn refresh_metadata_after_query_if_needed(
     connection_id: &str,
     sql: &str,
 ) {
-    if !sql_may_change_metadata(sql) {
-        return;
+    if sql_may_change_metadata(sql) {
+        refresh_metadata_after_mutation(state, connection_id).await;
     }
+}
 
+pub(super) async fn refresh_metadata_after_mutation(state: &DbState, connection_id: &str) {
     bump_metadata_generation(state);
     state
         .metadata_cache

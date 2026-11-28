@@ -19,6 +19,7 @@ import {
   toolCommands,
   useInstalledTools,
 } from "@/features/extensions/tools/extension-tools";
+import { SqlFileJobDialog } from "@/features/import/SqlFileJobDialog";
 import { ImportDialog } from "@/features/import";
 import { usePreferencesStore } from "@/features/preferences";
 import { QueryParameterDialog } from "@/features/query-editor";
@@ -209,6 +210,25 @@ export function WorkbenchDialogs() {
             onPutTextInEditor={workspace.putToolTextInEditor}
           />
         </Suspense>
+      ) : null}
+
+      {overlays.sqlFileOpen ? (
+        <SqlFileJobDialog
+          key={`${activeConnectionId}:${activeConnectionOpen}:${connections.activeConnectionReadOnly}`}
+          connectionId={activeConnectionId}
+          connectionName={activeConnection.name}
+          writable={
+            activeConnectionOpen &&
+            editorEngine === "sqlite" &&
+            !connections.activeConnectionReadOnly
+          }
+          onClose={overlays.closeSqlFile}
+          onStarted={() => {
+            overlays.closeSqlFile();
+            settings.openSettingsSection("jobs");
+          }}
+          t={t}
+        />
       ) : null}
 
       <AiGenerateDialog

@@ -96,6 +96,15 @@ export const ja = {
   "commands.query.explainAnalyze.title": "Explain Analyse",
   "commands.query.explainPlan.title": "実行計画を表示",
   "commands.query.run.title": "クエリを実行",
+  "commands.query.runFile.title": "SQL ファイルを実行…",
+  "sqlFile.choose": "SQL ファイルを選択…",
+  "sqlFile.requireConnection":
+    "ファイルを実行するには書き込み可能な SQLite 接続を選択してください。",
+  "sqlFile.review":
+    "ファイル全体を実行します。このデータベースを変更する可能性があります。途中で停止した場合も、コミット済みの変更は保持されます。",
+  "sqlFile.preview": "ファイルのプレビュー・先頭 {bytes} バイト",
+  "sqlFile.run": "ファイルを実行",
+  "settings.jobs.kind.import": "インポート",
   "commands.query.runAll.title": "すべて実行",
   "commands.query.runCurrent.title": "現在のステートメントを実行",
   "commands.query.runFromStart.title": "先頭から実行",

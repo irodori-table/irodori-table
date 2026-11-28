@@ -50,6 +50,9 @@ fn query_error(message: String) -> DbError {
 #[async_trait]
 pub(crate) trait Connection: Send + Sync {
     fn wire(&self) -> Wire;
+    fn sql_file_pool(&self) -> DbResult<&sqlx::SqlitePool> {
+        Err(DbError::unsupported("SQL file jobs require SQLite"))
+    }
     async fn version(&self) -> Option<String>;
     async fn run_query(&self, sql: &str, cap: usize) -> DbResult<RowSet>;
     async fn run_prepared_query(&self, query: &PreparedQuery, cap: usize) -> DbResult<RowSet> {
@@ -369,67 +372,79 @@ impl Connection for MysqlConn {
     }
 }
 
-struct SqliteConn(sqlx::SqlitePool);
+struct SqliteConn {
+    pool: sqlx::SqlitePool,
+    read_only: bool,
+}
 #[async_trait]
 impl Connection for SqliteConn {
+    fn sql_file_pool(&self) -> DbResult<&sqlx::SqlitePool> {
+        if self.read_only {
+            return Err(DbError::validation(
+                "SQL file jobs require a writable SQLite connection",
+            ));
+        }
+        Ok(&self.pool)
+    }
+
     fn wire(&self) -> Wire {
         Wire::Sqlite
     }
 
     async fn version(&self) -> Option<String> {
-        sqlite::version(&self.0).await
+        sqlite::version(&self.pool).await
     }
     async fn run_query(&self, sql: &str, cap: usize) -> DbResult<RowSet> {
-        sqlite::run_query(&self.0, sql, cap).await
+        sqlite::run_query(&self.pool, sql, cap).await
     }
     async fn run_prepared_query(&self, query: &PreparedQuery, cap: usize) -> DbResult<RowSet> {
-        sqlite::run_prepared_query(&self.0, query, cap).await
+        sqlite::run_prepared_query(&self.pool, query, cap).await
     }
     async fn run_query_affected(&self, sql: &str, cap: usize) -> DbResult<(RowSet, Option<u64>)> {
-        sqlite::run_query_affected(&self.0, sql, cap).await
+        sqlite::run_query_affected(&self.pool, sql, cap).await
     }
     async fn run_prepared_query_affected(
         &self,
         query: &PreparedQuery,
         cap: usize,
     ) -> DbResult<(RowSet, Option<u64>)> {
-        sqlite::run_prepared_query_affected(&self.0, query, cap).await
+        sqlite::run_prepared_query_affected(&self.pool, query, cap).await
     }
     async fn run_query_sets(&self, sql: &str, cap: usize) -> DbResult<Vec<RawResultSet>> {
-        sqlite::run_query_sets(&self.0, sql, cap).await
+        sqlite::run_query_sets(&self.pool, sql, cap).await
     }
     async fn stream_query(
         &self,
         sql: &str,
         ctx: &stream::StreamCtx,
     ) -> DbResult<stream::StreamSummary> {
-        sqlite::stream_query(&self.0, sql, ctx).await
+        sqlite::stream_query(&self.pool, sql, ctx).await
     }
     async fn stream_prepared_query(
         &self,
         query: &PreparedQuery,
         ctx: &stream::StreamCtx,
     ) -> DbResult<stream::StreamSummary> {
-        sqlite::stream_prepared_query(&self.0, query, ctx).await
+        sqlite::stream_prepared_query(&self.pool, query, ctx).await
     }
     async fn stream_query_sets(
         &self,
         sql: &str,
         ctx: &stream::StreamCtx,
     ) -> DbResult<stream::StreamSummary> {
-        sqlite::stream_query_sets(&self.0, sql, ctx).await
+        sqlite::stream_query_sets(&self.pool, sql, ctx).await
     }
     async fn apply_edits(&self, edits: &TableEdits) -> DbResult<AppliedEdits> {
-        sqlite::apply_edits(&self.0, edits).await
+        sqlite::apply_edits(&self.pool, edits).await
     }
     async fn metadata(&self) -> DbResult<DatabaseMetadata> {
-        sqlite::metadata(&self.0).await
+        sqlite::metadata(&self.pool).await
     }
     async fn explain_query(&self, sql: &str, mode: QueryPlanMode) -> DbResult<QueryPlanAnalysis> {
-        sqlite::explain_query(&self.0, self.wire(), sql, mode).await
+        sqlite::explain_query(&self.pool, self.wire(), sql, mode).await
     }
     async fn close(&self) {
-        self.0.close().await
+        self.pool.close().await
     }
 }
 
@@ -710,7 +725,10 @@ async fn connect_builtin_engine(profile: &ConnectionProfile) -> DbResult<Arc<dyn
             if should_seed_builtin_sample(profile) {
                 sqlite::seed_sample(&pool).await?;
             }
-            Arc::new(SqliteConn(pool))
+            Arc::new(SqliteConn {
+                pool,
+                read_only: profile.read_only,
+            })
         }
         Wire::SqlServer => {
             #[cfg(feature = "sqlserver")]

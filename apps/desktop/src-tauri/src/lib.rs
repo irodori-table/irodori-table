@@ -37,6 +37,7 @@ pub fn run() {
         .manage(db::DbState::default())
         .manage(extensions::ExtensionsState::default())
         .manage(jobs::JobState::default())
+        .manage(db::SqlFileState::default())
         .manage(indexing::SchemaIndexState::default())
         .manage(security::SecurityState::default())
         .manage(ai::AiState::default())
@@ -161,6 +162,7 @@ mod typegen {
             .decl(&decl::<db::DbEngine>())
             .decl(&decl::<db::EngineBuildSupport>())
             .decl(&decl::<db::ConnectionProfile>())
+            .decl(&decl::<db::SqlFilePreview>())
             .decl(&decl::<db::ConnectionInfo>())
             .decl(&decl::<db::QueryResultSet>())
             .decl(&decl::<db::QueryResult>())
@@ -276,6 +278,16 @@ mod typegen {
             .command(
                 Command::returning("db_cancel", TsType::boolean())
                     .arg(Arg::rust("query_id", TsType::string())),
+            )
+            .command(
+                Command::new("db_pick_sql_file", "SqlFilePreview | null")
+                    .arg(Arg::rust("connection_id", TsType::string())),
+            )
+            .command(
+                Command::new("db_finish_sql_file", "string | null")
+                    .arg(Arg::rust("connection_id", TsType::string()))
+                    .arg(Arg::new("token", TsType::string()))
+                    .arg(Arg::new("run", TsType::boolean())),
             )
             // `db_run_query_spill` takes a streaming `Channel`, so (like
             // `db_run_query_stream`) its wrapper is hand-written in `db-stream.ts`;

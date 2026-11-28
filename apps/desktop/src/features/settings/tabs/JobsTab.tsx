@@ -10,6 +10,7 @@ function toCount(value: bigint | number, locale: string) {
 }
 
 const jobKindKeys = {
+  import: "settings.jobs.kind.import",
   knowledgeRefresh: "settings.jobs.kind.knowledgeRefresh",
   indexBuild: "settings.jobs.kind.indexBuild",
   mlEvaluation: "settings.jobs.kind.mlEvaluation",
@@ -122,6 +123,9 @@ export function JobsTab({
                     {formatJobStatus(t, job.status)} ·{" "}
                     {formatJobProgress(t, job, locale)}
                   </small>
+                  {job.kind === "import" && job.progress.message ? (
+                    <small>{job.progress.message}</small>
+                  ) : null}
                   {job.progress.percent !== undefined ? (
                     <div className="job-progress">
                       <span style={{ width: `${job.progress.percent}%` }} />

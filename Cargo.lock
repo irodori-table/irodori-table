@@ -2750,6 +2750,7 @@ dependencies = [
  "irodori-security",
  "irodori-sql",
  "libloading 0.9.1",
+ "libsqlite3-sys",
  "minisign-verify",
  "mongodb",
  "neo4rs",

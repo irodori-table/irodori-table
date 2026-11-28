@@ -42,6 +42,12 @@ const developerCommands: CommandMeta[] = import.meta.env.DEV
 
 const shellCommands: CommandMeta[] = [
   {
+    id: "query.runFile",
+    title: "Run SQL File…",
+    category: "Query",
+    scope: "global",
+  },
+  {
     id: "connection.manager",
     title: "Open Connection Manager",
     category: "Workspace",
@@ -359,6 +365,10 @@ const commandTranslationKeys: Partial<Record<string, CommandTranslationKeys>> =
       title: "commands.query.run.title",
       category: "commands.category.query",
     },
+    "query.runFile": {
+      title: "commands.query.runFile.title",
+      category: "commands.category.query",
+    },
     "query.runAll": {
       title: "commands.query.runAll.title",
       category: "commands.category.query",
@@ -594,6 +604,7 @@ export const menuBarSections: AppMenuSection[] = [
       { commandId: "query.runCurrent" },
       { commandId: "query.runFromStart" },
       { commandId: "query.runAll" },
+      { commandId: "query.runFile" },
       { commandId: "query.cancel" },
     ],
   },

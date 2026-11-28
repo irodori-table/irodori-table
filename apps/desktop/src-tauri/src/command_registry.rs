@@ -119,6 +119,8 @@ pub(crate) fn invoke_handler() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         jobs::jobs_list,
         jobs::jobs_get,
         jobs::jobs_cancel,
+        db::db_pick_sql_file,
+        db::db_finish_sql_file,
         indexing::db_search_schema,
         db::db_engine_build_support,
         db::db_connect,

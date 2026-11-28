@@ -210,6 +210,30 @@ export function useSettingsController({
     }
   }, [settingsOpen, settingsTab]);
 
+  const hasActiveJobs = jobs.active.length > 0;
+  useEffect(() => {
+    if (!settingsOpen || settingsTab !== "jobs" || !hasActiveJobs) return;
+    let closed = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function poll() {
+      try {
+        const next = await workbenchRuntimeService.jobsList();
+        if (!closed) {
+          setJobs(next);
+          setJobsError(null);
+        }
+      } catch (error) {
+        if (!closed) setJobsError(errorMessage(error));
+      }
+      if (!closed) timer = setTimeout(poll, 750);
+    }
+    timer = setTimeout(poll, 750);
+    return () => {
+      closed = true;
+      clearTimeout(timer);
+    };
+  }, [settingsOpen, settingsTab, hasActiveJobs]);
+
   function buildSettingsJson() {
     return JSON.stringify(
       {

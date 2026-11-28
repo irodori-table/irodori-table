@@ -9,6 +9,7 @@ import { useState } from "react";
 export function useWorkbenchOverlays() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
+  const [sqlFileOpen, setSqlFileOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [activeToolCommandId, setActiveToolCommandId] = useState<string | null>(
     null,
@@ -25,6 +26,9 @@ export function useWorkbenchOverlays() {
       setPaletteOpen(true);
     },
     closePalette: () => setPaletteOpen(false),
+    sqlFileOpen,
+    openSqlFile: () => setSqlFileOpen(true),
+    closeSqlFile: () => setSqlFileOpen(false),
     aboutOpen,
     openAbout: () => setAboutOpen(true),
     closeAbout: () => setAboutOpen(false),

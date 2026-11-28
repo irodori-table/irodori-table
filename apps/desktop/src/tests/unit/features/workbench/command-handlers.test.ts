@@ -5,6 +5,7 @@ import type { SqlEditorTransformAction } from "@/sql/editor-transforms";
 function createHandler(calls: string[]) {
   return createWorkbenchCommandHandler({
     editMode: false,
+    openSqlFile: () => calls.push("sql-file"),
     openPalette: () => calls.push("palette"),
     openSettings: () => calls.push("settings"),
     openKeymap: () => calls.push("keymap"),
@@ -118,6 +119,7 @@ describe("createWorkbenchCommandHandler", () => {
     runCommand("app.exit");
     runCommand("developer.openDevtools");
     runCommand("tool.irodori.migration/migration.studio");
+    runCommand("query.runFile");
     runCommand("query.cancel");
 
     expect(calls).toEqual([
@@ -138,6 +140,7 @@ describe("createWorkbenchCommandHandler", () => {
       "exit",
       "devtools",
       "tool:tool.irodori.migration/migration.studio",
+      "sql-file",
       "query-cancel",
     ]);
   });
