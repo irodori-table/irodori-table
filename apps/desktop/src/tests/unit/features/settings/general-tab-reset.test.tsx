@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { GeneralTab } from "@/features/settings/tabs/GeneralTab";
 import { createTranslator } from "@/i18n";
@@ -69,5 +69,20 @@ describe("GeneralTab layout reset", () => {
     const { props, user } = renderTab();
     await user.click(resetLayoutButton());
     expect(props.resetLayout).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("Manual transaction availability", () => {
+  it("explains the supported engine at the setting", () => {
+    renderTab({ manualTransactionsSupported: false });
+    const row = screen.getByText("Auto Commit").closest("label")!;
+    expect(within(row).getByText("Off").closest("button")).toBeDisabled();
+    expect(within(row).getByText(/PostgreSQL connections/)).toBeVisible();
+  });
+  it("keeps a pending manual transaction until explicitly resolved", () => {
+    renderTab({ autoCommit: false, transactionPending: true });
+    const row = screen.getByText("Auto Commit").closest("label")!;
+    expect(within(row).getByText("On").closest("button")).toBeDisabled();
+    expect(within(row).getByText(/COMMIT or ROLLBACK/)).toBeVisible();
   });
 });

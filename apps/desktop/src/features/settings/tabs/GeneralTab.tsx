@@ -51,6 +51,8 @@ export interface GeneralTabProps {
   problemsBadgeVisible: boolean;
   setProblemsBadgeVisible: (value: BooleanUpdater) => void;
   autoCommit: boolean;
+  manualTransactionsSupported?: boolean;
+  transactionPending?: boolean;
   setAutoCommit: (value: BooleanUpdater) => void;
   updateCheckOnStartup: boolean;
   setUpdateCheckOnStartup: (value: BooleanUpdater) => void;
@@ -90,6 +92,8 @@ export function GeneralTab({
   problemsBadgeVisible,
   setProblemsBadgeVisible,
   autoCommit,
+  manualTransactionsSupported = true,
+  transactionPending = false,
   setAutoCommit,
   updateCheckOnStartup,
   setUpdateCheckOnStartup,
@@ -425,13 +429,22 @@ export function GeneralTab({
       <label className="settings-row" data-setting-id="general.autoCommit">
         <span>
           <strong>{t("settings.general.autoCommit.title")}</strong>
-          <small>{t("settings.general.autoCommit.description")}</small>
+          <small>
+            {t(
+              !manualTransactionsSupported
+                ? "settings.general.autoCommit.unsupported"
+                : transactionPending
+                  ? "settings.general.autoCommit.pending"
+                  : "settings.general.autoCommit.description",
+            )}
+          </small>
         </span>
         <div className="segmented-control">
           <button
             type="button"
             className={autoCommit ? "active" : undefined}
             aria-pressed={autoCommit}
+            disabled={!autoCommit && transactionPending}
             onClick={() => setAutoCommit(true)}
           >
             {t("common.on")}
@@ -440,6 +453,7 @@ export function GeneralTab({
             type="button"
             className={!autoCommit ? "active" : undefined}
             aria-pressed={!autoCommit}
+            disabled={!manualTransactionsSupported}
             onClick={() => setAutoCommit(false)}
           >
             {t("common.off")}

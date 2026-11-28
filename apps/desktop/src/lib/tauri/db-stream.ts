@@ -37,6 +37,7 @@ export interface RunQueryStreamArgs {
   /** Pass an id to make the run cancellable via `dbCancel(queryId)`. */
   queryId?: string;
   params?: QueryParameterInput[];
+  manualTransaction?: boolean;
 }
 
 /// Start a streaming query; `onEvent` is called for each batch as it arrives. The
@@ -55,6 +56,7 @@ export function runQueryStream(
     timeoutMs: args.timeoutMs,
     queryId: args.queryId,
     params: args.params,
+    manualTransaction: args.manualTransaction,
     onEvent: channel,
   });
 }
@@ -76,6 +78,7 @@ export interface RunQuerySpillArgs {
   /** Pass an id to make the run cancellable via `dbCancel(queryId)`. */
   queryId?: string;
   params?: QueryParameterInput[];
+  manualTransaction?: boolean;
 }
 
 /**
@@ -100,6 +103,7 @@ export function runQuerySpill(
     timeoutMs: args.timeoutMs,
     queryId: args.queryId,
     params: args.params,
+    manualTransaction: args.manualTransaction,
     onEvent: channel,
   });
 }

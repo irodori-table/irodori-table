@@ -206,6 +206,15 @@ pub async fn db_explain_query(
 }
 
 #[tauri::command]
+pub async fn db_editor_transaction_pending(
+    state: tauri::State<'_, DbState>,
+    connection_id: String,
+) -> IrodoriResult<bool> {
+    Ok(editor_transaction_pending_impl(state.inner(), &connection_id).await?)
+}
+
+#[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn db_run_query(
     state: tauri::State<'_, DbState>,
     security: tauri::State<'_, SecurityState>,
@@ -215,6 +224,7 @@ pub async fn db_run_query(
     timeout_ms: Option<u64>,
     query_id: Option<String>,
     params: Option<Vec<QueryParameterInput>>,
+    manual_transaction: Option<bool>,
 ) -> IrodoriResult<QueryResult> {
     // The managed run applies the optional timeout deadline and registers the
     // optional `query_id` so `db_cancel` can stop this specific statement.
@@ -223,7 +233,17 @@ pub async fn db_run_query(
     match state
         .inner()
         .query_executor()
-        .run_managed_with_params(connection_id, sql, max_rows, timeout_ms, query_id, params)
+        .run_managed_with_params(
+            connection_id,
+            sql,
+            max_rows,
+            timeout_ms,
+            query_id,
+            EditorQueryOptions {
+                params,
+                manual_transaction: manual_transaction.unwrap_or(false),
+            },
+        )
         .await
     {
         Ok(result) => {
@@ -296,6 +316,7 @@ pub async fn db_run_query_stream(
     timeout_ms: Option<u64>,
     query_id: Option<String>,
     params: Option<Vec<QueryParameterInput>>,
+    manual_transaction: Option<bool>,
     on_event: tauri::ipc::Channel<QueryStreamEvent>,
 ) -> IrodoriResult<()> {
     let (tx, mut rx) = mpsc::channel::<stream::FetchEvent>(16);
@@ -309,7 +330,10 @@ pub async fn db_run_query_stream(
         max_rows,
         timeout_ms,
         query_id,
-        params,
+        EditorQueryOptions {
+            params,
+            manual_transaction: manual_transaction.unwrap_or(false),
+        },
         tx,
     );
     let forward = async {
@@ -408,6 +432,7 @@ pub async fn db_run_query_spill(
     timeout_ms: Option<u64>,
     query_id: Option<String>,
     params: Option<Vec<QueryParameterInput>>,
+    manual_transaction: Option<bool>,
     on_event: tauri::ipc::Channel<QueryStreamEvent>,
 ) -> IrodoriResult<SpillRunResult> {
     let config = bounded_spill_config(memory_budget, offload_enabled);
@@ -421,7 +446,10 @@ pub async fn db_run_query_spill(
         config,
         timeout_ms,
         query_id,
-        params,
+        EditorQueryOptions {
+            params,
+            manual_transaction: manual_transaction.unwrap_or(false),
+        },
         tx,
     );
     let forward = async {

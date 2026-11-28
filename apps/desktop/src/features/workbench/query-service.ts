@@ -3,6 +3,7 @@ import {
   dbCancel,
   dbConnect,
   dbDisconnect,
+  dbEditorTransactionPending,
   dbExplainQuery,
   dbListObjects,
   dbQueryParameters,
@@ -37,6 +38,7 @@ export type QueryExecuteArgs = {
   timeoutMs?: number;
   queryId?: string;
   params?: QueryParameterInput[];
+  manualTransaction?: boolean;
 };
 
 export type QueryStreamArgs = QueryExecuteArgs;
@@ -49,6 +51,7 @@ export type QuerySpillArgs = {
   timeoutMs?: number;
   queryId?: string;
   params?: QueryParameterInput[];
+  manualTransaction?: boolean;
 };
 
 export interface QueryService {
@@ -61,6 +64,7 @@ export interface QueryService {
     args: QuerySpillArgs,
     onEvent: (event: SpillStreamEvent) => void,
   ): Promise<SpillRunResult>;
+  transactionPending(connectionId: string): Promise<boolean>;
   cancel(queryId: string): Promise<boolean>;
   resultWindow(
     handle: string,
@@ -89,9 +93,11 @@ export const tauriQueryService: QueryService = {
       args.timeoutMs,
       args.queryId,
       args.params,
+      args.manualTransaction,
     ),
   stream: runQueryStream,
   spill: runQuerySpill,
+  transactionPending: dbEditorTransactionPending,
   cancel: dbCancel,
   resultWindow: dbResultWindow,
   releaseResult: dbReleaseResult,

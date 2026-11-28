@@ -15,9 +15,8 @@ use super::result_spill_manager::ResultEntry;
 use super::spill::{ResultStore, SpillConfig};
 use super::state::{ensure_connection_can_run_sql, MAX_RETAINED_RESULTS};
 use super::{
-    stream, DbState, QueryParameterInput, QueryPlanAnalysis, QueryPlanMode, QueryResult,
-    ResultWindow, SpillRunResult, DEFAULT_MAX_ROWS, MAX_RESULT_ROWS, MAX_SPILL_ROWS, MAX_SQL_BYTES,
-    STREAM_BATCH_ROWS,
+    stream, DbState, QueryPlanAnalysis, QueryPlanMode, QueryResult, ResultWindow, SpillRunResult,
+    DEFAULT_MAX_ROWS, MAX_RESULT_ROWS, MAX_SPILL_ROWS, MAX_SQL_BYTES, STREAM_BATCH_ROWS,
 };
 
 /// Bound a query future by an optional wall-clock deadline. `None` preserves the
@@ -50,7 +49,7 @@ pub async fn run_query_with_params_impl(
     connection_id: String,
     sql: String,
     max_rows: Option<usize>,
-    params: Option<Vec<QueryParameterInput>>,
+    options: impl Into<super::EditorQueryOptions>,
 ) -> DbResult<QueryResult> {
     let connection_id = connection_id.trim().to_string();
     if connection_id.is_empty() {
@@ -76,10 +75,13 @@ pub async fn run_query_with_params_impl(
     ensure_connection_can_run_sql(state, &connection_id, &sql).await?;
 
     let cap = bounded_query_cap(max_rows)?;
-    let prepared = prepare_query(conn.wire(), &sql, params.as_deref())?;
+    let options = options.into();
+    let prepared = prepare_query(conn.wire(), &sql, options.params.as_deref())?;
     let metadata_sql = prepared.sql.clone();
     let start = Instant::now();
-    let sets = if prepared.params.is_empty() {
+    let sets = if options.manual_transaction {
+        super::postgres_transaction::run(conn.postgres_editor()?, &prepared, cap).await?
+    } else if prepared.params.is_empty() {
         conn.run_query_sets(&prepared.sql, cap).await?
     } else {
         let ((columns, rows, truncated), affected_rows) =
@@ -180,7 +182,7 @@ pub async fn run_query_managed_with_params_impl(
     max_rows: Option<usize>,
     timeout_ms: Option<u64>,
     query_id: Option<String>,
-    params: Option<Vec<QueryParameterInput>>,
+    options: impl Into<super::EditorQueryOptions>,
 ) -> DbResult<QueryResult> {
     let token = CancellationToken::new();
     if let Some(qid) = &query_id {
@@ -195,7 +197,7 @@ pub async fn run_query_managed_with_params_impl(
         tokio::select! {
             biased;
             _ = token.cancelled() => Err(DbError::cancelled("query cancelled")),
-            result = run_query_with_params_impl(state, connection_id, sql, max_rows, params) => result,
+            result = run_query_with_params_impl(state, connection_id, sql, max_rows, options) => result,
         }
     };
     let result = with_timeout(timeout_ms, run).await;
@@ -253,7 +255,7 @@ pub(crate) async fn run_query_stream_with_params_impl(
     max_rows: Option<usize>,
     timeout_ms: Option<u64>,
     query_id: Option<String>,
-    params: Option<Vec<QueryParameterInput>>,
+    options: impl Into<super::EditorQueryOptions>,
     sink: mpsc::Sender<stream::FetchEvent>,
 ) -> DbResult<stream::StreamSummary> {
     let cap = bounded_query_cap(max_rows)?;
@@ -264,7 +266,7 @@ pub(crate) async fn run_query_stream_with_params_impl(
         cap,
         timeout_ms,
         query_id,
-        params,
+        options,
         sink,
     )
     .await
@@ -283,7 +285,7 @@ pub(crate) async fn run_query_stream_capped_impl(
     cap: usize,
     timeout_ms: Option<u64>,
     query_id: Option<String>,
-    params: Option<Vec<QueryParameterInput>>,
+    options: impl Into<super::EditorQueryOptions>,
     sink: mpsc::Sender<stream::FetchEvent>,
 ) -> DbResult<stream::StreamSummary> {
     let connection_id = connection_id.trim().to_string();
@@ -307,7 +309,8 @@ pub(crate) async fn run_query_stream_capped_impl(
             .ok_or_else(|| DbError::not_found(format!("no open connection: {connection_id}")))?
     };
     ensure_connection_can_run_sql(state, &connection_id, &sql).await?;
-    let prepared = prepare_query(conn.wire(), &sql, params.as_deref())?;
+    let options = options.into();
+    let prepared = prepare_query(conn.wire(), &sql, options.params.as_deref())?;
     let metadata_sql = prepared.sql.clone();
 
     let token = CancellationToken::new();
@@ -331,7 +334,9 @@ pub(crate) async fn run_query_stream_capped_impl(
             biased;
             _ = token.cancelled() => Err(DbError::cancelled("query cancelled")),
             result = async {
-                if prepared.params.is_empty() {
+                if options.manual_transaction {
+                    super::postgres_transaction::stream(conn.postgres_editor()?, &prepared, &ctx).await
+                } else if prepared.params.is_empty() {
                     conn.stream_query_sets(&prepared.sql, &ctx).await
                 } else {
                     conn.stream_prepared_query(&prepared, &ctx).await
@@ -386,7 +391,7 @@ pub(crate) async fn run_query_spill_impl(
     config: SpillConfig,
     timeout_ms: Option<u64>,
     query_id: Option<String>,
-    params: Option<Vec<QueryParameterInput>>,
+    options: impl Into<super::EditorQueryOptions>,
     ui_sink: mpsc::Sender<stream::FetchEvent>,
 ) -> DbResult<SpillRunResult> {
     let started = Instant::now();
@@ -400,7 +405,7 @@ pub(crate) async fn run_query_spill_impl(
         config.fetch_cap(),
         timeout_ms,
         query_id,
-        params,
+        options,
         prod_tx,
     );
 

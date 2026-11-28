@@ -125,6 +125,7 @@ pub(crate) fn invoke_handler() -> Box<tauri::ipc::InvokeHandler<tauri::Wry>> {
         db::db_query_parameters,
         db::db_explain_query,
         db::db_run_query,
+        db::db_editor_transaction_pending,
         db::db_run_query_stream,
         db::db_run_query_spill,
         db::db_result_window,

@@ -555,6 +555,11 @@ export const ja = {
   "settings.general.animations.title": "アニメーション",
   "settings.general.animations.description":
     "短い画面効果。OS の動き軽減設定に従います。",
+  "settings.general.autoCommit.unsupported":
+    "手動トランザクションは PostgreSQL 接続で利用できます。",
+  "settings.general.autoCommit.pending":
+    "COMMIT または ROLLBACK を実行して保留中のトランザクションを終了してください。",
+  "statusbar.transactionPending": "トランザクション保留中",
   "settings.general.autoCommit.title": "自動コミット",
   "settings.general.autoCommit.description": "文の実行ごとに確定。",
   "settings.general.updateCheckOnStartup.title": "起動時に更新を確認",

@@ -18,7 +18,7 @@ impl<'a> QueryExecutor<'a> {
         max_rows: Option<usize>,
         timeout_ms: Option<u64>,
         query_id: Option<String>,
-        params: Option<Vec<QueryParameterInput>>,
+        options: EditorQueryOptions,
     ) -> DbResult<QueryResult> {
         run_query_managed_with_params_impl(
             self.state,
@@ -27,7 +27,7 @@ impl<'a> QueryExecutor<'a> {
             max_rows,
             timeout_ms,
             query_id,
-            params,
+            options,
         )
         .await
     }
@@ -39,7 +39,7 @@ impl<'a> QueryExecutor<'a> {
         max_rows: Option<usize>,
         timeout_ms: Option<u64>,
         query_id: Option<String>,
-        params: Option<Vec<QueryParameterInput>>,
+        options: EditorQueryOptions,
         sink: mpsc::Sender<stream::FetchEvent>,
     ) -> DbResult<stream::StreamSummary> {
         run_query_stream_with_params_impl(
@@ -49,7 +49,7 @@ impl<'a> QueryExecutor<'a> {
             max_rows,
             timeout_ms,
             query_id,
-            params,
+            options,
             sink,
         )
         .await

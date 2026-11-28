@@ -57,6 +57,8 @@ export interface SettingsDialogProps {
   vimMode: boolean;
   setVimMode: (value: boolean) => void;
   autoCommit: boolean;
+  manualTransactionsSupported?: boolean;
+  transactionPending?: boolean;
   setAutoCommit: (value: BooleanUpdater) => void;
   updateCheckOnStartup: boolean;
   setUpdateCheckOnStartup: (value: BooleanUpdater) => void;
@@ -140,6 +142,8 @@ export function SettingsDialog({
   vimMode,
   setVimMode,
   autoCommit,
+  manualTransactionsSupported = true,
+  transactionPending = false,
   setAutoCommit,
   updateCheckOnStartup,
   setUpdateCheckOnStartup,
@@ -401,6 +405,8 @@ export function SettingsDialog({
                 animationsEnabled={animationsEnabled}
                 setAnimationsEnabled={setAnimationsEnabled}
                 autoCommit={autoCommit}
+                manualTransactionsSupported={manualTransactionsSupported}
+                transactionPending={transactionPending}
                 setAutoCommit={setAutoCommit}
                 updateCheckOnStartup={updateCheckOnStartup}
                 setUpdateCheckOnStartup={setUpdateCheckOnStartup}

@@ -52,6 +52,7 @@ mod neo4j;
 #[cfg(feature = "oracle")]
 mod oracle;
 mod postgres;
+mod postgres_transaction;
 mod profile;
 mod query;
 mod query_executor;
@@ -86,8 +87,10 @@ pub use metadata_types::{
     ColumnMetadata, DatabaseMetadata, DbObjectMetadata, DbObjectMetadataKind, DbQuickSample,
     ForeignKey, IndexMetadata, SchemaMetadata,
 };
+pub use postgres_transaction::editor_transaction_pending_impl;
 pub use profile::ConnectionProfile;
 use profile::{normalize_profile, redact_secret_text};
+pub use query::EditorQueryOptions;
 pub use query::{
     query_parameter_prompt_set, QueryParameterInput, QueryParameterKey, QueryParameterPrompt,
     QueryParameterPromptSet, QueryResult, QueryResultSet, QueryStreamEvent,

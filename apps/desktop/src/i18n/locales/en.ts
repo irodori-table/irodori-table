@@ -549,6 +549,11 @@ export const en = {
   "settings.general.animations.title": "Animations",
   "settings.general.animations.description":
     "Short transitions; respects reduced motion.",
+  "settings.general.autoCommit.unsupported":
+    "Manual transactions are available on PostgreSQL connections.",
+  "settings.general.autoCommit.pending":
+    "Run COMMIT or ROLLBACK to resolve the open transaction.",
+  "statusbar.transactionPending": "Transaction pending",
   "settings.general.autoCommit.title": "Auto Commit",
   "settings.general.autoCommit.description": "Commit after each statement.",
   "settings.general.updateCheckOnStartup.title": "Check for updates on startup",
