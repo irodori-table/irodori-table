@@ -100,6 +100,7 @@ export function useWorkbenchActions({
     ui: {
       openPalette: overlays.openPalette,
       openAbout: overlays.openAbout,
+      openSqlFile: overlays.openSqlFile,
       openTool: overlays.openTool,
       openAiGenerate: overlays.openAiGenerate,
       toggleTerminal: overlays.toggleTerminal,

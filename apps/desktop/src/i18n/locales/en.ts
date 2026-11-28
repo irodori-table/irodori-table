@@ -94,6 +94,15 @@ export const en = {
   "commands.query.explainAnalyze.title": "Explain Analyse",
   "commands.query.explainPlan.title": "Explain Plan",
   "commands.query.run.title": "Run Query",
+  "commands.query.runFile.title": "Run SQL File…",
+  "sqlFile.choose": "Choose SQL file…",
+  "sqlFile.requireConnection":
+    "Select a writable SQLite connection to run a file.",
+  "sqlFile.review":
+    "The entire file will run and may change this database. If the job stops, previously committed changes are kept.",
+  "sqlFile.preview": "File preview · first {bytes} bytes",
+  "sqlFile.run": "Run file",
+  "settings.jobs.kind.import": "Import",
   "commands.query.runAll.title": "Run All",
   "commands.query.runCurrent.title": "Run Current Statement",
   "commands.query.runFromStart.title": "Run from Start",

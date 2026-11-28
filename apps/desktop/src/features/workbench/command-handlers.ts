@@ -13,6 +13,7 @@ type WorkbenchCommandHandlerDeps = {
   openGit: () => void;
   openHelp: () => void;
   openAbout: () => void;
+  openSqlFile: () => void;
   openDeveloperTools: () => void;
   openConnectionManager: () => void;
   openTool: (commandId: string) => void;
@@ -78,6 +79,7 @@ export function createWorkbenchCommandHandler({
   openGit,
   openHelp,
   openAbout,
+  openSqlFile,
   openDeveloperTools,
   openConnectionManager,
   openTool,
@@ -223,6 +225,9 @@ export function createWorkbenchCommandHandler({
         break;
       case "query.runFromStart":
         void runFromStartQuery();
+        break;
+      case "query.runFile":
+        openSqlFile();
         break;
       case "query.runAll":
         void runAllQuery();

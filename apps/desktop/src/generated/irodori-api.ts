@@ -157,6 +157,8 @@ export type ConnectionProfile<Engine> = { id: string, engine: Engine, host?: str
  */
 password?: string, auth?: AuthConfig, tls?: TlsConfig, database?: string, socketPath?: string, url?: string, transport?: TransportConfig, readOnly?: boolean, options?: { [key in string]: string }, };
 
+export type SqlFilePreview = { database: string, previewBytes: number, token: string, name: string, size: bigint, preview: string, };
+
 export type ConnectionInfo = { id: string, engine: DbEngine, serverVersion: string, };
 
 export type QueryResultSet = { statementIndex: number, statement: string, columns: Array<string>, rows: Array<Array<JsonValue>>, rowCount: bigint, elapsedMs: bigint, truncated: boolean, message?: string,
@@ -456,6 +458,14 @@ export function dbRunQuery(connectionId: string, sql: string, maxRows?: number, 
 
 export function dbCancel(queryId: string): Promise<boolean> {
   return invoke<boolean>("db_cancel", { queryId });
+}
+
+export function dbPickSqlFile(connectionId: string): Promise<SqlFilePreview | null> {
+  return invoke<SqlFilePreview | null>("db_pick_sql_file", { connectionId });
+}
+
+export function dbFinishSqlFile(connectionId: string, token: string, run: boolean): Promise<string | null> {
+  return invoke<string | null>("db_finish_sql_file", { connectionId, token, run });
 }
 
 export function dbResultWindow(handle: string, offset: number, limit: number): Promise<ResultWindow> {
