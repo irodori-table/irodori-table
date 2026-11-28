@@ -16,6 +16,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The stable auto-update channel follows published, non-prerelease GitHub
   Releases for `v*` tags.
 
+## [0.17.0] - 2026-11-28
+
+### Added
+
+- Table previews can filter and sort the full SQLite, PostgreSQL, MySQL or
+  MariaDB table before loading a page. The grid also offers a quick filter for
+  rows that have already loaded. (#400)
+- CSV and TSV imports can save a complete SQL script while keeping the on-screen
+  preview bounded. When appending to an existing table, map each source header
+  to a destination column or skip it to use the database default. (#401, #402)
+- Profiles can require a review before running SQL that changes data. The
+  editor and grid identify the connection and database before submitting the
+  reviewed changes. (#403)
+- Run a local SQLite script as a background job. Track progress, cancel a run,
+  or locate a failing statement while keeping the current editor open. (#404)
+- SQL completion recognizes tables and columns declared earlier in the same
+  editor tab, including columns added by `ALTER TABLE`. (#405)
+- Local notebooks keep Markdown notes alongside independently runnable SQL
+  cells. Saved notebooks contain the ordered cell sources. (#406)
+
+### Fixed
+
+- SQLite integer keys beyond JavaScript's safe integer range retain their
+  exact digits in query results, copies, exports, and grid updates. (#398)
+- Turning off Auto Commit on PostgreSQL now keeps editor writes pending on
+  their connection until commit or rollback. The workbench displays pending
+  transactions and identifies connections that cannot use manual mode. (#399)
+
+### Security
+
+- Updated `url` and `cookie` for RUSTSEC-2026-0592 and RUSTSEC-2026-0594.
+  Refreshed Rust and desktop dependencies and GitHub Actions. (#393–#397)
+
 ## [0.16.11] - 2026-11-20
 
 ### Fixed
