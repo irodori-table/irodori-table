@@ -5,6 +5,75 @@ use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
 #[tokio::test]
+async fn postgres_manual_transaction_spans_editor_stream_and_spill() {
+    let Ok(url) = std::env::var("IRODORI_PG_URL") else {
+        eprintln!("skip: IRODORI_PG_URL not set");
+        return;
+    };
+    let state = DbState::default();
+    let id = "stream-tx";
+    let profile = serde_json::from_value(serde_json::json!({
+        "id": id, "engine": "postgres", "url": url,
+    }))
+    .unwrap();
+    connect_impl(&state, &SecurityState::default(), None, profile)
+        .await
+        .unwrap();
+    let run = |sql: &str| run_query_impl(&state, id.into(), sql.into(), None);
+    run("CREATE TEMP TABLE edits (id bigint)").await.unwrap();
+    let options = || EditorQueryOptions {
+        params: Some(vec![QueryParameterInput {
+            key: QueryParameterKey::Name { name: "id".into() },
+            value: serde_json::json!(19),
+        }]),
+        manual_transaction: true,
+    };
+    let insert = "INSERT INTO edits VALUES (:id) RETURNING id";
+    let (sink, _events) = mpsc::channel(16);
+    let streamed = run_query_stream_with_params_impl(
+        &state,
+        id.into(),
+        insert.into(),
+        None,
+        None,
+        None,
+        options(),
+        sink,
+    )
+    .await
+    .unwrap();
+    assert_eq!(streamed.row_count, 1);
+    assert!(editor_transaction_pending_impl(&state, id).await.unwrap());
+    run("ROLLBACK").await.unwrap();
+    assert_eq!(
+        run("SELECT count(*)::int FROM edits").await.unwrap().rows[0][0],
+        0
+    );
+
+    let (sink, _events) = mpsc::channel(16);
+    let spilled = run_query_spill_impl(
+        &state,
+        id.into(),
+        insert.into(),
+        SpillConfig {
+            memory_budget: 1,
+            offload_enabled: true,
+            max_total_rows: 100,
+        },
+        None,
+        None,
+        options(),
+        sink,
+    )
+    .await
+    .unwrap();
+    assert_eq!(spilled.total_rows, 1);
+    assert!(editor_transaction_pending_impl(&state, id).await.unwrap());
+    run("COMMIT").await.unwrap();
+    assert_eq!(run("SELECT id FROM edits").await.unwrap().rows[0][0], 19);
+}
+
+#[tokio::test]
 async fn with_timeout_passes_through_and_trips() {
     // No limit (None / 0) runs to completion.
     let ok = with_timeout(None, async { Ok::<_, DbError>(42) }).await;

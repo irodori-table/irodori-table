@@ -53,6 +53,11 @@ pub(crate) trait Connection: Send + Sync {
     fn sql_file_pool(&self) -> DbResult<&sqlx::SqlitePool> {
         Err(DbError::unsupported("SQL file jobs require SQLite"))
     }
+    fn postgres_editor(&self) -> DbResult<&Session<sqlx::Postgres>> {
+        Err(DbError::unsupported(
+            "manual editor transactions require PostgreSQL",
+        ))
+    }
     async fn version(&self) -> Option<String>;
     async fn run_query(&self, sql: &str, cap: usize) -> DbResult<RowSet>;
     async fn run_prepared_query(&self, query: &PreparedQuery, cap: usize) -> DbResult<RowSet> {
@@ -174,6 +179,16 @@ struct PgConn {
 }
 #[async_trait]
 impl Connection for PgConn {
+    fn postgres_editor(&self) -> DbResult<&Session<sqlx::Postgres>> {
+        if self.engine == DbEngine::Postgres {
+            Ok(&self.session)
+        } else {
+            Err(DbError::unsupported(
+                "manual editor transactions require PostgreSQL",
+            ))
+        }
+    }
+
     fn wire(&self) -> Wire {
         self.engine.wire()
     }

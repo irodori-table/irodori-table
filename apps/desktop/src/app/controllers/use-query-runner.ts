@@ -43,6 +43,7 @@ import type {
   QueryResultSet,
   SpillRunResult,
 } from "@/generated/irodori-api";
+import { useEditorTransaction } from "./use-editor-transaction";
 import { sqlMayWrite } from "@/sql/read-only";
 import {
   tableBrowseKey,
@@ -153,6 +154,12 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
     t,
   } = deps;
 
+  const transaction = useEditorTransaction(
+    activeConnectionId,
+    activeConnectionOpen,
+    activeEngine,
+    queryService,
+  );
   const [queryRun, sendQueryRun] = useMachine(queryLifecycleMachine);
   const running = isQueryBusy(String(queryRun.value));
   const runningQueryIdRef = useRef<string | null>(null);
@@ -502,6 +509,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
           {
             connectionId: activeConnectionId,
             sql: sqlToRun,
+            manualTransaction: transaction.manualTransaction,
             memoryBudget: resultMemoryBudget,
             offloadEnabled: true,
             queryId,
@@ -536,6 +544,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
           {
             connectionId: activeConnectionId,
             sql: sqlToRun,
+            manualTransaction: transaction.manualTransaction,
             maxRows: 10_000,
             queryId,
             params,
@@ -679,6 +688,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
         cancelRequestedQueryIdRef.current = null;
       }
       runningQueryIdRef.current = null;
+      void transaction.refreshTransactionStatus();
     }
   }
 
@@ -784,6 +794,7 @@ export function useQueryRunner(deps: QueryRunnerDeps) {
   }
 
   return {
+    ...transaction,
     running,
     pendingQueryParameters,
     parameterDraftValues,

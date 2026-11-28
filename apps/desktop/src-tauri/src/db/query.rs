@@ -211,6 +211,23 @@ pub struct QueryParameterPromptSet {
     pub prompts: Vec<QueryParameterPrompt>,
 }
 
+/// Execution settings for a single editor request. Other database clients retain
+/// their existing per-statement behavior by omitting the manual mode.
+#[derive(Default)]
+pub struct EditorQueryOptions {
+    pub params: Option<Vec<QueryParameterInput>>,
+    pub manual_transaction: bool,
+}
+
+impl From<Option<Vec<QueryParameterInput>>> for EditorQueryOptions {
+    fn from(params: Option<Vec<QueryParameterInput>>) -> Self {
+        Self {
+            params,
+            manual_transaction: false,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct PreparedQuery {
     pub sql: String,
@@ -338,7 +355,7 @@ pub(crate) fn sql_statement_reports_affected_rows(sql: &str) -> bool {
     )
 }
 
-fn sql_tokens(sql: &str) -> impl Iterator<Item = String> + '_ {
+pub(super) fn sql_tokens(sql: &str) -> impl Iterator<Item = String> + '_ {
     SqlTokenIter {
         input: sql.as_bytes(),
         offset: 0,

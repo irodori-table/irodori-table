@@ -31,7 +31,7 @@ impl<'a> ResultSpillManager<'a> {
         config: SpillConfig,
         timeout_ms: Option<u64>,
         query_id: Option<String>,
-        params: Option<Vec<QueryParameterInput>>,
+        options: EditorQueryOptions,
         ui_sink: mpsc::Sender<stream::FetchEvent>,
     ) -> DbResult<SpillRunResult> {
         run_query_spill_impl(
@@ -41,7 +41,7 @@ impl<'a> ResultSpillManager<'a> {
             config,
             timeout_ms,
             query_id,
-            params,
+            options,
             ui_sink,
         )
         .await

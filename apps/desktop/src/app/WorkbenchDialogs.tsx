@@ -316,7 +316,9 @@ export function WorkbenchDialogs() {
           setSidebarViewLabels={setSidebarViewLabels}
           problemsBadgeVisible={problemsBadgeVisible}
           setProblemsBadgeVisible={setProblemsBadgeVisible}
-          autoCommit={autoCommit}
+          autoCommit={connections.activeEngine !== "postgres" || autoCommit}
+          manualTransactionsSupported={connections.activeEngine === "postgres"}
+          transactionPending={queryRunner.transactionPending}
           setAutoCommit={setAutoCommit}
           updateCheckOnStartup={updateCheckOnStartup}
           setUpdateCheckOnStartup={setUpdateCheckOnStartup}

@@ -1198,3 +1198,73 @@ async fn postgres_typed_edits(url: String) {
     assert_eq!(rows[0][3], json!("a"));
     assert_eq!(rows[1][0], json!("00000000-0000-0000-0000-000000000003"));
 }
+
+#[tokio::test]
+async fn postgres_manual_editor_transactions_are_visible_only_after_commit() {
+    use desktop_lib::db::{
+        editor_transaction_pending_impl, run_query_with_params_impl, EditorQueryOptions,
+    };
+    let Ok(url) = std::env::var("IRODORI_PG_URL") else {
+        eprintln!("skip: IRODORI_PG_URL not set");
+        return;
+    };
+    let state = DbState::default();
+    for id in ["writer", "observer"] {
+        connect_impl(
+            &state,
+            &SecurityState::default(),
+            None,
+            url_profile(id, DbEngine::Postgres, url.clone()),
+        )
+        .await
+        .unwrap();
+    }
+    let table = format!("irodori_it_manual_{}", std::process::id());
+    let run = |sql| {
+        run_query_with_params_impl(
+            &state,
+            "writer".into(),
+            sql,
+            None,
+            EditorQueryOptions {
+                params: None,
+                manual_transaction: true,
+            },
+        )
+    };
+    let observe = |sql| run_query_impl(&state, "observer".into(), sql, None);
+    observe(format!("CREATE TABLE {table} (id int primary key)"))
+        .await
+        .unwrap();
+    let count = || observe(format!("SELECT count(*)::int FROM {table}"));
+    for (id, finish, expected) in [(1, "ROLLBACK", 0), (2, "COMMIT", 1)] {
+        run(format!("INSERT INTO {table} VALUES ({id})"))
+            .await
+            .unwrap();
+        assert!(editor_transaction_pending_impl(&state, "writer")
+            .await
+            .unwrap());
+        assert_eq!(count().await.unwrap().rows[0][0], 0);
+        run(finish.into()).await.unwrap();
+        assert!(!editor_transaction_pending_impl(&state, "writer")
+            .await
+            .unwrap());
+        assert_eq!(count().await.unwrap().rows[0][0], expected);
+    }
+    run(format!(
+        "INSERT INTO {table} VALUES (3); COMMIT; INSERT INTO {table} VALUES (4)"
+    ))
+    .await
+    .unwrap();
+    assert_eq!(count().await.unwrap().rows[0][0], 2);
+    // A change to automatic mode does not resolve an outstanding transaction.
+    run_query_impl(&state, "writer".into(), "SELECT 1".into(), None)
+        .await
+        .unwrap();
+    assert!(editor_transaction_pending_impl(&state, "writer")
+        .await
+        .unwrap());
+    run("ROLLBACK".into()).await.unwrap();
+    assert_eq!(count().await.unwrap().rows[0][0], 2);
+    observe(format!("DROP TABLE {table}")).await.unwrap();
+}

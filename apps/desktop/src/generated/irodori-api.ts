@@ -452,8 +452,12 @@ export function dbExplainQuery(connectionId: string, sql: string, mode: QueryPla
   return invoke<QueryPlanAnalysis>("db_explain_query", { connectionId, sql, mode });
 }
 
-export function dbRunQuery(connectionId: string, sql: string, maxRows?: number, timeoutMs?: number, queryId?: string, params?: Array<QueryParameterInput>): Promise<QueryResult> {
-  return invoke<QueryResult>("db_run_query", { connectionId, sql, maxRows, timeoutMs, queryId, params });
+export function dbRunQuery(connectionId: string, sql: string, maxRows?: number, timeoutMs?: number, queryId?: string, params?: Array<QueryParameterInput>, manualTransaction?: boolean): Promise<QueryResult> {
+  return invoke<QueryResult>("db_run_query", { connectionId, sql, maxRows, timeoutMs, queryId, params, manualTransaction });
+}
+
+export function dbEditorTransactionPending(connectionId: string): Promise<boolean> {
+  return invoke<boolean>("db_editor_transaction_pending", { connectionId });
 }
 
 export function dbCancel(queryId: string): Promise<boolean> {

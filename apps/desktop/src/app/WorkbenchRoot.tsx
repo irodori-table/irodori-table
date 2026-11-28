@@ -98,7 +98,13 @@ export function WorkbenchRoot() {
         activeConnectionName={connections.activeConnection.name}
         activeConnectionEngine={connections.activeConnection.engine}
         activeConnectionColor={connections.activeConnectionColor}
-        activeConnectionStatus={connections.activeConnectionStatus}
+        activeConnectionStatus={
+          queryRunner.transactionPending
+            ? connections.activeConnectionStatus +
+              " · " +
+              t("statusbar.transactionPending")
+            : connections.activeConnectionStatus
+        }
         activeConnectionOpen={connections.activeConnectionOpen}
         activeTransportLabel={connections.activeTransportLabel}
         vimMode={vimMode}

@@ -69,6 +69,18 @@ impl<DB: Database> Session<DB> {
         })
     }
 
+    pub(super) async fn held_server_id(&self) -> Option<i64> {
+        self.held
+            .lock()
+            .await
+            .as_ref()
+            .and_then(|held| held.server_id)
+    }
+
+    pub(super) fn pool(&self) -> &Pool<DB> {
+        &self.pool
+    }
+
     /// Give the session back and close the pool. Closing a pool waits for every
     /// checked-out connection, so the held one has to be released first.
     pub(crate) async fn close(&self) {
@@ -86,6 +98,10 @@ pub(crate) struct SessionGuard<'a, DB: Database> {
 }
 
 impl<DB: Database> SessionGuard<'_, DB> {
+    pub(super) fn server_id(&self) -> Option<i64> {
+        self.slot.as_ref().and_then(|held| held.server_id)
+    }
+
     pub(crate) fn conn(&mut self) -> &mut DB::Connection {
         &mut self
             .slot

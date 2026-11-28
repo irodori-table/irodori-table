@@ -286,9 +286,12 @@ mod typegen {
                     .arg(Arg::rust("max_rows", TsType::number()).optional())
                     .arg(Arg::rust("timeout_ms", TsType::number()).optional())
                     .arg(Arg::rust("query_id", TsType::string()).optional())
-                    .arg(
-                        Arg::new("params", TsType::named("Array<QueryParameterInput>")).optional(),
-                    ),
+                    .arg(Arg::new("params", TsType::named("Array<QueryParameterInput>")).optional())
+                    .arg(Arg::rust("manual_transaction", TsType::boolean()).optional()),
+            )
+            .command(
+                Command::returning("db_editor_transaction_pending", TsType::boolean())
+                    .arg(Arg::rust("connection_id", TsType::string())),
             )
             .command(
                 Command::returning("db_cancel", TsType::boolean())
