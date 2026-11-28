@@ -1,3 +1,4 @@
+import { profileDatabaseLabel } from "@/features/connections/connection-transfer";
 import { useEffect, useMemo, useState } from "react";
 import type { ShowActionNotice } from "@/app/ActionToast";
 import { fallbackSnapshot } from "@/app/app-config";
@@ -182,9 +183,38 @@ export function useWorkbenchConnections({
   const activeProfile = profiles.find(
     (profile) => profile.id === activeConnectionId,
   );
-  const activeEngine = activeProfile?.engine ?? draft.engine;
+  const revision = useConnectionStore(
+    (state) => state.activeConnectionRevision,
+  );
+  const session = liveConnections[activeConnectionId];
+  const activeEngine =
+    (connectedIds.has(activeConnectionId) && session?.connectedEngine) ||
+    activeProfile?.engine ||
+    draft.engine;
+  const activeWriteProtection = activeProfile?.reviewWrites === true;
+  const activeDatabaseLabel =
+    (session?.databaseLabel ??
+      (activeProfile && profileDatabaseLabel(activeProfile))) ||
+    t("connection.defaultDatabase");
+  const activeWriteTarget = {
+    id: activeConnectionId,
+    name: activeConnection.name,
+    database: activeDatabaseLabel,
+    reviewWrites: activeWriteProtection,
+    revision,
+    isCurrent: () => {
+      const state = useConnectionStore.getState();
+      return (
+        state.activeConnectionRevision === revision &&
+        state.activeConnectionId === activeConnectionId &&
+        state.connectedIds.has(activeConnectionId)
+      );
+    },
+  };
   const activeConnectionOpen = connectedIds.has(activeConnectionId);
-  const activeConnectionReadOnly = activeProfile?.readOnly ?? false;
+  const activeConnectionReadOnly =
+    (activeConnectionOpen && session?.connectedReadOnly) ||
+    (activeProfile?.readOnly ?? false);
   const activeConnectionColor =
     activeProfile?.color ||
     profileById.get(activeConnectionId)?.color ||
@@ -315,6 +345,9 @@ export function useWorkbenchConnections({
     activeConnection,
     activeConnectionOpen,
     activeConnectionReadOnly,
+    activeWriteTarget,
+    activeWriteProtection,
+    activeDatabaseLabel,
     activeEngine,
     activeConnectionColor,
     activeConnectionStatus,

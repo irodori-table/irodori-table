@@ -20,7 +20,10 @@ import type { SidebarViews } from "@/app/controllers/use-sidebar-views";
 import type { WorkbenchConnections } from "@/app/controllers/use-workbench-connections";
 import { usePreferencesStore } from "@/features/preferences";
 import { useQueryHistoryStore } from "@/features/query-history/query-history-store";
-import type { QueryPlanAnalysis } from "@/generated/irodori-api";
+import type {
+  DbObjectMetadata,
+  QueryPlanAnalysis,
+} from "@/generated/irodori-api";
 import type { Translator } from "@/i18n";
 
 type QueryWorkspaceDeps = {
@@ -93,12 +96,10 @@ export function useQueryWorkspace({
   const [planLoading, setPlanLoading] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
 
-  // The grid needs to re-run the current query (edit commits, refresh), but
-  // editor commands are created after the grid; bridge with a ref.
   const importFileRef = useRef<HTMLInputElement | null>(null);
-  const editorCommandsRef = useRef<{ runQuery: () => Promise<void> } | null>(
-    null,
-  );
+  // Refresh the saved table's preview, even if the editor changed.
+  const refreshTableRef =
+    useRef<(sql: string, table: DbObjectMetadata) => Promise<void>>(undefined);
   const grid = useResultGridWorkspace({
     uiZoom,
     editorEngine,
@@ -107,10 +108,11 @@ export function useQueryWorkspace({
     metadataByConnection,
     activeConnectionId,
     activeConnectionReadOnly,
+    writeTarget: connections.activeWriteTarget,
     activeEditorApi,
     onRowSelected: () => sidebars.setActiveSidebarView("rowDetail"),
-    runQuery: async () => {
-      await editorCommandsRef.current?.runQuery();
+    refreshTable: async (sql, table) => {
+      await refreshTableRef.current?.(sql, table);
     },
     setQueryError,
     confirm,
@@ -124,6 +126,8 @@ export function useQueryWorkspace({
     activeConnectionId,
     activeConnectionOpen,
     activeConnectionReadOnly,
+    writeTarget: connections.activeWriteTarget,
+    confirm,
     activeConnectionName: activeConnection.name,
     activeConnectionEngine: activeEngine,
     activeEngine,
@@ -183,7 +187,8 @@ export function useQueryWorkspace({
     showActionNotice,
     t,
   });
-  editorCommandsRef.current = { runQuery: editorCommands.runQuery };
+  refreshTableRef.current = (sql, table) =>
+    queryRunner.executeQuery(sql, undefined, { sourceObject: table });
 
   const browseKey =
     activeTableObject && tableBrowseKey(activeConnectionId, activeTableObject);

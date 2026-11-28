@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   exportConnectionProfiles,
   importConnectionProfiles,
+  profileDatabaseLabel,
 } from "@/features/connections/connection-transfer";
 import type { ConnectionDraft } from "@/features/connections/connection-profiles";
 
@@ -26,6 +27,30 @@ function profile(patch: Partial<ConnectionDraft> = {}): ConnectionDraft {
 }
 
 describe("connection transfer", () => {
+  it("gets the review database from the connected URL without credentials or options", () => {
+    expect(
+      profileDatabaseLabel(
+        profile({
+          mode: "url",
+          url: "postgres://user:secret@example.test/staging?sslmode=require&application_name=editor",
+          database: "stale fields",
+        }),
+      ),
+    ).toBe("staging");
+    expect(profileDatabaseLabel(profile({ database: "staging?old" }))).toBe(
+      "staging?old",
+    );
+    expect(
+      profileDatabaseLabel(
+        profile({
+          engine: "sqlite",
+          mode: "url",
+          url: "sqlite:///tmp/warehouse.sqlite?mode=ro",
+        }),
+      ),
+    ).toBe("/tmp/warehouse.sqlite");
+  });
+
   it("imports DBeaver CSV and strips URL passwords", () => {
     const imported = importConnectionProfiles(
       [
@@ -126,9 +151,9 @@ describe("connection transfer", () => {
     });
   });
 
-  it("round-trips read-only mode in native exports", () => {
+  it("round-trips read-only and write review settings in native exports", () => {
     const exported = exportConnectionProfiles(
-      [profile({ readOnly: true })],
+      [profile({ readOnly: true, reviewWrites: true })],
       "irodori",
     );
     const imported = importConnectionProfiles(
@@ -139,6 +164,7 @@ describe("connection transfer", () => {
     expect(imported.profiles[0]).toMatchObject({
       id: "warehouse",
       readOnly: true,
+      reviewWrites: true,
     });
   });
 

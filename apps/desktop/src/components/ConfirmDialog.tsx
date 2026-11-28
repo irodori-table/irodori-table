@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
 import { usePreferencesStore } from "@/features/preferences";
 import { createTranslator } from "@/i18n";
@@ -8,6 +8,7 @@ export type ConfirmTone = "danger" | "default";
 
 export type ConfirmOptions = {
   title: string;
+  signal?: AbortSignal;
   message?: ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
@@ -112,10 +113,29 @@ export function useConfirm() {
   const confirm = useCallback(
     (options: ConfirmOptions) =>
       new Promise<boolean>((resolve) => {
-        setState({ ...options, resolve });
+        if (options.signal?.aborted) {
+          resolve(false);
+          return;
+        }
+        setState((previous) => {
+          previous?.resolve(false);
+          return { ...options, resolve };
+        });
       }),
     [],
   );
+
+  useEffect(() => {
+    const signal = state?.signal;
+    if (!state || !signal) return;
+    const abort = () => {
+      state.resolve(false);
+      setState((current) => (current === state ? null : current));
+    };
+    if (signal.aborted) abort();
+    else signal.addEventListener("abort", abort, { once: true });
+    return () => signal.removeEventListener("abort", abort);
+  }, [state]);
 
   const settle = useCallback((confirmed: boolean) => {
     setState((current) => {

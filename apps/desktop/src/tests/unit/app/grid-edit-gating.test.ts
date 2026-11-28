@@ -55,6 +55,14 @@ function editing(overrides: Partial<ResultGridEditingDeps>) {
     activeResult: resultSet,
     resultColumns: ["id", "kind"],
     activeConnectionId: "local",
+    writeTarget: {
+      id: "local",
+      name: "Staging",
+      database: "audit_stage",
+      reviewWrites: true,
+      revision: 1,
+      isCurrent: () => true,
+    },
     activeConnectionReadOnly: false,
     activeEngine: "postgres",
     lastRunSql: 'select * from "public"."memories" limit 200;',
@@ -147,7 +155,37 @@ describe("saving edits", () => {
       title: "Apply 1 changes to public.memories?",
       tone: "default",
     });
+    expect(String(confirm.mock.calls[0][0].message)).toContain(
+      "Staging (local) · Database: audit_stage",
+    );
     expect(apply).not.toHaveBeenCalled();
+  });
+
+  it("accepts a single review for a staged save on its named connection", async () => {
+    const apply = vi
+      .spyOn(queryService, "applyEdits")
+      .mockResolvedValue({ updated: 1n, inserted: 0n, deleted: 0n });
+    const confirm = vi.fn(async () => true);
+    const refreshTable = vi.fn(async () => {});
+    const { actions } = editing({
+      editMode: true,
+      cellEdits: new Map([["o0:1", "opinion"]]),
+      newRows: [],
+      deletedRows: new Set(),
+      confirm,
+      refreshTable,
+    });
+    await actions.commitEdits();
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(refreshTable).toHaveBeenCalledWith(
+      'select * from "public"."memories" limit 200;',
+      memoriesTable,
+    );
+    expect(apply).toHaveBeenCalledTimes(1);
+    expect(apply).toHaveBeenCalledWith(
+      "local",
+      expect.objectContaining({ table: "memories" }),
+    );
   });
 
   it("warns that deletes cannot be restored", async () => {
@@ -166,5 +204,32 @@ describe("saving edits", () => {
     expect(String(confirm.mock.calls[0][0].message)).toContain(
       "cannot be restored",
     );
+  });
+
+  it("never applies a staged save to a changed connection", async () => {
+    const apply = vi.spyOn(queryService, "applyEdits");
+    let current = true;
+    const confirm = vi.fn(async () => {
+      current = false;
+      return true;
+    });
+    const { actions } = editing({
+      editMode: true,
+      cellEdits: new Map([["o0:1", "updated"]]),
+      newRows: [],
+      deletedRows: new Set(),
+      writeTarget: {
+        id: "local",
+        name: "Staging",
+        database: "audit_stage",
+        reviewWrites: true,
+        revision: 1,
+        isCurrent: () => current,
+      },
+      confirm,
+    });
+    await actions.commitEdits();
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(apply).not.toHaveBeenCalled();
   });
 });

@@ -12,6 +12,7 @@ import {
 
 type ConnectionState = {
   activeConnectionId: string;
+  activeConnectionRevision: number;
   profiles: ConnectionDraft[];
   selectedProfileId: string;
   draft: ConnectionDraft;
@@ -54,6 +55,7 @@ export const useConnectionStore = create<ConnectionState>((set) => ({
   // Empty when no connection is configured yet; the app renders a safe
   // "no connection" placeholder until the user adds one.
   activeConnectionId: initialProfiles[0]?.id ?? "",
+  activeConnectionRevision: 0,
   profiles: initialProfiles,
   selectedProfileId: initialProfiles[0]?.id ?? initialDraft.id,
   draft: initialDraft,
@@ -69,11 +71,33 @@ export const useConnectionStore = create<ConnectionState>((set) => ({
   metadataErrors: {},
   objectActionMenu: null,
   setActiveConnectionId: (value) =>
-    set((state) => ({
-      activeConnectionId: resolveValue(state.activeConnectionId, value),
-    })),
+    set((state) => {
+      const id = resolveValue(state.activeConnectionId, value);
+      return id === state.activeConnectionId
+        ? state
+        : {
+            activeConnectionId: id,
+            activeConnectionRevision: state.activeConnectionRevision + 1,
+          };
+    }),
   setProfiles: (value) =>
-    set((state) => ({ profiles: resolveValue(state.profiles, value) })),
+    set((state) => {
+      const profiles = resolveValue(state.profiles, value);
+      const previous = state.profiles.find(
+        (profile) => profile.id === state.activeConnectionId,
+      );
+      const next = profiles.find(
+        (profile) => profile.id === state.activeConnectionId,
+      );
+      const changed =
+        previous?.reviewWrites !== next?.reviewWrites ||
+        previous?.readOnly !== next?.readOnly;
+      return {
+        profiles,
+        activeConnectionRevision:
+          state.activeConnectionRevision + Number(changed),
+      };
+    }),
   setSelectedProfileId: (value) =>
     set((state) => ({
       selectedProfileId: resolveValue(state.selectedProfileId, value),
@@ -89,13 +113,29 @@ export const useConnectionStore = create<ConnectionState>((set) => ({
       connectionSearch: resolveValue(state.connectionSearch, value),
     })),
   setConnectedIds: (value) =>
-    set((state) => ({
-      connectedIds: resolveValue(state.connectedIds, value),
-    })),
+    set((state) => {
+      const connectedIds = resolveValue(state.connectedIds, value);
+      const changed =
+        connectedIds.has(state.activeConnectionId) !==
+        state.connectedIds.has(state.activeConnectionId);
+      return {
+        connectedIds,
+        activeConnectionRevision:
+          state.activeConnectionRevision + Number(changed),
+      };
+    }),
   setLiveConnections: (value) =>
-    set((state) => ({
-      liveConnections: resolveValue(state.liveConnections, value),
-    })),
+    set((state) => {
+      const liveConnections = resolveValue(state.liveConnections, value);
+      const changed =
+        liveConnections[state.activeConnectionId] !==
+        state.liveConnections[state.activeConnectionId];
+      return {
+        liveConnections,
+        activeConnectionRevision:
+          state.activeConnectionRevision + Number(changed),
+      };
+    }),
   setConnecting: (value) =>
     set((state) => ({ connecting: resolveValue(state.connecting, value) })),
   setTestingConnection: (value) =>

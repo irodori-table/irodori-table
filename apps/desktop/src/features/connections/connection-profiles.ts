@@ -261,7 +261,7 @@ export function isPristineDraftProfile(profile: ConnectionDraft): boolean {
   if (!match) {
     return false;
   }
-  if (profile.ssh) {
+  if (profile.ssh || profile.reviewWrites === true) {
     return false;
   }
   const pristine = newDraft(Number(match[1]));
@@ -639,6 +639,7 @@ export function settingsProfileFromJson(
       database: jsonString(value.database, defaults.database),
       socketPath: jsonString(value.socketPath, defaults.socketPath),
       readOnly: value.readOnly === true,
+      ...(value.reviewWrites === true ? { reviewWrites: true } : {}),
       options: tls.options,
       ssh: sshTunnelFromJson(value.ssh),
       tls: tls.tls,

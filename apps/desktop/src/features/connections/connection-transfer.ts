@@ -66,6 +66,7 @@ type ConnectionCandidate = {
   database?: string;
   color?: string;
   readOnly?: boolean;
+  reviewWrites?: boolean;
 };
 
 type ParsedUrl = {
@@ -598,6 +599,7 @@ function candidateFromRecord(
     database,
     color: pickString(getAny(value, ["color", "colour"])),
     readOnly: booleanFrom(getAny(value, ["readOnly", "readonly", "read_only"])),
+    reviewWrites: value.reviewWrites === true,
   };
   return candidateHasTarget(candidate) ? candidate : null;
 }
@@ -828,7 +830,27 @@ function candidateToDraft(candidate: ConnectionCandidate, index: number) {
     password: "",
     database,
     readOnly: candidate.readOnly === true,
+    ...(candidate.reviewWrites === true ? { reviewWrites: true } : {}),
   });
+}
+
+/** The connected database, without displaying an endpoint URL or its credentials. */
+export function profileDatabaseLabel(profile: ConnectionDraft): string {
+  const parsed =
+    profile.mode === "url" ? parseConnectionUrl(profile.url) : undefined;
+  const database = parsed ? parsed.database : profile.database;
+  return (
+    (parsed?.engine === "sqlite"
+      ? database?.split("?")[0]
+      : database
+    )?.trim() ||
+    (profile.engine === "postgres"
+      ? parsed
+        ? parsed.user
+        : profile.user
+      : "") ||
+    ""
+  );
 }
 
 function parseConnectionUrl(raw: string): ParsedUrl {
@@ -892,6 +914,9 @@ function parseConnectionUrl(raw: string): ParsedUrl {
     };
   }
 
+  const parsed = parseStandardUrl(url);
+  if (parsed) return parsed;
+
   const keyValues = parseDelimitedProperties(url);
   if (Object.keys(keyValues).length > 1) {
     const looksLikeSqlServer =
@@ -924,11 +949,6 @@ function parseConnectionUrl(raw: string): ParsedUrl {
         keyValues.schema,
       ),
     };
-  }
-
-  const parsed = parseStandardUrl(url);
-  if (parsed) {
-    return parsed;
   }
 
   return { url };
@@ -1248,6 +1268,7 @@ function exportProfile(profile: ConnectionDraft) {
     user: view.user,
     database: view.database,
     readOnly: view.readOnly ? true : undefined,
+    reviewWrites: view.reviewWrites === true ? true : undefined,
   });
 }
 
