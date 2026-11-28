@@ -332,3 +332,26 @@ async fn sqlite_file_starts_only_the_reviewed_file_and_reports_history() {
     );
     tokio::fs::remove_file(path).await.unwrap();
 }
+
+#[tokio::test]
+async fn sqlite_file_requires_database_visible_to_the_job_session() {
+    let db = DbState::default();
+    let private = serde_json::from_value(serde_json::json!({
+        "id": "private", "engine": "sqlite", "url": "sqlite::memory:?cache=private"
+    }))
+    .unwrap();
+    connect_impl(&db, &SecurityState::default(), None, private)
+        .await
+        .unwrap();
+    let error = target(&db, "private").await.err().unwrap();
+    assert!(
+        error.message.contains("private to the editor session"),
+        "{error}"
+    );
+    for url in ["sqlite://db?mode=ro", "sqlite://db?immutable=true"] {
+        let options = url.parse().unwrap();
+        assert!(validate_session_options(&options)
+            .unwrap_err()
+            .contains("writable"));
+    }
+}

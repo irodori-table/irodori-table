@@ -399,6 +399,7 @@ impl Connection for SqliteConn {
                 "SQL file jobs require a writable SQLite connection",
             ));
         }
+        super::sql_file::validate_session_options(&self.pool.connect_options())?;
         Ok(&self.pool)
     }
 
