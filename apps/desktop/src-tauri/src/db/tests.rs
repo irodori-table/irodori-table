@@ -5,6 +5,101 @@ use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
 #[tokio::test]
+async fn reviewed_writes_cannot_reach_a_replacement_database() {
+    let state = DbState::default();
+    let security = SecurityState::default();
+    let id = "reviewed";
+    let mut first = temp_sqlite_profile("review-first");
+    let mut second = temp_sqlite_profile("review-second");
+    first.id = id.into();
+    second.id = id.into();
+    let run = |sql: &str| run_query_impl(&state, id.into(), sql.into(), None);
+    let create = "CREATE TABLE edits (value TEXT)";
+    let insert = "INSERT INTO edits VALUES ('approved')";
+    let original = connect_impl(&state, &security, None, first).await.unwrap();
+    run(create).await.unwrap();
+    let replacement = connect_impl(&state, &security, None, second).await.unwrap();
+    run(create).await.unwrap();
+    assert_ne!(original.session_id, replacement.session_id);
+    let reviewed = || EditorQueryOptions {
+        session_id: original.session_id.clone(),
+        ..Default::default()
+    };
+
+    assert!(
+        run_query_with_params_impl(&state, id.into(), insert.into(), None, reviewed())
+            .await
+            .unwrap_err()
+            .contains("connection session changed")
+    );
+    let (tx, _rx) = mpsc::channel(4);
+    assert!(run_query_stream_with_params_impl(
+        &state,
+        id.into(),
+        insert.into(),
+        None,
+        None,
+        None,
+        reviewed(),
+        tx
+    )
+    .await
+    .unwrap_err()
+    .contains("connection session changed"));
+    let (tx, _rx) = mpsc::channel(4);
+    let spill = SpillConfig {
+        memory_budget: 1,
+        offload_enabled: true,
+        max_total_rows: 10,
+    };
+    assert!(run_query_spill_impl(
+        &state,
+        id.into(),
+        insert.into(),
+        spill,
+        None,
+        None,
+        reviewed(),
+        tx
+    )
+    .await
+    .unwrap_err()
+    .contains("connection session changed"));
+    let edits = TableEdits {
+        schema: Some("main".into()),
+        table: "edits".into(),
+        updates: vec![],
+        deletes: vec![],
+        inserts: vec![RowInsert {
+            values: vec![CellValue {
+                column: "value".into(),
+                value: serde_json::json!("grid"),
+            }],
+        }],
+    };
+    assert!(apply_edits_to_session(
+        &state,
+        id.into(),
+        edits.clone(),
+        original.session_id.as_deref()
+    )
+    .await
+    .unwrap_err()
+    .contains("connection session changed"));
+    assert_eq!(
+        run("SELECT count(*) FROM edits").await.unwrap().rows[0][0],
+        0
+    );
+    apply_edits_to_session(&state, id.into(), edits, replacement.session_id.as_deref())
+        .await
+        .unwrap();
+    assert_eq!(
+        run("SELECT value FROM edits").await.unwrap().rows[0][0],
+        "grid"
+    );
+}
+
+#[tokio::test]
 async fn postgres_manual_transaction_spans_editor_stream_and_spill() {
     let Ok(url) = std::env::var("IRODORI_PG_URL") else {
         eprintln!("skip: IRODORI_PG_URL not set");
@@ -27,6 +122,7 @@ async fn postgres_manual_transaction_spans_editor_stream_and_spill() {
             value: serde_json::json!(19),
         }]),
         manual_transaction: true,
+        ..Default::default()
     };
     let insert = "INSERT INTO edits VALUES (:id) RETURNING id";
     let (sink, _events) = mpsc::channel(16);

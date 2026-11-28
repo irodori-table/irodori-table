@@ -157,7 +157,7 @@ export type ConnectionProfile<Engine> = { id: string, engine: Engine, host?: str
  */
 password?: string, auth?: AuthConfig, tls?: TlsConfig, database?: string, socketPath?: string, url?: string, transport?: TransportConfig, readOnly?: boolean, options?: { [key in string]: string }, };
 
-export type ConnectionInfo = { id: string, engine: DbEngine, serverVersion: string, };
+export type ConnectionInfo = { id: string, sessionId?: string, engine: DbEngine, serverVersion: string, };
 
 export type QueryResultSet = { statementIndex: number, statement: string, columns: Array<string>, rows: Array<Array<JsonValue>>, rowCount: bigint, elapsedMs: bigint, truncated: boolean, message?: string,
 /**
@@ -438,8 +438,8 @@ export function dbExplainQuery(connectionId: string, sql: string, mode: QueryPla
   return invoke<QueryPlanAnalysis>("db_explain_query", { connectionId, sql, mode });
 }
 
-export function dbRunQuery(connectionId: string, sql: string, maxRows?: number, timeoutMs?: number, queryId?: string, params?: Array<QueryParameterInput>, manualTransaction?: boolean): Promise<QueryResult> {
-  return invoke<QueryResult>("db_run_query", { connectionId, sql, maxRows, timeoutMs, queryId, params, manualTransaction });
+export function dbRunQuery(connectionId: string, sql: string, maxRows?: number, timeoutMs?: number, queryId?: string, params?: Array<QueryParameterInput>, manualTransaction?: boolean, sessionId?: string): Promise<QueryResult> {
+  return invoke<QueryResult>("db_run_query", { connectionId, sql, maxRows, timeoutMs, queryId, params, manualTransaction, sessionId });
 }
 
 export function dbEditorTransactionPending(connectionId: string): Promise<boolean> {
@@ -458,8 +458,8 @@ export function dbReleaseResult(handle: string): Promise<boolean> {
   return invoke<boolean>("db_release_result", { handle });
 }
 
-export function dbApplyEdits(connectionId: string, edits: TableEdits): Promise<AppliedEdits> {
-  return invoke<AppliedEdits>("db_apply_edits", { connectionId, edits });
+export function dbApplyEdits(connectionId: string, edits: TableEdits, sessionId?: string): Promise<AppliedEdits> {
+  return invoke<AppliedEdits>("db_apply_edits", { connectionId, edits, sessionId });
 }
 
 export function dbListObjects(connectionId: string): Promise<DatabaseMetadata> {

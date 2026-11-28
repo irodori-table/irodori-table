@@ -30,6 +30,7 @@ function harness({
     id: "stage",
     name: "Staging",
     database: "billing",
+    sessionId: "session-1",
     reviewWrites,
     revision,
     isCurrent: () =>
@@ -116,6 +117,7 @@ describe("protected editor execution", () => {
         connectionId: "stage",
         sql: "UPDATE orders SET amount=42;",
         manualTransaction: true,
+        sessionId: "session-1",
       }),
       expect.any(Function),
     );

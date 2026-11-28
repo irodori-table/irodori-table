@@ -688,7 +688,11 @@ export function useResultGridEditing(deps: ResultGridEditingDeps) {
     setCommitting(true);
     setCommitError(null);
     try {
-      await queryService.applyEdits(activeConnectionId, edits);
+      await queryService.applyEdits(
+        activeConnectionId,
+        edits,
+        writeTarget.sessionId,
+      );
       if (!writeTarget.isCurrent()) return;
       resetEdits();
       setEditMode(false);

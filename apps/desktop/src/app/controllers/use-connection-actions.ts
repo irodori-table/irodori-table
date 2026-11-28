@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import type { ShowActionNotice } from "@/app/ActionToast";
+import { invalidateConnectionReviews } from "@/features/connections/connection-store";
 import { profileDatabaseLabel } from "@/features/connections/connection-transfer";
 import {
   PASSWORD_SECRET_OPTION,
@@ -350,6 +351,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     }
     for (const id of targets) {
       if (connectedIds.has(id)) {
+        invalidateConnectionReviews(id);
         await queryService.disconnect(id).catch(() => undefined);
       }
     }
@@ -492,6 +494,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         ...nextConnection,
         databaseLabel: profileDatabaseLabel(profile),
         connectedEngine: info.engine,
+        sessionId: info.sessionId,
         connectedReadOnly: profile.readOnly,
       },
     }));
@@ -542,6 +545,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
       );
       return;
     }
+    invalidateConnectionReviews(profile.id);
     setConnecting(true);
     setConnectionError(null);
     const generation = (attemptTracker.generations.get(profile.id) ?? 0) + 1;
@@ -574,10 +578,10 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
         // a newer attempt for this profile has started, or the profile was
         // already open: the backend connection is then the live one.
         onLateSuccess: (value, givenUp) => {
-          if (
-            attemptTracker.generations.get(profile.id) !== generation ||
-            attemptTracker.connectedIds.current.has(value.info.id)
-          ) {
+          if (attemptTracker.generations.get(profile.id) !== generation) return;
+          if (attemptTracker.connectedIds.current.has(value.info.id)) {
+            // A late reconnect replaced this driver's session under the same ID.
+            openConnection(profile, value.info, started, "if-idle");
             return;
           }
           // The user stopped this one on purpose, or deleted the profile
@@ -718,6 +722,7 @@ export function useConnectionActions(deps: ConnectionActionsDeps) {
     if (!connectedIds.has(id)) {
       return;
     }
+    invalidateConnectionReviews(id);
     await queryService.disconnect(id).catch(() => undefined);
     const remaining = new Set(
       [...connectedIds].filter((value) => value !== id),

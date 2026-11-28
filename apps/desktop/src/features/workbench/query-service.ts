@@ -39,6 +39,7 @@ export type QueryExecuteArgs = {
   queryId?: string;
   params?: QueryParameterInput[];
   manualTransaction?: boolean;
+  sessionId?: string;
 };
 
 export type QueryStreamArgs = QueryExecuteArgs;
@@ -52,6 +53,7 @@ export type QuerySpillArgs = {
   queryId?: string;
   params?: QueryParameterInput[];
   manualTransaction?: boolean;
+  sessionId?: string;
 };
 
 export interface QueryService {
@@ -78,7 +80,11 @@ export interface QueryService {
     sql: string,
     mode: QueryPlanMode,
   ): Promise<QueryPlanAnalysis>;
-  applyEdits(connectionId: string, edits: TableEdits): Promise<AppliedEdits>;
+  applyEdits(
+    connectionId: string,
+    edits: TableEdits,
+    sessionId?: string,
+  ): Promise<AppliedEdits>;
   connect(profile: ConnectionProfile<DbEngine>): Promise<ConnectionInfo>;
   disconnect(connectionId: string): Promise<void>;
   listObjects(connectionId: string): Promise<DatabaseMetadata>;
@@ -94,6 +100,7 @@ export const tauriQueryService: QueryService = {
       args.queryId,
       args.params,
       args.manualTransaction,
+      args.sessionId,
     ),
   stream: runQueryStream,
   spill: runQuerySpill,
