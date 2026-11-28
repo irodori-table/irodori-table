@@ -4,6 +4,13 @@ import {
   keyMessage,
   type LocalizedMessage,
 } from "@/core";
+import type { DbEngine, DbObjectMetadata } from "@/generated/irodori-api";
+import {
+  qualifiedObjectName,
+  quoteSqlIdentifier,
+} from "@/features/workbench/object-sql";
+import { DelimitedReader, delimitedFileRows } from "./delimited";
+
 export type ImportTextFormat = "csv" | "tsv" | "json" | "jsonl";
 export type ImportFileKind = ImportTextFormat | "sql" | "excel";
 
@@ -106,17 +113,107 @@ export function generateImportSql(
   rows: readonly (readonly unknown[])[],
   includeCreate = true,
 ): string {
-  const table = quoteIdentifier(sanitizeSqlName(tableName || "imported_rows"));
-  const cleanedColumns = normalizeColumns(columns);
-  const statements = [
-    includeCreate
-      ? createImportTableStatement(table, cleanedColumns, rows)
-      : null,
-    rows.length > 0
-      ? insertImportRowsStatement(table, cleanedColumns, rows)
-      : null,
-  ].filter(isPresent);
-  return `${statements.join("\n\n")}\n`;
+  const plan = buildImportPlan({
+    tableName,
+    columns,
+    rows,
+    includeCreate,
+    engine: "sqlite",
+  });
+  return generatePreviewSql(plan, rows);
+}
+
+export type ImportMapping = {
+  connectionId: string;
+  schema: string;
+  table: string;
+  // null requires a choice; the empty string explicitly skips a source field.
+  choices: (string | null)[];
+};
+
+export function matchImportColumns(
+  source: readonly string[],
+  target: DbObjectMetadata,
+): (string | null)[] {
+  const normalized = source.map((header) => header.toLowerCase());
+  const unique = new Map<string, string | null>();
+  for (const { name } of target.columns) {
+    const key = name.toLowerCase();
+    unique.set(key, unique.has(key) ? null : name);
+  }
+  const seen = new Set<string>();
+  for (const key of normalized) {
+    if (seen.has(key)) unique.delete(key);
+    seen.add(key);
+  }
+  return normalized.map((key) => unique.get(key) ?? null);
+}
+
+export function importMappingError(
+  mapping: ImportMapping,
+  table: DbObjectMetadata | undefined,
+) {
+  if (!table) return "import.mapping.unavailable" as const;
+  const selected = mapping.choices.filter((name): name is string =>
+    Boolean(name),
+  );
+  if (selected.length !== new Set(selected).size)
+    return "import.mapping.duplicate" as const;
+  const available = new Set(table.columns.map((c) => c.name));
+  if (
+    mapping.choices.includes(null) ||
+    selected.some((name) => !available.has(name))
+  ) {
+    return "import.mapping.unresolved" as const;
+  }
+  return selected.length ? null : ("import.mapping.empty" as const);
+}
+
+export type ImportPlan = ReturnType<typeof buildImportPlan>;
+
+export function buildImportPlan(options: {
+  tableName: string;
+  columns: readonly string[];
+  rows: readonly (readonly unknown[])[];
+  engine: DbEngine;
+  includeCreate: boolean;
+  columnTypes?: readonly string[];
+  mapped?: { table: DbObjectMetadata; choices: (string | null)[] };
+}) {
+  const { engine, columns, mapped, includeCreate, columnTypes, rows } = options;
+  const table = mapped
+    ? qualifiedObjectName(engine, mapped.table)
+    : quoteSqlIdentifier(engine, sanitizeSqlName(options.tableName));
+  const names = mapped ? mapped.choices : normalizeColumns(columns);
+  const fields = names.flatMap((name, index) =>
+    name
+      ? [
+          {
+            index,
+            sqlName: quoteSqlIdentifier(engine, name),
+            type: includeCreate
+              ? (columnTypes?.[index] ??
+                inferSqlType(rows.map((row) => row[index])))
+              : "",
+          },
+        ]
+      : [],
+  );
+  return { table, fields, includeCreate, engine };
+}
+
+export function generatePreviewSql(
+  plan: ImportPlan,
+  rows: readonly (readonly unknown[])[],
+) {
+  return (
+    [
+      plan.includeCreate ? createImportTableStatement(plan) : null,
+      rows.length ? insertImportRowsStatement(plan, rows) : null,
+    ]
+      .filter(isPresent)
+      .join("\n\n") + "\n"
+  );
 }
 
 export function sanitizeSqlName(name: string): string {
@@ -133,63 +230,120 @@ function parseDelimitedImport(
   delimiter: string,
   maxRows: number,
 ): ParsedImport {
-  const table = parseDelimitedRows(text, delimiter);
-  if (table.length === 0) {
-    return emptyParsedImport();
-  }
-  const dataRows = table.slice(1).filter(hasDelimitedContent);
-  const columnCount = maxDelimitedColumnCount([table[0], ...dataRows]);
-  return parsedImport(
-    delimitedColumns(padDelimitedRow(table[0], columnCount)),
-    dataRows.map((row) => padDelimitedRow(row, columnCount)),
-    maxRows,
-  );
+  const reader = new DelimitedReader(delimiter);
+  const preview = new DelimitedPreview(maxRows);
+  for (const row of reader.read(text)) preview.add(row);
+  for (const row of reader.finish()) preview.add(row);
+  const { columns, rows, totalRows, truncated } = preview.result();
+  return { columns, rows, totalRows, truncated };
 }
 
-function parseDelimitedRows(text: string, delimiter: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let inQuotes = false;
-  let index = 0;
-  while (index < text.length) {
-    const char = text[index];
-    if (inQuotes) {
-      if (char === '"' && text[index + 1] === '"') {
-        cell += '"';
-        index += 2;
-      } else if (char === '"') {
-        inQuotes = false;
-        index += 1;
-      } else {
-        cell += char;
-        index += 1;
-      }
+class DelimitedPreview {
+  private header?: string[];
+  private rows: string[][] = [];
+  private total = 0;
+  private width = 0;
+  private types: (string | undefined)[] = [];
+
+  constructor(private readonly limit: number) {}
+
+  add(row: string[]) {
+    if (!this.header) {
+      this.header = row;
+      this.width = row.length;
+      return;
+    }
+    if (!row.some((cell) => cell !== "")) return;
+    this.total++;
+    this.width = Math.max(this.width, row.length);
+    row.forEach((value, index) => {
+      if (value === "" || this.types[index] === "TEXT") return;
+      const type =
+        sqlTypeChecks.find(({ matches }) => matches(value))?.type ?? "TEXT";
+      const prior = this.types[index];
+      this.types[index] =
+        !prior || prior === type
+          ? type
+          : (prior === "INTEGER" && type === "REAL") ||
+              (prior === "REAL" && type === "INTEGER")
+            ? "REAL"
+            : "TEXT";
+    });
+    if (this.rows.length < this.limit) this.rows.push(row);
+  }
+
+  result() {
+    const columns = delimitedColumns(
+      padDelimitedRow(this.header ?? [], this.width),
+    );
+    return {
+      columns,
+      rows: this.rows.map((row) => padDelimitedRow(row, this.width)),
+      totalRows: this.total,
+      truncated: this.total > this.rows.length,
+      columnTypes: columns.map((_, index) => this.types[index] ?? "TEXT"),
+    };
+  }
+}
+
+export async function previewDelimitedFile(
+  file: Blob,
+  format: "csv" | "tsv",
+  signal?: AbortSignal,
+) {
+  const preview = new DelimitedPreview(100);
+  for await (const row of delimitedFileRows(
+    file,
+    format === "csv" ? "," : "\t",
+    signal,
+  )) {
+    preview.add(row);
+  }
+  return preview.result();
+}
+
+export async function writeCompleteImport(
+  file: Blob,
+  format: "csv" | "tsv",
+  plan: ImportPlan,
+  expectedRows: number,
+  write: (text: string) => Promise<void>,
+  signal: AbortSignal,
+) {
+  signal.throwIfAborted();
+  if (plan.includeCreate)
+    await write(createImportTableStatement(plan) + "\n\n");
+  const tuples: string[] = [];
+  let chars = 0;
+  let count = 0;
+  let header = true;
+  async function flush() {
+    if (!tuples.length) return;
+    signal.throwIfAborted();
+    await write(insertValues(plan, tuples) + "\n");
+    tuples.length = 0;
+    chars = 0;
+  }
+  for await (const row of delimitedFileRows(
+    file,
+    format === "csv" ? "," : "\t",
+    signal,
+  )) {
+    if (header) {
+      header = false;
       continue;
     }
-    if (char === '"') {
-      inQuotes = true;
-      index += 1;
-    } else if (char === delimiter) {
-      row.push(cell);
-      cell = "";
-      index += 1;
-    } else if (char === "\n" || char === "\r") {
-      row.push(cell);
-      rows.push(row);
-      row = [];
-      cell = "";
-      index += char === "\r" && text[index + 1] === "\n" ? 2 : 1;
-    } else {
-      cell += char;
-      index += 1;
-    }
+    if (!row.some((value) => value !== "")) continue;
+    const tuple = importRowSql(plan, row);
+    tuples.push(tuple);
+    chars += tuple.length;
+    count++;
+    if (tuples.length >= 250 || chars >= 128 * 1024) await flush();
   }
-  if (cell.length > 0 || row.length > 0 || text.endsWith(delimiter)) {
-    row.push(cell);
-    rows.push(row);
-  }
-  return rows;
+  await flush();
+  signal.throwIfAborted();
+  if (count !== expectedRows)
+    throw new LocalizedError(keyMessage("import.error.sourceChanged"));
 }
 
 function parseJsonImport(text: string, maxRows: number): ParsedImport {
@@ -275,41 +429,30 @@ function inferSqlType(values: readonly unknown[]): string {
   );
 }
 
-function createImportTableStatement(
-  table: string,
-  columns: readonly string[],
-  rows: readonly (readonly unknown[])[],
-): string {
-  const types = columns.map((_, index) =>
-    inferSqlType(rows.map((row) => row[index])),
-  );
-  const definitions = columns
-    .map((column, index) => `  ${quoteIdentifier(column)} ${types[index]}`)
+function createImportTableStatement(plan: ImportPlan): string {
+  const definitions = plan.fields
+    .map(({ sqlName, type }) => `  ${sqlName} ${type}`)
     .join(",\n");
-  return `CREATE TABLE IF NOT EXISTS ${table} (\n${definitions}\n);`;
+  return `CREATE TABLE IF NOT EXISTS ${plan.table} (\n${definitions}\n);`;
 }
 
 function insertImportRowsStatement(
-  table: string,
-  columns: readonly string[],
+  plan: ImportPlan,
   rows: readonly (readonly unknown[])[],
-): string {
-  const quotedColumns = columns.map(quoteIdentifier).join(", ");
-  const values = rows
-    .map((row) => `  (${importRowSqlValues(columns, row)})`)
-    .join(",\n");
-  return `INSERT INTO ${table} (${quotedColumns}) VALUES\n${values};`;
+) {
+  return insertValues(
+    plan,
+    rows.map((row) => importRowSql(plan, row)),
+  );
 }
 
-function importRowSqlValues(
-  columns: readonly string[],
-  row: readonly unknown[],
-): string {
-  return columns.map((_, index) => sqlLiteral(row[index] ?? null)).join(", ");
+function insertValues(plan: ImportPlan, tuples: string[]) {
+  const names = plan.fields.map(({ sqlName }) => sqlName).join(", ");
+  return `INSERT INTO ${plan.table} (${names}) VALUES\n${tuples.join(",\n")};`;
 }
 
-function emptyParsedImport(): ParsedImport {
-  return { columns: [], rows: [], totalRows: 0, truncated: false };
+function importRowSql(plan: ImportPlan, row: readonly unknown[]) {
+  return `  (${plan.fields.map(({ index }) => sqlLiteral(row[index] ?? null, plan.engine)).join(", ")})`;
 }
 
 function parsedImport(
@@ -340,10 +483,6 @@ function normalizeFormatName(format: string): string {
   return format.trim().toLowerCase().replace(/^\./, "");
 }
 
-function maxDelimitedColumnCount(rows: readonly string[][]): number {
-  return Math.max(...rows.map((row) => row.length));
-}
-
 function padDelimitedRow(
   row: readonly string[],
   columnCount: number,
@@ -353,10 +492,6 @@ function padDelimitedRow(
 
 function delimitedColumns(columns: string[]) {
   return columns.map((column, index) => column || `column_${index + 1}`);
-}
-
-function hasDelimitedContent(row: string[]) {
-  return row.some((cell) => cell !== "");
 }
 
 function parseJsonValue(text: string): unknown {
@@ -450,7 +585,7 @@ function isZeroPaddedNumeric(text: string) {
   return /^-?0\d/.test(text) && !text.includes(".");
 }
 
-function sqlLiteral(value: unknown): string {
+function sqlLiteral(value: unknown, engine: DbEngine): string {
   if (value === null || value === undefined || value === "") {
     return "NULL";
   }
@@ -467,6 +602,16 @@ function sqlLiteral(value: unknown): string {
     typeof value === "object"
       ? JSON.stringify(jsonSafeValue(value))
       : String(value);
+  if (
+    ["mysql", "mariadb", "tidb"].includes(engine) &&
+    (text.includes("\\") || text.includes("\0"))
+  ) {
+    // Hex string conversion works with either MySQL backslash-escape mode.
+    const hex = Array.from(new TextEncoder().encode(text), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("");
+    return `CONVERT(X'${hex}' USING utf8mb4)`;
+  }
   return `'${text.replace(/'/g, "''")}'`;
 }
 
@@ -486,8 +631,4 @@ function jsonSafeValue(value: unknown): unknown {
     );
   }
   return value;
-}
-
-function quoteIdentifier(name: string) {
-  return `"${name.replace(/"/g, '""')}"`;
 }

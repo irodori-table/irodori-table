@@ -1429,6 +1429,29 @@ export const ja = {
   "import.dialog.table": "テーブル",
   "import.dialog.rowCount": "{shown} / {total} 行",
   "import.dialog.rowCountCapped": "{shown} / {total} 行(上限到達)",
+  "import.dialog.copyPreview": "プレビューの SQL をコピー",
+  "import.dialog.putPreview": "プレビューの SQL をエディターに挿入",
+  "import.dialog.saveFull": "全 {total} 行の SQL を保存",
+  "import.dialog.cancelSave": "保存をキャンセル",
+  "import.dialog.saved": "{total} 行分の SQL を保存しました。",
+  "import.mapping.table": "書き込み先のテーブル",
+  "import.mapping.manual": "入力したテーブル名を使用",
+  "import.mapping.column": "{source} の対応先",
+  "import.mapping.choose": "列を選択",
+  "import.mapping.skip": "この項目を除外",
+  "import.mapping.duplicate":
+    "複数の項目に同じ書き込み先の列が指定されています。",
+  "import.mapping.unresolved":
+    "対応先の列を選ぶか、取り込まない項目を除外してください。",
+  "import.mapping.empty": "少なくとも1項目に対応先の列を指定してください。",
+  "import.mapping.unavailable": "現在の接続からテーブルを選択してください。",
+  "import.error.rowTooLarge":
+    "CSV・TSV の1レコードが上限の4,194,304文字を超えています。",
+  "import.error.unclosedQuote": "引用符付きのフィールドが閉じられていません。",
+  "import.error.sourceChanged":
+    "元ファイルの行数が変わりました。ファイルをもう一度開いてください。",
+  "import.error.saveUnavailable":
+    "全件分の SQL を保存するには、デスクトップアプリでファイルを開いてください。",
   "schemaDesigner.dialogLabel": "スキーマデザイナー",
   "schemaDesigner.title": "スキーマデザイナー",
   "schemaDesigner.mode": "モード",

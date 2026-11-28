@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { ShowActionNotice } from "@/app/ActionToast";
 import {
@@ -15,7 +15,7 @@ import { flushEditorTabsEvent } from "@/app/controllers/use-editor-groups";
 import { tableTabId } from "@/app/editor-tabs";
 import {
   detectImportFileKind,
-  generateImportSql,
+  previewDelimitedFile,
   inferImportTableName,
   parseImportText,
   type ImportPreview,
@@ -107,25 +107,17 @@ export function useWorkspaceActions({
   const [importPreview, setImportPreview] = useState<ImportPreview | null>(
     null,
   );
-  const importSqlPreview = useMemo(
-    () =>
-      importPreview
-        ? generateImportSql(
-            importPreview.tableName,
-            importPreview.columns,
-            importPreview.rows,
-            // Append mode targets an existing table, so no CREATE TABLE (#164).
-            importPreview.mode !== "append",
-          )
-        : "",
-    [importPreview],
-  );
+  const importRead = useRef<AbortController | null>(null);
+  useEffect(() => () => importRead.current?.abort(), []);
   const schemaSqlPreview = useMemo(
     () => buildSchemaSql(schemaDraft),
     [schemaDraft],
   );
 
   async function handleImportFile(file: File) {
+    importRead.current?.abort();
+    const reader = new AbortController();
+    importRead.current = reader;
     const kind = detectImportFileKind(file.name);
     setImportPreview(null);
     if (!kind) {
@@ -134,12 +126,6 @@ export function useWorkspaceActions({
         t("notice.workbench.importFailed"),
         t("notice.workbench.importUnsupportedDetail"),
       );
-      return;
-    }
-    const text = await file.text();
-    if (kind === "sql") {
-      setQuery(text);
-      showActionNotice("success", t("notice.workbench.sqlLoaded"), file.name);
       return;
     }
     if (kind === "excel") {
@@ -151,9 +137,21 @@ export function useWorkspaceActions({
       return;
     }
     try {
-      const parsed = parseImportText(text, kind);
+      if (kind === "sql") {
+        const sql = await file.text();
+        if (reader.signal.aborted) return;
+        setQuery(sql);
+        showActionNotice("success", t("notice.workbench.sqlLoaded"), file.name);
+        return;
+      }
+      const delimited = kind === "csv" || kind === "tsv";
+      const parsed = delimited
+        ? await previewDelimitedFile(file, kind, reader.signal)
+        : parseImportText(await file.text(), kind);
+      if (reader.signal.aborted) return;
       setImportPreview({
         ...parsed,
+        sourceFile: delimited ? file : undefined,
         fileName: file.name,
         format: kind,
         tableName: inferImportTableName(file.name),
@@ -168,6 +166,7 @@ export function useWorkspaceActions({
         }),
       );
     } catch (error) {
+      if (reader.signal.aborted) return;
       showActionNotice(
         "error",
         t("notice.workbench.importFailed"),
@@ -177,6 +176,7 @@ export function useWorkspaceActions({
   }
 
   function handleLogProfileImport(request: LogProfileImportRequest) {
+    importRead.current?.abort();
     setImportPreview(null);
     try {
       const { profileId, ...parsed } = parseLogWithProfile(
@@ -219,16 +219,10 @@ export function useWorkspaceActions({
     }
   }
 
-  function putImportSqlInEditor() {
-    if (!importPreview) {
+  function putImportSqlInEditor(sql: string) {
+    if (!importPreview || !sql) {
       return;
     }
-    const sql = generateImportSql(
-      importPreview.tableName,
-      importPreview.columns,
-      importPreview.rows,
-      importPreview.mode !== "append",
-    );
     if (importPreview.sqlDestination === "new-tab") {
       openSqlInNewTab(sql);
     } else {
@@ -438,7 +432,6 @@ export function useWorkspaceActions({
   return {
     importPreview,
     setImportPreview,
-    importSqlPreview,
     schemaSqlPreview,
     formatObjectName: (object: DbObjectMetadata) =>
       qualifiedObjectName(editorEngine, object),

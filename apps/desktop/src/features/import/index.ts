@@ -4,5 +4,6 @@ export {
   generateImportSql,
   inferImportTableName,
   parseImportText,
+  previewDelimitedFile,
   type ParsedImport,
 } from "./importers";
