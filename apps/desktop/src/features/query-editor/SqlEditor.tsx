@@ -16,6 +16,7 @@
 
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -771,6 +772,15 @@ function uniqueTransformRanges(view: EditorView): SqlEditorSelection[] {
   return ranges;
 }
 
+// The workbench can supply new callback identities while typing. Keep the
+// installed language extension and its declaration index for the same document.
+function useEditorCallback<T>(callback: ((value: T) => void) | undefined) {
+  const latest = useRef(callback);
+  latest.current = callback;
+  const invoke = useCallback((value: T) => latest.current?.(value), []);
+  return callback ? invoke : undefined;
+}
+
 const SqlEditor = forwardRef<SqlEditorHandle, SqlEditorProps>(
   function SqlEditor(
     {
@@ -787,11 +797,13 @@ const SqlEditor = forwardRef<SqlEditorHandle, SqlEditorProps>(
       vimMode,
       formatter,
       linter,
-      onMetadataJump,
-      onMetadataToolWindow,
+      onMetadataJump: handleJump,
+      onMetadataToolWindow: handleToolWindow,
     },
     ref,
   ) {
+    const onMetadataJump = useEditorCallback(handleJump);
+    const onMetadataToolWindow = useEditorCallback(handleToolWindow);
     const language = editorLanguageForTabLabel(tabLabel ?? "");
     const hostRef = useRef<HTMLDivElement | null>(null);
     const viewRef = useRef<EditorView | null>(null);
